@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { ConsoleSqlOutlined } from '@ant-design/icons';
 import { Col, Modal, Row } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -25,7 +24,6 @@ export const FulfillPreparationSlipModal = ({ preparationSlip, visible, onClose 
 	const { fulfillPreparationSlip, status, errors, recentRequest, reset } = usePreparationSlips();
 
 	useEffect(() => {
-		console.log(preparationSlip);
 		if (preparationSlip) {
 			const formattedPreparationSlipProducts = preparationSlip?.products?.map(
 				(requestedProduct) => {

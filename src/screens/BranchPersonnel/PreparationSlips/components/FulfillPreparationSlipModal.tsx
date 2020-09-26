@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { ConsoleSqlOutlined } from '@ant-design/icons';
 import { Col, Modal, Row } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -24,24 +25,29 @@ export const FulfillPreparationSlipModal = ({ preparationSlip, visible, onClose 
 	const { fulfillPreparationSlip, status, errors, recentRequest, reset } = usePreparationSlips();
 
 	useEffect(() => {
-		const formattedPreparationSlipProducts = preparationSlip?.products?.map((requestedProduct) => {
-			const { id, product, quantity_piece, fulfilled_quantity_piece = 0 } = requestedProduct;
-			const { barcode, name, pieces_in_bulk } = product;
+		console.log(preparationSlip);
+		if (preparationSlip) {
+			const formattedPreparationSlipProducts = preparationSlip?.products?.map(
+				(requestedProduct) => {
+					const { id, product, quantity_piece, fulfilled_quantity_piece = 0 } = requestedProduct;
+					const { barcode, name, pieces_in_bulk } = product;
 
-			return {
-				barcode,
-				name,
-				pieces_in_bulk,
-				order_slip_product_id: id,
-				product_id: product.id,
-				quantity: quantity_piece,
-				fulfilled_quantity: fulfilled_quantity_piece,
-				quantity_type: quantityTypes.PIECE,
-				assigned_person_id: user?.id,
-			};
-		});
+					return {
+						barcode,
+						name,
+						pieces_in_bulk,
+						order_slip_product_id: id,
+						product_id: product.id,
+						quantity: quantity_piece,
+						fulfilled_quantity: fulfilled_quantity_piece,
+						quantity_type: quantityTypes.PIECE,
+						assigned_person_id: user?.id,
+					};
+				},
+			);
 
-		setPreparationSlipProducts(formattedPreparationSlipProducts);
+			setPreparationSlipProducts(formattedPreparationSlipProducts);
+		}
 	}, [preparationSlip]);
 
 	// Effect: Close modal if fulfill success
@@ -94,12 +100,14 @@ export const FulfillPreparationSlipModal = ({ preparationSlip, visible, onClose 
 				</Row>
 			</div>
 
-			<FulfillPreparationSlipForm
-				preparationSlipProducts={preparationSlipProducts}
-				onSubmit={onFulfill}
-				onClose={onClose}
-				loading={status === request.REQUESTING}
-			/>
+			{preparationSlipProducts && (
+				<FulfillPreparationSlipForm
+					preparationSlipProducts={preparationSlipProducts}
+					onSubmit={onFulfill}
+					onClose={onClose}
+					loading={status === request.REQUESTING}
+				/>
+			)}
 		</Modal>
 	);
 };

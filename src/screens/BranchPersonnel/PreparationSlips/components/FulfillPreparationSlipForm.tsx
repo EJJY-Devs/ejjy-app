@@ -29,11 +29,11 @@ export const FulfillPreparationSlipForm = ({
 	loading,
 }: Props) => {
 	const [isSubmitting, setSubmitting] = useState(false);
-	console.log(preparationSlipProducts);
+
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: {
-				preparationSlipProducts: preparationSlipProducts?.map((product) => ({
+				preparationSlipProducts: preparationSlipProducts.map((product) => ({
 					pieces_in_bulk: product.pieces_in_bulk,
 					quantity_type: product.quantity_type,
 					order_slip_product_id: product.order_slip_product_id,
@@ -104,7 +104,7 @@ export const FulfillPreparationSlipForm = ({
 						<Form className="form">
 							<TableNormal
 								columns={columns}
-								data={preparationSlipProducts?.map((product, index) => [
+								data={preparationSlipProducts.map((product, index) => [
 									// Name
 									product?.name,
 									// Ordered

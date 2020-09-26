@@ -29,7 +29,7 @@ export const FulfillPreparationSlipForm = ({
 	loading,
 }: Props) => {
 	const [isSubmitting, setSubmitting] = useState(false);
-
+	console.log(preparationSlipProducts);
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: {

@@ -48,7 +48,7 @@ export default function configureAxios(store: any) {
 			const { refreshToken } = state[AUTH_KEY];
 
 			if (!refreshToken) {
-				store.dispatch(authActions.loginReset());
+				store.dispatch(authActions.logout());
 				return;
 			}
 
@@ -64,7 +64,7 @@ export default function configureAxios(store: any) {
 					if (tokenStatus?.code === tokenResponseStatuses.INVALID) {
 						// if the REFRESH TOKEN has already expired as well, logout the user
 						// and throw an error to exit this Promise chain
-						store.dispatch(authActions.loginReset());
+						store.dispatch(authActions.logout());
 						throw new Error('refresh token has already expired');
 					}
 

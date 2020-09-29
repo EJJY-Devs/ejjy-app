@@ -78,6 +78,12 @@
 		margin-top: auto;
 		border-radius: $border-radius-lg;
 		background-color: $color-main-background;
+		cursor: pointer;
+
+		&:hover {
+			opacity: 0.7;
+			transition: 300ms;
+		}
 
 		.avatar {
 			width: 40px;

@@ -6,6 +6,7 @@ import { useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 import { selectors as authSelectors } from '../../../ducks/auth';
 import { actions as uiActions, selectors as uiSelectors } from '../../../ducks/ui';
+import { actions as authActions } from '../../../ducks/auth';
 import { userTypes } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
 import { getUserTypeName } from '../../../utils/function';
@@ -83,6 +84,7 @@ export const Sidebar = () => {
 	const user = useSelector(authSelectors.selectUser());
 	const isSidebarCollapsed = useSelector(uiSelectors.selectIsSidebarCollapsed());
 	const onCollapseSidebar = useActionDispatch(uiActions.onCollapseSidebar);
+	const logout = useActionDispatch(authActions.logout);
 
 	return (
 		<Layout.Sider
@@ -106,7 +108,7 @@ export const Sidebar = () => {
 				))}
 			</div>
 
-			<div className="user-details">
+			<div className="user-details" onClick={logout}>
 				<img
 					src={require('../../../assets/images/sample-avatar.png')}
 					alt="user avatar"

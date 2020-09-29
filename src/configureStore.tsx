@@ -7,9 +7,11 @@ import rootReducer from './ducks/index';
 import { key as UI_KEY } from './ducks/ui';
 import rootSaga from './sagas/index';
 
+export const STORAGE_KEY = 'ejjy-app';
+
 export default function configureStore(initialState = {}, history: any): any {
 	const persistConfig = {
-		key: 'ejjy-app',
+		key: STORAGE_KEY,
 		storage,
 		blacklist: ['_persist', UI_KEY],
 		keyPrefix: '',

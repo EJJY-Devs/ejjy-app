@@ -6,7 +6,7 @@ export const key = 'AUTH';
 export const types = {
 	SAVE: `${key}/SAVE`,
 	LOGIN: `${key}/LOGIN`,
-	LOGIN_RESET: `${key}/LOGIN_RESET`,
+	LOGOUT: `${key}/LOGOUT`,
 };
 
 const initialState = {
@@ -21,7 +21,6 @@ const reducer = handleActions(
 			...state,
 			...payload,
 		}),
-		[types.LOGIN_RESET]: () => initialState,
 	},
 	initialState,
 );
@@ -29,7 +28,7 @@ const reducer = handleActions(
 export const actions = {
 	save: createAction(types.SAVE),
 	login: createAction(types.LOGIN),
-	loginReset: createAction(types.LOGIN_RESET),
+	logout: createAction(types.LOGOUT),
 };
 
 const selectState = (state: any) => state[key] || initialState;

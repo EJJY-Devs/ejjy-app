@@ -39,7 +39,7 @@ export const ViewPreparationSlipModal = ({ preparationSlip, visible, onClose }: 
 					barcode,
 					name,
 					getColoredText(
-						`${preparationSlip?.id}-${product}-${quantity.isFulfilled}`, // key
+						`${preparationSlip?.id}-${barcode}-${quantity.isFulfilled}`, // key
 						!quantity.isFulfilled,
 						quantity.piecesInputted,
 						quantity.piecesOrdered,

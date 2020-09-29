@@ -2,6 +2,7 @@ export { default as BadgePill } from './BadgePill/BadgePill';
 export { default as Box } from './Box/Box';
 export { default as Button } from './Button/Button';
 export { default as ButtonIcon } from './ButtonIcon/ButtonIcon';
+export { default as ButtonLink } from './ButtonLink/ButtonLink';
 export { default as FieldError } from './FieldError/FieldError';
 export { default as FormCheckbox } from './FormCheckbox/FormCheckbox';
 export { default as FormInput } from './FormInput/FormInput';

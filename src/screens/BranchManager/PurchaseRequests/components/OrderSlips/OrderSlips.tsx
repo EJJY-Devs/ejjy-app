@@ -10,10 +10,10 @@ import {
 } from '../../../../../ducks/purchase-requests';
 import { purchaseRequestActions, request } from '../../../../../global/types';
 import { useActionDispatch } from '../../../../../hooks/useActionDispatch';
+import { ViewOrderSlipModal } from '../../../../OfficeManager/PurchaseRequests/components/OrderSlips/ViewOrderSlipModal';
 import { useOrderSlips } from '../../../hooks/useOrderSlips';
 import { OrderSlipsTable } from './OrderSlipsTable';
 import { ReceiveDeliveryReceiptModal } from './ReceiveDeliveryReceiptModal';
-import { ViewDeliveryReceiptModal } from './ViewDeliveryReceiptModal';
 
 interface Props {
 	purchaseRequestId: number;
@@ -57,10 +57,10 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 		}
 	}, [orderSlipStatus, orderSlipRecentRequest]);
 
-	// const onViewDeliveryReceipt = (orderSlip) => {
-	// 	setSelectedOrderSlip(orderSlip);
-	// 	setViewOrderSlipVisible(true);
-	// };
+	const onViewOrderSlip = (orderSlip) => {
+		setSelectedOrderSlip(orderSlip);
+		setViewOrderSlipVisible(true);
+	};
 
 	const onReceiveDeliveryReceipt = (orderSlip) => {
 		setSelectedOrderSlip(orderSlip);
@@ -74,10 +74,11 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 			<OrderSlipsTable
 				orderSlips={orderSlips}
 				orderSlipStatus={orderSlipStatus}
+				onViewOrderSlip={onViewOrderSlip}
 				onReceiveDeliveryReceipt={onReceiveDeliveryReceipt}
 			/>
 
-			<ViewDeliveryReceiptModal
+			<ViewOrderSlipModal
 				visible={viewOrderSlipVisible}
 				orderSlip={selectedOrderSlip}
 				onClose={() => setViewOrderSlipVisible(false)}

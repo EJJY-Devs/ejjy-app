@@ -8,6 +8,8 @@ import {
 	ColoredText,
 	coloredTextType,
 	CompletedBadgePill,
+	DoneBadgePill,
+	ErrorBadgePill,
 	FDS1CreatedBadgePill,
 	FDS1CreatingBadgePill,
 	FDS1DeliveredBadgePill,
@@ -24,9 +26,11 @@ import {
 	SeenBadgePill,
 } from '../components';
 import { BadgePill } from '../components/elements';
+import { EMPTY_DR_STATUS } from '../global/constants';
 import {
 	branchProductStatus,
 	orderSlipStatus,
+	OSDRStatus,
 	preparationSlipStatus,
 	purchaseRequestActions,
 	purchaseRequestProductStatus,
@@ -74,10 +78,11 @@ export const modifiedExtraCallback = (callback, extraCallback = null) => {
 	};
 };
 
-export const getColoredText = memoize((key, isDefault, x, y) => {
-	const text = `${x}/${y}`;
+export const getColoredText = memoize((key, isDefault, x, y, isOverOnlyIfDefault = false) => {
+	let text = `${x}/${y}`;
 
 	if (isDefault) {
+		text = isOverOnlyIfDefault ? text : y;
 		return <ColoredText type={coloredTextType.DEFAULT} text={text} />;
 	} else if (x !== y) {
 		return <ColoredText type={coloredTextType.ERROR} text={text} />;
@@ -186,6 +191,20 @@ export const getUserTypeName = memoize((type) => {
 		}
 		case userTypes.BRANCH_PERSONNEL: {
 			return 'Branch Personnel';
+		}
+	}
+});
+
+export const getOSDRStatus = memoize((status) => {
+	switch (status) {
+		case OSDRStatus.DONE: {
+			return <DoneBadgePill />;
+		}
+		case OSDRStatus.ERROR: {
+			return <ErrorBadgePill />;
+		}
+		default: {
+			return EMPTY_DR_STATUS;
 		}
 	}
 });

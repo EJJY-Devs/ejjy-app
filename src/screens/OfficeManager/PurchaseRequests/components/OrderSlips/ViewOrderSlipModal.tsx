@@ -1,13 +1,10 @@
 import { Col, Divider, Modal, Row } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
-import { DetailsHalf, DetailsRow, QuantitySelect, TableNormal } from '../../../../../components';
-import { Button, Input, Label } from '../../../../../components/elements';
-import {
-	convertToBulk,
-	formatDateTime,
-	getColoredText,
-	getOrderSlipStatus,
-} from '../../../../../utils/function';
+import { QuantitySelect, TableNormal } from '../../../../../components';
+import { Button, Label } from '../../../../../components/elements';
+import { quantityTypes } from '../../../../../global/types';
+import { convertToBulk, getColoredText } from '../../../../../utils/function';
+import { OrderSlipDetails } from './OrderSlipDetails';
 
 interface Props {
 	visible: boolean;
@@ -15,8 +12,7 @@ interface Props {
 	onClose: any;
 }
 
-export const ViewDeliveryReceiptModal = ({ orderSlip, visible, onClose }: Props) => {
-	const { purchase_request } = orderSlip;
+export const ViewOrderSlipModal = ({ orderSlip, visible, onClose }: Props) => {
 	const [requestedProducts, setRequestedProducts] = useState([]);
 	const [requestedProductsQuantity, setRequestedProductsQuantity] = useState([]);
 
@@ -70,7 +66,7 @@ export const ViewDeliveryReceiptModal = ({ orderSlip, visible, onClose }: Props)
 			const QUANTITY_INDEX = 2;
 			const formattedRequestedProducts = requestedProducts.map((requestedProduct, index) => {
 				const quantity = requestedProductsQuantity[index];
-				const isPiece = quantityType === quantityType.PIECE;
+				const isPiece = quantityType === quantityTypes.PIECE;
 				const inputted = isPiece ? quantity.piecesInputted : quantity.bulkInputted;
 				const ordered = isPiece ? quantity.piecesOrdered : quantity.bulkOrdered;
 				const key = `${orderSlip?.id}-${!quantity.isFulfilled}-${inputted}-${ordered}`;
@@ -107,38 +103,13 @@ export const ViewDeliveryReceiptModal = ({ orderSlip, visible, onClose }: Props)
 			centered
 			closable
 		>
-			<DetailsRow>
-				<DetailsHalf
-					label="Date & Time Requested"
-					value={formatDateTime(orderSlip?.datetime_created)}
-				/>
-				<DetailsHalf label="F-RS1" value={purchase_request?.id} />
-				<DetailsHalf
-					label="Requesting Branch"
-					value={purchase_request?.requesting_user?.branch?.name}
-				/>
-				<DetailsHalf label="F-OS1" value={orderSlip?.id} />
-				<DetailsHalf
-					label="Created By"
-					value={`${purchase_request?.requesting_user?.first_name} ${purchase_request?.requesting_user?.last_name}`}
-				/>
-				<DetailsHalf
-					label="Status"
-					value={getOrderSlipStatus(
-						orderSlip?.status?.value,
-						orderSlip?.status?.percentage_fulfilled * 100,
-					)}
-				/>
-			</DetailsRow>
+			<OrderSlipDetails orderSlip={orderSlip} />
 
 			<Divider dashed />
 
 			<Row gutter={[15, 15]} align="middle" justify="space-between">
-				<Col xs={24} sm={12} lg={18}>
+				<Col span={24}>
 					<Label label="Requested Products" />
-				</Col>
-				<Col xs={24} sm={12} lg={6}>
-					<Input placeholder={orderSlip?.assigned_store?.name} onChange={null} disabled />
 				</Col>
 			</Row>
 

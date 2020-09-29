@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AddButtonIcon, Table } from '../../../../../components';
-import { EMPTY_DR_STATUS } from '../../../../../global/constants';
+import { ButtonLink } from '../../../../../components/elements';
 import { orderSlipStatus as osStatus, request } from '../../../../../global/types';
 import {
 	calculateTableHeight,
@@ -13,19 +13,20 @@ const orderSlipsColumns = [
 	{ title: 'ID', dataIndex: 'id' },
 	{ title: 'Date & Time Created', dataIndex: 'datetime_created' },
 	{ title: 'Status', dataIndex: 'status' },
-	{ title: 'DR Status', dataIndex: 'dr_status' },
 	{ title: 'Actions', dataIndex: 'actions' },
 ];
 
 interface Props {
 	orderSlips: any;
 	orderSlipStatus: any;
+	onViewOrderSlip;
 	onReceiveDeliveryReceipt: any;
 }
 
 export const OrderSlipsTable = ({
 	orderSlips,
 	orderSlipStatus,
+	onViewOrderSlip,
 	onReceiveDeliveryReceipt,
 }: Props) => {
 	const [orderSlipsData, setOrderSlipsData] = useState([]);
@@ -38,10 +39,9 @@ export const OrderSlipsTable = ({
 				const { value, percentage_fulfilled } = status;
 
 				return {
-					id,
+					id: <ButtonLink text={id} onClick={() => onViewOrderSlip(orderSlip)} />,
 					datetime_created: formatDateTime(datetime_created),
 					status: getOrderSlipStatus(value, percentage_fulfilled * 100),
-					dr_status: EMPTY_DR_STATUS,
 					actions:
 						status.value === osStatus.DELIVERED ? (
 							<AddButtonIcon
@@ -53,7 +53,7 @@ export const OrderSlipsTable = ({
 			});
 			sleep(500).then(() => setOrderSlipsData(formattedOrderSlips));
 		}
-	}, [orderSlips, orderSlipStatus, onReceiveDeliveryReceipt]);
+	}, [orderSlips, orderSlipStatus, onReceiveDeliveryReceipt, onViewOrderSlip]);
 
 	return (
 		<Table

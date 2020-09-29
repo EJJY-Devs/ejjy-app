@@ -71,7 +71,7 @@ export const ReceiveDeliveryReceiptModal = ({
 			.map(({ status }) => status.value === orderSlipStatus.DELIVERED);
 
 		receiveDeliveryReceipt({
-			id: orderSlip.delivery_receipt_id,
+			id: orderSlip.delivery_receipt.id,
 			order_slip_id: orderSlip.id,
 			receiving_user_id: user.id,
 			received_products: values.products,

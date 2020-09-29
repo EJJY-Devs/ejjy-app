@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Table } from '../../../../../components';
-import { EMPTY_DR_STATUS } from '../../../../../global/constants';
+import { ButtonLink } from '../../../../../components/elements';
 import { orderSlipStatus as osStatus, request } from '../../../../../global/types';
 import {
 	calculateTableHeight,
 	formatDateTime,
 	getOrderSlipStatus,
+	getOSDRStatus,
 	sleep,
 } from '../../../../../utils/function';
 import { OrderSlipActions } from './OrderSlipActions';
@@ -22,6 +23,7 @@ interface Props {
 	orderSlips: any;
 	orderSlipStatus: any;
 	onViewDeliveryReceipt: any;
+	onViewOrderSlip: any;
 	onEditOrderSlip: any;
 	onCreateDeliveryReceipt: any;
 	loading: boolean;
@@ -31,6 +33,7 @@ export const OrderSlipsTable = ({
 	orderSlips,
 	orderSlipStatus,
 	onViewDeliveryReceipt,
+	onViewOrderSlip,
 	onEditOrderSlip,
 	onCreateDeliveryReceipt,
 	loading,
@@ -41,7 +44,7 @@ export const OrderSlipsTable = ({
 	useEffect(() => {
 		if (orderSlipStatus === request.SUCCESS) {
 			const formattedOrderSlips = orderSlips.map((orderSlip) => {
-				const { id, datetime_created, status } = orderSlip;
+				const { id, datetime_created, status, delivery_receipt } = orderSlip;
 				const { value, percentage_fulfilled } = status;
 
 				const onViewDR =
@@ -50,10 +53,10 @@ export const OrderSlipsTable = ({
 				const onCreateDR = value === osStatus.PREPARED ? () => onCreateDeliveryReceipt(id) : null;
 
 				return {
-					id: id,
+					id: <ButtonLink text={id} onClick={() => onViewOrderSlip(orderSlip)} />,
 					datetime_created: formatDateTime(datetime_created),
 					status: getOrderSlipStatus(value, percentage_fulfilled * 100),
-					dr_status: EMPTY_DR_STATUS,
+					dr_status: getOSDRStatus(delivery_receipt?.status),
 					actions: <OrderSlipActions onView={onViewDR} onEdit={onEdit} onCreateDR={onCreateDR} />,
 				};
 			});
@@ -65,6 +68,7 @@ export const OrderSlipsTable = ({
 		onViewDeliveryReceipt,
 		onEditOrderSlip,
 		onCreateDeliveryReceipt,
+		onViewOrderSlip,
 	]);
 
 	return (

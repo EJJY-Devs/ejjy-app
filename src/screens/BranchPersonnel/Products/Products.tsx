@@ -2,9 +2,8 @@
 import { lowerCase } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Container, Table, TableHeader } from '../../../components';
-import { Box } from '../../../components/elements';
+import { Box, ButtonLink } from '../../../components/elements';
 import { types } from '../../../ducks/OfficeManager/products';
-import { LINK_VOID } from '../../../global/constants';
 import { request } from '../../../global/types';
 import { useProducts } from '../../../hooks/useProducts';
 import { calculateTableHeight } from '../../../utils/function';
@@ -35,11 +34,7 @@ const Products = () => {
 
 			return {
 				_barcode: barcode,
-				barcode: (
-					<a href={LINK_VOID} onClick={() => onView(product)}>
-						{barcode}
-					</a>
-				),
+				barcode: <ButtonLink text={barcode} onClick={() => onView(product)} />,
 				name,
 			};
 		});

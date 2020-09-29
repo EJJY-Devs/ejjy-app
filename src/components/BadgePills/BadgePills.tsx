@@ -5,6 +5,14 @@ interface Props {
 	classNames?: any;
 }
 
+export const DoneBadgePill = ({ classNames }: Props) => (
+	<BadgePill classNames={classNames} label="Done" variant="primary" />
+);
+
+export const ErrorBadgePill = ({ classNames }: Props) => (
+	<BadgePill classNames={classNames} label="Error" variant="error" />
+);
+
 export const AddedToOSBadgePill = ({ classNames }: Props) => (
 	<BadgePill classNames={classNames} label="Added to OS" variant="primary" />
 );

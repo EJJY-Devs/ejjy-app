@@ -12,6 +12,7 @@ import { convertToPieces } from '../../../../../utils/function';
 import { useOrderSlips } from '../../../hooks/useOrderSlips';
 import { PurchaseRequestDetails, purchaseRequestDetailsType } from '../PurchaseRequestDetails';
 import { CreateEditOrderSlipForm } from './CreateEditOrderSlipForm';
+import { OrderSlipDetails } from './OrderSlipDetails';
 
 interface Props {
 	purchaseRequest: any;
@@ -132,6 +133,15 @@ export const CreateEditOrderSlipModal = ({
 			{errors.map((error, index) => (
 				<FieldError key={index} error={error} />
 			))}
+
+			{orderSlip ? (
+				<OrderSlipDetails orderSlip={orderSlip} />
+			) : (
+				<PurchaseRequestDetails
+					purchaseRequest={purchaseRequest}
+					type={purchaseRequestDetailsType.CREATE_EDIT}
+				/>
+			)}
 
 			<PurchaseRequestDetails
 				purchaseRequest={purchaseRequest}

@@ -28,9 +28,9 @@ export const ViewDeliveryReceiptModal = ({ orderSlip, visible, onClose }: Props)
 
 	// Effect: Fetch delivery receipt of order slip
 	useEffect(() => {
-		if (orderSlip) {
+		if (orderSlip?.delivery_receipt && visible) {
 			reset();
-			getDeliveryReceiptById(orderSlip.delivery_receipt_id);
+			getDeliveryReceiptById(orderSlip.delivery_receipt.id);
 		}
 	}, [orderSlip]);
 

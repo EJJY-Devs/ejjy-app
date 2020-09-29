@@ -3,10 +3,9 @@ import { lowerCase } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { AddButtonIcon, Container, Table, TableHeader } from '../../../components';
-import { Box } from '../../../components/elements';
+import { Box, ButtonLink } from '../../../components/elements';
 import { selectors as authSelectors } from '../../../ducks/auth';
 import { types } from '../../../ducks/BranchPersonnel/preparation-slips';
-import { LINK_VOID } from '../../../global/constants';
 import { preparationSlipStatusOptions } from '../../../global/options';
 import { request } from '../../../global/types';
 import {
@@ -50,11 +49,7 @@ const PreparationSlips = () => {
 				_id: id,
 				_datetime_created: dateTime,
 				_status: status,
-				id: (
-					<a href={LINK_VOID} onClick={() => onView(preparationSlip)}>
-						{id}
-					</a>
-				),
+				id: <ButtonLink text={id} onClick={() => onView(preparationSlip)} />,
 				datetime_created: dateTime,
 				status: getPreparationSlipStatus(status),
 				action: <AddButtonIcon onClick={() => onFulfill(preparationSlip)} tooltip="Fulfill" />,

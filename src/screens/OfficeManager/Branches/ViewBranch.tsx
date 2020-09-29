@@ -3,10 +3,9 @@ import { lowerCase } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Breadcrumb, Container, Table, TableActions, TableHeader } from '../../../components';
-import { Box } from '../../../components/elements';
+import { Box, ButtonLink } from '../../../components/elements';
 import { types } from '../../../ducks/branch-products';
 import { selectors as branchesSelectors } from '../../../ducks/OfficeManager/branches';
-import { LINK_VOID } from '../../../global/constants';
 import { request } from '../../../global/types';
 import { useBranchProducts } from '../../../hooks/useBranchProducts';
 import { calculateTableHeight } from '../../../utils/function';
@@ -56,11 +55,7 @@ const ViewBranch = ({ match }: Props) => {
 
 				return {
 					_barcode: barcode,
-					barcode: (
-						<a href={LINK_VOID} onClick={() => onView(branchProduct)}>
-							{barcode}
-						</a>
-					),
+					barcode: <ButtonLink text={barcode} onClick={() => onView(branchProduct)} />,
 					name,
 					balance: `${current_balance} / ${max_balance}`,
 					actions: <TableActions onEdit={() => onEdit(branchProduct)} />,

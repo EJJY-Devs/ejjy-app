@@ -24,6 +24,7 @@ import { useOrderSlips } from '../../../hooks/useOrderSlips';
 import { CreateEditOrderSlipModal } from './CreateEditOrderSlipModal';
 import { OrderSlipsTable } from './OrderSlipsTable';
 import { ViewDeliveryReceiptModal } from './ViewDeliveryReceiptModal';
+import { ViewOrderSlipModal } from './ViewOrderSlipModal';
 
 interface Props {
 	purchaseRequestId: number;
@@ -38,6 +39,7 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 	const [purchaseRequestProducts, setPurchaseRequestProducts] = useState([]);
 
 	// State: Modal
+	const [viewOrderSlipVisible, setViewOrderSlipVisible] = useState(false);
 	const [createEditOrderSlipVisible, setCreateEditOrderSlipVisible] = useState(false);
 	const [viewDeliveryReceiptVisible, setViewDeliveryReceiptVisible] = useState(false);
 
@@ -188,6 +190,11 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 		setCreateEditOrderSlipVisible(true);
 	};
 
+	const onViewOrderSlip = (orderSlip) => {
+		setSelectedOrderSlip(orderSlip);
+		setViewOrderSlipVisible(true);
+	};
+
 	const onEditOrderSlip = (orderSlip) => {
 		onChangePreparingBranch(orderSlip?.assigned_store?.id);
 		setSelectedOrderSlip(orderSlip);
@@ -205,11 +212,21 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 
 	return (
 		<Box>
-			<TableHeader title="F-OS1" buttonName="Create Order Slip" onCreate={onCreateOrderSlip} />
+			<TableHeader
+				title="F-OS1"
+				buttonName="Create Order Slip"
+				onCreate={onCreateOrderSlip}
+				onCreateDisabled={
+					![purchaseRequestActions.SEEN, purchaseRequestActions.F_OS1_CREATING].includes(
+						purchaseRequest?.action?.action,
+					)
+				}
+			/>
 
 			<OrderSlipsTable
 				orderSlips={orderSlips}
 				orderSlipStatus={orderSlipStatus}
+				onViewOrderSlip={onViewOrderSlip}
 				onEditOrderSlip={onEditOrderSlip}
 				onViewDeliveryReceipt={onViewDeliveryReceipt}
 				onCreateDeliveryReceipt={onCreateDeliveryReceipt}
@@ -220,6 +237,12 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 				visible={viewDeliveryReceiptVisible}
 				orderSlip={selectedOrderSlip}
 				onClose={() => setViewDeliveryReceiptVisible(false)}
+			/>
+
+			<ViewOrderSlipModal
+				visible={viewOrderSlipVisible}
+				orderSlip={selectedOrderSlip}
+				onClose={() => setViewOrderSlipVisible(false)}
 			/>
 
 			<CreateEditOrderSlipModal

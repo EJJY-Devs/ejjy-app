@@ -29,6 +29,7 @@ import { BadgePill } from '../components/elements';
 import { EMPTY_DR_STATUS } from '../global/constants';
 import {
 	branchProductStatus,
+	deliveryReceiptStatus,
 	orderSlipStatus,
 	OSDRStatus,
 	preparationSlipStatus,
@@ -202,6 +203,20 @@ export const getOSDRStatus = memoize((status) => {
 		}
 		case OSDRStatus.ERROR: {
 			return <ErrorBadgePill />;
+		}
+		default: {
+			return EMPTY_DR_STATUS;
+		}
+	}
+});
+
+export const getDeliveryReceiptStatus = memoize((status) => {
+	switch (status) {
+		case deliveryReceiptStatus.RESOLVED: {
+			return <BadgePill label="Resolved" variant="primary" />;
+		}
+		case deliveryReceiptStatus.INVESTIGATION: {
+			return <BadgePill label="Investigation" variant="secondary" />;
 		}
 		default: {
 			return EMPTY_DR_STATUS;

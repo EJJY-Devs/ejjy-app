@@ -77,3 +77,8 @@ export const OSDRStatus = {
 	DONE: 'done',
 	ERROR: 'error',
 };
+
+export const deliveryReceiptStatus = {
+	INVESTIGATION: 'investigation',
+	RESOLVED: 'resolved',
+};

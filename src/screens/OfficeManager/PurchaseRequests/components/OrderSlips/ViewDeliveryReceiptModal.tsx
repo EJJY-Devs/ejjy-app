@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Col, Divider, Modal, Row, Spin } from 'antd';
+import { Divider, Modal, Spin } from 'antd';
 import React, { useEffect, useState } from 'react';
 import {
 	CheckIcon,
@@ -8,12 +8,19 @@ import {
 	DetailsHalf,
 	DetailsRow,
 	ErrorIcon,
+	TableNormal,
 } from '../../../../../components';
-import { Button, Input, Label, Select } from '../../../../../components/elements';
-import { deliveryReceiptProductOptions } from '../../../../../global/options';
+import { Button } from '../../../../../components/elements';
 import { request } from '../../../../../global/types';
-import { formatDateTime } from '../../../../../utils/function';
+import { formatDateTime, getDeliveryReceiptStatus } from '../../../../../utils/function';
 import { useDeliveryReceipt } from '../../../hooks/useDeliveryReceipt';
+
+const columns = [
+	{ name: 'Product', width: '50%' },
+	{ name: 'Delivered' },
+	{ name: 'Received' },
+	{ name: 'Status', width: '20%' },
+];
 
 interface Props {
 	visible: boolean;
@@ -29,14 +36,13 @@ export const ViewDeliveryReceiptModal = ({ orderSlip, visible, onClose }: Props)
 	// Effect: Fetch delivery receipt of order slip
 	useEffect(() => {
 		if (orderSlip?.delivery_receipt && visible) {
-			reset();
 			getDeliveryReceiptById(orderSlip.delivery_receipt.id);
 		}
-	}, [orderSlip]);
+	}, [orderSlip, visible]);
 
 	// Effect: Format received products
 	useEffect(() => {
-		if (orderSlip && deliveryReceipt && status === request.SUCCESS) {
+		if (orderSlip && visible && deliveryReceipt && status === request.SUCCESS) {
 			const { delivery_receipt_products } = deliveryReceipt;
 			const findDrProduct = (orderSlipProductId) => {
 				return delivery_receipt_products?.find(
@@ -44,92 +50,59 @@ export const ViewDeliveryReceiptModal = ({ orderSlip, visible, onClose }: Props)
 				);
 			};
 
-			const formattedProducts = orderSlip?.products?.map((orderSlipProduct) => {
+			const formattedProducts = [];
+			orderSlip?.products?.map((orderSlipProduct) => {
 				const { id, product, fulfilled_quantity_piece } = orderSlipProduct;
 				const { status, is_match, received_quantity_piece, extra_message } = findDrProduct(id);
 
-				let mainMessage = 'Match';
-				let colorType = coloredTextType.DEFAULT;
-				let extraMessage = '';
-				if (!is_match) {
-					mainMessage = extra_message?.is_under ? 'Under' : 'Over';
-					extraMessage = extra_message?.message || '';
-					colorType = coloredTextType.ERROR;
-				} else {
-					colorType = coloredTextType.PRIMARY;
-				}
-
-				return {
-					name: product.name,
-					delivered: fulfilled_quantity_piece,
-					received: received_quantity_piece,
-					status,
-					is_match,
-					mainMessage,
-					colorType,
-					extraMessage,
-				};
+				formattedProducts.push([
+					<>
+						<span>{product.name}</span>{' '}
+						{getMessage(is_match, extra_message?.is_under, extra_message?.message)}
+					</>,
+					fulfilled_quantity_piece,
+					received_quantity_piece,
+					getDeliveryReceiptStatus(status),
+				]);
 			});
 
 			setReceivedProducts(formattedProducts);
 		}
-	}, [orderSlip, deliveryReceipt, status]);
+	}, [orderSlip, deliveryReceipt, visible, status]);
 
-	const onChangeStatus = (status) => {
-		console.log(status);
+	const getMessage = (isMatch, isUnder, message) => {
+		let mainMessage = 'Match';
+		let colorType = coloredTextType.DEFAULT;
+		let extraMessage = '';
+		if (!isMatch) {
+			mainMessage = isUnder ? 'Under' : 'Over';
+			extraMessage = message || '';
+			colorType = coloredTextType.ERROR;
+		} else {
+			colorType = coloredTextType.PRIMARY;
+		}
+
+		return (
+			<div style={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
+				<span style={{ marginRight: '5px' }}>
+					{isMatch ? <CheckIcon size="small" /> : <ErrorIcon size="small" />}
+				</span>
+				<ColoredText size="small" text={`${mainMessage}: ${extraMessage}`} type={colorType} />
+			</div>
+		);
 	};
 
-	const getRow = (product) => {
-		return (
-			<Col span={24}>
-				<Row gutter={[25, 8]}>
-					<Col xs={12} sm={6}>
-						<Label label="Product" spacing />
-						<Input placeholder={product.name} onChange={null} disabled />
-					</Col>
-
-					<Col xs={12} sm={6}>
-						<Label label="Delivered" spacing />
-						<Input placeholder={product.delivered} onChange={null} disabled />
-					</Col>
-
-					<Col xs={12} sm={6}>
-						<Label label="Received" spacing />
-						<Input placeholder={product.received} onChange={null} disabled />
-					</Col>
-
-					<Col xs={12} sm={6}>
-						<Label label="Status" spacing />
-						<Select
-							options={deliveryReceiptProductOptions}
-							value={product.status}
-							onChange={onChangeStatus}
-						/>
-					</Col>
-				</Row>
-				<Row gutter={[25, 8]}>
-					<Col span={24}>
-						<div style={{ display: 'flex', alignItems: 'center' }}>
-							<span style={{ marginRight: '10px' }}>
-								{product.is_match ? <CheckIcon /> : <ErrorIcon />}
-							</span>
-							<ColoredText
-								text={`${product.mainMessage}: ${product.extraMessage}`}
-								type={product.colorType}
-							/>
-						</div>
-					</Col>
-				</Row>
-			</Col>
-		);
+	const onModelClose = () => {
+		reset();
+		onClose();
 	};
 
 	return (
 		<Modal
 			title="View FDS-1"
 			visible={visible}
-			footer={[<Button key="close" text="Close" onClick={onClose} />]}
-			onCancel={onClose}
+			footer={[<Button key="close" text="Close" onClick={onModelClose} />]}
+			onCancel={onModelClose}
 			centered
 			closable
 		>
@@ -151,7 +124,7 @@ export const ViewDeliveryReceiptModal = ({ orderSlip, visible, onClose }: Props)
 
 				<Divider dashed />
 
-				<Row gutter={[0, 20]}>{receivedProducts.map((product) => getRow(product))}</Row>
+				<TableNormal columns={columns} data={receivedProducts} />
 			</Spin>
 		</Modal>
 	);

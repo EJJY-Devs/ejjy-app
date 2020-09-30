@@ -30,13 +30,25 @@ export const TableNormal = ({ columns, data, loading }: Props) => {
 						</tr>
 					</thead>
 					<tbody>
-						{data.map((items, index) => (
-							<tr key={`tr-${index}`} style={{ height: `${ROW_HEIGHT}px` }}>
-								{items.map((item, index) => (
-									<td key={`td-${index}`}>{item}</td>
-								))}
-							</tr>
-						))}
+						{data.map((row, index) => {
+							if (row?.isCustom) {
+								return (
+									<tr key={`tr-${index}`} style={{ height: `${row?.height || ROW_HEIGHT}px` }}>
+										<td colSpan={row.span} key={`td-${index}`}>
+											{row.content}
+										</td>
+									</tr>
+								);
+							} else {
+								return (
+									<tr key={`tr-${index}`} style={{ height: `${ROW_HEIGHT}px` }}>
+										{row.map((item, index) => (
+											<td key={`td-${index}`}>{item}</td>
+										))}
+									</tr>
+								);
+							}
+						})}
 					</tbody>
 				</table>
 			</div>

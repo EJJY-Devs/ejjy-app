@@ -11,8 +11,13 @@ export const coloredTextType = {
 interface Props {
 	text: string;
 	type: string;
+	size?: 'default' | 'small';
 }
 
-export const ColoredText = ({ text, type }: Props) => {
-	return <span className={cn('ColoredText', type)}>{text}</span>;
+export const ColoredText = ({ text, type, size }: Props) => {
+	return <span className={cn('ColoredText', type, size)}>{text}</span>;
+};
+
+ColoredText.defaultProps = {
+	size: 'default',
 };

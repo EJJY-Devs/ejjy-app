@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { Container, Table, TableHeader } from '../../../components';
 import { Box } from '../../../components/elements';
 import { types } from '../../../ducks/purchase-requests';
+import { EMPTY_PR_PROGRESS } from '../../../global/constants';
 import { purchaseRequestActionsOptionsWithAll } from '../../../global/options';
 import { request } from '../../../global/types';
 import { usePurchaseRequests } from '../../../hooks/usePurchaseRequests';
@@ -21,6 +22,7 @@ const columns = [
 	{ title: 'Requestor', dataIndex: 'requestor' },
 	{ title: 'Request Type', dataIndex: 'type' },
 	{ title: 'Actions', dataIndex: 'action' },
+	{ title: 'Progress', dataIndex: 'progress' },
 ];
 
 const PurchaseRequests = () => {
@@ -33,7 +35,7 @@ const PurchaseRequests = () => {
 		status,
 		recentRequest,
 	} = usePurchaseRequests();
-
+	console.log(purchaseRequests);
 	useEffect(() => {
 		getPurchaseRequestsExtended();
 	}, []);
@@ -41,8 +43,9 @@ const PurchaseRequests = () => {
 	// Effect: Format purchaseRequests to be rendered in Table
 	useEffect(() => {
 		const formattedProducts = purchaseRequests.map((purchaseRequest) => {
-			const { id, type, requestor_id, action: prAction } = purchaseRequest;
+			const { id, type, requesting_user, progress, action: prAction } = purchaseRequest;
 			const { datetime_created, action } = prAction;
+
 			const dateTime = formatDateTime(datetime_created);
 
 			return {
@@ -52,9 +55,10 @@ const PurchaseRequests = () => {
 				_status: action,
 				id: <Link to={`/purchase-requests/${id}`}>{id}</Link>,
 				datetime_created: dateTime,
-				requestor: requestor_id,
+				requestor: requesting_user.branch.name,
 				type: upperFirst(type),
 				action: getPurchaseRequestStatus(action),
+				progress: progress ? `${progress.current} / ${progress.total}` : EMPTY_PR_PROGRESS,
 			};
 		});
 

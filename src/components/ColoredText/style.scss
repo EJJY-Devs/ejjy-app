@@ -11,4 +11,8 @@
 	&.error {
 		color: $color-red;
 	}
+
+	&.small {
+		@include font(0.8rem, 600);
+	}
 }

@@ -20,4 +20,14 @@
 		border: 1px solid $color-red;
 		background-color: $color-red;
 	}
+
+	&.small {
+		height: 14px;
+		width: 14px;
+
+		img {
+			height: 8px;
+			width: 8px;
+		}
+	}
 }

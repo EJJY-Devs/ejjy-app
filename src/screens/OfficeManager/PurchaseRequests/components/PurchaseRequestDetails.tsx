@@ -41,7 +41,7 @@ export const PurchaseRequestDetails = ({ purchaseRequest, type }: Props) => {
 						<Label label="Date &amp; Time Created" />
 					</Col>
 					<Col span={12}>
-						<strong>{formatDateTime(purchaseRequest?.datetime_created)}</strong>
+						<span>{formatDateTime(purchaseRequest?.datetime_created)}</span>
 					</Col>
 				</Row>
 				<Row gutter={[15, 15]} align="middle">
@@ -49,7 +49,7 @@ export const PurchaseRequestDetails = ({ purchaseRequest, type }: Props) => {
 						<Label label="Requestor" />
 					</Col>
 					<Col span={12}>
-						<strong>{getRequestor()}</strong>
+						<span>{getRequestor()}</span>
 					</Col>
 				</Row>
 				{type === purchaseRequestDetailsType.SINGLE_VIEW && (
@@ -58,7 +58,7 @@ export const PurchaseRequestDetails = ({ purchaseRequest, type }: Props) => {
 							<Label label="Request Type" />
 						</Col>
 						<Col span={12}>
-							<strong>{upperFirst(purchaseRequest?.type)}</strong>
+							<span>{upperFirst(purchaseRequest?.type)}</span>
 						</Col>
 					</Row>
 				)}
@@ -89,7 +89,7 @@ export const PurchaseRequestDetails = ({ purchaseRequest, type }: Props) => {
 							<Label label="F-RS1" />
 						</Col>
 						<Col span={12}>
-							<strong>{purchaseRequest?.id}</strong>
+							<span>{purchaseRequest?.id}</span>
 						</Col>
 					</Row>
 				)}

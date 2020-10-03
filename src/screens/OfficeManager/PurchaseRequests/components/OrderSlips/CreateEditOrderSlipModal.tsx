@@ -143,11 +143,6 @@ export const CreateEditOrderSlipModal = ({
 				/>
 			)}
 
-			<PurchaseRequestDetails
-				purchaseRequest={purchaseRequest}
-				type={purchaseRequestDetailsType.CREATE_EDIT}
-			/>
-
 			<Divider dashed />
 
 			<Row gutter={[15, 15]} align="middle">

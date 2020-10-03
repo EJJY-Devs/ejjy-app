@@ -20,43 +20,43 @@ export const quantityTypeOptions = [
 export const purchaseRequestActionsOptions = [
 	{
 		value: purchaseRequestActions.NEW,
-		name: 'New',
+		name: '(1/6) New',
 	},
 	{
 		value: purchaseRequestActions.SEEN,
-		name: 'Seen',
+		name: '(2/6) Seen',
 	},
 	{
 		value: purchaseRequestActions.F_OS1_CREATING,
-		name: 'F-OS1 Creating',
+		name: '(3/6) F-OS1 Creating',
 	},
 	{
 		value: purchaseRequestActions.F_OS1_CREATED,
-		name: 'F-OS1 Created',
+		name: '(3/6) F-OS1 Created',
 	},
 	{
 		value: purchaseRequestActions.F_OS1_PREPARING,
-		name: 'F-OS1 Preparing',
+		name: '(4/6) F-OS1 Preparing',
 	},
 	{
 		value: purchaseRequestActions.F_OS1_PREPARED,
-		name: 'F-OS1 Prepared',
+		name: '(4/6) F-OS1 Prepared',
 	},
 	{
 		value: purchaseRequestActions.F_DS1_CREATING,
-		name: 'F-DS1 Creating',
+		name: '(5/6) F-DS1 Creating',
 	},
 	{
 		value: purchaseRequestActions.F_DS1_CREATED,
-		name: 'F-DS1 Created',
+		name: '(5/6) F-DS1 Created',
 	},
 	{
 		value: purchaseRequestActions.F_DS1_DELIVERING,
-		name: 'F-DS1 Delivering',
+		name: '(6/6) F-DS1 Delivering',
 	},
 	{
 		value: purchaseRequestActions.F_DS1_DELIVERED,
-		name: 'F-DS1 Delivered',
+		name: '(6/6) F-DS1 Delivered',
 	},
 ];
 

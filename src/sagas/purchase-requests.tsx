@@ -6,14 +6,13 @@ import { service } from '../services/purchase-requests';
 
 /* WORKERS */
 function* list({ payload }: any) {
-	const { id = null, callback } = payload;
+	const { callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	try {
 		const response = yield call(service.list, {
 			page: 1,
 			page_size: MAX_PAGE_SIZE,
-			branch_id: id,
 		});
 
 		yield put(
@@ -26,14 +25,13 @@ function* list({ payload }: any) {
 }
 
 function* listExtended({ payload }: any) {
-	const { id = null, callback } = payload;
+	const { callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	try {
 		const response = yield call(service.listExtended, {
 			page: 1,
 			page_size: MAX_PAGE_SIZE,
-			branch_id: id,
 		});
 
 		yield put(

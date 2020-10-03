@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { Container, Table, TableHeader } from '../../../components';
 import { Box } from '../../../components/elements';
 import { selectors as authSelectors } from '../../../ducks/auth';
+import { EMPTY_PR_PROGRESS } from '../../../global/constants';
 import { purchaseRequestActionsOptionsWithAll } from '../../../global/options';
 import { request } from '../../../global/types';
 import { useBranchProducts } from '../../../hooks/useBranchProducts';
@@ -21,9 +22,10 @@ import './style.scss';
 const columns = [
 	{ title: 'ID', dataIndex: 'id' },
 	{ title: 'Date Requested', dataIndex: 'datetime_created' },
-	{ title: 'Type', dataIndex: 'type' },
-	{ title: 'Status', dataIndex: 'status' },
+	{ title: 'Requestor', dataIndex: 'requestor' },
+	{ title: 'Request Type', dataIndex: 'type' },
 	{ title: 'Actions', dataIndex: 'action' },
+	{ title: 'Progress', dataIndex: 'progress' },
 ];
 
 const PurchaseRequests = () => {
@@ -49,9 +51,14 @@ const PurchaseRequests = () => {
 	// Effect: Format purchaseRequests to be rendered in Table
 	useEffect(() => {
 		const formattedProducts = purchaseRequests.map((purchaseRequest) => {
-			const { id, type, action: prAction } = purchaseRequest;
+			const { id, type, requesting_user, progress, action: prAction } = purchaseRequest;
 			const { datetime_created, action } = prAction;
 			const dateTime = formatDateTime(datetime_created);
+
+			const isOwnPurchaseRequest = user?.branch?.id === requesting_user.branch.id;
+			const _action = isOwnPurchaseRequest ? getPurchaseRequestStatus(action) : EMPTY_PR_PROGRESS;
+			let _progress = progress ? `${progress.current} / ${progress.total}` : EMPTY_PR_PROGRESS;
+			_progress = isOwnPurchaseRequest ? _progress : EMPTY_PR_PROGRESS;
 
 			return {
 				_id: id,
@@ -60,8 +67,10 @@ const PurchaseRequests = () => {
 				_status: action,
 				id: <Link to={`/purchase-requests/${id}`}>{id}</Link>,
 				datetime_created: dateTime,
+				requestor: requesting_user.branch.name,
 				type: upperFirst(type),
-				status: getPurchaseRequestStatus(action),
+				action: _action,
+				progress: _progress,
 			};
 		});
 

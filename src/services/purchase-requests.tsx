@@ -29,13 +29,9 @@ interface IBranchIdGetRequestPurchaseRequest {
 	preparing_branch_id: number;
 }
 
-interface IGetRequestPurchaseRequest extends IGetRequest {
-	branch_id: number;
-}
-
 export const service = {
-	list: async (params: IGetRequestPurchaseRequest) => axios.get('/purchase-requests/', { params }),
-	listExtended: async (params: IGetRequestPurchaseRequest) =>
+	list: async (params: IGetRequest) => axios.get('/purchase-requests/', { params }),
+	listExtended: async (params: IGetRequest) =>
 		axios.get('/purchase-requests/extended/', { params }),
 	getById: async (id) => axios.get(`/purchase-requests/${id}/extended`),
 	getByIdAndBranch: async (params: IBranchIdGetRequestPurchaseRequest, id: number) =>

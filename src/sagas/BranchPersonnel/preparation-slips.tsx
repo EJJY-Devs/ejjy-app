@@ -16,6 +16,7 @@ function* list({ payload }: any) {
 
 	try {
 		const response = yield call(service.list, {
+			ordering: 'id',
 			page: 1,
 			page_size: MAX_PAGE_SIZE,
 			purchase_request_id,

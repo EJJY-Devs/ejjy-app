@@ -57,7 +57,7 @@ export const FulfillPreparationSlipForm = ({
 		[preparationSlipProducts],
 	);
 
-	const getFulfilledQuantity = (index, touched, errors) => {
+	const getFulfilledQuantity = (index, ordered, touched, errors) => {
 		return (
 			<>
 				<div className="quantity-container">
@@ -65,6 +65,7 @@ export const FulfillPreparationSlipForm = ({
 						type="number"
 						id={`preparationSlipProducts.${index}.fulfilled_quantity`}
 						min={1}
+						max={ordered}
 					/>
 					<FormSelect
 						id={`preparationSlipProducts.${index}.quantity_type`}
@@ -114,7 +115,7 @@ export const FulfillPreparationSlipForm = ({
 									// Barcode
 									product?.barcode,
 									// Fulfilled quantity / Bulk | Pieces
-									getFulfilledQuantity(index, touched, errors),
+									getFulfilledQuantity(index, product?.quantity, touched, errors),
 								])}
 							/>
 

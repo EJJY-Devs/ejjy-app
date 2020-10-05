@@ -1,13 +1,8 @@
 import { Col, Divider, Modal, Row } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
-import { DetailsHalf, DetailsRow, QuantitySelect, TableNormal } from '../../../../../components';
+import { TableNormal } from '../../../../../components';
 import { Button, Input, Label } from '../../../../../components/elements';
-import {
-	convertToBulk,
-	formatDateTime,
-	getColoredText,
-	getOrderSlipStatus,
-} from '../../../../../utils/function';
+import { OrderSlipDetails } from '../../../../OfficeManager/PurchaseRequests/components/OrderSlips/OrderSlipDetails';
 
 interface Props {
 	visible: boolean;
@@ -15,45 +10,44 @@ interface Props {
 	onClose: any;
 }
 
-export const ViewDeliveryReceiptModal = ({ orderSlip, visible, onClose }: Props) => {
-	const { purchase_request } = orderSlip;
+export const ViewOrderSlipModal = ({ orderSlip, visible, onClose }: Props) => {
 	const [requestedProducts, setRequestedProducts] = useState([]);
-	const [requestedProductsQuantity, setRequestedProductsQuantity] = useState([]);
+	// const [requestedProductsQuantity, setRequestedProductsQuantity] = useState([]);
 
 	useEffect(() => {
 		if (orderSlip) {
-			const formattedQuantities = [];
+			// const formattedQuantities = [];
 			const formattedPreparationSlip = [];
 
 			orderSlip?.products?.forEach((requestedProduct) => {
 				const {
 					product,
 					assigned_person,
-					quantity_piece,
-					fulfilled_quantity_piece = 0,
+					// quantity_piece,
+					// fulfilled_quantity_piece = 0,
 				} = requestedProduct;
-				const { barcode, name, pieces_in_bulk } = product;
+				const { barcode, name } = product;
 				const { first_name, last_name } = assigned_person;
 
-				const quantity = {
-					barcode,
-					isFulfilled: fulfilled_quantity_piece !== null,
-					piecesInputted: fulfilled_quantity_piece || 0,
-					piecesOrdered: quantity_piece,
-					bulkInputted: convertToBulk(fulfilled_quantity_piece, pieces_in_bulk),
-					bulkOrdered: convertToBulk(quantity_piece, pieces_in_bulk),
-				};
+				// const quantity = {
+				// 	barcode,
+				// 	isFulfilled: fulfilled_quantity_piece !== null,
+				// 	piecesInputted: fulfilled_quantity_piece || 0,
+				// 	piecesOrdered: quantity_piece,
+				// 	bulkInputted: convertToBulk(fulfilled_quantity_piece, pieces_in_bulk),
+				// 	bulkOrdered: convertToBulk(quantity_piece, pieces_in_bulk),
+				// };
 
-				formattedQuantities.push(quantity);
+				// formattedQuantities.push(quantity);
 				formattedPreparationSlip.push([
 					barcode,
 					name,
-					getColoredText(
-						`${orderSlip?.id}-${barcode}-${quantity.isFulfilled}`, // key
-						!quantity.isFulfilled,
-						quantity.piecesInputted,
-						quantity.piecesOrdered,
-					),
+					// getColoredText(
+					// 	`${orderSlip?.id}-${barcode}-${quantity.isFulfilled}`, // key
+					// 	!quantity.isFulfilled,
+					// 	quantity.piecesInputted,
+					// 	quantity.piecesOrdered,
+					// ),
 					`${first_name} ${last_name}`,
 				]);
 
@@ -61,41 +55,41 @@ export const ViewDeliveryReceiptModal = ({ orderSlip, visible, onClose }: Props)
 			});
 
 			setRequestedProducts(formattedPreparationSlip);
-			setRequestedProductsQuantity(formattedQuantities);
+			// setRequestedProductsQuantity(formattedQuantities);
 		}
 	}, [orderSlip]);
 
-	const onQuantityTypeChange = useCallback(
-		(quantityType) => {
-			const QUANTITY_INDEX = 2;
-			const formattedRequestedProducts = requestedProducts.map((requestedProduct, index) => {
-				const quantity = requestedProductsQuantity[index];
-				const isPiece = quantityType === quantityType.PIECE;
-				const inputted = isPiece ? quantity.piecesInputted : quantity.bulkInputted;
-				const ordered = isPiece ? quantity.piecesOrdered : quantity.bulkOrdered;
-				const key = `${orderSlip?.id}-${!quantity.isFulfilled}-${inputted}-${ordered}`;
+	// const onQuantityTypeChange = useCallback(
+	// 	(quantityType) => {
+	// 		const QUANTITY_INDEX = 2;
+	// 		const formattedRequestedProducts = requestedProducts.map((requestedProduct, index) => {
+	// 			const quantity = requestedProductsQuantity[index];
+	// 			const isPiece = quantityType === quantityType.PIECE;
+	// 			const inputted = isPiece ? quantity.piecesInputted : quantity.bulkInputted;
+	// 			const ordered = isPiece ? quantity.piecesOrdered : quantity.bulkOrdered;
+	// 			const key = `${orderSlip?.id}-${!quantity.isFulfilled}-${inputted}-${ordered}`;
 
-				requestedProduct[QUANTITY_INDEX] = getColoredText(
-					key,
-					!quantity.isFulfilled,
-					inputted,
-					ordered,
-				);
-				return requestedProduct;
-			});
-			setRequestedProducts(formattedRequestedProducts);
-		},
-		[requestedProducts, requestedProductsQuantity, orderSlip],
-	);
+	// 			requestedProduct[QUANTITY_INDEX] = getColoredText(
+	// 				key,
+	// 				!quantity.isFulfilled,
+	// 				inputted,
+	// 				ordered,
+	// 			);
+	// 			return requestedProduct;
+	// 		});
+	// 		setRequestedProducts(formattedRequestedProducts);
+	// 	},
+	// 	[requestedProducts, requestedProductsQuantity, orderSlip],
+	// );
 
 	const getColumns = useCallback(
 		() => [
 			{ name: 'Barcode' },
 			{ name: 'Name' },
-			{ name: <QuantitySelect onQuantityTypeChange={onQuantityTypeChange} /> },
+			// { name: <QuantitySelect onQuantityTypeChange={onQuantityTypeChange} /> },
 			{ name: 'Assigned Personnel' },
 		],
-		[onQuantityTypeChange],
+		[],
 	);
 
 	return (
@@ -107,29 +101,7 @@ export const ViewDeliveryReceiptModal = ({ orderSlip, visible, onClose }: Props)
 			centered
 			closable
 		>
-			<DetailsRow>
-				<DetailsHalf
-					label="Date & Time Requested"
-					value={formatDateTime(orderSlip?.datetime_created)}
-				/>
-				<DetailsHalf label="F-RS1" value={purchase_request?.id} />
-				<DetailsHalf
-					label="Requesting Branch"
-					value={purchase_request?.requesting_user?.branch?.name}
-				/>
-				<DetailsHalf label="F-OS1" value={orderSlip?.id} />
-				<DetailsHalf
-					label="Created By"
-					value={`${purchase_request?.requesting_user?.first_name} ${purchase_request?.requesting_user?.last_name}`}
-				/>
-				<DetailsHalf
-					label="Status"
-					value={getOrderSlipStatus(
-						orderSlip?.status?.value,
-						orderSlip?.status?.percentage_fulfilled * 100,
-					)}
-				/>
-			</DetailsRow>
+			<OrderSlipDetails orderSlip={orderSlip} />
 
 			<Divider dashed />
 

@@ -45,7 +45,7 @@ export const OrderSlipsTable = ({
 			const formattedOrderSlips = orderSlips.map((orderSlip) => {
 				const { id, datetime_created, status, delivery_receipt } = orderSlip;
 				const { value, percentage_fulfilled } = status;
-				console.log(orderSlip);
+
 				const deliveryReceipt =
 					value === osStatus.RECEIVED ? (
 						<ButtonLink

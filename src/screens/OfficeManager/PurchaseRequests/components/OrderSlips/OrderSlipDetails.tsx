@@ -7,23 +7,21 @@ interface Props {
 }
 
 export const OrderSlipDetails = ({ orderSlip }: Props) => {
-	const { purchase_request } = orderSlip;
-
 	return (
 		<DetailsRow>
 			<DetailsHalf
 				label="Date & Time Requested"
 				value={formatDateTime(orderSlip?.datetime_created)}
 			/>
-			<DetailsHalf label="F-RS1" value={purchase_request?.id} />
+			<DetailsHalf label="F-RS1" value={orderSlip?.purchase_request?.id} />
 			<DetailsHalf
 				label="Requesting Branch"
-				value={purchase_request?.requesting_user?.branch?.name}
+				value={orderSlip?.purchase_request?.requesting_user?.branch?.name}
 			/>
 			<DetailsHalf label="F-OS1" value={orderSlip?.id} />
 			<DetailsHalf
 				label="Created By"
-				value={`${purchase_request?.requesting_user?.first_name} ${purchase_request?.requesting_user?.last_name}`}
+				value={`${orderSlip?.purchase_request?.requesting_user?.first_name} ${orderSlip?.purchase_request?.requesting_user?.last_name}`}
 			/>
 			<DetailsHalf
 				label="Status"

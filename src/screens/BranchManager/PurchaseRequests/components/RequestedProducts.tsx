@@ -1,8 +1,8 @@
 import { Col, Divider, Row } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
-import { QuantitySelect, Table } from '../../../../components';
+import { Table } from '../../../../components';
 import { Box, Label } from '../../../../components/elements';
-import { quantityTypes, request } from '../../../../global/types';
+import { request } from '../../../../global/types';
 import { calculateTableHeight, convertToBulk, sleep } from '../../../../utils/function';
 import '../style.scss';
 import { PurchaseRequestDetails, purchaseRequestDetailsType } from './PurchaseRequestDetails';
@@ -27,7 +27,7 @@ export const RequestedProducts = ({ purchaseRequest, purchaseRequestStatus }: Pr
 					_quantity_bulk: convertToBulk(quantity_piece, pieces_in_bulk),
 					barcode,
 					name,
-					quantity: quantity_piece,
+					// quantity: quantity_piece,
 				};
 			});
 
@@ -35,30 +35,30 @@ export const RequestedProducts = ({ purchaseRequest, purchaseRequestStatus }: Pr
 		}
 	}, [purchaseRequest, purchaseRequestStatus]);
 
-	const onQuantityTypeChange = useCallback(
-		(quantityType) => {
-			const formattedRequestedProducts = requestedProducts.map((requestProduct) => ({
-				...requestProduct,
-				quantity:
-					quantityType === quantityTypes.PIECE
-						? requestProduct._quantity_piece
-						: requestProduct._quantity_bulk,
-			}));
-			setRequestedProducts(formattedRequestedProducts);
-		},
-		[requestedProducts],
-	);
+	// const onQuantityTypeChange = useCallback(
+	// 	(quantityType) => {
+	// 		const formattedRequestedProducts = requestedProducts.map((requestProduct) => ({
+	// 			...requestProduct,
+	// 			quantity:
+	// 				quantityType === quantityTypes.PIECE
+	// 					? requestProduct._quantity_piece
+	// 					: requestProduct._quantity_bulk,
+	// 		}));
+	// 		setRequestedProducts(formattedRequestedProducts);
+	// 	},
+	// 	[requestedProducts],
+	// );
 
 	const getColumns = useCallback(
 		() => [
 			{ title: 'Barcode', dataIndex: 'barcode' },
 			{ title: 'Name', dataIndex: 'name' },
-			{
-				title: <QuantitySelect onQuantityTypeChange={onQuantityTypeChange} />,
-				dataIndex: 'quantity',
-			},
+			// {
+			// 	title: <QuantitySelect onQuantityTypeChange={onQuantityTypeChange} />,
+			// 	dataIndex: 'quantity',
+			// },
 		],
-		[onQuantityTypeChange],
+		[],
 	);
 
 	return (

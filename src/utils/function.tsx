@@ -173,6 +173,8 @@ export const getOrderSlipStatus = (status, percentage, osdrStatus = null) => {
 			if (osdrStatus === OSDRStatus.ERROR) {
 				return <BadgePill label="Received (Error)" variant="error" />;
 			}
+
+			return <BadgePill label="Received" />;
 		}
 	}
 };

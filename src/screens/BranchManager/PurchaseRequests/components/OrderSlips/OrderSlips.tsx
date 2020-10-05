@@ -10,10 +10,10 @@ import {
 } from '../../../../../ducks/purchase-requests';
 import { purchaseRequestActions, request } from '../../../../../global/types';
 import { useActionDispatch } from '../../../../../hooks/useActionDispatch';
-import { ViewOrderSlipModal } from '../../../../OfficeManager/PurchaseRequests/components/OrderSlips/ViewOrderSlipModal';
 import { useOrderSlips } from '../../../hooks/useOrderSlips';
 import { OrderSlipsTable } from './OrderSlipsTable';
 import { ReceiveDeliveryReceiptModal } from './ReceiveDeliveryReceiptModal';
+import { ViewOrderSlipModal } from './ViewOrderSlipModal';
 
 interface Props {
 	purchaseRequestId: number;

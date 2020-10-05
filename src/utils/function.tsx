@@ -54,7 +54,7 @@ export const showMessage = (status, successMessage, errorMessage) => {
 	}
 };
 
-export const formatDateTime = (datetime) => moment(datetime).format('MM/DD/YYYY h:mma ');
+export const formatDateTime = memoize((datetime) => moment(datetime).format('MM/DD/YYYY h:mma '));
 
 export const convertToBulk = (pieces, piecesInBulk) => floor(pieces / piecesInBulk);
 
@@ -154,7 +154,7 @@ export const getPurchaseRequestProductStatus = memoize((status) => {
 	}
 });
 
-export const getOrderSlipStatus = memoize((status, percentage) => {
+export const getOrderSlipStatus = (status, percentage, osdrStatus = null) => {
 	switch (status) {
 		case orderSlipStatus.PREPARING: {
 			return <BadgePill label={`Preparing (${percentage}%)`} />;
@@ -166,10 +166,16 @@ export const getOrderSlipStatus = memoize((status, percentage) => {
 			return <BadgePill label="Delivered" variant="secondary" />;
 		}
 		case orderSlipStatus.RECEIVED: {
-			return <BadgePill label="Received" variant="primary" />;
+			if (osdrStatus === OSDRStatus.DONE) {
+				return <BadgePill label="Received (Done)" variant="primary" />;
+			}
+
+			if (osdrStatus === OSDRStatus.ERROR) {
+				return <BadgePill label="Received (Error)" variant="error" />;
+			}
 		}
 	}
-});
+};
 
 export const getPreparationSlipStatus = memoize((status) => {
 	switch (status) {

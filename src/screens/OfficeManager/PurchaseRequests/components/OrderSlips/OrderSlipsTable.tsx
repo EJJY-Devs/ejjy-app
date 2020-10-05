@@ -6,7 +6,6 @@ import {
 	calculateTableHeight,
 	formatDateTime,
 	getOrderSlipStatus,
-	getOSDRStatus,
 	sleep,
 } from '../../../../../utils/function';
 import { OrderSlipActions } from './OrderSlipActions';
@@ -15,7 +14,7 @@ const orderSlipsColumns = [
 	{ title: 'ID', dataIndex: 'id' },
 	{ title: 'Date & Time Created', dataIndex: 'datetime_created' },
 	{ title: 'Status', dataIndex: 'status' },
-	{ title: 'DR Status', dataIndex: 'dr_status' },
+	{ title: 'DR', dataIndex: 'dr' },
 	{ title: 'Actions', dataIndex: 'actions' },
 ];
 
@@ -46,18 +45,23 @@ export const OrderSlipsTable = ({
 			const formattedOrderSlips = orderSlips.map((orderSlip) => {
 				const { id, datetime_created, status, delivery_receipt } = orderSlip;
 				const { value, percentage_fulfilled } = status;
-
-				const onViewDR =
-					value === osStatus.RECEIVED ? () => onViewDeliveryReceipt(orderSlip) : null;
+				console.log(orderSlip);
+				const deliveryReceipt =
+					value === osStatus.RECEIVED ? (
+						<ButtonLink
+							text={delivery_receipt?.id}
+							onClick={() => onViewDeliveryReceipt(orderSlip)}
+						/>
+					) : null;
 				const onEdit = value === osStatus.PREPARING ? () => onEditOrderSlip(orderSlip) : null;
 				const onCreateDR = value === osStatus.PREPARED ? () => onCreateDeliveryReceipt(id) : null;
 
 				return {
 					id: <ButtonLink text={id} onClick={() => onViewOrderSlip(orderSlip)} />,
 					datetime_created: formatDateTime(datetime_created),
-					status: getOrderSlipStatus(value, percentage_fulfilled * 100),
-					dr_status: getOSDRStatus(delivery_receipt?.status),
-					actions: <OrderSlipActions onView={onViewDR} onEdit={onEdit} onCreateDR={onCreateDR} />,
+					status: getOrderSlipStatus(value, percentage_fulfilled * 100, delivery_receipt?.status),
+					dr: deliveryReceipt,
+					actions: <OrderSlipActions onEdit={onEdit} onCreateDR={onCreateDR} />,
 				};
 			});
 			sleep(500).then(() => setOrderSlipsData(formattedOrderSlips));

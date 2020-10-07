@@ -5,7 +5,7 @@ import './style.scss';
 interface Item {
 	id: string;
 	label: string;
-	value: string;
+	value: string | boolean;
 }
 
 interface Props {

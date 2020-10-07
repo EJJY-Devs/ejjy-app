@@ -27,7 +27,15 @@ export const ViewBranchProductModal = ({ branchProduct, branchName, visible, onC
 
 				<Divider dashed />
 
-				<DetailsHalf label="Reorder Point'" value={branchProduct?.reorder_point} />
+				<DetailsHalf
+					label="Is Daily Checked?"
+					value={branchProduct?.is_daily_checked ? 'Yes' : 'No'}
+				/>
+				<DetailsHalf
+					label="Is Randomly Checked?"
+					value={branchProduct?.is_randomly_checked ? 'Yes' : 'No'}
+				/>
+				<DetailsHalf label="Reorder Point" value={branchProduct?.reorder_point} />
 				<DetailsHalf label="Max Balance" value={branchProduct?.max_balance} />
 				<DetailsHalf label="Price (Piece)" value={branchProduct?.price_per_piece} />
 				<DetailsHalf label="Price (Bulk)" value={branchProduct?.price_per_bulk} />

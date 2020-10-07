@@ -1,9 +1,15 @@
 import { Col, Divider } from 'antd';
-import { Field, Form, Formik } from 'formik';
+import { Form, Formik } from 'formik';
 import React, { useCallback, useState } from 'react';
 import * as Yup from 'yup';
 import { DetailsRow, DetailsSingle } from '../../../../../components';
-import { Button, FieldError, FormInputLabel } from '../../../../../components/elements';
+import {
+	Button,
+	FieldError,
+	FormInputLabel,
+	FormRadioButton,
+	Label,
+} from '../../../../../components/elements';
 import { productTypes, unitOfMeasurementTypes } from '../../../../../global/types';
 import { sleep } from '../../../../../utils/function';
 
@@ -38,9 +44,11 @@ export const EditBranchProductsForm = ({
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: {
+				product_id: branchProduct?.product_id || '',
+				is_daily_checked: branchProduct?.is_daily_checked?.toString(),
+				is_randomly_checked: branchProduct?.is_randomly_checked?.toString(),
 				type: branchProduct?.product?.type,
 				unit_of_measurement: branchProduct?.product?.unit_of_measurement,
-				product_id: branchProduct?.product_id || '',
 				reorder_point: branchProduct?.reorder_point || '',
 				max_balance: branchProduct?.max_balance || '',
 				price_per_piece: branchProduct?.price_per_piece || '',
@@ -49,7 +57,6 @@ export const EditBranchProductsForm = ({
 				allowable_spoilage: branchProduct?.allowable_spoilage * 100 || '',
 			},
 			Schema: Yup.object().shape({
-				product_id: Yup.number().required().label('Product'),
 				reorder_point: Yup.number().required().min(0).max(65535).label('Reorder Point'),
 				max_balance: Yup.number().required().min(0).max(65535).label('Max Balance'),
 				price_per_piece: Yup.number().required().min(0).label('Price per Piece'),
@@ -71,6 +78,32 @@ export const EditBranchProductsForm = ({
 		[branchProduct],
 	);
 
+	const dailyChecking = [
+		{
+			id: 'daily-no',
+			label: 'No',
+			value: 'false',
+		},
+		{
+			id: 'daily-yes',
+			label: 'Yes',
+			value: 'true',
+		},
+	];
+
+	const randomChecking = [
+		{
+			id: 'random-no',
+			label: 'No',
+			value: 'false',
+		},
+		{
+			id: 'random-yes',
+			label: 'Yes',
+			value: 'true',
+		},
+	];
+
 	return (
 		<Formik
 			initialValues={getFormDetails().DefaultValues}
@@ -88,8 +121,6 @@ export const EditBranchProductsForm = ({
 		>
 			{({ values, errors, touched }) => (
 				<Form className="form">
-					<Field type="hidden" name="product_id" />
-
 					<DetailsRow>
 						<DetailsSingle label="Barcode" value={branchProduct?.product?.id} />
 						<DetailsSingle label="Name" value={branchProduct?.product?.name} />
@@ -97,14 +128,22 @@ export const EditBranchProductsForm = ({
 						<Divider dashed />
 
 						<Col sm={12} xs={24}>
-							<FormInputLabel min={0} type="number" id="reorder_point" label="Reorder Point" />
-							{errors.reorder_point && touched.reorder_point ? (
-								<FieldError error={errors.reorder_point} />
+							<Label label="Is Daily Checked?" spacing />
+							<FormRadioButton name="is_daily_checked" items={dailyChecking} />
+							{errors.is_daily_checked && touched.is_daily_checked ? (
+								<FieldError error={errors.is_daily_checked} />
 							) : null}
 						</Col>
 
 						<Col sm={12} xs={24}>
-							<Field type="hidden" name="product_id" />
+							<Label label="Is Randomly Checked?" spacing />
+							<FormRadioButton name="is_randomly_checked" items={randomChecking} />
+							{errors.is_randomly_checked && touched.is_randomly_checked ? (
+								<FieldError error={errors.is_randomly_checked} />
+							) : null}
+						</Col>
+
+						<Col sm={12} xs={24}>
 							<FormInputLabel min={0} type="number" id="reorder_point" label="Reorder Point" />
 							{errors.reorder_point && touched.reorder_point ? (
 								<FieldError error={errors.reorder_point} />

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Table } from '../../../../../components';
 import { ButtonLink } from '../../../../../components/elements';
-import { orderSlipStatus as osStatus, request } from '../../../../../global/types';
+import { orderSlipStatus as osStatus } from '../../../../../global/types';
 import {
 	calculateTableHeight,
 	formatDateTime,
@@ -10,7 +11,7 @@ import {
 } from '../../../../../utils/function';
 import { OrderSlipActions } from './OrderSlipActions';
 
-const orderSlipsColumns = [
+const columns = [
 	{ title: 'ID', dataIndex: 'id' },
 	{ title: 'Date & Time Created', dataIndex: 'datetime_created' },
 	{ title: 'Status', dataIndex: 'status' },
@@ -20,8 +21,6 @@ const orderSlipsColumns = [
 
 interface Props {
 	orderSlips: any;
-	orderSlipStatus: any;
-	onViewDeliveryReceipt: any;
 	onViewOrderSlip: any;
 	onEditOrderSlip: any;
 	onCreateDeliveryReceipt: any;
@@ -30,8 +29,6 @@ interface Props {
 
 export const OrderSlipsTable = ({
 	orderSlips,
-	orderSlipStatus,
-	onViewDeliveryReceipt,
 	onViewOrderSlip,
 	onEditOrderSlip,
 	onCreateDeliveryReceipt,
@@ -41,17 +38,16 @@ export const OrderSlipsTable = ({
 
 	// Effect: Format order slips to be rendered in Table
 	useEffect(() => {
-		if (orderSlipStatus === request.SUCCESS) {
+		if (orderSlips) {
 			const formattedOrderSlips = orderSlips.map((orderSlip) => {
 				const { id, datetime_created, status, delivery_receipt } = orderSlip;
 				const { value, percentage_fulfilled } = status;
 
 				const deliveryReceipt =
 					value === osStatus.RECEIVED ? (
-						<ButtonLink
-							text={delivery_receipt?.id}
-							onClick={() => onViewDeliveryReceipt(orderSlip)}
-						/>
+						<Link to={`/purchase-requests/delivery-receipt/${delivery_receipt?.id}`}>
+							{delivery_receipt?.id}
+						</Link>
 					) : null;
 				const onEdit = value === osStatus.PREPARING ? () => onEditOrderSlip(orderSlip) : null;
 				const onCreateDR = value === osStatus.PREPARED ? () => onCreateDeliveryReceipt(id) : null;
@@ -66,21 +62,14 @@ export const OrderSlipsTable = ({
 			});
 			sleep(500).then(() => setOrderSlipsData(formattedOrderSlips));
 		}
-	}, [
-		orderSlips,
-		orderSlipStatus,
-		onViewDeliveryReceipt,
-		onEditOrderSlip,
-		onCreateDeliveryReceipt,
-		onViewOrderSlip,
-	]);
+	}, [orderSlips, onEditOrderSlip, onCreateDeliveryReceipt, onViewOrderSlip]);
 
 	return (
 		<Table
-			columns={orderSlipsColumns}
+			columns={columns}
 			dataSource={orderSlipsData}
 			scroll={{ y: calculateTableHeight(orderSlipsData.length), x: '100%' }}
-			loading={orderSlipStatus === request.REQUESTING || loading}
+			loading={loading}
 		/>
 	);
 };

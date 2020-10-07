@@ -1,9 +1,9 @@
 import { Col, Row } from 'antd';
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Label } from '../elements';
 
 interface Props {
-	value: string | number;
+	value: string | number | ReactNode;
 	label: string;
 }
 

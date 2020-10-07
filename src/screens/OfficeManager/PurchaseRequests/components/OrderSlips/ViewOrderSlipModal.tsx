@@ -52,8 +52,6 @@ export const ViewOrderSlipModal = ({ orderSlip, visible, onClose }: Props) => {
 					),
 					`${first_name} ${last_name}`,
 				]);
-
-				return;
 			});
 
 			setRequestedProducts(formattedPreparationSlip);

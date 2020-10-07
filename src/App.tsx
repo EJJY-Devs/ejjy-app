@@ -12,6 +12,7 @@ import {
 	PurchaseRequestsScreens,
 	UsersScreens,
 	ViewBranchScreens,
+	ViewDeliveryReceiptScreens,
 	ViewPurchaseRequestScreens,
 } from './utils/routeMapping';
 
@@ -25,6 +26,11 @@ const App = () => (
 		<CommonRoute path="/branches/:id" exact component={ViewBranchScreens} />
 		<CommonRoute path="/purchase-requests" exact component={PurchaseRequestsScreens} />
 		<CommonRoute path="/purchase-requests/:id" exact component={ViewPurchaseRequestScreens} />
+		<CommonRoute
+			path="/purchase-requests/delivery-receipt/:id"
+			exact
+			component={ViewDeliveryReceiptScreens}
+		/>
 		<CommonRoute path="/users" exact component={UsersScreens} />
 		<CommonRoute path="/notifications" exact component={NotificationsScreens} />
 		<CommonRoute path="/order-slips" exact component={OrderSlipsScreens} />

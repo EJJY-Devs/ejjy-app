@@ -51,6 +51,8 @@ const ViewPurchaseRequest = ({ match }: Props) => {
 			title="[VIEW] F-RS01"
 			rightTitle={`#${purchaseRequest?.id}`}
 			breadcrumb={<Breadcrumb items={getBreadcrumbItems()} />}
+			loading={purchaseRequestStatus === request.REQUESTING}
+			loadingText="Fetching purchase request..."
 		>
 			<section className="ViewPurchaseRequest">
 				<RequestedProducts

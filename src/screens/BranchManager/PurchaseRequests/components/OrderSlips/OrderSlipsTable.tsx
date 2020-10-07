@@ -9,7 +9,7 @@ import {
 	sleep,
 } from '../../../../../utils/function';
 
-const orderSlipsColumns = [
+const columns = [
 	{ title: 'ID', dataIndex: 'id' },
 	{ title: 'Date & Time Created', dataIndex: 'datetime_created' },
 	{ title: 'Status', dataIndex: 'status' },
@@ -57,7 +57,7 @@ export const OrderSlipsTable = ({
 
 	return (
 		<Table
-			columns={orderSlipsColumns}
+			columns={columns}
 			dataSource={orderSlipsData}
 			scroll={{ y: calculateTableHeight(orderSlipsData.length), x: '100%' }}
 			loading={orderSlipStatus === request.REQUESTING}

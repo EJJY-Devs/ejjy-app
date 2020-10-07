@@ -23,7 +23,6 @@ import { useDeliveryReceipt } from '../../../hooks/useDeliveryReceipt';
 import { useOrderSlips } from '../../../hooks/useOrderSlips';
 import { CreateEditOrderSlipModal } from './CreateEditOrderSlipModal';
 import { OrderSlipsTable } from './OrderSlipsTable';
-import { ViewDeliveryReceiptModal } from './ViewDeliveryReceiptModal';
 import { ViewOrderSlipModal } from './ViewOrderSlipModal';
 
 interface Props {
@@ -41,7 +40,6 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 	// State: Modal
 	const [viewOrderSlipVisible, setViewOrderSlipVisible] = useState(false);
 	const [createEditOrderSlipVisible, setCreateEditOrderSlipVisible] = useState(false);
-	const [viewDeliveryReceiptVisible, setViewDeliveryReceiptVisible] = useState(false);
 
 	const branches = useSelector(branchesSelectors.selectBranches());
 
@@ -201,11 +199,6 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 		setCreateEditOrderSlipVisible(true);
 	};
 
-	const onViewDeliveryReceipt = (orderSlip) => {
-		setSelectedOrderSlip(orderSlip);
-		setViewDeliveryReceiptVisible(true);
-	};
-
 	const onCreateDeliveryReceipt = (id) => {
 		createDeliveryReceipt(id);
 	};
@@ -225,18 +218,12 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 
 			<OrderSlipsTable
 				orderSlips={orderSlips}
-				orderSlipStatus={orderSlipStatus}
 				onViewOrderSlip={onViewOrderSlip}
 				onEditOrderSlip={onEditOrderSlip}
-				onViewDeliveryReceipt={onViewDeliveryReceipt}
 				onCreateDeliveryReceipt={onCreateDeliveryReceipt}
-				loading={deliveryReceiptStatus === request.REQUESTING}
-			/>
-
-			<ViewDeliveryReceiptModal
-				visible={viewDeliveryReceiptVisible}
-				orderSlip={selectedOrderSlip}
-				onClose={() => setViewDeliveryReceiptVisible(false)}
+				loading={
+					deliveryReceiptStatus === request.REQUESTING || orderSlipStatus === request.REQUESTING
+				}
 			/>
 
 			<ViewOrderSlipModal

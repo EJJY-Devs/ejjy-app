@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Container, Table, TableHeader } from '../../../components';
 import { Box } from '../../../components/elements';
 import { selectors as authSelectors } from '../../../ducks/auth';
-import { EMPTY_PR_PROGRESS } from '../../../global/constants';
+import { EMPTY_CELL } from '../../../global/constants';
 import { purchaseRequestActionsOptionsWithAll } from '../../../global/options';
 import { request } from '../../../global/types';
 import { useBranchProducts } from '../../../hooks/useBranchProducts';
@@ -56,9 +56,9 @@ const PurchaseRequests = () => {
 			const dateTime = formatDateTime(datetime_created);
 
 			const isOwnPurchaseRequest = user?.branch?.id === requesting_user.branch.id;
-			const _action = isOwnPurchaseRequest ? getPurchaseRequestStatus(action) : EMPTY_PR_PROGRESS;
-			let _progress = progress ? `${progress.current} / ${progress.total}` : EMPTY_PR_PROGRESS;
-			_progress = isOwnPurchaseRequest ? _progress : EMPTY_PR_PROGRESS;
+			const _action = isOwnPurchaseRequest ? getPurchaseRequestStatus(action) : EMPTY_CELL;
+			let _progress = progress ? `${progress.current} / ${progress.total}` : EMPTY_CELL;
+			_progress = isOwnPurchaseRequest ? _progress : EMPTY_CELL;
 
 			return {
 				_id: id,

@@ -45,8 +45,6 @@ export const ViewPreparationSlipModal = ({ preparationSlip, visible, onClose }: 
 						quantity.piecesOrdered,
 					),
 				]);
-
-				return;
 			});
 
 			setRequestedProducts(formattedPreparationSlip);

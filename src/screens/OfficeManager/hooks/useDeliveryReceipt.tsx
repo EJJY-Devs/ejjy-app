@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { actions, selectors, types } from '../../../ducks/OfficeManager/delivery-receipts';
 import { request } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
-import { modifiedCallback } from '../../../utils/function';
+import { modifiedCallback, modifiedExtraCallback } from '../../../utils/function';
 
 const CREATE_SUCCESS_MESSAGE = 'Delivery receipt created successfully';
 const CREATE_ERROR_MESSAGE = 'An error occurred while creating the delivery receipt';
@@ -26,9 +26,9 @@ export const useDeliveryReceipt = () => {
 
 	const resetStatus = () => setStatus(request.NONE);
 
-	const getDeliveryReceiptByIdRequest = (id) => {
+	const getDeliveryReceiptByIdRequest = (id, extraCallback = null) => {
 		setRecentRequest(types.GET_DELIVERY_RECEIPT_BY_ID);
-		getDeliveryReceiptById({ id, callback });
+		getDeliveryReceiptById({ id, callback: modifiedExtraCallback(callback, extraCallback) });
 	};
 
 	const createDeliveryReceiptRequest = (order_slip_id) => {

@@ -17,6 +17,7 @@ import {
 	OfficeManagerPurchaseRequests,
 	OfficeManagerUsers,
 	OfficeManagerViewBranch,
+	OfficeManagerViewDeliveryReceipt,
 	OfficeManagerViewPurchaseRequest,
 } from '../screens';
 
@@ -48,6 +49,10 @@ export const PurchaseRequestsScreens = {
 export const ViewPurchaseRequestScreens = {
 	[userTypes.OFFICE_MANAGER]: OfficeManagerViewPurchaseRequest,
 	[userTypes.BRANCH_MANAGER]: BranchManagerViewPurchaseRequest,
+};
+
+export const ViewDeliveryReceiptScreens = {
+	[userTypes.OFFICE_MANAGER]: OfficeManagerViewDeliveryReceipt,
 };
 
 export const OrderSlipsScreens = {

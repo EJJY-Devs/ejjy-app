@@ -30,4 +30,22 @@
 			}
 		}
 	}
+
+	&.page {
+		table {
+			thead {
+				th {
+					padding-left: 25px !important;
+					padding-right: 25px !important;
+				}
+			}
+
+			tbody {
+				td {
+					padding-left: 25px !important;
+					padding-right: 25px !important;
+				}
+			}
+		}
+	}
 }

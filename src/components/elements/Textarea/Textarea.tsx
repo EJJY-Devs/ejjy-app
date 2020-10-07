@@ -3,32 +3,25 @@ import './style.scss';
 
 interface Props {
 	id?: string;
-	type?: string;
 	placeholder?: string;
 	disabled?: boolean;
-	max?: number;
-	min?: number;
 	onChange: any;
 }
 
-const Input = ({ type, id, max, min, placeholder, onChange, disabled }: Props) => (
-	<input
-		type={type}
+const Textarea = ({ id, placeholder, onChange, disabled }: Props) => (
+	<textarea
 		id={id}
 		name={id}
-		className="Input"
+		className="Textarea"
 		placeholder={placeholder}
-		max={max}
-		min={min}
 		disabled={disabled}
 		onChange={(event) => onChange(event.target.value)}
 	/>
 );
 
-Input.defaultProps = {
-	type: 'text',
+Textarea.defaultProps = {
 	placeholder: '',
 	disabled: false,
 };
 
-export default Input;
+export default Textarea;

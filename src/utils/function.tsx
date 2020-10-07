@@ -26,7 +26,7 @@ import {
 	SeenBadgePill,
 } from '../components';
 import { BadgePill } from '../components/elements';
-import { EMPTY_DR_STATUS } from '../global/constants';
+import { EMPTY_CELL } from '../global/constants';
 import {
 	branchProductStatus,
 	deliveryReceiptStatus,
@@ -54,7 +54,9 @@ export const showMessage = (status, successMessage, errorMessage) => {
 	}
 };
 
-export const formatDateTime = memoize((datetime) => moment(datetime).format('MM/DD/YYYY h:mma '));
+export const formatDateTime = memoize((datetime) => moment(datetime).format('MM/DD/YYYY h:mma'));
+
+export const formatDate = memoize((date) => moment(date).format('MM/DD/YYYY'));
 
 export const convertToBulk = (pieces, piecesInBulk) => floor(pieces / piecesInBulk);
 
@@ -213,21 +215,22 @@ export const getOSDRStatus = memoize((status) => {
 			return <ErrorBadgePill />;
 		}
 		default: {
-			return EMPTY_DR_STATUS;
+			return EMPTY_CELL;
 		}
 	}
 });
 
-export const getDeliveryReceiptStatus = memoize((status) => {
+export const getDeliveryReceiptStatus = memoize((key, status, isAdjusted) => {
+	const isAdjustedText = isAdjusted ? '(Adjusted)' : '';
 	switch (status) {
 		case deliveryReceiptStatus.RESOLVED: {
-			return <BadgePill label="Resolved" variant="primary" />;
+			return <BadgePill label={`Resolved ${isAdjustedText}`} variant="primary" />;
 		}
 		case deliveryReceiptStatus.INVESTIGATION: {
-			return <BadgePill label="Investigation" variant="secondary" />;
+			return <BadgePill label={`Investigation ${isAdjustedText}`} variant="secondary" />;
 		}
 		default: {
-			return EMPTY_DR_STATUS;
+			return EMPTY_CELL;
 		}
 	}
 });

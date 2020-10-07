@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Divider, Modal, Spin } from 'antd';
+import { Divider, Modal } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { FieldError } from '../../../../../components/elements';
-import { types } from '../../../../../ducks/BranchManager/delivery-receipts';
 import { selectors as authSelectors } from '../../../../../ducks/auth';
-import { request, orderSlipStatus, purchaseRequestActions } from '../../../../../global/types';
+import { types } from '../../../../../ducks/BranchManager/delivery-receipts';
+import { orderSlipStatus, purchaseRequestActions, request } from '../../../../../global/types';
 import { useDeliveryReceipt } from '../../../hooks/useDeliveryReceipt';
 import { PurchaseRequestDetails, purchaseRequestDetailsType } from '../PurchaseRequestDetails';
 import { ReceiveDeliveryReceiptForm } from './ReceiveDeliveryReceiptForm';
@@ -55,11 +55,6 @@ export const ReceiveDeliveryReceiptModal = ({
 		}
 	}, [status, recentRequest]);
 
-	const isFetching = useCallback(
-		() => status === request.REQUESTING && recentRequest === types.GET_DELIVERY_RECEIPT_BY_ID,
-		[status, recentRequest],
-	);
-
 	const isReceiving = useCallback(
 		() => status === request.REQUESTING && recentRequest === types.RECEIVE_DELIVERY_RECEIPT,
 		[status, recentRequest],
@@ -91,25 +86,23 @@ export const ReceiveDeliveryReceiptModal = ({
 			centered
 			closable
 		>
-			<Spin size="large" spinning={isFetching()}>
-				{errors.map((error, index) => (
-					<FieldError key={index} error={error} />
-				))}
+			{errors.map((error, index) => (
+				<FieldError key={index} error={error} />
+			))}
 
-				<PurchaseRequestDetails
-					purchaseRequest={purchaseRequest}
-					type={purchaseRequestDetailsType.CREATE_EDIT}
-				/>
+			<PurchaseRequestDetails
+				purchaseRequest={purchaseRequest}
+				type={purchaseRequestDetailsType.CREATE_EDIT}
+			/>
 
-				<Divider dashed />
+			<Divider dashed />
 
-				<ReceiveDeliveryReceiptForm
-					products={products}
-					onSubmit={onReceiveDeliveryReceiptSubmit}
-					onClose={onClose}
-					loading={isReceiving()}
-				/>
-			</Spin>
+			<ReceiveDeliveryReceiptForm
+				products={products}
+				onSubmit={onReceiveDeliveryReceiptSubmit}
+				onClose={onClose}
+				loading={isReceiving()}
+			/>
 		</Modal>
 	);
 };

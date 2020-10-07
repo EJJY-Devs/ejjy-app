@@ -1,6 +1,13 @@
 @import '../../../assets/styles/main';
 
-.PurchaseRequests {
+.ViewDeliveryReceipt {
+	.details {
+		padding: 25px 25px 0 25px;
+	}
+
+	.received-products {
+		padding: 0 25px 10px 25px;
+	}
 }
 
 .ViewPurchaseRequest {

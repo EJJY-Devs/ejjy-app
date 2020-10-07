@@ -15,7 +15,7 @@ export const Breadcrumb = ({ items }: Props) => {
 	return (
 		<div className="Breadcrumb">
 			{items.map(({ name, link }, index) => (
-				<div className="item" key={name}>
+				<div className="item" key={`${name}-${index}`}>
 					{index === items.length - 1 ? (
 						<span className="last">{name}</span>
 					) : (

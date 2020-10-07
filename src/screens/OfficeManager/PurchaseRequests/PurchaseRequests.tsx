@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { Container, Table, TableHeader } from '../../../components';
 import { Box } from '../../../components/elements';
 import { types } from '../../../ducks/purchase-requests';
-import { EMPTY_PR_PROGRESS } from '../../../global/constants';
+import { EMPTY_CELL } from '../../../global/constants';
 import { purchaseRequestActionsOptionsWithAll } from '../../../global/options';
 import { request } from '../../../global/types';
 import { usePurchaseRequests } from '../../../hooks/usePurchaseRequests';
@@ -35,7 +35,7 @@ const PurchaseRequests = () => {
 		status,
 		recentRequest,
 	} = usePurchaseRequests();
-	console.log(purchaseRequests);
+
 	useEffect(() => {
 		getPurchaseRequestsExtended();
 	}, []);
@@ -58,7 +58,7 @@ const PurchaseRequests = () => {
 				requestor: requesting_user.branch.name,
 				type: upperFirst(type),
 				action: getPurchaseRequestStatus(action),
-				progress: progress ? `${progress.current} / ${progress.total}` : EMPTY_PR_PROGRESS,
+				progress: progress ? `${progress.current} / ${progress.total}` : EMPTY_CELL,
 			};
 		});
 

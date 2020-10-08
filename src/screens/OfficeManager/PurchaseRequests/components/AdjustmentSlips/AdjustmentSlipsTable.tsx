@@ -32,6 +32,7 @@ export const AdjustmentSlipsTable = ({ adjustmentSlips, onViewAdjustmentSlip, lo
 		}
 	}, [adjustmentSlips, onViewAdjustmentSlip]);
 
+	console.log(adjustmentSlipsData);
 	return (
 		<Table
 			columns={columns}

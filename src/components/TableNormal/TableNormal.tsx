@@ -36,7 +36,7 @@ export const TableNormal = ({ columns, data, loading, displayInPage }: Props) =>
 						</tr>
 					</thead>
 					<tbody>
-						{data.map((row, index) => {
+						{data?.map((row, index) => {
 							if (row?.isCustom) {
 								return (
 									<tr key={`tr-${index}`} style={{ height: `${row?.height || ROW_HEIGHT}px` }}>

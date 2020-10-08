@@ -28,7 +28,7 @@ export const AdjustmentSlips = ({ deliveryReceipt }: Props) => {
 
 	// Effect: Fetch adjustment slips
 	useEffect(() => {
-		if (deliveryReceipt) {
+		if (deliveryReceipt?.id) {
 			getAdjustmentSlipsByDeliveryReceiptId(deliveryReceipt?.id);
 		}
 	}, [deliveryReceipt]);

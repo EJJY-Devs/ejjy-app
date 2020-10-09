@@ -26,7 +26,8 @@ const columns = [
 
 interface Props {
 	orderSlip: any;
-	branchProducts: any;
+	requestedProducts: any;
+	assignedPersonnelOptions: any;
 	onSubmit: any;
 	onClose: any;
 	loading: boolean;
@@ -39,7 +40,7 @@ export const CreateEditOrderSlipForm = ({
 	onSubmit,
 	onClose,
 	loading,
-}) => {
+}: Props) => {
 	const [isSubmitting, setSubmitting] = useState(false);
 
 	const getFormDetails = useCallback(

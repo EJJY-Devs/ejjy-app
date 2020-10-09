@@ -26,7 +26,7 @@ interface IEditPurchaseRequest {
 }
 
 interface IBranchIdGetRequestPurchaseRequest {
-	preparing_branch_id: number;
+	preparing_branch_id?: number;
 }
 
 export const service = {

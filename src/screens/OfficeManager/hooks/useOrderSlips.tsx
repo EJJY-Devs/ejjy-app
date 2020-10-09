@@ -5,6 +5,10 @@ import { request } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
 import { modifiedCallback } from '../../../utils/function';
 
+const SET_OUT_OF_STOCK_SUCCESS_MESSAGE = 'Product/s set to out of stocks successfully';
+const SET_OUT_OF_STOCK_ERROR_MESSAGE =
+	'An error occurred while setting the product/s as out of stock';
+
 const CREATE_SUCCESS_MESSAGE = 'Order slip created successfully';
 const CREATE_ERROR_MESSAGE = 'An error occurred while creating the order slip';
 
@@ -53,6 +57,18 @@ export const useOrderSlips = () => {
 		});
 	};
 
+	const setOutOfStockRequest = (orderSlip) => {
+		setRecentRequest(types.CREATE_ORDER_SLIP);
+		createOrderSlip({
+			...orderSlip,
+			callback: modifiedCallback(
+				callback,
+				SET_OUT_OF_STOCK_SUCCESS_MESSAGE,
+				SET_OUT_OF_STOCK_ERROR_MESSAGE,
+			),
+		});
+	};
+
 	const editOrderSlipRequest = (orderSlip) => {
 		setRecentRequest(types.EDIT_ORDER_SLIP);
 		editOrderSlip({
@@ -81,6 +97,7 @@ export const useOrderSlips = () => {
 		createOrderSlip: createOrderSlipRequest,
 		editOrderSlip: editOrderSlipRequest,
 		removeOrderSlip: removeOrderSlipRequest,
+		setOutOfStock: setOutOfStockRequest,
 		status,
 		errors,
 		recentRequest,

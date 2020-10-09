@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { TableHeader } from '../../../../../components';
+import { TableHeaderOrderSlip } from '../../../../../components';
 import { Box } from '../../../../../components/elements';
 import { selectors as branchesSelectors } from '../../../../../ducks/OfficeManager/branches';
 import { types as orderSlipsTypes } from '../../../../../ducks/order-slips';
@@ -23,6 +23,7 @@ import { useDeliveryReceipt } from '../../../hooks/useDeliveryReceipt';
 import { useOrderSlips } from '../../../hooks/useOrderSlips';
 import { CreateEditOrderSlipModal } from './CreateEditOrderSlipModal';
 import { OrderSlipsTable } from './OrderSlipsTable';
+import { SetOutOfStockModal } from './SetOutOfStockModal';
 import { ViewOrderSlipModal } from './ViewOrderSlipModal';
 
 interface Props {
@@ -40,6 +41,7 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 	// State: Modal
 	const [viewOrderSlipVisible, setViewOrderSlipVisible] = useState(false);
 	const [createEditOrderSlipVisible, setCreateEditOrderSlipVisible] = useState(false);
+	const [createOutOfStockSlipVisible, setCreateOutOfStockVisible] = useState(false);
 
 	const branches = useSelector(branchesSelectors.selectBranches());
 
@@ -188,6 +190,11 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 		setCreateEditOrderSlipVisible(true);
 	};
 
+	const onCreateOutOfStock = () => {
+		setSelectedOrderSlip(null);
+		setCreateOutOfStockVisible(true);
+	};
+
 	const onViewOrderSlip = (orderSlip) => {
 		setSelectedOrderSlip(orderSlip);
 		setViewOrderSlipVisible(true);
@@ -205,7 +212,7 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 
 	return (
 		<Box>
-			<TableHeader
+			<TableHeaderOrderSlip
 				title="F-OS1"
 				buttonName="Create Order Slip"
 				onCreate={onCreateOrderSlip}
@@ -214,6 +221,7 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 						purchaseRequest?.action?.action,
 					)
 				}
+				onOutOfStock={onCreateOutOfStock}
 			/>
 
 			<OrderSlipsTable
@@ -240,6 +248,12 @@ export const OrderSlips = ({ purchaseRequestId }: Props) => {
 				onChangePreparingBranch={onChangePreparingBranch}
 				visible={createEditOrderSlipVisible}
 				onClose={() => setCreateEditOrderSlipVisible(false)}
+			/>
+
+			<SetOutOfStockModal
+				purchaseRequestId={purchaseRequest?.id}
+				visible={createOutOfStockSlipVisible}
+				onClose={() => setCreateOutOfStockVisible(false)}
 			/>
 		</Box>
 	);

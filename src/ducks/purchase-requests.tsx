@@ -22,6 +22,7 @@ const initialState = {
 	purchaseRequests: [],
 	purchaseRequest: null,
 	purchaseRequestsByBranch: {},
+	purchaseRequestForOutOfStock: null,
 };
 
 const reducer = handleActions(
@@ -42,7 +43,13 @@ const reducer = handleActions(
 				}
 				case types.GET_PURCHASE_REQUEST_BY_ID_AND_BRANCH: {
 					const purchaseRequestsByBranch = cloneDeep(state.purchaseRequestsByBranch);
-					purchaseRequestsByBranch[payload?.branchId] = payload.purchaseRequest;
+					if (payload?.branchId) {
+						purchaseRequestsByBranch[payload?.branchId] = payload.purchaseRequest;
+					} else {
+						newData = { purchaseRequestForOutOfStock: payload.purchaseRequest };
+						break;
+					}
+
 					newData = { purchaseRequestsByBranch };
 					break;
 				}
@@ -94,6 +101,8 @@ export const selectors = {
 	selectPurchaseRequest: () => createSelector(selectState, (state) => state.purchaseRequest),
 	selectPurchaseRequestsByBranch: () =>
 		createSelector(selectState, (state) => state.purchaseRequestsByBranch),
+	selectPurchaseRequestForOutOfStock: () =>
+		createSelector(selectState, (state) => state.purchaseRequestForOutOfStock),
 	selectPurchaseRequests: () => createSelector(selectState, (state) => state.purchaseRequests),
 	selectPurchaseRequestById: (id) =>
 		createSelector(selectState, (state) =>

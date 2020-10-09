@@ -12,4 +12,5 @@ export * from './QuantitySelect/QuantitySelect';
 export * from './Table/Table';
 export * from './Table/TableActions/TableActions';
 export * from './Table/TableHeaders/TableHeader';
+export * from './Table/TableHeaders/TableHeaderOrderSlip';
 export * from './TableNormal/TableNormal';

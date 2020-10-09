@@ -1,6 +1,6 @@
 import { Layout } from 'antd';
 import cn from 'classnames';
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
@@ -86,6 +86,8 @@ export const Sidebar = () => {
 	const onCollapseSidebar = useActionDispatch(uiActions.onCollapseSidebar);
 	const logout = useActionDispatch(authActions.logout);
 
+	const [popupVisible, setPopupVisible] = useState(false);
+
 	return (
 		<Layout.Sider
 			className={cn('Sidebar', { collapsed: isSidebarCollapsed })}
@@ -108,15 +110,40 @@ export const Sidebar = () => {
 				))}
 			</div>
 
-			<div className="user-details" onClick={logout}>
-				<img
-					src={require('../../../assets/images/sample-avatar.png')}
-					alt="user avatar"
-					className="avatar"
-				/>
-				<div className="user-text-info">
-					<span className="name">{`${user.first_name} ${user.last_name}`}</span>
-					<span className="role">{getUserTypeName(user.user_type)}</span>
+			<div
+				className={cn('bottom', { active: popupVisible })}
+				onClick={() => setPopupVisible((value) => !value)}
+			>
+				<div className="menu">
+					<div className="item">
+						<img
+							src={require(`../../../assets/images/icon-account.svg`)}
+							alt="icon"
+							className="icon"
+						/>
+						<span className="name">Account</span>
+					</div>
+
+					<div className="item" onClick={logout}>
+						<img
+							src={require(`../../../assets/images/icon-logout.svg`)}
+							alt="icon"
+							className="icon"
+						/>
+						<span className="name">Logout</span>
+					</div>
+				</div>
+
+				<div className="user-details">
+					<img
+						src={require('../../../assets/images/sample-avatar.png')}
+						alt="user avatar"
+						className="avatar"
+					/>
+					<div className="user-text-info">
+						<span className="name">{`${user.first_name} ${user.last_name}`}</span>
+						<span className="role">{getUserTypeName(user.user_type)}</span>
+					</div>
 				</div>
 			</div>
 		</Layout.Sider>

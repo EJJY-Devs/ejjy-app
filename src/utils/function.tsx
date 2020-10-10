@@ -226,6 +226,9 @@ export const getDeliveryReceiptStatus = memoize((key, status, isAdjusted) => {
 		case deliveryReceiptStatus.RESOLVED: {
 			return <BadgePill label={`Resolved ${isAdjustedText}`} variant="primary" />;
 		}
+		case deliveryReceiptStatus.DONE: {
+			return <BadgePill label={`Done ${isAdjustedText}`} variant="primary" />;
+		}
 		case deliveryReceiptStatus.INVESTIGATION: {
 			return <BadgePill label={`Investigation ${isAdjustedText}`} variant="secondary" />;
 		}

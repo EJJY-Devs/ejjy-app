@@ -81,4 +81,5 @@ export const OSDRStatus = {
 export const deliveryReceiptStatus = {
 	INVESTIGATION: 'investigation',
 	RESOLVED: 'resolved',
+	DONE: 'done',
 };

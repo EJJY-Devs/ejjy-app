@@ -1,6 +1,6 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, put, retry, takeLatest } from 'redux-saga/effects';
 import { actions, types } from '../ducks/purchase-requests';
-import { MAX_PAGE_SIZE } from '../global/constants';
+import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../global/constants';
 import { request } from '../global/types';
 import { service } from '../services/purchase-requests';
 
@@ -10,7 +10,7 @@ function* list({ payload }: any) {
 	callback({ status: request.REQUESTING });
 
 	try {
-		const response = yield call(service.list, {
+		const response = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.list, {
 			page: 1,
 			page_size: MAX_PAGE_SIZE,
 		});
@@ -29,7 +29,7 @@ function* listExtended({ payload }: any) {
 	callback({ status: request.REQUESTING });
 
 	try {
-		const response = yield call(service.listExtended, {
+		const response = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.listExtended, {
 			page: 1,
 			page_size: MAX_PAGE_SIZE,
 		});
@@ -51,7 +51,13 @@ function* getByIdAndBranch({ payload }: any) {
 	callback({ status: request.REQUESTING });
 
 	try {
-		const response = yield call(service.getByIdAndBranch, { preparing_branch_id: branchId }, id);
+		const response = yield retry(
+			MAX_RETRY,
+			RETRY_INTERVAL_MS,
+			service.getByIdAndBranch,
+			{ preparing_branch_id: branchId },
+			id,
+		);
 
 		yield put(
 			actions.save({
@@ -78,7 +84,7 @@ function* getById({ payload }: any) {
 	callback({ status: request.REQUESTING });
 
 	try {
-		const response = yield call(service.getById, id);
+		const response = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.getById, id);
 
 		yield put(
 			actions.save({

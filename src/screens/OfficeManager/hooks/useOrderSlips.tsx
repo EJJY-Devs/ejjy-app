@@ -29,6 +29,7 @@ export const useOrderSlips = () => {
 	const createOrderSlip = useActionDispatch(actions.createOrderSlip);
 	const editOrderSlip = useActionDispatch(actions.editOrderSlip);
 	const removeOrderSlip = useActionDispatch(actions.removeOrderSlip);
+	const setOutOfStock = useActionDispatch(actions.setOutOfStock);
 
 	const reset = () => {
 		resetError();
@@ -58,8 +59,8 @@ export const useOrderSlips = () => {
 	};
 
 	const setOutOfStockRequest = (orderSlip) => {
-		setRecentRequest(types.CREATE_ORDER_SLIP);
-		createOrderSlip({
+		setRecentRequest(types.SET_OUT_OF_STOCK);
+		setOutOfStock({
 			...orderSlip,
 			callback: modifiedCallback(
 				callback,

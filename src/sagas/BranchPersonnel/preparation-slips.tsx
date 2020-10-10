@@ -1,6 +1,6 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, put, retry, takeLatest } from 'redux-saga/effects';
 import { actions, types } from '../../ducks/BranchPersonnel/preparation-slips';
-import { MAX_PAGE_SIZE } from '../../global/constants';
+import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../../global/constants';
 import { request } from '../../global/types';
 import { service } from '../../services/BranchPersonnel/preparation-slips';
 
@@ -15,7 +15,7 @@ function* list({ payload }: any) {
 	callback({ status: request.REQUESTING });
 
 	try {
-		const response = yield call(service.list, {
+		const response = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.list, {
 			ordering: 'id',
 			page: 1,
 			page_size: MAX_PAGE_SIZE,

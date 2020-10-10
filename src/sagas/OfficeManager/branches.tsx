@@ -1,10 +1,10 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, put, retry, takeLatest } from 'redux-saga/effects';
 import {
 	actions as branchProductsActions,
 	types as branchProductsTypes,
 } from '../../ducks/branch-products';
 import { actions, types } from '../../ducks/OfficeManager/branches';
-import { MAX_PAGE_SIZE } from '../../global/constants';
+import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../../global/constants';
 import { request } from '../../global/types';
 import { service as branchProductsService } from '../../services/branch-products';
 import { service } from '../../services/OfficeManager/branches';
@@ -15,7 +15,7 @@ function* list({ payload }: any) {
 	callback({ status: request.REQUESTING });
 
 	try {
-		const branchesResponse = yield call(service.list, {
+		const branchesResponse = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.list, {
 			page: 1,
 			page_size: MAX_PAGE_SIZE,
 		});
@@ -47,7 +47,7 @@ function* getById({ payload }: any) {
 	callback({ status: request.REQUESTING });
 
 	try {
-		const response = yield call(service.getById, id);
+		const response = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.getById, id);
 
 		yield put(actions.save({ type: types.GET_BRANCH, branch: response.data.results }));
 		callback({ status: request.SUCCESS });

@@ -1,5 +1,6 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { put, retry, takeLatest } from 'redux-saga/effects';
 import { actions, types } from '../ducks/auth';
+import { MAX_RETRY, RETRY_INTERVAL_MS } from '../global/constants';
 import { request } from '../global/types';
 import { service } from '../services/auth';
 
@@ -9,12 +10,12 @@ function* login({ payload }: any) {
 	callback(request.REQUESTING);
 
 	try {
-		const loginResponse = yield call(service.login, {
+		const loginResponse = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.login, {
 			login: username,
 			password,
 		});
 
-		const tokenResponse = yield call(service.acquireToken, {
+		const tokenResponse = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.acquireToken, {
 			username,
 			password,
 		});

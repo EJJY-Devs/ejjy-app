@@ -31,6 +31,7 @@ interface IEditOrderSlip {
 
 interface IGetOrderSlipsRequest extends IGetRequest {
 	purchase_request_id: number;
+	is_out_of_stock?: boolean;
 }
 
 export const service = {

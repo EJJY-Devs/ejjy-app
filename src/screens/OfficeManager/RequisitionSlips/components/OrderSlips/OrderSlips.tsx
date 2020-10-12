@@ -222,6 +222,11 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 					)
 				}
 				onOutOfStock={onCreateOutOfStock}
+				onOutOfStockDisabled={
+					![requisitionSlipActions.SEEN, requisitionSlipActions.F_OS1_CREATING].includes(
+						requisitionSlip?.action?.action,
+					)
+				}
 			/>
 
 			<OrderSlipsTable

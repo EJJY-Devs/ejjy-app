@@ -111,7 +111,7 @@ export const ViewOrderSlipModal = ({ orderSlip, visible, onClose }: Props) => {
 				</Col>
 			</Row>
 
-			<TableNormal columns={getColumns()} data={requestedProducts} />
+			<TableNormal columns={getColumns()} data={requestedProducts} hasCustomHeaderComponent />
 		</Modal>
 	);
 };

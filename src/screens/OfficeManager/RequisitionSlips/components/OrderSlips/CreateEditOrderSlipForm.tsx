@@ -1,5 +1,6 @@
 import { Divider } from 'antd';
 import { FieldArray, Form, Formik } from 'formik';
+import { min } from 'lodash';
 import React, { useCallback, useState } from 'react';
 import * as Yup from 'yup';
 import { TableNormal } from '../../../../../components';
@@ -20,7 +21,7 @@ const columns = [
 	{ name: 'Name' },
 	{ name: 'Quantity', width: '200px' },
 	{ name: 'Qty Reqstd', tooltip: 'Quantity Requested' },
-	{ name: 'Balance', tooltip: "Selected branch's remaining balance" },
+	{ name: 'Balance', tooltip: "Assigned branch's remaining balance" },
 	{ name: 'Assigned Personnel' },
 ];
 
@@ -65,7 +66,8 @@ export const CreateEditOrderSlipForm = ({
 								is: true,
 								then: Yup.number().required('Qty required'),
 								otherwise: Yup.number().notRequired(),
-							}),
+							})
+							.label('Qty'),
 						assigned_personnel: Yup.number().when('selected', {
 							is: true,
 							then: Yup.number().required('Personnel required'),
@@ -83,14 +85,19 @@ export const CreateEditOrderSlipForm = ({
 		return <FormCheckbox id={`requestedProducts.${index}.selected`} />;
 	};
 
-	const getQuantity = (index, values, touched, errors) => {
+	const getQuantity = (index, values, touched, errors, maxPiece, maxBulk) => {
 		return (
 			<>
 				<div className="quantity-container">
 					<FormInput
 						type="number"
 						id={`requestedProducts.${index}.quantity`}
-						min={1}
+						min={0}
+						max={
+							values?.requestedProducts?.[index]?.quantity_type === quantityTypes.PIECE
+								? maxPiece
+								: maxBulk
+						}
 						disabled={!values?.requestedProducts?.[index]?.selected}
 					/>
 					<FormSelect
@@ -169,7 +176,20 @@ export const CreateEditOrderSlipForm = ({
 									// Name
 									requestedProduct?.product_name,
 									// Quantity / Bulk | Pieces
-									getQuantity(index, values, touched, errors),
+									getQuantity(
+										index,
+										values,
+										touched,
+										errors,
+										min([
+											requestedProduct?.branch_current,
+											requestedProduct?.ordered_quantity_piece,
+										]),
+										min([
+											requestedProduct?.branch_current_bulk,
+											requestedProduct?.ordered_quantity_bulk,
+										]),
+									),
 									// Quantity / Bulk | Pieces
 									getOrdered(
 										index,

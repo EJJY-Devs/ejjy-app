@@ -17,13 +17,20 @@ interface Props {
 	data: any;
 	loading?: boolean;
 	displayInPage?: boolean;
+	hasCustomHeaderComponent?: boolean;
 }
 
-export const TableNormal = ({ columns, data, loading, displayInPage }: Props) => {
+export const TableNormal = ({
+	columns,
+	data,
+	loading,
+	displayInPage,
+	hasCustomHeaderComponent,
+}: Props) => {
 	return (
 		<Spin size="large" spinning={loading}>
 			<div
-				className={cn('TableNormal', { page: displayInPage })}
+				className={cn('TableNormal', { page: displayInPage, hasCustomHeaderComponent })}
 				style={{ height: calculateTableHeight(data?.length + 1) + 25 }}
 			>
 				<table>

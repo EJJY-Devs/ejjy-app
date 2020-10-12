@@ -54,7 +54,12 @@ export const RequestedProducts = ({ requisitionSlip, requisitionSlipStatus }: Pr
 			{ title: 'Barcode', dataIndex: 'barcode' },
 			{ title: 'Name', dataIndex: 'name' },
 			{
-				title: <QuantitySelect onQuantityTypeChange={onQuantityTypeChange} />,
+				title: (
+					<QuantitySelect
+						quantityText="Quantity Requested"
+						onQuantityTypeChange={onQuantityTypeChange}
+					/>
+				),
 				dataIndex: 'quantity',
 			},
 		],

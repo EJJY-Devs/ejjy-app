@@ -5,13 +5,14 @@ import { Select } from '../elements';
 import './style.scss';
 
 interface Props {
+	quantityText?: string;
 	onQuantityTypeChange: any;
 }
 
-export const QuantitySelect = ({ onQuantityTypeChange }: Props) => {
+export const QuantitySelect = ({ quantityText, onQuantityTypeChange }: Props) => {
 	return (
 		<div className="QuantitySelect">
-			<span>Quantity</span>
+			<span>{quantityText}</span>
 			<Select
 				classNames="quantity-select"
 				options={quantityTypeOptions}
@@ -21,4 +22,8 @@ export const QuantitySelect = ({ onQuantityTypeChange }: Props) => {
 			/>
 		</div>
 	);
+};
+
+QuantitySelect.defaultProps = {
+	quantityText: 'Quantity',
 };

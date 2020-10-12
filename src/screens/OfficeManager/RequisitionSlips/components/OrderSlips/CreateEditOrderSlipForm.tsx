@@ -19,8 +19,8 @@ const columns = [
 	{ name: 'Barcode' },
 	{ name: 'Name' },
 	{ name: 'Quantity', width: '200px' },
-	{ name: 'Ordered' },
-	{ name: 'Balance' },
+	{ name: 'Qty Reqstd', tooltip: 'Quantity Requested' },
+	{ name: 'Balance', tooltip: "Selected branch's remaining balance" },
 	{ name: 'Assigned Personnel' },
 ];
 

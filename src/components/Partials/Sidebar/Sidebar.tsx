@@ -38,11 +38,11 @@ const SidebarItems = [
 		userTypes: [userTypes.OFFICE_MANAGER],
 	},
 	{
-		key: 'purchase-requests',
-		name: 'Purchase Requests',
-		activeIcon: require(`../../../assets/images/icon-transaction-active.svg`),
-		defaultIcon: require(`../../../assets/images/icon-transaction.svg`),
-		link: '/purchase-requests',
+		key: 'requisition-slips',
+		name: 'Requisition Slips',
+		activeIcon: require(`../../../assets/images/icon-requisition-slip-active.svg`),
+		defaultIcon: require(`../../../assets/images/icon-requisition-slip.svg`),
+		link: '/requisition-slips',
 		userTypes: [userTypes.OFFICE_MANAGER, userTypes.BRANCH_MANAGER],
 	},
 	{

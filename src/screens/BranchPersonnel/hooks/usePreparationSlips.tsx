@@ -5,7 +5,7 @@ import { request } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
 import { modifiedCallback } from '../../../utils/function';
 
-const FULFILL_SUCCESS_MESSAGE = 'Preparation slip fulfilled successfully';
+const FULFILL_SUCCESS_MESSAGE = 'Preparation slip was fulfilled successfully';
 const FULFILL_ERROR_MESSAGE = 'An error occurred while fulfilling the preparation slip';
 
 export const usePreparationSlips = () => {

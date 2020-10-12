@@ -6,13 +6,13 @@ import { request } from '../global/types';
 import { modifiedCallback } from '../utils/function';
 import { useActionDispatch } from './useActionDispatch';
 
-const CREATE_SUCCESS_MESSAGE = 'Product created successfully';
+const CREATE_SUCCESS_MESSAGE = 'Product was created successfully';
 const CREATE_ERROR_MESSAGE = 'An error occurred while creating the product';
 
-const EDIT_SUCCESS_MESSAGE = 'Product edited successfully';
+const EDIT_SUCCESS_MESSAGE = 'Product was edited successfully';
 const EDIT_ERROR_MESSAGE = 'An error occurred while editing the product';
 
-const REMOVE_SUCCESS_MESSAGE = 'Product removed successfully';
+const REMOVE_SUCCESS_MESSAGE = 'Product was removed successfully';
 const REMOVE_ERROR_MESSAGE = 'An error occurred while removing the product';
 
 export const useProducts = () => {

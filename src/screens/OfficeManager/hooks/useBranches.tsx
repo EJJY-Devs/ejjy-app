@@ -5,13 +5,13 @@ import { request } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
 import { modifiedCallback } from '../../../utils/function';
 
-const CREATE_SUCCESS_MESSAGE = 'Branch created successfully';
+const CREATE_SUCCESS_MESSAGE = 'Branch was created successfully';
 const CREATE_ERROR_MESSAGE = 'An error occurred while creating the branch';
 
-const EDIT_SUCCESS_MESSAGE = 'Branch edited successfully';
+const EDIT_SUCCESS_MESSAGE = 'Branch was edited successfully';
 const EDIT_ERROR_MESSAGE = 'An error occurred while editing the branch';
 
-const REMOVE_SUCCESS_MESSAGE = 'Branch removed successfully';
+const REMOVE_SUCCESS_MESSAGE = 'Branch was removed successfully';
 const REMOVE_ERROR_MESSAGE = 'An error occurred while removing the branch';
 
 export const useBranches = () => {

@@ -5,7 +5,7 @@ import { request } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
 import { modifiedCallback, modifiedExtraCallback } from '../../../utils/function';
 
-const CREATE_SUCCESS_MESSAGE = 'Adjustment slip created successfully';
+const CREATE_SUCCESS_MESSAGE = 'Adjustment slip was created successfully';
 const CREATE_ERROR_MESSAGE = 'An error occurred while creating the adjustment slip';
 
 export const useAdjustmentSlips = () => {

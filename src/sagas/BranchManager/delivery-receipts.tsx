@@ -1,7 +1,7 @@
 import { call, put, retry, takeLatest } from 'redux-saga/effects';
 import { actions, types } from '../../ducks/BranchManager/delivery-receipts';
 import { actions as orderSlipActions } from '../../ducks/order-slips';
-import { actions as purchaseRequestActions } from '../../ducks/purchase-requests';
+import { actions as requisitionSlipsActions } from '../../ducks/requisition-slips';
 import { MAX_RETRY, RETRY_INTERVAL_MS } from '../../global/constants';
 import { request } from '../../global/types';
 import { service } from '../../services/BranchManager/delivery-receipts';
@@ -24,7 +24,7 @@ function* getById({ payload }: any) {
 }
 
 function* receive({ payload }: any) {
-	const { callback, purchaseRequestAction, ...data } = payload;
+	const { callback, requisitionSlipAction, ...data } = payload;
 	callback({ status: request.REQUESTING });
 
 	try {
@@ -38,9 +38,9 @@ function* receive({ payload }: any) {
 		);
 
 		yield put(
-			purchaseRequestActions.save({
+			requisitionSlipsActions.save({
 				type: types.RECEIVE_DELIVERY_RECEIPT,
-				purchaseRequestAction,
+				requisitionSlipAction,
 			}),
 		);
 		callback({ status: request.SUCCESS });

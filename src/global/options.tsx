@@ -2,7 +2,7 @@ import { upperFirst } from 'lodash';
 import {
 	deliveryReceiptProductStatus,
 	preparationSlipStatus,
-	purchaseRequestActions,
+	requisitionSlipActions,
 	quantityTypes,
 } from './types';
 
@@ -17,55 +17,55 @@ export const quantityTypeOptions = [
 	},
 ];
 
-export const purchaseRequestActionsOptions = [
+export const requisitionSlipActionsOptions = [
 	{
-		value: purchaseRequestActions.NEW,
+		value: requisitionSlipActions.NEW,
 		name: 'New',
 	},
 	{
-		value: purchaseRequestActions.SEEN,
+		value: requisitionSlipActions.SEEN,
 		name: 'Seen',
 	},
 	{
-		value: purchaseRequestActions.F_OS1_CREATING,
+		value: requisitionSlipActions.F_OS1_CREATING,
 		name: 'F-OS1 Creating',
 	},
 	{
-		value: purchaseRequestActions.F_OS1_CREATED,
+		value: requisitionSlipActions.F_OS1_CREATED,
 		name: 'F-OS1 Created',
 	},
 	{
-		value: purchaseRequestActions.F_OS1_PREPARING,
+		value: requisitionSlipActions.F_OS1_PREPARING,
 		name: 'F-OS1 Preparing',
 	},
 	{
-		value: purchaseRequestActions.F_OS1_PREPARED,
+		value: requisitionSlipActions.F_OS1_PREPARED,
 		name: 'F-OS1 Prepared',
 	},
 	{
-		value: purchaseRequestActions.F_DS1_CREATING,
+		value: requisitionSlipActions.F_DS1_CREATING,
 		name: 'F-DS1 Creating',
 	},
 	{
-		value: purchaseRequestActions.F_DS1_CREATED,
+		value: requisitionSlipActions.F_DS1_CREATED,
 		name: 'F-DS1 Created',
 	},
 	{
-		value: purchaseRequestActions.F_DS1_DELIVERING,
+		value: requisitionSlipActions.F_DS1_DELIVERING,
 		name: 'F-DS1 Delivering',
 	},
 	{
-		value: purchaseRequestActions.F_DS1_DELIVERED,
+		value: requisitionSlipActions.F_DS1_DELIVERED,
 		name: 'F-DS1 Delivered',
 	},
 ];
 
-export const purchaseRequestActionsOptionsWithAll = [
+export const requisitionSlipActionsOptionsWithAll = [
 	{
 		value: 'all',
 		name: 'All',
 	},
-	...purchaseRequestActionsOptions,
+	...requisitionSlipActionsOptions,
 ];
 
 export const preparationSlipStatusOptions = [

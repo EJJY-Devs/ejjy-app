@@ -33,8 +33,8 @@ import {
 	orderSlipStatus,
 	OSDRStatus,
 	preparationSlipStatus,
-	purchaseRequestActions,
-	purchaseRequestProductStatus,
+	requisitionSlipActions,
+	requisitionSlipProductStatus,
 	request,
 	userTypes,
 } from '../global/types';
@@ -110,47 +110,47 @@ export const getBranchProductStatus = memoize((status) => {
 	}
 });
 
-export const getPurchaseRequestStatus = memoize((status) => {
+export const getRequisitionSlipStatus = memoize((status) => {
 	switch (status) {
-		case purchaseRequestActions.NEW: {
+		case requisitionSlipActions.NEW: {
 			return <NewBadgePill />;
 		}
-		case purchaseRequestActions.SEEN: {
+		case requisitionSlipActions.SEEN: {
 			return <SeenBadgePill />;
 		}
-		case purchaseRequestActions.F_OS1_CREATING: {
+		case requisitionSlipActions.F_OS1_CREATING: {
 			return <FOS1CreatingBadgePill />;
 		}
-		case purchaseRequestActions.F_OS1_CREATED: {
+		case requisitionSlipActions.F_OS1_CREATED: {
 			return <FOS1CreatedBadgePill />;
 		}
-		case purchaseRequestActions.F_OS1_PREPARING: {
+		case requisitionSlipActions.F_OS1_PREPARING: {
 			return <FOS1PreparingBadgePill />;
 		}
-		case purchaseRequestActions.F_OS1_PREPARED: {
+		case requisitionSlipActions.F_OS1_PREPARED: {
 			return <FOS1PreparedBadgePill />;
 		}
-		case purchaseRequestActions.F_DS1_CREATING: {
+		case requisitionSlipActions.F_DS1_CREATING: {
 			return <FDS1CreatingBadgePill />;
 		}
-		case purchaseRequestActions.F_DS1_CREATED: {
+		case requisitionSlipActions.F_DS1_CREATED: {
 			return <FDS1CreatedBadgePill />;
 		}
-		case purchaseRequestActions.F_DS1_DELIVERING: {
+		case requisitionSlipActions.F_DS1_DELIVERING: {
 			return <FDS1DeliveringBadgePill />;
 		}
-		case purchaseRequestActions.F_DS1_DELIVERED: {
+		case requisitionSlipActions.F_DS1_DELIVERED: {
 			return <FDS1DeliveredBadgePill />;
 		}
 	}
 });
 
-export const getPurchaseRequestProductStatus = memoize((status) => {
+export const getRequisitionSlipProductStatus = memoize((status) => {
 	switch (status) {
-		case purchaseRequestProductStatus.ADDED_TO_OS: {
+		case requisitionSlipProductStatus.ADDED_TO_OS: {
 			return <AddedToOSBadgePill />;
 		}
-		case purchaseRequestProductStatus.NOT_ADDED_TO_OS: {
+		case requisitionSlipProductStatus.NOT_ADDED_TO_OS: {
 			return <NotAddedToOSBadgePill />;
 		}
 	}

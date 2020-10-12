@@ -5,7 +5,7 @@ import { request } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
 import { modifiedCallback, modifiedExtraCallback } from '../../../utils/function';
 
-const CREATE_SUCCESS_MESSAGE = 'Delivery receipt created successfully';
+const CREATE_SUCCESS_MESSAGE = 'Delivery receipt was created successfully';
 const CREATE_ERROR_MESSAGE = 'An error occurred while creating the delivery receipt';
 
 export const useDeliveryReceipt = () => {

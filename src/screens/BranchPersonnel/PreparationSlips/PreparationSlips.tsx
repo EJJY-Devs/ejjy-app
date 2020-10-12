@@ -99,7 +99,7 @@ const PreparationSlips = () => {
 			loading={getFetchLoading()}
 			loadingText="Fetching preparation slips..."
 		>
-			<section className="PurchaseRequests">
+			<section className="RequisitionSlips">
 				<Box>
 					<TableHeader
 						statuses={preparationSlipStatusOptions}

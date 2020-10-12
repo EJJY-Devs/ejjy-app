@@ -8,8 +8,8 @@ export { default as BranchManagerDashboard } from './BranchManager/Dashboard/Das
 export { default as BranchManagerNotifications } from './BranchManager/Notifications/Notifications';
 export { default as BranchManagerOrderSlips } from './BranchManager/OrderSlips/OrderSlips';
 export { default as BranchManagerProducts } from './BranchManager/Products/Products';
-export { default as BranchManagerPurchaseRequests } from './BranchManager/PurchaseRequests/PurchaseRequests';
-export { default as BranchManagerViewPurchaseRequest } from './BranchManager/PurchaseRequests/ViewPurchaseRequest';
+export { default as BranchManagerRequisitionSlips } from './BranchManager/RequisitionSlips/RequisitionSlips';
+export { default as BranchManagerViewRequisitionSlip } from './BranchManager/RequisitionSlips/ViewRequisitionSlip';
 
 // Branch Personnel
 export { default as BranchPersonnelDashboard } from './BranchPersonnel/Dashboard/Dashboard';
@@ -23,8 +23,8 @@ export { default as OfficeManagerViewBranch } from './OfficeManager/Branches/Vie
 export { default as OfficeManagerDashboard } from './OfficeManager/Dashboard/Dashboard';
 export { default as OfficeManagerNotifications } from './OfficeManager/Notifications/Notifications';
 export { default as OfficeManagerProducts } from './OfficeManager/Products/Products';
-export { default as OfficeManagerPurchaseRequests } from './OfficeManager/PurchaseRequests/PurchaseRequests';
-export { default as OfficeManagerViewPurchaseRequest } from './OfficeManager/PurchaseRequests/ViewPurchaseRequest';
-export { default as OfficeManagerViewDeliveryReceipt } from './OfficeManager/PurchaseRequests/ViewDeliveryReceipt';
+export { default as OfficeManagerRequisitionSlips } from './OfficeManager/RequisitionSlips/RequisitionSlips';
+export { default as OfficeManagerViewRequisitionSlip } from './OfficeManager/RequisitionSlips/ViewRequisitionSlip';
+export { default as OfficeManagerViewDeliveryReceipt } from './OfficeManager/RequisitionSlips/ViewDeliveryReceipt';
 
 export { default as OfficeManagerUsers } from './OfficeManager/Users/Users';

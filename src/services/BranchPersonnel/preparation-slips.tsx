@@ -16,7 +16,7 @@ interface IFulfillPreparationSlip {
 }
 
 interface IGetPreparationSlipsRequest extends IGetRequest {
-	purchase_request_id: number;
+	requisition_slip_id: number;
 	assigned_store_id: number;
 	assigned_personnel_id: number;
 }

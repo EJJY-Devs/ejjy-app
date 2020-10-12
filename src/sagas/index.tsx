@@ -4,14 +4,14 @@ import branchProductsSagas from './branch-products';
 import { branchManagerSagas } from './BranchManager';
 import { branchPersonnelSagas } from './BranchPersonnel';
 import { officeManagerSagas } from './OfficeManager';
-import purchaseRequestsSagas from './purchase-requests';
+import requisitionSlipsSagas from './requisition-slips';
 import usersSagas from './users';
 
 export default function* rootSaga() {
 	yield all([
 		...authSagas,
 		...branchProductsSagas,
-		...purchaseRequestsSagas,
+		...requisitionSlipsSagas,
 		...usersSagas,
 		...officeManagerSagas,
 		...branchManagerSagas,

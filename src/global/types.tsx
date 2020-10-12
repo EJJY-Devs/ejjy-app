@@ -21,17 +21,17 @@ export const userTypes = {
 	BRANCH_PERSONNEL: 'branch_personnel',
 };
 
-export const purchaseRequestTypes = {
+export const requisitionSlipTypes = {
 	MANUAL: 'manual',
 	AUTOMATIC: 'automatic',
 };
 
-export const purchaseRequestProductStatus = {
+export const requisitionSlipProductStatus = {
 	ADDED_TO_OS: 'added_to_os',
 	NOT_ADDED_TO_OS: 'not_added_to_os',
 };
 
-export const purchaseRequestActions = {
+export const requisitionSlipActions = {
 	NEW: 'new',
 	SEEN: 'seen',
 	F_OS1_CREATING: 'f_os1_creating',

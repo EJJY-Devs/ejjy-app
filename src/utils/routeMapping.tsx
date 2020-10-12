@@ -4,8 +4,8 @@ import {
 	BranchManagerNotifications,
 	BranchManagerOrderSlips,
 	BranchManagerProducts,
-	BranchManagerPurchaseRequests,
-	BranchManagerViewPurchaseRequest,
+	BranchManagerRequisitionSlips,
+	BranchManagerViewRequisitionSlip,
 	BranchPersonnelDashboard,
 	BranchPersonnelNotifications,
 	BranchPersonnelPreparationSlips,
@@ -14,11 +14,11 @@ import {
 	OfficeManagerDashboard,
 	OfficeManagerNotifications,
 	OfficeManagerProducts,
-	OfficeManagerPurchaseRequests,
+	OfficeManagerRequisitionSlips,
 	OfficeManagerUsers,
 	OfficeManagerViewBranch,
 	OfficeManagerViewDeliveryReceipt,
-	OfficeManagerViewPurchaseRequest,
+	OfficeManagerViewRequisitionSlip,
 } from '../screens';
 
 export const DashboardScreens = {
@@ -41,14 +41,14 @@ export const ViewBranchScreens = {
 	[userTypes.OFFICE_MANAGER]: OfficeManagerViewBranch,
 };
 
-export const PurchaseRequestsScreens = {
-	[userTypes.OFFICE_MANAGER]: OfficeManagerPurchaseRequests,
-	[userTypes.BRANCH_MANAGER]: BranchManagerPurchaseRequests,
+export const RequisitionSlipsScreens = {
+	[userTypes.OFFICE_MANAGER]: OfficeManagerRequisitionSlips,
+	[userTypes.BRANCH_MANAGER]: BranchManagerRequisitionSlips,
 };
 
-export const ViewPurchaseRequestScreens = {
-	[userTypes.OFFICE_MANAGER]: OfficeManagerViewPurchaseRequest,
-	[userTypes.BRANCH_MANAGER]: BranchManagerViewPurchaseRequest,
+export const ViewRequisitionSlipScreens = {
+	[userTypes.OFFICE_MANAGER]: OfficeManagerViewRequisitionSlip,
+	[userTypes.BRANCH_MANAGER]: BranchManagerViewRequisitionSlip,
 };
 
 export const ViewDeliveryReceiptScreens = {

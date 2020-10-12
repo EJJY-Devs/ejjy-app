@@ -6,7 +6,7 @@ import { request } from '../global/types';
 import { modifiedCallback } from '../utils/function';
 import { useActionDispatch } from './useActionDispatch';
 
-const EDIT_SUCCESS_MESSAGE = 'Branch product edited successfully';
+const EDIT_SUCCESS_MESSAGE = 'Branch product was edited successfully';
 const EDIT_ERROR_MESSAGE = 'An error occurred while editing the branch product';
 
 export const useBranchProducts = () => {

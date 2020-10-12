@@ -9,11 +9,11 @@ import {
 	OrderSlipsScreens,
 	PreparationSlipsScreens,
 	ProductsScreens,
-	PurchaseRequestsScreens,
+	RequisitionSlipsScreens,
 	UsersScreens,
 	ViewBranchScreens,
 	ViewDeliveryReceiptScreens,
-	ViewPurchaseRequestScreens,
+	ViewRequisitionSlipScreens,
 } from './utils/routeMapping';
 
 const App = () => (
@@ -24,10 +24,10 @@ const App = () => (
 		<CommonRoute path="/products" exact component={ProductsScreens} />
 		<CommonRoute path="/branches" exact component={BranchesScreens} />
 		<CommonRoute path="/branches/:id" exact component={ViewBranchScreens} />
-		<CommonRoute path="/purchase-requests" exact component={PurchaseRequestsScreens} />
-		<CommonRoute path="/purchase-requests/:id" exact component={ViewPurchaseRequestScreens} />
+		<CommonRoute path="/requisition-slips" exact component={RequisitionSlipsScreens} />
+		<CommonRoute path="/requisition-slips/:id" exact component={ViewRequisitionSlipScreens} />
 		<CommonRoute
-			path="/purchase-requests/delivery-receipt/:id"
+			path="/requisition-slips/delivery-receipt/:id"
 			exact
 			component={ViewDeliveryReceiptScreens}
 		/>

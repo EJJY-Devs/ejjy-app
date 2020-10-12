@@ -5,13 +5,13 @@ import { request } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
 import { modifiedCallback } from '../../../utils/function';
 
-const CREATE_SUCCESS_MESSAGE = 'Order slip created successfully';
+const CREATE_SUCCESS_MESSAGE = 'Order slip was created successfully';
 const CREATE_ERROR_MESSAGE = 'An error occurred while creating the order slip';
 
-const EDIT_SUCCESS_MESSAGE = 'Order slip edited successfully';
+const EDIT_SUCCESS_MESSAGE = 'Order slip was edited successfully';
 const EDIT_ERROR_MESSAGE = 'An error occurred while editing the order slip';
 
-const REMOVE_SUCCESS_MESSAGE = 'Order slip removed successfully';
+const REMOVE_SUCCESS_MESSAGE = 'Order slip was removed successfully';
 const REMOVE_ERROR_MESSAGE = 'An error occurred while removing the order slip';
 
 export const useOrderSlips = () => {
@@ -35,14 +35,14 @@ export const useOrderSlips = () => {
 
 	const resetStatus = () => setStatus(request.NONE);
 
-	const getOrderSlipRequest = (purchaseRequestId) => {
+	const getOrderSlipRequest = (requisitionSlipId) => {
 		setRecentRequest(types.GET_ORDER_SLIPS);
-		getOrderSlips({ purchase_request_id: purchaseRequestId, callback });
+		getOrderSlips({ requisition_slip_id: requisitionSlipId, callback });
 	};
 
-	const getOrderSlipsExtendedRequest = (purchaseRequestId) => {
+	const getOrderSlipsExtendedRequest = (requisitionSlipId) => {
 		setRecentRequest(types.GET_ORDER_SLIPS_EXTENDED);
-		getOrderSlipsExtended({ purchase_request_id: purchaseRequestId, callback });
+		getOrderSlipsExtended({ requisition_slip_id: requisitionSlipId, callback });
 	};
 
 	const createOrderSlipRequest = (orderSlip) => {

@@ -19,7 +19,7 @@ type EditProduct = {
 interface ICreateOrderSlip {
 	requesting_user_id: number;
 	assigned_store_id: number;
-	purchase_request_id: number;
+	requisition_slip_id: number;
 	products: Product[];
 }
 
@@ -30,7 +30,7 @@ interface IEditOrderSlip {
 }
 
 interface IGetOrderSlipsRequest extends IGetRequest {
-	purchase_request_id: number;
+	requisition_slip_id: number;
 	is_out_of_stock?: boolean;
 }
 

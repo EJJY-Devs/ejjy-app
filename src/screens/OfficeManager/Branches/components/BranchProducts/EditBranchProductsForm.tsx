@@ -10,7 +10,11 @@ import {
 	FormRadioButton,
 	Label,
 } from '../../../../../components/elements';
-import { productTypes, unitOfMeasurementTypes } from '../../../../../global/types';
+import {
+	productCheckingTypes,
+	productTypes,
+	unitOfMeasurementTypes,
+} from '../../../../../global/types';
 import { sleep } from '../../../../../utils/function';
 
 interface ICreateBranch {
@@ -22,6 +26,9 @@ interface ICreateBranch {
 	price_per_piece?: number;
 	price_per_bulk?: number;
 	current_balance?: number;
+	checking?: string;
+	is_daily_checked?: boolean;
+	is_randomly_checked?: boolean;
 }
 
 interface Props {
@@ -45,8 +52,9 @@ export const EditBranchProductsForm = ({
 		() => ({
 			DefaultValues: {
 				product_id: branchProduct?.product_id || '',
-				is_daily_checked: branchProduct?.is_daily_checked?.toString(),
-				is_randomly_checked: branchProduct?.is_randomly_checked?.toString(),
+				checking: branchProduct?.is_daily_checked
+					? productCheckingTypes.DAILY
+					: productCheckingTypes.RANDOM,
 				type: branchProduct?.product?.type,
 				unit_of_measurement: branchProduct?.product?.unit_of_measurement,
 				reorder_point: branchProduct?.reorder_point || '',
@@ -78,29 +86,16 @@ export const EditBranchProductsForm = ({
 		[branchProduct],
 	);
 
-	const dailyChecking = [
+	const checkingTypes = [
 		{
-			id: 'daily-no',
-			label: 'No',
-			value: 'false',
+			id: productCheckingTypes.DAILY,
+			label: 'Daily',
+			value: productCheckingTypes.DAILY,
 		},
 		{
-			id: 'daily-yes',
-			label: 'Yes',
-			value: 'true',
-		},
-	];
-
-	const randomChecking = [
-		{
-			id: 'random-no',
-			label: 'No',
-			value: 'false',
-		},
-		{
-			id: 'random-yes',
-			label: 'Yes',
-			value: 'true',
+			id: productCheckingTypes.RANDOM,
+			label: 'Random',
+			value: productCheckingTypes.RANDOM,
 		},
 	];
 
@@ -115,6 +110,8 @@ export const EditBranchProductsForm = ({
 
 				values.id = branchProduct?.id;
 				values.branch_id = branchId;
+				values.is_daily_checked = values.checking === productCheckingTypes.DAILY;
+				values.is_randomly_checked = values.checking === productCheckingTypes.RANDOM;
 				onSubmit(values);
 			}}
 			enableReinitialize
@@ -128,19 +125,9 @@ export const EditBranchProductsForm = ({
 						<Divider dashed />
 
 						<Col sm={12} xs={24}>
-							<Label label="Is Daily Checked?" spacing />
-							<FormRadioButton name="is_daily_checked" items={dailyChecking} />
-							{errors.is_daily_checked && touched.is_daily_checked ? (
-								<FieldError error={errors.is_daily_checked} />
-							) : null}
-						</Col>
-
-						<Col sm={12} xs={24}>
-							<Label label="Is Randomly Checked?" spacing />
-							<FormRadioButton name="is_randomly_checked" items={randomChecking} />
-							{errors.is_randomly_checked && touched.is_randomly_checked ? (
-								<FieldError error={errors.is_randomly_checked} />
-							) : null}
+							<Label label="Checking" spacing />
+							<FormRadioButton name="checking" items={checkingTypes} />
+							{errors.checking && touched.checking ? <FieldError error={errors.checking} /> : null}
 						</Col>
 
 						<Col sm={12} xs={24}>

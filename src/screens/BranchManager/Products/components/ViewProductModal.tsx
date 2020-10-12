@@ -30,11 +30,7 @@ export const ViewProductModal = ({ product, visible, onClose }: Props) => {
 
 				<Divider dashed />
 
-				<DetailsHalf label="Is Daily Checked?" value={product?.is_daily_checked ? 'Yes' : 'No'} />
-				<DetailsHalf
-					label="Is Randomly Checked?"
-					value={product?.is_randomly_checked ? 'Yes' : 'No'}
-				/>
+				<DetailsHalf label="Checking" value={product?.is_daily_checked ? 'Daily' : 'Random'} />
 				<DetailsHalf label="Reorder Point" value={product?.reorder_point} />
 				<DetailsHalf label="Max Balance" value={product?.max_balance} />
 				<DetailsHalf label="Cost (Piece)" value={product?.cost_per_piece} />

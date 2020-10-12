@@ -83,3 +83,8 @@ export const deliveryReceiptStatus = {
 	RESOLVED: 'resolved',
 	DONE: 'done',
 };
+
+export const productCheckingTypes = {
+	DAILY: 'daily',
+	RANDOM: 'random',
+};

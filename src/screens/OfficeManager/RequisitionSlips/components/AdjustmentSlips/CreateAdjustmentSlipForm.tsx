@@ -35,7 +35,7 @@ export const CreateAdjustmentSlipForm = ({
 		() => ({
 			DefaultValues: {
 				deliveryReceiptProducts: deliveryReceiptProducts.map((drProduct) => ({
-					selected: drProduct.selected,
+					selected: true,
 					delivery_receipt_product_id: drProduct.id,
 					new_delivered_quantity_piece: null,
 					new_received_quantity_piece: null,

@@ -1,8 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { TableHeader } from '../../../../../components';
 import { Box } from '../../../../../components/elements';
-import { request } from '../../../../../global/types';
+import { deliveryReceiptProductStatus, request } from '../../../../../global/types';
 import { useAdjustmentSlips } from '../../../hooks/useAdjustmentSlips';
 import { AdjustmentSlipsTable } from './AdjustmentSlipsTable';
 import { CreateAdjustmentSlipModal } from './CreateAdjustmentSlipModal';
@@ -10,9 +10,10 @@ import { ViewAdjustmentSlipModal } from './ViewAdjustmentSlipModal';
 
 interface Props {
 	deliveryReceipt: any;
+	fetchDeliveryReceipt: any;
 }
 
-export const AdjustmentSlips = ({ deliveryReceipt }: Props) => {
+export const AdjustmentSlips = ({ fetchDeliveryReceipt, deliveryReceipt }: Props) => {
 	// State: Selection
 	const [selectedAdjustmentSlip, setSelectedAdjustmentSlip] = useState(null);
 
@@ -33,6 +34,12 @@ export const AdjustmentSlips = ({ deliveryReceipt }: Props) => {
 		}
 	}, [deliveryReceipt]);
 
+	const hasProductUnderInvestigation = useCallback(() => {
+		return deliveryReceipt.delivery_receipt_products.some(
+			({ status }) => status === deliveryReceiptProductStatus.INVESTIGATION,
+		);
+	}, [deliveryReceipt]);
+
 	const onCreateAdjustmentSlip = () => {
 		setSelectedAdjustmentSlip(null);
 		setCreateAdjustmentSlipVisible(true);
@@ -49,6 +56,7 @@ export const AdjustmentSlips = ({ deliveryReceipt }: Props) => {
 				title="Adjustment Slips"
 				buttonName="Create Adjustment Slip"
 				onCreate={onCreateAdjustmentSlip}
+				onCreateDisabled={!hasProductUnderInvestigation()}
 			/>
 
 			<AdjustmentSlipsTable
@@ -64,6 +72,7 @@ export const AdjustmentSlips = ({ deliveryReceipt }: Props) => {
 			/>
 
 			<CreateAdjustmentSlipModal
+				fetchDeliveryReceipt={fetchDeliveryReceipt}
 				deliveryReceipt={deliveryReceipt}
 				visible={createAdjustmentSlipVisible}
 				onClose={() => setCreateAdjustmentSlipVisible(false)}

@@ -12,11 +12,17 @@ import { CreateAdjustmentSlipForm } from './CreateAdjustmentSlipForm';
 
 interface Props {
 	deliveryReceipt: any;
+	fetchDeliveryReceipt: any;
 	visible: boolean;
 	onClose: any;
 }
 
-export const CreateAdjustmentSlipModal = ({ deliveryReceipt, visible, onClose }: Props) => {
+export const CreateAdjustmentSlipModal = ({
+	deliveryReceipt,
+	fetchDeliveryReceipt,
+	visible,
+	onClose,
+}: Props) => {
 	const [remarks, setRemarks] = useState('');
 	const [deliveryReceiptProducts, setDeliveryReceiptProducts] = useState([]);
 
@@ -26,8 +32,9 @@ export const CreateAdjustmentSlipModal = ({ deliveryReceipt, visible, onClose }:
 	// Effect: Format delivery receipt products
 	useEffect(() => {
 		if (deliveryReceipt && visible) {
-			const formattedDeliveryReceiptProducts = deliveryReceipt.delivery_receipt_products.map(
-				(product) => {
+			const formattedDeliveryReceiptProducts = deliveryReceipt.delivery_receipt_products
+				.filter(({ status }) => status === deliveryReceiptStatus.INVESTIGATION)
+				.map((product) => {
 					const {
 						id,
 						status,
@@ -38,7 +45,6 @@ export const CreateAdjustmentSlipModal = ({ deliveryReceipt, visible, onClose }:
 					} = product;
 
 					return {
-						selected: status === deliveryReceiptStatus.INVESTIGATION,
 						id,
 						name: order_slip_product?.product?.name,
 						status,
@@ -46,8 +52,7 @@ export const CreateAdjustmentSlipModal = ({ deliveryReceipt, visible, onClose }:
 						delivered_quantity_piece,
 						received_quantity_piece,
 					};
-				},
-			);
+				});
 
 			setDeliveryReceiptProducts(formattedDeliveryReceiptProducts);
 		}
@@ -58,6 +63,7 @@ export const CreateAdjustmentSlipModal = ({ deliveryReceipt, visible, onClose }:
 		if (status === request.SUCCESS && recentRequest === types.CREATE_ADJUSTMENT_SLIP) {
 			reset();
 			onClose();
+			fetchDeliveryReceipt();
 		}
 	}, [status, recentRequest]);
 

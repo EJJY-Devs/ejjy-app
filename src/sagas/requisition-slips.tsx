@@ -128,6 +128,19 @@ function* edit({ payload }: any) {
 	}
 }
 
+function* setOutOfStock({ payload }: any) {
+	const { callback, ...data } = payload;
+	callback({ status: request.REQUESTING });
+
+	try {
+		yield call(service.edit, data);
+		yield put(actions.removeRequisitionSlipByBranch());
+		callback({ status: request.SUCCESS });
+	} catch (e) {
+		callback({ status: request.ERROR, errors: e.errors });
+	}
+}
+
 /* WATCHERS */
 const listWatcherSaga = function* listWatcherSaga() {
 	yield takeLatest(types.GET_REQUISITION_SLIPS, list);
@@ -153,6 +166,10 @@ const editWatcherSaga = function* editWatcherSaga() {
 	yield takeLatest(types.EDIT_REQUISITION_SLIP, edit);
 };
 
+const setOutOfStockWatcherSaga = function* setOutOfStockWatcherSaga() {
+	yield takeLatest(types.SET_OUT_OF_STOCK, setOutOfStock);
+};
+
 export default [
 	listWatcherSaga(),
 	listExtendedWatcherSaga(),
@@ -160,4 +177,5 @@ export default [
 	getByIdAndBranchWatcherSaga(),
 	createWatcherSaga(),
 	editWatcherSaga(),
+	setOutOfStockWatcherSaga(),
 ];

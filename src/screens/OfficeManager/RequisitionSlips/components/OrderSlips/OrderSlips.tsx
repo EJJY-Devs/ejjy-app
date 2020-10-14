@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+// TODO:: Enable /disable the create buttons (out of stock and order slip)
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { TableHeaderOrderSlip } from '../../../../../components';
@@ -28,9 +29,10 @@ import { ViewOrderSlipModal } from './ViewOrderSlipModal';
 
 interface Props {
 	requisitionSlipId: number;
+	fetchRequisitionSlip: any;
 }
 
-export const OrderSlips = ({ requisitionSlipId }: Props) => {
+export const OrderSlips = ({ fetchRequisitionSlip, requisitionSlipId }: Props) => {
 	// State: Selection
 	const [selectedBranchId, setSelectedBranchId] = useState(null);
 	const [selectedOrderSlip, setSelectedOrderSlip] = useState(null);
@@ -106,6 +108,11 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 		[branches, requisitionSlip],
 	);
 
+	const hasAvailableProducts = useCallback(
+		() => !!requisitionSlip?.products?.filter(({ product }) => !product.is_out_of_stock).length,
+		[requisitionSlip],
+	);
+
 	const processOrderSlip = (branchData, orderSlip = null) => {
 		if (branchData) {
 			let requestedProducts = [];
@@ -132,7 +139,10 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 				});
 			} else {
 				requestedProducts = branchData.products
-					.filter(({ status }) => status === requisitionSlipProductStatus.NOT_ADDED_TO_OS)
+					.filter(
+						({ product, status }) =>
+							status === requisitionSlipProductStatus.NOT_ADDED_TO_OS && !product.is_out_of_stock,
+					)
 					.map((product) => {
 						return processedOrderSlipProduct(
 							null,
@@ -210,6 +220,8 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 		createDeliveryReceipt(id);
 	};
 
+	console.log(requisitionSlip);
+
 	return (
 		<Box>
 			<TableHeaderOrderSlip
@@ -219,14 +231,10 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 				onCreateDisabled={
 					![requisitionSlipActions.SEEN, requisitionSlipActions.F_OS1_CREATING].includes(
 						requisitionSlip?.action?.action,
-					)
+					) || !hasAvailableProducts()
 				}
 				onOutOfStock={onCreateOutOfStock}
-				onOutOfStockDisabled={
-					![requisitionSlipActions.SEEN, requisitionSlipActions.F_OS1_CREATING].includes(
-						requisitionSlip?.action?.action,
-					)
-				}
+				onOutOfStockDisabled={!hasAvailableProducts()}
 			/>
 
 			<OrderSlipsTable
@@ -256,6 +264,7 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 			/>
 
 			<SetOutOfStockModal
+				updateRequisitionSlipByFetching={fetchRequisitionSlip}
 				requisitionSlipId={requisitionSlip?.id}
 				visible={createOutOfStockSlipVisible}
 				onClose={() => setCreateOutOfStockVisible(false)}

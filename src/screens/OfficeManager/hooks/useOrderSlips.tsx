@@ -5,10 +5,6 @@ import { request } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
 import { modifiedCallback } from '../../../utils/function';
 
-const SET_OUT_OF_STOCK_SUCCESS_MESSAGE = 'Products was set to out of stocks successfully';
-const SET_OUT_OF_STOCK_ERROR_MESSAGE =
-	'An error occurred while setting the products as out of stock';
-
 const CREATE_SUCCESS_MESSAGE = 'Order slip was created successfully';
 const CREATE_ERROR_MESSAGE = 'An error occurred while creating the order slip';
 
@@ -29,7 +25,6 @@ export const useOrderSlips = () => {
 	const createOrderSlip = useActionDispatch(actions.createOrderSlip);
 	const editOrderSlip = useActionDispatch(actions.editOrderSlip);
 	const removeOrderSlip = useActionDispatch(actions.removeOrderSlip);
-	const setOutOfStock = useActionDispatch(actions.setOutOfStock);
 
 	const reset = () => {
 		resetError();
@@ -55,18 +50,6 @@ export const useOrderSlips = () => {
 		createOrderSlip({
 			...orderSlip,
 			callback: modifiedCallback(callback, CREATE_SUCCESS_MESSAGE, CREATE_ERROR_MESSAGE),
-		});
-	};
-
-	const setOutOfStockRequest = (orderSlip) => {
-		setRecentRequest(types.SET_OUT_OF_STOCK);
-		setOutOfStock({
-			...orderSlip,
-			callback: modifiedCallback(
-				callback,
-				SET_OUT_OF_STOCK_SUCCESS_MESSAGE,
-				SET_OUT_OF_STOCK_ERROR_MESSAGE,
-			),
 		});
 	};
 
@@ -98,7 +81,6 @@ export const useOrderSlips = () => {
 		createOrderSlip: createOrderSlipRequest,
 		editOrderSlip: editOrderSlipRequest,
 		removeOrderSlip: removeOrderSlipRequest,
-		setOutOfStock: setOutOfStockRequest,
 		status,
 		errors,
 		recentRequest,

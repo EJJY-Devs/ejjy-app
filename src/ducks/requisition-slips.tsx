@@ -14,6 +14,8 @@ export const types = {
 	CREATE_REQUISITION_SLIP: `${key}/CREATE_REQUISITION_SLIP`,
 	EDIT_REQUISITION_SLIP: `${key}/EDIT_REQUISITION_SLIP`,
 
+	SET_OUT_OF_STOCK: `${key}/SET_OUT_OF_STOCK`,
+
 	REMOVE_REQUISITION_SLIP_BY_BRANCH: `${key}/REMOVE_REQUISITION_SLIP_BY_BRANCH`,
 	SET_REQUISITION_SLIP_ACTION: `${key}/SET_REQUISITION_SLIP_ACTION`,
 };
@@ -91,6 +93,7 @@ export const actions = {
 	getRequisitionSlipByIdAndBranch: createAction(types.GET_REQUISITION_SLIP_BY_ID_AND_BRANCH),
 	createRequisitionSlip: createAction(types.CREATE_REQUISITION_SLIP),
 	editRequisitionSlip: createAction(types.EDIT_REQUISITION_SLIP),
+	setOutOfStock: createAction(types.SET_OUT_OF_STOCK),
 
 	removeRequisitionSlipByBranch: createAction(types.REMOVE_REQUISITION_SLIP_BY_BRANCH),
 	setRequisitionSlipAction: createAction(types.SET_REQUISITION_SLIP_ACTION),

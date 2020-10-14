@@ -3,25 +3,33 @@ import { Col, message, Modal, Row, Spin } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { FieldError, Label } from '../../../../../components/elements';
-import { selectors as authSelectors } from '../../../../../ducks/auth';
-import { types } from '../../../../../ducks/order-slips';
-import { selectors as prSelectors } from '../../../../../ducks/requisition-slips';
-import { requisitionSlipProductStatus, request } from '../../../../../global/types';
+import { selectors, types } from '../../../../../ducks/requisition-slips';
+import { request, requisitionSlipProductStatus } from '../../../../../global/types';
 import { useRequisitionSlips } from '../../../../../hooks/useRequisitionSlips';
-import { useOrderSlips } from '../../../hooks/useOrderSlips';
 import { SetOutOfStockForm } from './SetOutOfStockForm';
 
 interface Props {
+	updateRequisitionSlipByFetching: any;
 	requisitionSlipId: number;
 	visible: boolean;
 	onClose: any;
 }
 
-export const SetOutOfStockModal = ({ requisitionSlipId, visible, onClose }: Props) => {
-	const user = useSelector(authSelectors.selectUser());
-	const { setOutOfStock, status, errors, recentRequest, reset } = useOrderSlips();
-	const { getRequisitionSlipsByIdAndBranch, status: requisitionSlipStatus } = useRequisitionSlips();
-	const requisitionSlip = useSelector(prSelectors.selectRequisitionSlipForOutOfStock());
+export const SetOutOfStockModal = ({
+	updateRequisitionSlipByFetching,
+	requisitionSlipId,
+	visible,
+	onClose,
+}: Props) => {
+	const {
+		getRequisitionSlipsByIdAndBranch,
+		setOutOfStock,
+		status,
+		errors,
+		recentRequest,
+		reset,
+	} = useRequisitionSlips();
+	const requisitionSlip = useSelector(selectors.selectRequisitionSlipForOutOfStock());
 
 	const [products, setProducts] = useState([]);
 
@@ -34,14 +42,22 @@ export const SetOutOfStockModal = ({ requisitionSlipId, visible, onClose }: Prop
 
 	// Effect: Format product
 	useEffect(() => {
-		if (visible && requisitionSlip && requisitionSlipStatus === request.SUCCESS) {
+		if (
+			visible &&
+			requisitionSlip &&
+			status === request.SUCCESS &&
+			recentRequest === types.GET_REQUISITION_SLIP_BY_ID_AND_BRANCH
+		) {
 			const formattedProducts = requisitionSlip?.products
-				?.filter(({ status }) => status === requisitionSlipProductStatus.NOT_ADDED_TO_OS)
-				?.map((prProduct) => {
-					const { product } = prProduct?.product;
+				?.filter(
+					({ product, status }) =>
+						status === requisitionSlipProductStatus.NOT_ADDED_TO_OS && !product.is_out_of_stock,
+				)
+				?.map((item) => {
+					const { id, product } = item?.product;
 
 					return {
-						product_id: product.id,
+						requisition_slip_product_id: id,
 						product_barcode: product.barcode,
 						product_name: product.name,
 					};
@@ -49,35 +65,41 @@ export const SetOutOfStockModal = ({ requisitionSlipId, visible, onClose }: Prop
 
 			setProducts(formattedProducts);
 		}
-	}, [visible, requisitionSlipStatus, requisitionSlip]);
+	}, [visible, status, recentRequest, requisitionSlip]);
 
 	// Effect: Close modal if success
 	useEffect(() => {
-		if (status === request.SUCCESS && recentRequest === types.CREATE_ORDER_SLIP) {
+		if (status === request.SUCCESS && recentRequest === types.SET_OUT_OF_STOCK) {
+			updateRequisitionSlipByFetching();
 			reset();
 			onClose();
 		}
 	}, [status, recentRequest]);
 
-	const isFetching = useCallback(() => requisitionSlipStatus === request.REQUESTING, [
-		requisitionSlipStatus,
-	]);
+	const isFetching = useCallback(
+		() =>
+			status === request.REQUESTING &&
+			recentRequest === types.GET_REQUISITION_SLIP_BY_ID_AND_BRANCH,
+		[status, recentRequest],
+	);
+
+	const isSettingOutOfStock = useCallback(
+		() => status === request.REQUESTING && recentRequest === types.SET_OUT_OF_STOCK,
+		[status, recentRequest],
+	);
 
 	const onSetOutOfStockSubmit = (values) => {
-		const products = values.products
+		const requisition_slip_products = values.products
 			.filter(({ selected }) => selected)
-			.map((product) => ({
-				product_id: product.product_id,
-				quantity_piece: null,
-				assigned_person_id: null,
+			.map(({ requisition_slip_product_id }) => ({
+				requisition_slip_product_id,
+				is_out_of_stock: true,
 			}));
 
 		if (products?.length > 0) {
 			const data = {
-				requesting_user_id: user.id,
-				assigned_store_id: null,
-				requisition_slip_id: requisitionSlipId,
-				products,
+				id: requisitionSlipId,
+				requisition_slip_products,
 			};
 
 			setOutOfStock(data);
@@ -110,7 +132,7 @@ export const SetOutOfStockModal = ({ requisitionSlipId, visible, onClose }: Prop
 					products={products}
 					onSubmit={onSetOutOfStockSubmit}
 					onClose={onClose}
-					loading={status === request.REQUESTING}
+					loading={isSettingOutOfStock()}
 				/>
 			</Spin>
 		</Modal>

@@ -12,6 +12,10 @@ const CREATE_ERROR_MESSAGE = 'An error occurred while creating the requisition s
 const EDIT_SUCCESS_MESSAGE = 'Requisition slip was edited successfully';
 const EDIT_ERROR_MESSAGE = 'An error occurred while updating the requisition slip';
 
+const SET_OUT_OF_STOCK_SUCCESS_MESSAGE = 'Products were set to out of stocks successfully';
+const SET_OUT_OF_STOCK_ERROR_MESSAGE =
+	'An error occurred while setting the products as out of stock';
+
 export const useRequisitionSlips = () => {
 	const [status, setStatus] = useState<any>(request.NONE);
 	const [errors, setErrors] = useState<any>([]);
@@ -28,6 +32,7 @@ export const useRequisitionSlips = () => {
 	const createRequisitionSlip = useActionDispatch(actions.createRequisitionSlip);
 	const editRequisitionSlip = useActionDispatch(actions.editRequisitionSlip);
 	const removeRequisitionSlipByBranch = useActionDispatch(actions.removeRequisitionSlipByBranch);
+	const setOutOfStock = useActionDispatch(actions.setOutOfStock);
 
 	const reset = () => {
 		resetError();
@@ -84,6 +89,18 @@ export const useRequisitionSlips = () => {
 		});
 	};
 
+	const setOutOfStockRequest = (data) => {
+		setRecentRequest(types.SET_OUT_OF_STOCK);
+		setOutOfStock({
+			...data,
+			callback: modifiedCallback(
+				callback,
+				SET_OUT_OF_STOCK_SUCCESS_MESSAGE,
+				SET_OUT_OF_STOCK_ERROR_MESSAGE,
+			),
+		});
+	};
+
 	const callback = ({ status, errors = [] }) => {
 		setStatus(status);
 		setErrors(errors);
@@ -97,6 +114,7 @@ export const useRequisitionSlips = () => {
 		getRequisitionSlipsByIdAndBranch: getRequisitionSlipsByIdAndBranchRequest,
 		createRequisitionSlip: createRequisitionSlipRequest,
 		editRequisitionSlip: editRequisitionSlipRequest,
+		setOutOfStock: setOutOfStockRequest,
 		removeRequisitionSlipByBranch,
 		status,
 		errors,

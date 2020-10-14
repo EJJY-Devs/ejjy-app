@@ -20,9 +20,9 @@ export const SetOutOfStockForm = ({ products, onSubmit, onClose, loading }: Prop
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: {
-				products: products.map((product) => ({
+				products: products.map(({ requisition_slip_product_id }) => ({
 					selected: false,
-					product_id: product?.product_id,
+					requisition_slip_product_id,
 				})),
 			},
 		}),

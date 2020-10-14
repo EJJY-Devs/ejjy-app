@@ -19,7 +19,7 @@ interface Props {
 
 export const FulfillPreparationSlipModal = ({ preparationSlip, visible, onClose }: Props) => {
 	const [preparationSlipProducts, setPreparationSlipProducts] = useState([]);
-
+	console.log(preparationSlip);
 	const user = useSelector(authSelectors.selectUser());
 	const { fulfillPreparationSlip, status, errors, recentRequest, reset } = usePreparationSlips();
 

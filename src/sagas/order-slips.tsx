@@ -90,19 +90,6 @@ function* remove({ payload }: any) {
 	}
 }
 
-function* setOutOfStock({ payload }: any) {
-	const { callback, ...data } = payload;
-	callback({ status: request.REQUESTING });
-
-	try {
-		yield call(service.create, data);
-		yield put(requisitionSlipActions.removeRequisitionSlipByBranch());
-		callback({ status: request.SUCCESS });
-	} catch (e) {
-		callback({ status: request.ERROR, errors: e.errors });
-	}
-}
-
 /* WATCHERS */
 const listWatcherSaga = function* listWatcherSaga() {
 	yield takeLatest(types.GET_ORDER_SLIPS, list);
@@ -124,15 +111,10 @@ const removeWatcherSaga = function* removeWatcherSaga() {
 	yield takeLatest(types.REMOVE_ORDER_SLIP, remove);
 };
 
-const setOutOfStockWatcherSaga = function* setOutOfStockWatcherSaga() {
-	yield takeLatest(types.SET_OUT_OF_STOCK, setOutOfStock);
-};
-
 export default [
 	listWatcherSaga(),
 	listExtendedWatcherSaga(),
 	createWatcherSaga(),
 	editWatcherSaga(),
 	removeWatcherSaga(),
-	setOutOfStockWatcherSaga(),
 ];

@@ -28,9 +28,8 @@ const ViewRequisitionSlip = ({ match }: Props) => {
 
 	// Effect: Fetch requisition slip
 	useEffect(() => {
-		removeRequisitionSlipByBranch();
-		getRequisitionSlipsById(requisitionSlipId, requisitionSlipDoesNotExistCallback);
-	}, []);
+		fetchRequisitionSlip();
+	}, [requisitionSlipId]);
 
 	const requisitionSlipDoesNotExistCallback = ({ status }) => {
 		if (status === request.ERROR) {
@@ -46,6 +45,13 @@ const ViewRequisitionSlip = ({ match }: Props) => {
 		[requisitionSlip],
 	);
 
+	const fetchRequisitionSlip = () => {
+		if (requisitionSlipId) {
+			removeRequisitionSlipByBranch();
+			getRequisitionSlipsById(requisitionSlipId, requisitionSlipDoesNotExistCallback);
+		}
+	};
+
 	return (
 		<Container
 			title="[VIEW] F-RS01"
@@ -60,7 +66,10 @@ const ViewRequisitionSlip = ({ match }: Props) => {
 					requisitionSlipStatus={requisitionSlipStatus}
 				/>
 
-				<OrderSlips requisitionSlipId={requisitionSlipId} />
+				<OrderSlips
+					fetchRequisitionSlip={fetchRequisitionSlip}
+					requisitionSlipId={requisitionSlipId}
+				/>
 			</section>
 		</Container>
 	);

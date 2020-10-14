@@ -15,8 +15,6 @@ export const types = {
 	CREATE_ORDER_SLIP: `${key}/CREATE_ORDER_SLIP`,
 	EDIT_ORDER_SLIP: `${key}/EDIT_ORDER_SLIP`,
 	REMOVE_ORDER_SLIP: `${key}/REMOVE_ORDER_SLIP`,
-
-	SET_OUT_OF_STOCK: `${key}/SET_OUT_OF_STOCK`,
 };
 
 const initialState = {
@@ -88,7 +86,6 @@ export const actions = {
 	createOrderSlip: createAction(types.CREATE_ORDER_SLIP),
 	editOrderSlip: createAction(types.EDIT_ORDER_SLIP),
 	removeOrderSlip: createAction(types.REMOVE_ORDER_SLIP),
-	setOutOfStock: createAction(types.SET_OUT_OF_STOCK),
 };
 
 const selectState = (state: any) => state[key] || initialState;

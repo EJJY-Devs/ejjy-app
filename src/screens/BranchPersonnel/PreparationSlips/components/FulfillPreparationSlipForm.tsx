@@ -1,16 +1,18 @@
 import { Divider } from 'antd';
 import { FieldArray, Form, Formik } from 'formik';
+import { min } from 'lodash';
 import React, { useCallback, useState } from 'react';
 import * as Yup from 'yup';
 import { TableNormal } from '../../../../components';
 import { Button, FieldError, FormInput, FormSelect } from '../../../../components/elements';
 import { quantityTypeOptions } from '../../../../global/options';
 import { quantityTypes } from '../../../../global/types';
-import { convertToBulk, sleep } from '../../../../utils/function';
+import { sleep } from '../../../../utils/function';
 
 const columns = [
 	{ name: 'Barcode' },
 	{ name: 'Ordered' },
+	{ name: 'Balance', tooltip: "Product's current balance" },
 	{ name: 'Name' },
 	{ name: 'Quantity', width: '200px' },
 ];
@@ -57,15 +59,18 @@ export const FulfillPreparationSlipForm = ({
 		[preparationSlipProducts],
 	);
 
-	const getFulfilledQuantity = (index, ordered, touched, errors) => {
+	const getFulfilledQuantity = (index, values, touched, errors, maxPiece, maxBulk) => {
 		return (
 			<>
 				<div className="quantity-container">
 					<FormInput
 						type="number"
 						id={`preparationSlipProducts.${index}.fulfilled_quantity`}
-						min={1}
-						max={ordered}
+						max={
+							values?.preparationSlipProducts?.[index]?.quantity_type === quantityTypes.PIECE
+								? maxPiece
+								: maxBulk
+						}
 					/>
 					<FormSelect
 						id={`preparationSlipProducts.${index}.quantity_type`}
@@ -80,11 +85,11 @@ export const FulfillPreparationSlipForm = ({
 		);
 	};
 
-	const getOrdered = (index, ordered, pieces_in_bulk, values) => {
+	const getOrdered = (index, values, ordered, ordered_bulk) => {
 		return values?.preparationSlipProducts?.[index]?.quantity_type === quantityTypes.PIECE ? (
 			<span>{ordered}</span>
 		) : (
-			<span>{convertToBulk(ordered, pieces_in_bulk)}</span>
+			<span>{ordered_bulk}</span>
 		);
 	};
 
@@ -111,11 +116,20 @@ export const FulfillPreparationSlipForm = ({
 									// Name
 									product?.name,
 									// Ordered
-									getOrdered(index, product?.quantity, product?.pieces_in_bulk, values),
+									getOrdered(index, values, product?.quantity, product?.quantity_bulk),
+									// Balance
+									getOrdered(index, values, product?.branch_current, product?.branch_current_bulk),
 									// Barcode
 									product?.barcode,
 									// Fulfilled quantity / Bulk | Pieces
-									getFulfilledQuantity(index, product?.quantity, touched, errors),
+									getFulfilledQuantity(
+										index,
+										values,
+										touched,
+										errors,
+										min([product?.quantity, product?.branch_current]),
+										min([product?.quantity_bulk, product?.branch_current_bulk]),
+									),
 								])}
 							/>
 

@@ -36,7 +36,7 @@ const PreparationSlips = () => {
 	const [selectedPreparationSlip, setSelectedPreparationSlip] = useState(null);
 
 	useEffect(() => {
-		getPreparationSlips(user?.id);
+		fetchPreparationSlips();
 	}, []);
 
 	// Effect: Format preparation slips to be rendered in Table
@@ -93,6 +93,10 @@ const PreparationSlips = () => {
 		setTableData(filteredData);
 	};
 
+	const fetchPreparationSlips = () => {
+		getPreparationSlips(user?.id);
+	};
+
 	return (
 		<Container
 			title="Preparation Slips"
@@ -121,6 +125,7 @@ const PreparationSlips = () => {
 
 					<FulfillPreparationSlipModal
 						preparationSlip={selectedPreparationSlip}
+						updatePreparationSlipsByFetching={fetchPreparationSlips}
 						visible={fulfillModalVisible}
 						onClose={() => setFulfillModalVisible(false)}
 					/>

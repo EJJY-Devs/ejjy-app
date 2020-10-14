@@ -190,7 +190,7 @@ export const CreateEditOrderSlipForm = ({
 											requestedProduct?.ordered_quantity_bulk,
 										]),
 									),
-									// Quantity / Bulk | Pieces
+									// Order / Bulk | Pieces
 									getOrdered(
 										index,
 										requestedProduct?.ordered_quantity_piece,

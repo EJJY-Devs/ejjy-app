@@ -15,10 +15,6 @@ export const PreparationSlipDetails = ({ preparationSlip }: Props) => {
 				label="Date & Time Created"
 				value={formatDateTime(preparationSlip?.datetime_created)}
 			/>
-			<DetailsSingle
-				label="Assigned User"
-				value={`${preparationSlip?.requesting_user.first_name} ${preparationSlip?.requesting_user.last_name}`}
-			/>
 
 			<Divider dashed />
 		</DetailsRow>

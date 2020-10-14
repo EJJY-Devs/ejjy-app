@@ -6,18 +6,24 @@ import { FieldError, Label } from '../../../../components/elements';
 import { selectors as authSelectors } from '../../../../ducks/auth';
 import { types } from '../../../../ducks/BranchPersonnel/preparation-slips';
 import { quantityTypes, request } from '../../../../global/types';
-import { convertToPieces } from '../../../../utils/function';
+import { convertToBulk, convertToPieces } from '../../../../utils/function';
 import { usePreparationSlips } from '../../hooks/usePreparationSlips';
 import { FulfillPreparationSlipForm } from './FulfillPreparationSlipForm';
 import { PreparationSlipDetails } from './PreparationSlipDetails';
 
 interface Props {
 	preparationSlip: any;
+	updatePreparationSlipsByFetching: any;
 	visible: boolean;
 	onClose: any;
 }
 
-export const FulfillPreparationSlipModal = ({ preparationSlip, visible, onClose }: Props) => {
+export const FulfillPreparationSlipModal = ({
+	preparationSlip,
+	updatePreparationSlipsByFetching,
+	visible,
+	onClose,
+}: Props) => {
 	const [preparationSlipProducts, setPreparationSlipProducts] = useState([]);
 	console.log(preparationSlip);
 	const user = useSelector(authSelectors.selectUser());
@@ -27,7 +33,13 @@ export const FulfillPreparationSlipModal = ({ preparationSlip, visible, onClose 
 		if (preparationSlip) {
 			const formattedPreparationSlipProducts = preparationSlip?.products?.map(
 				(requestedProduct) => {
-					const { id, product, quantity_piece, fulfilled_quantity_piece = 0 } = requestedProduct;
+					const {
+						id,
+						product,
+						quantity_piece,
+						current_balance,
+						fulfilled_quantity_piece = 0,
+					} = requestedProduct;
 					const { barcode, name, pieces_in_bulk } = product;
 
 					return {
@@ -37,9 +49,12 @@ export const FulfillPreparationSlipModal = ({ preparationSlip, visible, onClose 
 						order_slip_product_id: id,
 						product_id: product.id,
 						quantity: quantity_piece,
+						quantity_bulk: convertToBulk(quantity_piece, pieces_in_bulk),
 						fulfilled_quantity: fulfilled_quantity_piece,
 						quantity_type: quantityTypes.PIECE,
 						assigned_person_id: user?.id,
+						branch_current: current_balance,
+						branch_current_bulk: convertToBulk(current_balance, pieces_in_bulk),
 					};
 				},
 			);
@@ -51,6 +66,7 @@ export const FulfillPreparationSlipModal = ({ preparationSlip, visible, onClose 
 	// Effect: Close modal if fulfill success
 	useEffect(() => {
 		if (status === request.SUCCESS && recentRequest === types.FULFILL_PREPARATION_SLIP) {
+			updatePreparationSlipsByFetching();
 			reset();
 			onClose();
 		}

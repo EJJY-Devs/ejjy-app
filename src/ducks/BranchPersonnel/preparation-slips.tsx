@@ -1,8 +1,5 @@
-import { cloneDeep } from 'lodash';
 import { createAction, handleActions } from 'redux-actions';
 import { createSelector } from 'reselect';
-import { NOT_FOUND_INDEX } from '../../global/constants';
-import { preparationSlipStatus } from '../../global/types';
 
 export const key = 'BP_PREPARATION_SLIPS';
 
@@ -27,20 +24,21 @@ const reducer = handleActions(
 					newData = { preparationSlips: payload.preparationSlips };
 					break;
 				}
-				case types.FULFILL_PREPARATION_SLIP: {
-					const { preparationSlip: editedPreparationSlip } = payload;
-					const index = state.preparationSlips.findIndex(
-						({ id }) => id === editedPreparationSlip.id,
-					);
+				// NOTE: Commented out because prep slip re-fetched after fulfilling prep slip
+				// case types.FULFILL_PREPARATION_SLIP: {
+				// 	const { preparationSlip: editedPreparationSlip } = payload;
+				// 	const index = state.preparationSlips.findIndex(
+				// 		({ id }) => id === editedPreparationSlip.id,
+				// 	);
 
-					if (index !== NOT_FOUND_INDEX) {
-						const preparationSlips = cloneDeep(state.preparationSlips);
-						preparationSlips[index].products = editedPreparationSlip.products;
-						preparationSlips[index].status = preparationSlipStatus.COMPLETED;
-						newData = { preparationSlips };
-					}
-					break;
-				}
+				// 	if (index !== NOT_FOUND_INDEX) {
+				// 		const preparationSlips = cloneDeep(state.preparationSlips);
+				// 		preparationSlips[index].products = editedPreparationSlip.products;
+				// 		preparationSlips[index].status = preparationSlipStatus.COMPLETED;
+				// 		newData = { preparationSlips };
+				// 	}
+				// 	break;
+				// }
 			}
 
 			return { ...state, ...newData };

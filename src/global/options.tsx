@@ -55,8 +55,12 @@ export const requisitionSlipActionsOptions = [
 		name: 'F-DS1 Delivering',
 	},
 	{
-		value: requisitionSlipActions.F_DS1_DELIVERED,
-		name: 'F-DS1 Delivered',
+		value: requisitionSlipActions.F_DS1_DELIVERED_DONE,
+		name: 'F-DS1 Delivered (Done)',
+	},
+	{
+		value: requisitionSlipActions.F_DS1_DELIVERED_ERROR,
+		name: 'F-DS1 Delivered (Error)',
 	},
 ];
 

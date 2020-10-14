@@ -72,7 +72,7 @@ export const ReceiveDeliveryReceiptModal = ({
 			received_products: values.products,
 			requisitionSlipAction:
 				deliveredOrderSlips.length === orderSlips.length - 1
-					? requisitionSlipActions.F_DS1_DELIVERED
+					? requisitionSlipActions.F_DS1_DELIVERED_DONE
 					: requisitionSlipActions.F_DS1_DELIVERING,
 		});
 	};

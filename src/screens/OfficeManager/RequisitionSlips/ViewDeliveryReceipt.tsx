@@ -26,11 +26,7 @@ const ViewDeliveryReceipt = ({ match }: Props) => {
 	// Effect: Fetch delivery receipt of order slip
 	useEffect(() => {
 		if (deliveryReceiptId) {
-			getDeliveryReceiptById(deliveryReceiptId, ({ status }) => {
-				if (status === request.ERROR) {
-					history.replace('/404');
-				}
-			});
+			fetchDeliveryReceipt();
 		}
 	}, [deliveryReceiptId]);
 
@@ -46,6 +42,14 @@ const ViewDeliveryReceipt = ({ match }: Props) => {
 		[deliveryReceipt],
 	);
 
+	const fetchDeliveryReceipt = () => {
+		getDeliveryReceiptById(deliveryReceiptId, ({ status }) => {
+			if (status === request.ERROR) {
+				history.replace('/404');
+			}
+		});
+	};
+
 	return (
 		<Container
 			title="[VIEW] F-DS1"
@@ -56,7 +60,10 @@ const ViewDeliveryReceipt = ({ match }: Props) => {
 		>
 			<section className="ViewDeliveryReceipt">
 				<DeliveryReceipt deliveryReceipt={deliveryReceipt} />
-				<AdjustmentSlips deliveryReceipt={deliveryReceipt} />
+				<AdjustmentSlips
+					deliveryReceipt={deliveryReceipt}
+					fetchDeliveryReceipt={fetchDeliveryReceipt}
+				/>
 			</section>
 		</Container>
 	);

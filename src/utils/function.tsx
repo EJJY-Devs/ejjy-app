@@ -12,7 +12,8 @@ import {
 	ErrorBadgePill,
 	FDS1CreatedBadgePill,
 	FDS1CreatingBadgePill,
-	FDS1DeliveredBadgePill,
+	FDS1DeliveredBadgeDonePill,
+	FDS1DeliveredBadgeErrorPill,
 	FDS1DeliveringBadgePill,
 	FOS1CreatedBadgePill,
 	FOS1CreatingBadgePill,
@@ -33,9 +34,9 @@ import {
 	orderSlipStatus,
 	OSDRStatus,
 	preparationSlipStatus,
+	request,
 	requisitionSlipActions,
 	requisitionSlipProductStatus,
-	request,
 	userTypes,
 } from '../global/types';
 
@@ -139,8 +140,11 @@ export const getRequisitionSlipStatus = memoize((status) => {
 		case requisitionSlipActions.F_DS1_DELIVERING: {
 			return <FDS1DeliveringBadgePill />;
 		}
-		case requisitionSlipActions.F_DS1_DELIVERED: {
-			return <FDS1DeliveredBadgePill />;
+		case requisitionSlipActions.F_DS1_DELIVERED_DONE: {
+			return <FDS1DeliveredBadgeDonePill />;
+		}
+		case requisitionSlipActions.F_DS1_DELIVERED_ERROR: {
+			return <FDS1DeliveredBadgeErrorPill />;
 		}
 	}
 });

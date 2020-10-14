@@ -65,8 +65,12 @@ export const FDS1DeliveringBadgePill = ({ classNames }: Props) => (
 	<BadgePill classNames={classNames} label="(6/6) F-DS1 Delivering" />
 );
 
-export const FDS1DeliveredBadgePill = ({ classNames }: Props) => (
+export const FDS1DeliveredBadgeDonePill = ({ classNames }: Props) => (
 	<BadgePill classNames={classNames} label="(6/6) F-DS1 Delivered" variant="primary" />
+);
+
+export const FDS1DeliveredBadgeErrorPill = ({ classNames }: Props) => (
+	<BadgePill classNames={classNames} label="(6/6) F-DS1 Delivered" variant="error" />
 );
 
 export const AvailableBadgePill = ({ classNames }: Props) => (

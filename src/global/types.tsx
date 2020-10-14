@@ -41,7 +41,9 @@ export const requisitionSlipActions = {
 	F_DS1_CREATING: 'f_ds1_creating',
 	F_DS1_CREATED: 'f_ds1_created',
 	F_DS1_DELIVERING: 'f_ds1_delivering',
-	F_DS1_DELIVERED: 'f_ds1_delivered',
+	F_DS1_DELIVERED_DONE: 'f_ds1_delivered_done',
+	F_DS1_DELIVERED_ERROR: 'f_ds1_delivered_error',
+	OUT_OF_STOCK: 'out_of_stock',
 };
 
 export const branchProductStatus = {

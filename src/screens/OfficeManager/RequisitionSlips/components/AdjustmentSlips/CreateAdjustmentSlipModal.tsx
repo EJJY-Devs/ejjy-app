@@ -7,6 +7,7 @@ import { FieldError, Label, Textarea } from '../../../../../components/elements'
 import { selectors as authSelectors } from '../../../../../ducks/auth';
 import { types } from '../../../../../ducks/OfficeManager/adjustment-slips';
 import { deliveryReceiptStatus, request } from '../../../../../global/types';
+import { confirmPassword } from '../../../../../utils/function';
 import { useAdjustmentSlips } from '../../../hooks/useAdjustmentSlips';
 import { CreateAdjustmentSlipForm } from './CreateAdjustmentSlipForm';
 
@@ -67,13 +68,49 @@ export const CreateAdjustmentSlipModal = ({
 		}
 	}, [status, recentRequest]);
 
-	const onCreateOrderSlipSubmit = (values) => {
+	const hasErrors = (values) => {
 		if (!remarks.length) {
 			message.error('Remarks field is required');
+			return true;
+		}
+
+		const productLength = values.deliveryReceiptProducts.filter(
+			(product) =>
+				product.selected &&
+				(product.new_delivered_quantity_piece || product.new_received_quantity_piece),
+		)?.length;
+		if (!productLength) {
+			message.error('Must have at least one (1) adjusted product');
+			return true;
+		}
+
+		return false;
+	};
+
+	const onCreateAdjustmentSlipSubmit = (values) => {
+		if (hasErrors(values)) {
 			return;
 		}
 
-		const products = values.deliveryReceiptProducts
+		const submit = () => {
+			createAdjustmentSlip({
+				delivery_receipt_id: deliveryReceipt?.id,
+				creating_user_id: user.id,
+				remarks,
+				adjustment_slip_products: getProducts(values),
+			});
+		};
+
+		const requiresPassword = values.deliveryReceiptProducts.some(({ is_adjusted }) => is_adjusted);
+		if (requiresPassword) {
+			confirmPassword({ onSuccess: submit });
+		} else {
+			submit();
+		}
+	};
+
+	const getProducts = (values) => {
+		return values.deliveryReceiptProducts
 			.filter(
 				(product) =>
 					product.selected &&
@@ -84,18 +121,6 @@ export const CreateAdjustmentSlipModal = ({
 				new_delivered_quantity_piece: product?.new_delivered_quantity_piece || undefined,
 				new_received_quantity_piece: product?.new_received_quantity_piece || undefined,
 			}));
-
-		if (products.length) {
-			const data = {
-				delivery_receipt_id: deliveryReceipt?.id,
-				creating_user_id: user.id,
-				remarks,
-				adjustment_slip_products: products,
-			};
-			createAdjustmentSlip(data);
-		} else {
-			message.error('Must have at least one (1) adjusted product');
-		}
 	};
 
 	return (
@@ -124,7 +149,7 @@ export const CreateAdjustmentSlipModal = ({
 
 			<CreateAdjustmentSlipForm
 				deliveryReceiptProducts={deliveryReceiptProducts}
-				onSubmit={onCreateOrderSlipSubmit}
+				onSubmit={onCreateAdjustmentSlipSubmit}
 				onClose={onClose}
 				loading={status === request.REQUESTING}
 			/>

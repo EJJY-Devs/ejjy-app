@@ -1,4 +1,4 @@
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import { floor, memoize } from 'lodash';
 import moment from 'moment';
 import React from 'react';
@@ -16,7 +16,7 @@ import {
 	ReorderBadgePill,
 	ROW_HEIGHT,
 } from '../components';
-import { BadgePill } from '../components/elements';
+import { BadgePill, Input } from '../components/elements';
 import { EMPTY_CELL } from '../global/constants';
 import {
 	branchProductStatus,
@@ -43,6 +43,35 @@ export const showMessage = (status, successMessage, errorMessage) => {
 	} else if (status === request.ERROR) {
 		message.error(errorMessage);
 	}
+};
+
+interface ConfirmPassword {
+	title?: string;
+	label?: string;
+	onSuccess: any;
+}
+export const confirmPassword = ({ title = 'Input Password', onSuccess }: ConfirmPassword) => {
+	let password = '';
+
+	Modal.confirm({
+		title,
+		centered: true,
+		className: 'ConfirmPassword',
+		okText: 'Submit',
+		content: (
+			<div>
+				<Input onChange={(value) => (password = value)} />
+			</div>
+		),
+		onOk: (close) => {
+			if (password === 'generic123') {
+				onSuccess();
+				close();
+			} else {
+				message.error('Incorrect password');
+			}
+		},
+	});
 };
 
 export const formatDateTime = memoize((datetime) => moment(datetime).format('MM/DD/YYYY h:mma'));

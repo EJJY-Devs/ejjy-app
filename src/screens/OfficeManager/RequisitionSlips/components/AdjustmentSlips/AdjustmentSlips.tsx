@@ -35,7 +35,7 @@ export const AdjustmentSlips = ({ fetchDeliveryReceipt, deliveryReceipt }: Props
 	}, [deliveryReceipt]);
 
 	const hasProductUnderInvestigation = useCallback(() => {
-		return deliveryReceipt.delivery_receipt_products.some(
+		return deliveryReceipt?.delivery_receipt_products?.some(
 			({ status }) => status === deliveryReceiptProductStatus.INVESTIGATION,
 		);
 	}, [deliveryReceipt]);

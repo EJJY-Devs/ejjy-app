@@ -10,21 +10,11 @@ import {
 	CompletedBadgePill,
 	DoneBadgePill,
 	ErrorBadgePill,
-	FDS1CreatedBadgePill,
-	FDS1CreatingBadgePill,
-	FDS1DeliveredBadgeDonePill,
-	FDS1DeliveredBadgeErrorPill,
-	FDS1DeliveringBadgePill,
-	FOS1CreatedBadgePill,
-	FOS1CreatingBadgePill,
-	FOS1PreparedBadgePill,
-	FOS1PreparingBadgePill,
 	NewBadgePill,
 	NotAddedToOSBadgePill,
 	OutOfStocksBadgePill,
 	ReorderBadgePill,
 	ROW_HEIGHT,
-	SeenBadgePill,
 } from '../components';
 import { BadgePill } from '../components/elements';
 import { EMPTY_CELL } from '../global/constants';
@@ -114,37 +104,40 @@ export const getBranchProductStatus = memoize((status) => {
 export const getRequisitionSlipStatus = memoize((status) => {
 	switch (status) {
 		case requisitionSlipActions.NEW: {
-			return <NewBadgePill />;
+			return <BadgePill label="(1/6) New" variant="secondary" />;
 		}
 		case requisitionSlipActions.SEEN: {
-			return <SeenBadgePill />;
+			return <BadgePill label="(2/6) Seen" />;
 		}
 		case requisitionSlipActions.F_OS1_CREATING: {
-			return <FOS1CreatingBadgePill />;
+			return <BadgePill label="(3/6) F-OS1 Creating" />;
 		}
 		case requisitionSlipActions.F_OS1_CREATED: {
-			return <FOS1CreatedBadgePill />;
+			return <BadgePill label="(3/6) F-OS1 Created" />;
 		}
 		case requisitionSlipActions.F_OS1_PREPARING: {
-			return <FOS1PreparingBadgePill />;
+			return <BadgePill label="(4/6) F-OS1 Preparing" />;
 		}
 		case requisitionSlipActions.F_OS1_PREPARED: {
-			return <FOS1PreparedBadgePill />;
+			return <BadgePill label="(4/6) F-OS1 Prepared" />;
 		}
 		case requisitionSlipActions.F_DS1_CREATING: {
-			return <FDS1CreatingBadgePill />;
+			return <BadgePill label="(5/6) F-DS1 Creating" />;
 		}
 		case requisitionSlipActions.F_DS1_CREATED: {
-			return <FDS1CreatedBadgePill />;
+			return <BadgePill label="(5/6) F-DS1 Created" />;
 		}
 		case requisitionSlipActions.F_DS1_DELIVERING: {
-			return <FDS1DeliveringBadgePill />;
+			return <BadgePill label="(6/6) F-DS1 Delivering" />;
 		}
 		case requisitionSlipActions.F_DS1_DELIVERED_DONE: {
-			return <FDS1DeliveredBadgeDonePill />;
+			return <BadgePill label="(6/6) F-DS1 Delivered" variant="primary" />;
 		}
 		case requisitionSlipActions.F_DS1_DELIVERED_ERROR: {
-			return <FDS1DeliveredBadgeErrorPill />;
+			return <BadgePill label="(6/6) F-DS1 Delivered" variant="error" />;
+		}
+		case requisitionSlipActions.OUT_OF_STOCK: {
+			return <BadgePill label="Out Of Stock" variant="secondary" />;
 		}
 	}
 });

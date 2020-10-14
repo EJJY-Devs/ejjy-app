@@ -62,6 +62,10 @@ export const requisitionSlipActionsOptions = [
 		value: requisitionSlipActions.F_DS1_DELIVERED_ERROR,
 		name: 'F-DS1 Delivered (Error)',
 	},
+	{
+		value: requisitionSlipActions.OUT_OF_STOCK,
+		name: 'Out of Stock',
+	},
 ];
 
 export const requisitionSlipActionsOptionsWithAll = [

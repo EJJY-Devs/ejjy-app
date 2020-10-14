@@ -109,7 +109,11 @@ export const OrderSlips = ({ fetchRequisitionSlip, requisitionSlipId }: Props) =
 	);
 
 	const hasAvailableProducts = useCallback(
-		() => !!requisitionSlip?.products?.filter(({ product }) => !product.is_out_of_stock).length,
+		() =>
+			!!requisitionSlip?.products?.filter(
+				({ is_out_of_stock, status }) =>
+					status === requisitionSlipProductStatus.NOT_ADDED_TO_OS && !is_out_of_stock,
+			).length,
 		[requisitionSlip],
 	);
 
@@ -219,8 +223,6 @@ export const OrderSlips = ({ fetchRequisitionSlip, requisitionSlipId }: Props) =
 	const onCreateDeliveryReceipt = (id) => {
 		createDeliveryReceipt(id);
 	};
-
-	console.log(requisitionSlip);
 
 	return (
 		<Box>

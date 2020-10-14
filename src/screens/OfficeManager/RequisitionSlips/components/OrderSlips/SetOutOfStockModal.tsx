@@ -50,8 +50,9 @@ export const SetOutOfStockModal = ({
 		) {
 			const formattedProducts = requisitionSlip?.products
 				?.filter(
-					({ product, status }) =>
-						status === requisitionSlipProductStatus.NOT_ADDED_TO_OS && !product.is_out_of_stock,
+					({ product }) =>
+						product.status === requisitionSlipProductStatus.NOT_ADDED_TO_OS &&
+						!product.is_out_of_stock,
 				)
 				?.map((item) => {
 					const { id, product } = item?.product;

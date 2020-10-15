@@ -66,7 +66,7 @@ export const OrderSlips = ({ fetchRequisitionSlip, requisitionSlipId }: Props) =
 	const requisitionSlipsByBranch = useSelector(prSelectors.selectRequisitionSlipsByBranch());
 	const setRequisitionSlipAction = useActionDispatch(prActions.setRequisitionSlipAction);
 
-	// Effect: Fetch requisition slip
+	// Effect: Fetch order slips
 	useEffect(() => {
 		if (requisitionSlipId) {
 			getOrderSlipsExtended(requisitionSlipId);

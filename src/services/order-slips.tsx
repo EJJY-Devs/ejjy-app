@@ -30,7 +30,8 @@ interface IEditOrderSlip {
 }
 
 interface IGetOrderSlipsRequest extends IGetRequest {
-	requisition_slip_id: number;
+	requisition_slip_id?: number;
+	assigned_store_id?: number;
 	is_out_of_stock?: boolean;
 }
 

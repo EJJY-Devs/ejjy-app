@@ -7,7 +7,7 @@ import { service } from '../services/order-slips';
 
 /* WORKERS */
 function* list({ payload }: any) {
-	const { requisition_slip_id, callback } = payload;
+	const { requisition_slip_id = null, assigned_store_id = null, callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	try {
@@ -15,7 +15,7 @@ function* list({ payload }: any) {
 			page: 1,
 			page_size: MAX_PAGE_SIZE,
 			requisition_slip_id,
-			is_out_of_stock: false,
+			assigned_store_id,
 		});
 
 		yield put(actions.save({ type: types.GET_ORDER_SLIPS, orderSlips: response.data.results }));
@@ -26,7 +26,7 @@ function* list({ payload }: any) {
 }
 
 function* listExtended({ payload }: any) {
-	const { requisition_slip_id, callback } = payload;
+	const { requisition_slip_id = null, assigned_store_id = null, callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	try {
@@ -34,7 +34,7 @@ function* listExtended({ payload }: any) {
 			page: 1,
 			page_size: MAX_PAGE_SIZE,
 			requisition_slip_id,
-			is_out_of_stock: false,
+			assigned_store_id,
 		});
 
 		yield put(

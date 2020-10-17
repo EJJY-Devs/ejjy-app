@@ -15,7 +15,7 @@ function* list({ payload }: any) {
 	callback({ status: request.REQUESTING });
 
 	try {
-		yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.list, {
+		const response = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.list, {
 			ordering: 'id',
 			page: 1,
 			page_size: MAX_PAGE_SIZE,
@@ -25,7 +25,7 @@ function* list({ payload }: any) {
 		});
 
 		// NOTE: Commented out because prep slip re-fetched after fulfilling prep slip
-		// yield put(actions.save({ type: types.GET_PREPARATION_SLIPS, preparationSlips: response.data }));
+		yield put(actions.save({ type: types.GET_PREPARATION_SLIPS, preparationSlips: response.data }));
 		callback({ status: request.SUCCESS });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });

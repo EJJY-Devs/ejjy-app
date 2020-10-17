@@ -22,14 +22,22 @@ export const useOrderSlips = () => {
 
 	const resetStatus = () => setStatus(request.NONE);
 
-	const getOrderSlipRequest = (assignedStoreId) => {
+	const getOrderSlipRequest = (assignedStoreId, requisitionSlipId) => {
 		setRecentRequest(types.GET_ORDER_SLIPS);
-		getOrderSlips({ assigned_store_id: assignedStoreId, callback });
+		getOrderSlips({
+			assigned_store_id: assignedStoreId,
+			requisition_slip_id: requisitionSlipId,
+			callback,
+		});
 	};
 
-	const getOrderSlipsExtendedRequest = (assignedStoreId) => {
+	const getOrderSlipsExtendedRequest = (assignedStoreId, requisitionSlipId) => {
 		setRecentRequest(types.GET_ORDER_SLIPS_EXTENDED);
-		getOrderSlipsExtended({ assigned_store_id: assignedStoreId, callback });
+		getOrderSlipsExtended({
+			assigned_store_id: assignedStoreId,
+			requisition_slip_id: requisitionSlipId,
+			callback,
+		});
 	};
 
 	const callback = ({ status, errors = [] }) => {

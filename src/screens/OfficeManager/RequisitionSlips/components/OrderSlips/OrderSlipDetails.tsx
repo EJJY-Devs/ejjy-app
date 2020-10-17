@@ -28,6 +28,7 @@ export const OrderSlipDetails = ({ orderSlip }: Props) => {
 				value={getOrderSlipStatus(
 					orderSlip?.status?.value,
 					orderSlip?.status?.percentage_fulfilled * 100,
+					orderSlip?.delivery_receipt?.status,
 				)}
 			/>
 		</DetailsRow>

@@ -24,9 +24,11 @@ import {
 	orderSlipStatus,
 	OSDRStatus,
 	preparationSlipStatus,
+	productTypes,
 	request,
 	requisitionSlipActions,
 	requisitionSlipProductStatus,
+	unitOfMeasurementTypes,
 	userTypes,
 } from '../global/types';
 
@@ -257,6 +259,34 @@ export const getDeliveryReceiptStatus = memoize((key, status, isAdjusted) => {
 		}
 		case deliveryReceiptStatus.INVESTIGATION: {
 			return <BadgePill label={`Investigation ${isAdjustedText}`} variant="secondary" />;
+		}
+		default: {
+			return EMPTY_CELL;
+		}
+	}
+});
+
+export const getUnitOfMeasurement = memoize((unitOfMeasurement) => {
+	switch (unitOfMeasurement) {
+		case unitOfMeasurementTypes.WEIGHING: {
+			return 'Weighing';
+		}
+		case unitOfMeasurementTypes.NON_WEIGHING: {
+			return 'Non-weighing';
+		}
+		default: {
+			return EMPTY_CELL;
+		}
+	}
+});
+
+export const getProductType = memoize((type) => {
+	switch (type) {
+		case productTypes.DRY: {
+			return 'Dry';
+		}
+		case productTypes.WET: {
+			return 'Wet';
 		}
 		default: {
 			return EMPTY_CELL;

@@ -1,56 +1,88 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { lowerCase } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { Container, Table, TableHeader } from '../../../components';
 import { Box, ButtonLink } from '../../../components/elements';
-import { types } from '../../../ducks/OfficeManager/products';
+import { selectors as authSelectors } from '../../../ducks/auth';
+import { types } from '../../../ducks/branch-products';
+import { EMPTY_CELL } from '../../../global/constants';
 import { request } from '../../../global/types';
-import { useProducts } from '../../../hooks/useProducts';
-import { calculateTableHeight } from '../../../utils/function';
+import { useBranchProducts } from '../../../hooks/useBranchProducts';
+import { calculateTableHeight, getBranchProductStatus } from '../../../utils/function';
 import { ViewProductModal } from './components/ViewProductModal';
 
 const columns = [
 	{ title: 'Barcode', dataIndex: 'barcode' },
 	{ title: 'Name', dataIndex: 'name' },
+	{ title: 'Status', dataIndex: 'status' },
+	{ title: 'RS ID', dataIndex: 'requisitionSlip' },
 ];
 
-// NOTE: THIS IS NOT COMPLETED YET, NOT PART OF ANY SPRINTS YET.
 const Products = () => {
+	// States
 	const [data, setData] = useState([]);
 	const [tableData, setTableData] = useState([]);
-	const [viewProductModalVisible, setViewProductModalVisible] = useState(false);
-	const [selectedProduct, setSelectedProduct] = useState(null);
+	const [viewBranchProductModalVisible, setViewBranchProductModalVisible] = useState(false);
+	const [selectedBranchProduct, setSelectedBranchProduct] = useState(null);
 
-	const { status, products, getProducts, recentRequest } = useProducts();
+	// Custom hooks
+	const user = useSelector(authSelectors.selectUser());
+	const { branchProducts, getBranchProductsByBranch, status, recentRequest } = useBranchProducts();
 
+	// Effect: Fetch branch products
 	useEffect(() => {
-		getProducts();
+		getBranchProductsByBranch(user?.branch?.id);
 	}, []);
 
-	// Effect: Format products to be rendered in Table
+	// Effect: Format branch products to be rendered in Table
 	useEffect(() => {
-		const formattedProducts = products.map((product) => {
-			const { barcode, name } = product;
+		if (status === request.SUCCESS && recentRequest === types.GET_BRANCH_PRODUCTS_BY_BRANCH) {
+			const formattedBranchProducts = branchProducts.map((branchProduct) => {
+				const {
+					product: { barcode, name },
+					requisition_slip,
+					product_status,
+				} = branchProduct;
 
-			return {
-				_barcode: barcode,
-				barcode: <ButtonLink text={barcode} onClick={() => onView(product)} />,
-				name,
-			};
-		});
+				const product = {
+					...branchProduct?.product,
+					max_balance: branchProduct?.max_balance,
+					reorder_point: branchProduct?.reorder_point,
+					price_per_piece: branchProduct?.price_per_piece,
+					price_per_bulk: branchProduct?.price_per_bulk,
+					allowable_spoilage: branchProduct?.allowable_spoilage,
+					is_daily_checked: branchProduct?.is_daily_checked,
+					is_vat_exempted: branchProduct?.is_vat_exempted,
+				};
 
-		setData(formattedProducts);
-		setTableData(formattedProducts);
-	}, [products]);
+				return {
+					_barcode: barcode,
+					barcode: <ButtonLink text={barcode} onClick={() => onView(product)} />,
+					name,
+					status: getBranchProductStatus(product_status),
+					requisitionSlip: requisition_slip ? (
+						<Link to={`/requisition-slips/${requisition_slip?.id}`}>{requisition_slip?.id}</Link>
+					) : (
+						EMPTY_CELL
+					),
+				};
+			});
+
+			setData(formattedBranchProducts);
+			setTableData(formattedBranchProducts);
+		}
+	}, [branchProducts, status, recentRequest]);
 
 	const getFetchLoading = useCallback(
-		() => status === request.REQUESTING && recentRequest === types.GET_PRODUCTS,
+		() => status === request.REQUESTING && recentRequest === types.GET_BRANCH_PRODUCTS_BY_BRANCH,
 		[status, recentRequest],
 	);
 
-	const onView = (product) => {
-		setSelectedProduct(product);
-		setViewProductModalVisible(true);
+	const onView = (branchProduct) => {
+		setSelectedBranchProduct(branchProduct);
+		setViewBranchProductModalVisible(true);
 	};
 
 	const onSearch = (keyword) => {
@@ -64,22 +96,21 @@ const Products = () => {
 	};
 
 	return (
-		<Container title="Products" loading={getFetchLoading()} loadingText="Fetching products...">
-			<section className="Products">
+		<Container title="Products" loadingText="Fetching products..." loading={getFetchLoading()}>
+			<section>
 				<Box>
-					<TableHeader onSearch={onSearch} />
+					<TableHeader title="Products" buttonName="Create Branch Product" onSearch={onSearch} />
 
 					<Table
 						columns={columns}
 						dataSource={tableData}
 						scroll={{ y: calculateTableHeight(tableData.length), x: '100%' }}
-						loading={status === request.REQUESTING}
 					/>
 
 					<ViewProductModal
-						product={selectedProduct}
-						visible={viewProductModalVisible}
-						onClose={() => setViewProductModalVisible(false)}
+						product={selectedBranchProduct}
+						visible={viewBranchProductModalVisible}
+						onClose={() => setViewBranchProductModalVisible(false)}
 					/>
 				</Box>
 			</section>

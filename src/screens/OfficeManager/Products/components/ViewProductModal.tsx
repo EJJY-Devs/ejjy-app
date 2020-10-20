@@ -2,6 +2,7 @@ import { Divider, Modal } from 'antd';
 import React from 'react';
 import { DetailsHalf, DetailsRow, DetailsSingle } from '../../../../components';
 import { Button } from '../../../../components/elements';
+import { getProductType, getUnitOfMeasurement } from '../../../../utils/function';
 
 interface Props {
 	visible: boolean;
@@ -23,8 +24,11 @@ export const ViewProductModal = ({ product, visible, onClose }: Props) => {
 			<DetailsRow>
 				<DetailsSingle label="Barcode" value={product?.barcode} />
 				<DetailsSingle label="Name" value={product?.name} />
-				<DetailsSingle label="Type" value={product?.type} />
-				<DetailsSingle label="Unit of Measurement" value={product?.unit_of_measurement} />
+				<DetailsSingle label="Type" value={getProductType(product?.type)} />
+				<DetailsSingle
+					label="Unit of Measurement"
+					value={getUnitOfMeasurement(product?.unit_of_measurement)}
+				/>
 				<DetailsSingle label="Print Details" value={product?.print_details} />
 				<DetailsSingle label="Description" value={product?.description} />
 

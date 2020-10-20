@@ -26,7 +26,7 @@ export const ReceiveDeliveryReceiptForm = ({ products, onSubmit, onClose, loadin
 			Schema: Yup.object().shape({
 				products: Yup.array().of(
 					Yup.object().shape({
-						received_quantity_piece: Yup.number().positive().required().label('Quantity'),
+						received_quantity_piece: Yup.number().min(0).required().label('Quantity'),
 					}),
 				),
 			}),

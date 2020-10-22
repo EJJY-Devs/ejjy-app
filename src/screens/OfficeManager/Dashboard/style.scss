@@ -1,4 +1,12 @@
 @import '../../../assets/styles/main';
 
 .Dashboard {
+	.tab-search-input {
+		margin-bottom: 16px;
+
+		input {
+			display: block;
+			width: 100%;
+		}
+	}
 }

@@ -6,7 +6,7 @@ import cn from 'classnames';
 interface Props {
 	placeholder?: string;
 	onChange: any;
-	classNames: any;
+	classNames?: any;
 	autoFocus?: boolean;
 }
 

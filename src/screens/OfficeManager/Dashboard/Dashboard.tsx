@@ -1,12 +1,13 @@
 import React from 'react';
 import { Container } from '../../../components';
+import { BranchBalances } from './BranchBalances/BranchBalances';
 import './style.scss';
 
 const Dashboard = () => {
 	return (
 		<Container title="Dashboard">
 			<section className="Dashboard">
-				<p>Dashboard for Office Manager content here</p>
+				<BranchBalances />
 			</section>
 		</Container>
 	);

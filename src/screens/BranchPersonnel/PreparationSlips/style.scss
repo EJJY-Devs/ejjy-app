@@ -15,7 +15,7 @@
 		padding: 25px 25px 0 25px;
 	}
 
-	.keyboardKeys {
+	.keyboard-keys {
 		padding: 0 25px 0 25px;
 		display: flex;
 		align-items: center;
@@ -36,12 +36,20 @@
 }
 
 .FulfillSlipModal {
-	.keyboardKeys {
+	.keyboard-keys {
 		display: flex;
 		align-items: center;
 
 		.KeyboardButton {
 			margin-right: 50px;
+		}
+	}
+
+	.input-quantity {
+		margin-top: 20px;
+
+		input {
+			text-align: center;
 		}
 	}
 }

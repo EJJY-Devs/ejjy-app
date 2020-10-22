@@ -1,5 +1,6 @@
 import * as React from 'react';
 import './style.scss';
+import cn from 'classnames';
 
 interface Props {
 	id?: string;
@@ -9,19 +10,32 @@ interface Props {
 	max?: number;
 	min?: number;
 	onChange: any;
+	autoFocus?: boolean;
+	classNames?: any;
 }
 
-const Input = ({ type, id, max, min, placeholder, onChange, disabled }: Props) => (
+const Input = ({
+	classNames,
+	type,
+	id,
+	max,
+	min,
+	placeholder,
+	onChange,
+	disabled,
+	autoFocus,
+}: Props) => (
 	<input
 		type={type}
 		id={id}
 		name={id}
-		className="Input"
+		className={cn('Input', classNames)}
 		placeholder={placeholder}
 		max={max}
 		min={min}
 		disabled={disabled}
 		onChange={(event) => onChange(event.target.value)}
+		autoFocus={autoFocus}
 	/>
 );
 

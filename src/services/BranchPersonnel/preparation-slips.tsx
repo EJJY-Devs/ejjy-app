@@ -12,6 +12,7 @@ interface PreparattionSlipProduct {
 interface IFulfillPreparationSlip {
 	id: number;
 	assigned_store_id: number;
+	is_prepared?: boolean;
 	products: PreparattionSlipProduct[];
 }
 

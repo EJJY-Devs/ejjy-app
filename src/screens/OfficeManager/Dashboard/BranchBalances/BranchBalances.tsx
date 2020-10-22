@@ -58,7 +58,7 @@ export const BranchBalances = () => {
 	};
 
 	const onTabClick = (key) => {
-		if (!queriedBranches.includes(key)) {
+		if (!queriedBranches.includes(key) && key) {
 			setQueriedBranches((value) => [...value, key.toString()]);
 			getBranchProductsByBranch(key);
 		}

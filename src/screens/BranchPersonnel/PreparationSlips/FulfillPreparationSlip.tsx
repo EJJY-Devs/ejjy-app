@@ -76,6 +76,7 @@ const PreparationSlips = ({ match }) => {
 
 				return {
 					payload: {
+						preparation_slip_id: preparationSlip.id,
 						id,
 						name,
 						order_slip_product_id: id,
@@ -116,31 +117,16 @@ const PreparationSlips = ({ match }) => {
 				return value;
 			});
 		} else if (key === 'f1') {
-			onAddQuantity();
+			onModifyQuantity(fulfillType.ADD);
 		} else if (key === 'f2') {
-			onDeductQuantity();
+			onModifyQuantity(fulfillType.DEDUCT);
 		}
 	};
 
-	const onAddQuantity = () => {
+	const onModifyQuantity = (type) => {
 		if (selectedProduct) {
 			setFulfillPreparationSlipVisible(true);
-			setSelectedProduct((value) => ({
-				...value,
-				type: fulfillType.ADD,
-			}));
-		} else {
-			message.error('Select a product first');
-		}
-	};
-
-	const onDeductQuantity = () => {
-		if (selectedProduct) {
-			setFulfillPreparationSlipVisible(true);
-			setSelectedProduct((value) => ({
-				...value,
-				type: fulfillType.DEDUCT,
-			}));
+			setSelectedProduct((value) => ({ ...value, type }));
 		} else {
 			message.error('Select a product first');
 		}
@@ -156,19 +142,27 @@ const PreparationSlips = ({ match }) => {
 			loading={getFetchLoading()}
 			loadingText="Fetching preparation slip..."
 		>
-			<section className="FulfillPreparationSlip">
-				<KeyboardEventHandler
-					handleKeys={['up', 'down', 'f1', 'f2']}
-					onKeyEvent={(key, e) => handleKeyPress(key)}
-				>
+			<KeyboardEventHandler
+				handleKeys={['up', 'down', 'f1', 'f2']}
+				onKeyEvent={(key, e) => handleKeyPress(key)}
+			>
+				<section className="FulfillPreparationSlip">
 					<Box>
 						<div className="details">
 							<PreparationSlipDetails preparationSlip={preparationSlip} />
 						</div>
 
-						<div className="keyboardKeys">
-							<KeyboardButton keyboardKey="F1" label="Add Quantity" onClick={onAddQuantity} />
-							<KeyboardButton keyboardKey="F2" label="Deduct Quantity" onClick={onDeductQuantity} />
+						<div className="keyboard-keys">
+							<KeyboardButton
+								keyboardKey="F1"
+								label="Add Quantity"
+								onClick={() => onModifyQuantity(fulfillType.ADD)}
+							/>
+							<KeyboardButton
+								keyboardKey="F2"
+								label="Deduct Quantity"
+								onClick={() => onModifyQuantity(fulfillType.DEDUCT)}
+							/>
 						</div>
 
 						<div className="search-input-container">
@@ -195,15 +189,16 @@ const PreparationSlips = ({ match }) => {
 							</Col>
 						</Row>
 					</Box>
-				</KeyboardEventHandler>
 
-				<FulfillSlipModal
-					preparationSlipProduct={selectedProduct}
-					updatePreparationSlipsByFetching={fetchPreparationSlip}
-					visible={fulfillPreparationSlipVisible}
-					onClose={onCloseFulfillPreparationSlip}
-				/>
-			</section>
+					<FulfillSlipModal
+						preparationSlipProduct={selectedProduct}
+						otherProducts={products}
+						updatePreparationSlipsByFetching={fetchPreparationSlip}
+						visible={fulfillPreparationSlipVisible}
+						onClose={onCloseFulfillPreparationSlip}
+					/>
+				</section>
+			</KeyboardEventHandler>
 		</Container>
 	);
 };

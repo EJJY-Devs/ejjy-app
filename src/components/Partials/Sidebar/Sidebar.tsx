@@ -100,7 +100,7 @@ export const Sidebar = () => {
 			<img src={require('../../../assets/images/logo.jpg')} alt="logo" className="logo" />
 			<div className="sidebar-items">
 				{SidebarItems.filter((item) => item.userTypes.includes(user.user_type)).map((item) => (
-					<Link to={item.link} key={item.key}>
+					<Link tabIndex={-1} to={item.link} key={item.key}>
 						<div className={cn('item', { active: pathname.startsWith(item.link) })}>
 							<img src={item.defaultIcon} alt={item.name} className="icon" />
 							<img src={item.activeIcon} alt={item.name} className="icon icon-active" />

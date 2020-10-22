@@ -13,6 +13,7 @@
 		"lodash": "^4.17.20",
 		"rc-resize-observer": "^0.2.3",
 		"react": "^16.13.1",
+		"react-barcode-reader": "0.0.2",
 		"react-dom": "^16.13.1",
 		"react-keyboard-event-handler": "^1.5.4",
 		"react-redux": "^7.2.1",

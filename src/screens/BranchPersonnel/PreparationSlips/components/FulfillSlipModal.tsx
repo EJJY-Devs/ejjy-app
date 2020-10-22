@@ -1,17 +1,20 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Modal } from 'antd';
+import { message, Modal, Spin } from 'antd';
 import React, { useEffect, useState } from 'react';
+import BarcodeReader from 'react-barcode-reader';
+import KeyboardEventHandler from 'react-keyboard-event-handler';
 import { useSelector } from 'react-redux';
-import { FieldError } from '../../../../components/elements';
+import { Input, Label } from '../../../../components/elements';
 import { KeyboardButton } from '../../../../components/KeyboardButton/KeyboardButton';
 import { selectors as authSelectors } from '../../../../ducks/auth';
 import { types } from '../../../../ducks/BranchPersonnel/preparation-slips';
-import { quantityTypes, request } from '../../../../global/types';
-import { convertToPieces } from '../../../../utils/function';
+import { request } from '../../../../global/types';
 import { usePreparationSlips } from '../../hooks/usePreparationSlips';
+import { fulfillType } from '../FulfillPreparationSlip';
 
 interface Props {
 	preparationSlipProduct: any;
+	otherProducts: any;
 	updatePreparationSlipsByFetching: any;
 	visible: boolean;
 	onClose: any;
@@ -19,12 +22,15 @@ interface Props {
 
 export const FulfillSlipModal = ({
 	preparationSlipProduct,
+	otherProducts,
 	updatePreparationSlipsByFetching,
 	visible,
 	onClose,
 }: Props) => {
 	const user = useSelector(authSelectors.selectUser());
-	const { fulfillPreparationSlip, status, errors, recentRequest, reset } = usePreparationSlips();
+	const { fulfillPreparationSlip, status, recentRequest, reset } = usePreparationSlips();
+
+	const [quantity, setQuantity] = useState('');
 
 	// Effect: Close modal if fulfill success
 	useEffect(() => {
@@ -35,23 +41,50 @@ export const FulfillSlipModal = ({
 		}
 	}, [status, recentRequest]);
 
-	const onFulfill = (values) => {
-		// const products = values.preparationSlipProducts.map((product) => ({
-		// 	order_slip_product_id: product.order_slip_product_id,
-		// 	product_id: product.product_id,
-		// 	assigned_person_id: product.assigned_person_id,
-		// 	quantity_piece: product.quantity,
-		// 	fulfilled_quantity_piece:
-		// 		product.quantity_type === quantityTypes.PIECE
-		// 			? product.fulfilled_quantity
-		// 			: convertToPieces(product.fulfilled_quantity, product.pieces_in_bulk),
-		// }));
+	const onFulfill = () => {
+		if (!quantity.length || !Number(quantity) || Number(quantity) <= 0) {
+			message.error('Please input a valid quantity.');
+		}
+
+		const products = otherProducts
+			?.filter(({ payload }) => payload.id !== preparationSlipProduct.id)
+			?.map(({ payload }) => ({
+				order_slip_product_id: payload?.order_slip_product_id,
+				product_id: payload?.product_id,
+				assigned_person_id: payload?.assigned_person_id,
+				quantity_piece: payload?.quantity_piece,
+			}));
 
 		fulfillPreparationSlip({
-			id: preparationSlipProduct.id,
+			id: preparationSlipProduct.preparation_slip_id,
 			assigned_store_id: user.branch.id,
-			products: [],
+			products: [
+				{
+					order_slip_product_id: preparationSlipProduct.order_slip_product_id,
+					product_id: preparationSlipProduct.product_id,
+					assigned_person_id: preparationSlipProduct.assigned_person_id,
+					quantity_piece: preparationSlipProduct.quantity_piece,
+					fulfilled_quantity_piece: quantity,
+				},
+				...products,
+			],
 		});
+	};
+
+	const handleKeyPress = (key) => {
+		if (key === 'esc') {
+			onClose();
+		} else if (key === 'enter') {
+			onFulfill();
+		}
+	};
+
+	const handleScan = (data) => {
+		console.log(data);
+	};
+
+	const handleError = (err) => {
+		console.error(err);
 	};
 
 	return (
@@ -64,14 +97,28 @@ export const FulfillSlipModal = ({
 			centered
 			closable
 		>
-			{errors.map((error, index) => (
-				<FieldError key={index} error={error} />
-			))}
+			<Spin spinning={status === request.REQUESTING}>
+				<BarcodeReader onError={handleError} onScan={handleScan} />
+				<KeyboardEventHandler
+					handleKeys={['enter', 'esc']}
+					onKeyEvent={(key, e) => handleKeyPress(key)}
+				>
+					<div className="keyboard-keys">
+						<KeyboardButton keyboardKey="Enter" label="Submit" onClick={() => {}} />
+						<KeyboardButton keyboardKey="Esc" label="Exit" onClick={onClose} />
+					</div>
 
-			<div className="keyboardKeys">
-				<KeyboardButton keyboardKey="Enter" label="Submit" onClick={() => {}} />
-				<KeyboardButton keyboardKey="Esc" label="Exit" onClick={onClose} />
-			</div>
+					<div className="input-quantity">
+						<Label
+							label={`${
+								preparationSlipProduct?.type === fulfillType.ADD ? 'Add' : 'Deduct	'
+							} Quantity`}
+							spacing
+						/>
+						<Input type="number" min={0} onChange={(value) => setQuantity(value)} autoFocus />
+					</div>
+				</KeyboardEventHandler>
+			</Spin>
 		</Modal>
 	);
 };

@@ -70,6 +70,14 @@ const SidebarItems = [
 		userTypes: [userTypes.BRANCH_PERSONNEL],
 	},
 	{
+		key: 'checking',
+		name: 'Checking',
+		activeIcon: require(`../../../assets/images/icon-checking-active.svg`),
+		defaultIcon: require(`../../../assets/images/icon-checking.svg`),
+		link: '/checking',
+		userTypes: [userTypes.BRANCH_MANAGER],
+	},
+	{
 		key: 'notifications',
 		name: 'Notifications',
 		activeIcon: require(`../../../assets/images/icon-notifications-active.svg`),

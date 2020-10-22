@@ -1,5 +1,6 @@
 import { userTypes } from '../global/types';
 import {
+	BranchManagerChecking,
 	BranchManagerDashboard,
 	BranchManagerNotifications,
 	BranchManagerOrderSlips,
@@ -76,4 +77,8 @@ export const PreparationSlipsScreens = {
 
 export const FulfillPreparationSlipScreens = {
 	[userTypes.BRANCH_PERSONNEL]: BranchPersonnelFulfillPreparationSlips,
+};
+
+export const CheckingScreens = {
+	[userTypes.BRANCH_MANAGER]: BranchManagerChecking,
 };

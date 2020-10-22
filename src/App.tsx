@@ -4,6 +4,7 @@ import { CommonRoute } from './components';
 import { Error404, Landing, Login } from './screens';
 import {
 	BranchesScreens,
+	CheckingScreens,
 	DashboardScreens,
 	FulfillPreparationSlipScreens,
 	NotificationsScreens,
@@ -37,6 +38,7 @@ const App = () => (
 		<CommonRoute path="/order-slips" exact component={OrderSlipsScreens} />
 		<CommonRoute path="/preparation-slips" exact component={PreparationSlipsScreens} />
 		<CommonRoute path="/preparation-slips/:id" exact component={FulfillPreparationSlipScreens} />
+		<CommonRoute path="/checking" exact component={CheckingScreens} />
 
 		<Route path="/404" exact component={Error404} />
 		<Route path="" render={() => <Redirect to="/404" />} />

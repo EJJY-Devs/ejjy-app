@@ -10,6 +10,7 @@ export { default as BranchManagerOrderSlips } from './BranchManager/OrderSlips/O
 export { default as BranchManagerProducts } from './BranchManager/Products/Products';
 export { default as BranchManagerRequisitionSlips } from './BranchManager/RequisitionSlips/RequisitionSlips';
 export { default as BranchManagerViewRequisitionSlip } from './BranchManager/RequisitionSlips/ViewRequisitionSlip';
+export { default as BranchManagerChecking } from './BranchManager/Checking/Checking';
 
 // Branch Personnel
 export { default as BranchPersonnelDashboard } from './BranchPersonnel/Dashboard/Dashboard';

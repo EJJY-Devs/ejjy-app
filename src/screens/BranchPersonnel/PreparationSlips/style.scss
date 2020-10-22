@@ -33,6 +33,15 @@
 			width: 100%;
 		}
 	}
+
+	.product-name {
+		display: flex;
+		align-items: center;
+
+		span {
+			margin-left: 8px;
+		}
+	}
 }
 
 .FulfillSlipModal {

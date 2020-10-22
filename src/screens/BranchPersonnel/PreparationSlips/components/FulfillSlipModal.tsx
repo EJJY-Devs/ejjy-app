@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import BarcodeReader from 'react-barcode-reader';
 import KeyboardEventHandler from 'react-keyboard-event-handler';
 import { useSelector } from 'react-redux';
+import { DetailsRow, DetailsSingle } from '../../../../components';
 import { Input, Label } from '../../../../components/elements';
 import { KeyboardButton } from '../../../../components/KeyboardButton/KeyboardButton';
 import { selectors as authSelectors } from '../../../../ducks/auth';
@@ -44,6 +45,23 @@ export const FulfillSlipModal = ({
 	const onFulfill = () => {
 		if (!quantity.length || !Number(quantity) || Number(quantity) <= 0) {
 			message.error('Please input a valid quantity.');
+			return;
+		}
+
+		const newQuantity =
+			preparationSlipProduct.fulfilled_quantity_piece +
+			(preparationSlipProduct.type === fulfillType.ADD ? quantity : -quantity);
+
+		if (newQuantity < 0) {
+			message.error('Total quantity must be greater than or equals to zero');
+			return;
+		}
+
+		if (newQuantity > preparationSlipProduct.quantity_piece) {
+			message.error(
+				`Total quantity must not be greater than ${preparationSlipProduct.quantity_piece}`,
+			);
+			return;
 		}
 
 		const products = otherProducts
@@ -64,7 +82,7 @@ export const FulfillSlipModal = ({
 					product_id: preparationSlipProduct.product_id,
 					assigned_person_id: preparationSlipProduct.assigned_person_id,
 					quantity_piece: preparationSlipProduct.quantity_piece,
-					fulfilled_quantity_piece: quantity,
+					fulfilled_quantity_piece: newQuantity,
 				},
 				...products,
 			],
@@ -109,6 +127,17 @@ export const FulfillSlipModal = ({
 					</div>
 
 					<div className="input-quantity">
+						<DetailsRow>
+							<DetailsSingle
+								label="Ordered quantity"
+								value={preparationSlipProduct?.quantity_piece}
+							/>
+							<DetailsSingle
+								label="Current quantity"
+								value={preparationSlipProduct?.fulfilled_quantity_piece || 0}
+							/>
+						</DetailsRow>
+
 						<Label
 							label={`${
 								preparationSlipProduct?.type === fulfillType.ADD ? 'Add' : 'Deduct	'

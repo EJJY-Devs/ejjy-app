@@ -4,7 +4,7 @@ import { debounce } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import KeyboardEventHandler from 'react-keyboard-event-handler';
 import { useSelector } from 'react-redux';
-import { BarcodeTable, Container } from '../../../components';
+import { BarcodeTable, CheckIcon, Container, TableNormal } from '../../../components';
 import { Box, SearchInput } from '../../../components/elements';
 import { KeyboardButton } from '../../../components/KeyboardButton/KeyboardButton';
 import { selectors as authSelectors } from '../../../ducks/auth';
@@ -32,6 +32,7 @@ const PreparationSlips = ({ match }) => {
 	const { preparationSlip, getPreparationSlipById, status, recentRequest } = usePreparationSlips();
 
 	const [products, setProducts] = useState([]);
+	const [inputtedProducts, setInputtedProducts] = useState([]);
 	const [selectedProduct, setSelectedProduct] = useState(null);
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [selectedProductIndex, setSelectedProductIndex] = useState(null);
@@ -45,6 +46,7 @@ const PreparationSlips = ({ match }) => {
 	useEffect(() => {
 		if (status === request.SUCCESS && preparationSlip) {
 			searchProducts('');
+			formatOrderedProducts();
 		}
 	}, [preparationSlip, status]);
 
@@ -64,6 +66,7 @@ const PreparationSlips = ({ match }) => {
 				const name = product?.name?.toLowerCase() ?? '';
 				return barcode.includes(searchedText) || name.includes(searchedText);
 			})
+			?.sort((a, b) => a.fulfilled_quantity_piece - b.fulfilled_quantity_piece)
 			?.map((requestedProduct) => {
 				const {
 					id,
@@ -73,6 +76,13 @@ const PreparationSlips = ({ match }) => {
 					assigned_person,
 				} = requestedProduct;
 				const { id: product_id, name } = product;
+
+				const productName = (
+					<div className="product-name">
+						{fulfilled_quantity_piece > 0 ? <CheckIcon /> : null}
+						<span>{name}</span>
+					</div>
+				);
 
 				return {
 					payload: {
@@ -85,13 +95,24 @@ const PreparationSlips = ({ match }) => {
 						quantity_piece,
 						fulfilled_quantity_piece,
 					},
-					value: [name, quantity_piece],
+					value: [productName, quantity_piece],
 				};
 			});
 
 		setProducts(formattedProducts);
 		setSelectedProduct(formattedProducts?.[0]?.payload);
 		setSelectedProductIndex(0);
+	};
+
+	const formatOrderedProducts = () => {
+		const formattedProducts = preparationSlip?.products
+			?.filter(({ fulfilled_quantity_piece }) => fulfilled_quantity_piece > 0)
+			?.map((requestedProduct) => [
+				requestedProduct?.product?.name,
+				requestedProduct?.fulfilled_quantity_piece,
+			]);
+
+		setInputtedProducts(formattedProducts);
 	};
 
 	const debounceSearched = useCallback(
@@ -185,7 +206,7 @@ const PreparationSlips = ({ match }) => {
 							</Col>
 
 							<Col xs={24} md={12}>
-								{/* <BarcodeTable columns={columnsRight} data={[]} displayInPage /> */}
+								<TableNormal columns={columnsRight} data={inputtedProducts} displayInPage />
 							</Col>
 						</Row>
 					</Box>

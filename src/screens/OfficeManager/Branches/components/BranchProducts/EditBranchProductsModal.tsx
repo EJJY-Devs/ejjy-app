@@ -28,6 +28,7 @@ export const EditBranchProductsModal = ({ branch, branchProduct, visible, onClos
 	return (
 		<Modal
 			title={`${branchProduct ? '[EDIT]' : '[CREATE]'} Product Details (${branch?.name})`}
+			className="modal-large"
 			visible={visible}
 			footer={null}
 			onCancel={onClose}

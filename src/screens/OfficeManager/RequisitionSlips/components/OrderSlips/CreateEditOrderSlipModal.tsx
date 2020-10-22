@@ -15,6 +15,7 @@ import { CreateEditOrderSlipForm } from './CreateEditOrderSlipForm';
 import { OrderSlipDetails } from './OrderSlipDetails';
 
 interface Props {
+	updateRequisitionSlipByFetching: any;
 	requisitionSlip: any;
 	orderSlip: any;
 	selectedBranchId?: number;
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export const CreateEditOrderSlipModal = ({
+	updateRequisitionSlipByFetching,
 	requisitionSlip,
 	orderSlip,
 	selectedBranchId,
@@ -43,6 +45,7 @@ export const CreateEditOrderSlipModal = ({
 		const recentRequests = [types.CREATE_ORDER_SLIP, types.EDIT_ORDER_SLIP];
 
 		if (status === request.SUCCESS && recentRequests.includes(recentRequest)) {
+			updateRequisitionSlipByFetching();
 			reset();
 			onClose();
 		}
@@ -124,6 +127,7 @@ export const CreateEditOrderSlipModal = ({
 	return (
 		<Modal
 			title={`${orderSlip ? '[EDIT]' : '[CREATE]'} F-OS1`}
+			className="modal-large"
 			visible={visible}
 			footer={null}
 			onCancel={onClose}

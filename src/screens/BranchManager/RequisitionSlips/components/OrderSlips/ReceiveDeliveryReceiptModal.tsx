@@ -80,6 +80,7 @@ export const ReceiveDeliveryReceiptModal = ({
 	return (
 		<Modal
 			title={`F-DS01 ${requisitionSlip?.requesting_user?.branch?.name}`}
+			className="modal-large"
 			visible={visible}
 			footer={null}
 			onCancel={onClose}

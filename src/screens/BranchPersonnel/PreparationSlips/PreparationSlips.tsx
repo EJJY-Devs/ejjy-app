@@ -2,6 +2,7 @@
 import { lowerCase } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useHistory } from 'react-router-dom';
 import { AddButtonIcon, Container, Table, TableHeader } from '../../../components';
 import { Box, ButtonLink } from '../../../components/elements';
 import { selectors as authSelectors } from '../../../ducks/auth';
@@ -14,7 +15,6 @@ import {
 	getPreparationSlipStatus,
 } from '../../../utils/function';
 import { usePreparationSlips } from '../hooks/usePreparationSlips';
-import { FulfillPreparationSlipModal } from './components/FulfillPreparationSlipModal';
 import { ViewPreparationSlipModal } from './components/ViewPreparationSlipModal';
 import './style.scss';
 
@@ -26,17 +26,17 @@ const columns = [
 ];
 
 const PreparationSlips = () => {
+	let history = useHistory();
 	const user = useSelector(authSelectors.selectUser());
 	const { preparationSlips, getPreparationSlips, status, recentRequest } = usePreparationSlips();
 
 	const [data, setData] = useState([]);
 	const [tableData, setTableData] = useState([]);
 	const [viewPreparationSlipModalVisible, setViewPreparationSlipModalVisible] = useState(false);
-	const [fulfillModalVisible, setFulfillModalVisible] = useState(false);
 	const [selectedPreparationSlip, setSelectedPreparationSlip] = useState(null);
 
 	useEffect(() => {
-		fetchPreparationSlips();
+		getPreparationSlips(user?.id);
 	}, []);
 
 	// Effect: Format preparation slips to be rendered in Table
@@ -52,7 +52,12 @@ const PreparationSlips = () => {
 				id: <ButtonLink text={id} onClick={() => onView(preparationSlip)} />,
 				datetime_created: dateTime,
 				status: getPreparationSlipStatus(status),
-				action: <AddButtonIcon onClick={() => onFulfill(preparationSlip)} tooltip="Fulfill" />,
+				action: (
+					<AddButtonIcon
+						onClick={() => history.push(`/preparation-slips/${preparationSlip.id}`)}
+						tooltip="Fulfill"
+					/>
+				),
 			};
 		});
 
@@ -68,11 +73,6 @@ const PreparationSlips = () => {
 	const onView = (preparationSlip) => {
 		setSelectedPreparationSlip(preparationSlip);
 		setViewPreparationSlipModalVisible(true);
-	};
-
-	const onFulfill = (preparationSlip) => {
-		setSelectedPreparationSlip(preparationSlip);
-		setFulfillModalVisible(true);
 	};
 
 	const onSearch = (keyword) => {
@@ -93,17 +93,13 @@ const PreparationSlips = () => {
 		setTableData(filteredData);
 	};
 
-	const fetchPreparationSlips = () => {
-		getPreparationSlips(user?.id);
-	};
-
 	return (
 		<Container
 			title="Preparation Slips"
 			loading={getFetchLoading()}
 			loadingText="Fetching preparation slips..."
 		>
-			<section className="RequisitionSlips">
+			<section>
 				<Box>
 					<TableHeader
 						statuses={preparationSlipStatusOptions}
@@ -121,13 +117,6 @@ const PreparationSlips = () => {
 						preparationSlip={selectedPreparationSlip}
 						visible={viewPreparationSlipModalVisible}
 						onClose={() => setViewPreparationSlipModalVisible(false)}
-					/>
-
-					<FulfillPreparationSlipModal
-						preparationSlip={selectedPreparationSlip}
-						updatePreparationSlipsByFetching={fetchPreparationSlips}
-						visible={fulfillModalVisible}
-						onClose={() => setFulfillModalVisible(false)}
 					/>
 				</Box>
 			</section>

@@ -7,6 +7,7 @@ import {
 	BranchManagerRequisitionSlips,
 	BranchManagerViewRequisitionSlip,
 	BranchPersonnelDashboard,
+	BranchPersonnelFulfillPreparationSlips,
 	BranchPersonnelNotifications,
 	BranchPersonnelPreparationSlips,
 	BranchPersonnelProducts,
@@ -71,4 +72,8 @@ export const NotificationsScreens = {
 
 export const PreparationSlipsScreens = {
 	[userTypes.BRANCH_PERSONNEL]: BranchPersonnelPreparationSlips,
+};
+
+export const FulfillPreparationSlipScreens = {
+	[userTypes.BRANCH_PERSONNEL]: BranchPersonnelFulfillPreparationSlips,
 };

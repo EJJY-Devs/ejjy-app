@@ -55,7 +55,7 @@ export const CreateRequisitionSlipModal = ({
 
 	return (
 		<Modal
-			className="CreateRequisitionSlipModal"
+			className="CreateRequisitionSlipModal modal-large"
 			title="[CREATE] F-RS1"
 			visible={visible}
 			footer={null}

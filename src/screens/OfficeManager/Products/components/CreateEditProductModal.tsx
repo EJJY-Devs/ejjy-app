@@ -28,7 +28,7 @@ export const CreateEditProductModal = ({ product, visible, onClose }: Props) => 
 
 	return (
 		<Modal
-			className="CreateEditProductModal"
+			className="CreateEditProductModal modal-large"
 			title={product ? 'Edit Product' : 'Create Product'}
 			visible={visible}
 			footer={null}

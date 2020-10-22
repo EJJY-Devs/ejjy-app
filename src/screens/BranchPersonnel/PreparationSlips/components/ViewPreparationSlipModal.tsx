@@ -86,7 +86,7 @@ export const ViewPreparationSlipModal = ({ preparationSlip, visible, onClose }: 
 
 	return (
 		<Modal
-			className="ViewPreparationSlipModal"
+			className="ViewPreparationSlipModal modal-large"
 			title="View Preparation Slip"
 			visible={visible}
 			footer={[<Button text="Close" onClick={onClose} />]}
@@ -104,7 +104,7 @@ export const ViewPreparationSlipModal = ({ preparationSlip, visible, onClose }: 
 				</Row>
 			</div>
 
-			<TableNormal columns={getColumns()} data={requestedProducts} />
+			<TableNormal columns={getColumns()} data={requestedProducts} hasCustomHeaderComponent />
 		</Modal>
 	);
 };

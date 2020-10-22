@@ -1,4 +1,5 @@
 export * from './BadgePills/BadgePills';
+export * from './BarcodeTable/BarcodeTable';
 export * from './Breadcrumb/Breadcrumb';
 export * from './ButtonIcons/ButtonIcons';
 export * from './ColoredText/ColoredText';

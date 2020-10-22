@@ -13,8 +13,10 @@ export const usePreparationSlips = () => {
 	const [errors, setErrors] = useState<any>([]);
 	const [recentRequest, setRecentRequest] = useState<any>();
 
+	const preparationSlip = useSelector(selectors.selectPreparationSlip());
 	const preparationSlips = useSelector(selectors.selectPreparationSlips());
 	const getPreparationSlips = useActionDispatch(actions.getPreparationSlips);
+	const getPreparationSlipById = useActionDispatch(actions.getPreparationSlipById);
 	const fulfillPreparationSlip = useActionDispatch(actions.fulfillPreparationSlip);
 
 	const reset = () => {
@@ -31,6 +33,11 @@ export const usePreparationSlips = () => {
 		getPreparationSlips({ assigned_personnel_id, callback });
 	};
 
+	const getPreparationSlipByIdRequest = (id, assigned_personnel_id) => {
+		setRecentRequest(types.GET_PREPARATION_SLIP_BY_ID);
+		getPreparationSlipById({ id, assigned_personnel_id, callback });
+	};
+
 	const fulfillPreparationSlipRequest = (branch) => {
 		setRecentRequest(types.FULFILL_PREPARATION_SLIP);
 		fulfillPreparationSlip({
@@ -45,8 +52,10 @@ export const usePreparationSlips = () => {
 	};
 
 	return {
+		preparationSlip,
 		preparationSlips,
 		getPreparationSlips: getPreparationSlipsRequest,
+		getPreparationSlipById: getPreparationSlipByIdRequest,
 		fulfillPreparationSlip: fulfillPreparationSlipRequest,
 		status,
 		errors,

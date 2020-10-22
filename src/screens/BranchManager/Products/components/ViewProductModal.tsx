@@ -14,6 +14,7 @@ export const ViewProductModal = ({ product, visible, onClose }: Props) => {
 	return (
 		<Modal
 			title={`[VIEW] Product Details`}
+			className="modal-large"
 			visible={visible}
 			footer={[<Button text="Close" onClick={onClose} />]}
 			onCancel={onClose}

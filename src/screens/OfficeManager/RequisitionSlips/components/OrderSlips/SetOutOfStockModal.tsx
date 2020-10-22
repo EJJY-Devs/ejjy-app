@@ -112,6 +112,7 @@ export const SetOutOfStockModal = ({
 	return (
 		<Modal
 			title="Out of Stock"
+			className="modal-large"
 			visible={visible}
 			footer={null}
 			onCancel={onClose}

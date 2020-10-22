@@ -9,3 +9,39 @@
 		padding: 0 25px 10px 25px;
 	}
 }
+
+.FulfillPreparationSlip {
+	.details {
+		padding: 25px 25px 0 25px;
+	}
+
+	.keyboardKeys {
+		padding: 0 25px 0 25px;
+		display: flex;
+		align-items: center;
+
+		.KeyboardButton {
+			margin-right: 50px;
+		}
+	}
+
+	.search-input-container {
+		padding: 25px;
+
+		input {
+			display: block;
+			width: 100%;
+		}
+	}
+}
+
+.FulfillSlipModal {
+	.keyboardKeys {
+		display: flex;
+		align-items: center;
+
+		.KeyboardButton {
+			margin-right: 50px;
+		}
+	}
+}

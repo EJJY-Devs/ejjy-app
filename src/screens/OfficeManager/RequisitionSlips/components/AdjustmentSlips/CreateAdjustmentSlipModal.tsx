@@ -125,7 +125,7 @@ export const CreateAdjustmentSlipModal = ({
 
 	return (
 		<Modal
-			title="Create Adjustment Slip"
+			title="Create Adjustment Slip modal-large"
 			visible={visible}
 			footer={null}
 			onCancel={onClose}

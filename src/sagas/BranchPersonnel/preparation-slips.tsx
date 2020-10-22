@@ -24,8 +24,25 @@ function* list({ payload }: any) {
 			assigned_personnel_id,
 		});
 
-		// NOTE: Commented out because prep slip re-fetched after fulfilling prep slip
 		yield put(actions.save({ type: types.GET_PREPARATION_SLIPS, preparationSlips: response.data }));
+		callback({ status: request.SUCCESS });
+	} catch (e) {
+		callback({ status: request.ERROR, errors: e.errors });
+	}
+}
+
+function* getById({ payload }: any) {
+	const { id, assigned_personnel_id, callback } = payload;
+	callback({ status: request.REQUESTING });
+
+	try {
+		const response = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.getById, id, {
+			assigned_personnel_id,
+		});
+
+		yield put(
+			actions.save({ type: types.GET_PREPARATION_SLIP_BY_ID, preparationSlip: response.data }),
+		);
 		callback({ status: request.SUCCESS });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
@@ -49,12 +66,16 @@ function* fulfill({ payload }: any) {
 }
 
 /* WATCHERS */
-const listWatcherSaga = function* listesWatcherSaga() {
+const listWatcherSaga = function* listWatcherSaga() {
 	yield takeLatest(types.GET_PREPARATION_SLIPS, list);
+};
+
+const getByIdWatcherSaga = function* getByIdWatcherSaga() {
+	yield takeLatest(types.GET_PREPARATION_SLIP_BY_ID, getById);
 };
 
 const fulfillWatcherSaga = function* fulfillWatcherSaga() {
 	yield takeLatest(types.FULFILL_PREPARATION_SLIP, fulfill);
 };
 
-export default [listWatcherSaga(), fulfillWatcherSaga()];
+export default [listWatcherSaga(), getByIdWatcherSaga(), fulfillWatcherSaga()];

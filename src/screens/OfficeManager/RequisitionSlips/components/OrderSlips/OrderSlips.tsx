@@ -256,6 +256,7 @@ export const OrderSlips = ({ fetchRequisitionSlip, requisitionSlipId }: Props) =
 			/>
 
 			<CreateEditOrderSlipModal
+				updateRequisitionSlipByFetching={fetchRequisitionSlip}
 				requisitionSlip={requisitionSlip}
 				orderSlip={selectedOrderSlip}
 				selectedBranchId={selectedBranchId}

@@ -1,0 +1,81 @@
+@import '../../assets/styles/main';
+
+$padding: 3px;
+
+.BarcodeTable {
+	width: 100%;
+	overflow-y: auto;
+	padding: 0 $padding;
+
+	table {
+		width: 100%;
+		padding: 2px;
+
+		thead {
+			th {
+				position: sticky;
+				top: 0;
+				padding: 25px 15px;
+				@include font(1rem, bold);
+				color: $color-dark;
+				background-color: $color-main-background;
+			}
+		}
+
+		tbody {
+			tr.active {
+				td {
+					border: $padding solid $color-secondary;
+					border-left: 0;
+					border-right: 0;
+
+					&:first-child {
+						border: $padding solid $color-secondary;
+						border-right: 0;
+					}
+
+					&:last-child {
+						border: $padding solid $color-secondary;
+						border-left: 0;
+					}
+				}
+			}
+
+			td {
+				@include font(1rem, 600);
+				padding: 10px 15px;
+				color: $color-dark-gray;
+
+				a {
+					color: $color-link !important;
+				}
+			}
+		}
+	}
+
+	&.hasCustomHeaderComponent {
+		thead {
+			th {
+				padding: 13px 15px;
+			}
+		}
+	}
+
+	&.page {
+		table {
+			thead {
+				th {
+					padding-left: 25px !important;
+					padding-right: 25px !important;
+				}
+			}
+
+			tbody {
+				td {
+					padding-left: 25px !important;
+					padding-right: 25px !important;
+				}
+			}
+		}
+	}
+}

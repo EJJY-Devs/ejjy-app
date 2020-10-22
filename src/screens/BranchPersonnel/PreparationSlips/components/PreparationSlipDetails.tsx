@@ -16,7 +16,7 @@ export const PreparationSlipDetails = ({ preparationSlip }: Props) => {
 				value={formatDateTime(preparationSlip?.datetime_created)}
 			/>
 
-			<Divider dashed />
+			<Divider dashed style={{ marginTop: '12px', marginBottom: '17px' }} />
 		</DetailsRow>
 	);
 };

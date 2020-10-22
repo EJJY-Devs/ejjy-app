@@ -15,6 +15,7 @@ export { default as BranchManagerViewRequisitionSlip } from './BranchManager/Req
 export { default as BranchPersonnelDashboard } from './BranchPersonnel/Dashboard/Dashboard';
 export { default as BranchPersonnelNotifications } from './BranchPersonnel/Notifications/Notifications';
 export { default as BranchPersonnelPreparationSlips } from './BranchPersonnel/PreparationSlips/PreparationSlips';
+export { default as BranchPersonnelFulfillPreparationSlips } from './BranchPersonnel/PreparationSlips/FulfillPreparationSlip';
 export { default as BranchPersonnelProducts } from './BranchPersonnel/Products/Products';
 
 // Office Manager

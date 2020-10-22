@@ -13,7 +13,7 @@ interface Props {
 export const ViewBranchProductModal = ({ branchProduct, branchName, visible, onClose }: Props) => {
 	return (
 		<Modal
-			className="ViewBranchProductModal"
+			className="ViewBranchProductModal modal-large"
 			title={`[VIEW] Product Details (${branchName})`}
 			visible={visible}
 			footer={[<Button text="Close" onClick={onClose} />]}

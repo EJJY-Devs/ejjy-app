@@ -16,7 +16,7 @@ import {
 	ReorderBadgePill,
 	ROW_HEIGHT,
 } from '../components';
-import { BadgePill, Input } from '../components/elements';
+import { BadgePill, UncontrolledInput } from '../components/elements';
 import { EMPTY_CELL } from '../global/constants';
 import {
 	branchProductStatus,
@@ -60,11 +60,7 @@ export const confirmPassword = ({ title = 'Input Password', onSuccess }: Confirm
 		centered: true,
 		className: 'ConfirmPassword',
 		okText: 'Submit',
-		content: (
-			<div>
-				<Input onChange={(value) => (password = value)} />
-			</div>
-		),
+		content: <UncontrolledInput type="password" onChange={(value) => (password = value)} />,
 		onOk: (close) => {
 			if (password === 'generic123') {
 				onSuccess();

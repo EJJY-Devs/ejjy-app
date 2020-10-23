@@ -1,7 +1,7 @@
 import { Col, Divider, Modal, Row } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { TableNormal } from '../../../../../components';
-import { Button, Input, Label } from '../../../../../components/elements';
+import { Button, Label, UncontrolledInput } from '../../../../../components/elements';
 import { OrderSlipDetails } from '../../../../OfficeManager/RequisitionSlips/components/OrderSlips/OrderSlipDetails';
 
 interface Props {
@@ -111,7 +111,11 @@ export const ViewOrderSlipModal = ({ orderSlip, visible, onClose }: Props) => {
 					<Label label="Requested Products" />
 				</Col>
 				<Col xs={24} sm={12} lg={6}>
-					<Input placeholder={orderSlip?.assigned_store?.name} onChange={null} disabled />
+					<UncontrolledInput
+						placeholder={orderSlip?.assigned_store?.name}
+						onChange={null}
+						disabled
+					/>
 				</Col>
 			</Row>
 

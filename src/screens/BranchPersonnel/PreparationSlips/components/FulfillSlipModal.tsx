@@ -5,7 +5,7 @@ import BarcodeReader from 'react-barcode-reader';
 import KeyboardEventHandler from 'react-keyboard-event-handler';
 import { useSelector } from 'react-redux';
 import { DetailsRow, DetailsSingle } from '../../../../components';
-import { Input, Label } from '../../../../components/elements';
+import { ControlledInput, Label } from '../../../../components/elements';
 import { KeyboardButton } from '../../../../components/KeyboardButton/KeyboardButton';
 import { selectors as authSelectors } from '../../../../ducks/auth';
 import { types } from '../../../../ducks/BranchPersonnel/preparation-slips';
@@ -38,7 +38,7 @@ export const FulfillSlipModal = ({
 		if (status === request.SUCCESS && recentRequest === types.FULFILL_PREPARATION_SLIP) {
 			updatePreparationSlipsByFetching();
 			reset();
-			onClose();
+			close();
 		}
 	}, [status, recentRequest]);
 
@@ -49,8 +49,8 @@ export const FulfillSlipModal = ({
 		}
 
 		const newQuantity =
-			preparationSlipProduct.fulfilled_quantity_piece +
-			(preparationSlipProduct.type === fulfillType.ADD ? quantity : -quantity);
+			(preparationSlipProduct?.fulfilled_quantity_piece || 0) +
+			Number(preparationSlipProduct.type === fulfillType.ADD ? quantity : -quantity);
 
 		if (newQuantity < 0) {
 			message.error('Total quantity must be greater than or equals to zero');
@@ -65,12 +65,13 @@ export const FulfillSlipModal = ({
 		}
 
 		const products = otherProducts
-			?.filter(({ payload }) => payload.id !== preparationSlipProduct.id)
-			?.map(({ payload }) => ({
-				order_slip_product_id: payload?.order_slip_product_id,
-				product_id: payload?.product_id,
-				assigned_person_id: payload?.assigned_person_id,
-				quantity_piece: payload?.quantity_piece,
+			?.filter(({ id }) => id !== preparationSlipProduct.id)
+			?.map((product) => ({
+				order_slip_product_id: product?.order_slip_product_id,
+				product_id: product?.product_id,
+				assigned_person_id: product?.assigned_person_id,
+				quantity_piece: product?.quantity_piece,
+				fulfilled_quantity_piece: product?.fulfilled_quantity_piece || undefined,
 			}));
 
 		fulfillPreparationSlip({
@@ -91,7 +92,7 @@ export const FulfillSlipModal = ({
 
 	const handleKeyPress = (key) => {
 		if (key === 'esc') {
-			onClose();
+			close();
 		} else if (key === 'enter') {
 			onFulfill();
 		}
@@ -105,13 +106,18 @@ export const FulfillSlipModal = ({
 		console.error(err);
 	};
 
+	const close = () => {
+		setQuantity('');
+		onClose();
+	};
+
 	return (
 		<Modal
 			title={preparationSlipProduct?.name}
 			className="FulfillSlipModal"
 			visible={visible}
 			footer={null}
-			onCancel={onClose}
+			onCancel={close}
 			centered
 			closable
 		>
@@ -123,7 +129,7 @@ export const FulfillSlipModal = ({
 				>
 					<div className="keyboard-keys">
 						<KeyboardButton keyboardKey="Enter" label="Submit" onClick={() => {}} />
-						<KeyboardButton keyboardKey="Esc" label="Exit" onClick={onClose} />
+						<KeyboardButton keyboardKey="Esc" label="Exit" onClick={close} />
 					</div>
 
 					<div className="input-quantity">
@@ -140,11 +146,17 @@ export const FulfillSlipModal = ({
 
 						<Label
 							label={`${
-								preparationSlipProduct?.type === fulfillType.ADD ? 'Add' : 'Deduct	'
+								preparationSlipProduct?.type === fulfillType.ADD ? 'Add' : 'Deduct'
 							} Quantity`}
 							spacing
 						/>
-						<Input type="number" min={0} onChange={(value) => setQuantity(value)} autoFocus />
+						<ControlledInput
+							type="number"
+							min={0}
+							value={quantity}
+							onChange={(value) => setQuantity(value)}
+							autoFocus
+						/>
 					</div>
 				</KeyboardEventHandler>
 			</Spin>

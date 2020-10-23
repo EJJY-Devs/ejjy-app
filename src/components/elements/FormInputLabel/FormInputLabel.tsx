@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Input, { IInputProps } from '../FormInput/FormInput';
+import FormInput, { IInputProps } from '../FormInput/FormInput';
 import Label from '../Label/Label';
 
 interface Props extends IInputProps {
@@ -17,7 +17,14 @@ const FormInputLabel = ({
 }: Props) => (
 	<>
 		<Label id={id} label={inputLabel} spacing />
-		<Input type={type} id={id} max={max} min={min} placeholder={placeholder} disabled={disabled} />
+		<FormInput
+			type={type}
+			id={id}
+			max={max}
+			min={min}
+			placeholder={placeholder}
+			disabled={disabled}
+		/>
 	</>
 );
 

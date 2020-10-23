@@ -4,6 +4,7 @@ import cn from 'classnames';
 
 interface Props {
 	id?: string;
+	value: any;
 	type?: string;
 	placeholder?: string;
 	disabled?: boolean;
@@ -14,7 +15,7 @@ interface Props {
 	classNames?: any;
 }
 
-const Input = ({
+const ControlledInput = ({
 	classNames,
 	type,
 	id,
@@ -24,6 +25,7 @@ const Input = ({
 	onChange,
 	disabled,
 	autoFocus,
+	value,
 }: Props) => (
 	<input
 		type={type}
@@ -36,13 +38,14 @@ const Input = ({
 		disabled={disabled}
 		onChange={(event) => onChange(event.target.value)}
 		autoFocus={autoFocus}
+		value={value}
 	/>
 );
 
-Input.defaultProps = {
+ControlledInput.defaultProps = {
 	type: 'text',
 	placeholder: '',
 	disabled: false,
 };
 
-export default Input;
+export default ControlledInput;

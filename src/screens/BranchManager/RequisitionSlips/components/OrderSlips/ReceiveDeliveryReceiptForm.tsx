@@ -2,7 +2,13 @@ import { Col, Divider, Row } from 'antd';
 import { FieldArray, Form, Formik } from 'formik';
 import React, { useCallback, useState } from 'react';
 import * as Yup from 'yup';
-import { Button, FieldError, FormInput, Input, Label } from '../../../../../components/elements';
+import {
+	Button,
+	FieldError,
+	FormInput,
+	UncontrolledInput,
+	Label,
+} from '../../../../../components/elements';
 import { sleep } from '../../../../../utils/function';
 
 interface Props {
@@ -40,7 +46,7 @@ export const ReceiveDeliveryReceiptForm = ({ products, onSubmit, onClose, loadin
 			<Row gutter={[25, 8]}>
 				<Col xs={24} sm={12}>
 					<Label label="Product" spacing />
-					<Input placeholder={name} onChange={null} disabled />
+					<UncontrolledInput placeholder={name} onChange={null} disabled />
 				</Col>
 
 				<Col xs={24} sm={12}>

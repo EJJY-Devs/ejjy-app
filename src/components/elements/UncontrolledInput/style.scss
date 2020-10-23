@@ -1,0 +1,16 @@
+@import '../../../assets/styles/main';
+
+.Input {
+	@include font(1rem);
+	width: 100%;
+	padding: 8px 12px;
+	color: $color-dark;
+	border: 1px solid $color-gray;
+	border-radius: $border-radius;
+	outline: 0 !important;
+	display: block;
+
+	&.disabled {
+		background-color: $color-main-background;
+	}
+}

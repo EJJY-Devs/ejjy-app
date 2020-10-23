@@ -32,6 +32,7 @@ const PreparationSlips = ({ match }) => {
 	const { preparationSlip, getPreparationSlipById, status, recentRequest } = usePreparationSlips();
 
 	const [products, setProducts] = useState([]);
+	const [allProducts, setAllProducts] = useState([]);
 	const [inputtedProducts, setInputtedProducts] = useState([]);
 	const [selectedProduct, setSelectedProduct] = useState(null);
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -46,6 +47,7 @@ const PreparationSlips = ({ match }) => {
 	useEffect(() => {
 		if (status === request.SUCCESS && preparationSlip) {
 			searchProducts('');
+			formatAllProducts();
 			formatOrderedProducts();
 		}
 	}, [preparationSlip, status]);
@@ -104,6 +106,32 @@ const PreparationSlips = ({ match }) => {
 		setSelectedProductIndex(0);
 	};
 
+	const formatAllProducts = () => {
+		const formattedProducts = preparationSlip?.products?.map((requestedProduct) => {
+			const {
+				id,
+				product,
+				quantity_piece,
+				fulfilled_quantity_piece = 0,
+				assigned_person,
+			} = requestedProduct;
+			const { id: product_id, name } = product;
+
+			return {
+				preparation_slip_id: preparationSlip.id,
+				id,
+				name,
+				order_slip_product_id: id,
+				product_id,
+				assigned_person_id: assigned_person?.id,
+				quantity_piece,
+				fulfilled_quantity_piece,
+			};
+		});
+
+		setAllProducts(formattedProducts);
+	};
+
 	const formatOrderedProducts = () => {
 		const formattedProducts = preparationSlip?.products
 			?.filter(({ fulfilled_quantity_piece }) => fulfilled_quantity_piece > 0)
@@ -117,7 +145,7 @@ const PreparationSlips = ({ match }) => {
 
 	const debounceSearched = useCallback(
 		debounce((keyword) => searchProducts(keyword), SEARCH_DEBOUNCE_TIME),
-		[],
+		[preparationSlip],
 	);
 
 	const handleKeyPress = (key) => {
@@ -213,7 +241,7 @@ const PreparationSlips = ({ match }) => {
 
 					<FulfillSlipModal
 						preparationSlipProduct={selectedProduct}
-						otherProducts={products}
+						otherProducts={allProducts}
 						updatePreparationSlipsByFetching={fetchPreparationSlip}
 						visible={fulfillPreparationSlipVisible}
 						onClose={onCloseFulfillPreparationSlip}

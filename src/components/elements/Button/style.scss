@@ -16,7 +16,6 @@
 	border-radius: $border-radius;
 	cursor: pointer;
 	transition: 300ms;
-	outline: 0 !important;
 
 	&.flex {
 		@include flex(center, center);

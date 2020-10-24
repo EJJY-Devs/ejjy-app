@@ -1,15 +1,16 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Col, message, Row } from 'antd';
+import { Col, Divider, message, Row } from 'antd';
 import { debounce } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import KeyboardEventHandler from 'react-keyboard-event-handler';
 import { useSelector } from 'react-redux';
+import { useHistory } from 'react-router-dom';
 import { BarcodeTable, CheckIcon, Container, TableNormal } from '../../../components';
-import { Box, SearchInput } from '../../../components/elements';
+import { Box, Button, SearchInput } from '../../../components/elements';
 import { KeyboardButton } from '../../../components/KeyboardButton/KeyboardButton';
 import { selectors as authSelectors } from '../../../ducks/auth';
 import { types } from '../../../ducks/BranchPersonnel/preparation-slips';
-import { request } from '../../../global/types';
+import { preparationSlipStatus, request } from '../../../global/types';
 import { usePreparationSlips } from '../hooks/usePreparationSlips';
 import { FulfillSlipModal } from './components/FulfillSlipModal';
 import { PreparationSlipDetails } from './components/PreparationSlipDetails';
@@ -27,9 +28,16 @@ export const fulfillType = {
 
 const PreparationSlips = ({ match }) => {
 	const preparationSlipId = match?.params?.id;
+	const history = useHistory();
 
 	const user = useSelector(authSelectors.selectUser());
-	const { preparationSlip, getPreparationSlipById, status, recentRequest } = usePreparationSlips();
+	const {
+		preparationSlip,
+		fulfillPreparationSlip,
+		getPreparationSlipById,
+		status,
+		recentRequest,
+	} = usePreparationSlips();
 
 	const [products, setProducts] = useState([]);
 	const [allProducts, setAllProducts] = useState([]);
@@ -45,20 +53,49 @@ const PreparationSlips = ({ match }) => {
 
 	// Effect: Format preparation slip products
 	useEffect(() => {
-		if (status === request.SUCCESS && preparationSlip) {
+		if (
+			status === request.SUCCESS &&
+			recentRequest === types.GET_PREPARATION_SLIP_BY_ID &&
+			preparationSlip
+		) {
+			if (preparationSlip.status === preparationSlipStatus.COMPLETED) {
+				history.replace('/preparation-slips');
+				return;
+			}
+
 			searchProducts('');
 			formatAllProducts();
 			formatOrderedProducts();
 		}
-	}, [preparationSlip, status]);
+	}, [preparationSlip, recentRequest, status]);
 
-	const getFetchLoading = useCallback(
-		() => status === request.REQUESTING && recentRequest === types.GET_PREPARATION_SLIP_BY_ID,
-		[status, recentRequest],
-	);
+	// Effect: Fulfill success
+	useEffect(() => {
+		if (status === request.SUCCESS && recentRequest === types.FULFILL_PREPARATION_SLIP) {
+			history.replace('/preparation-slips');
+		}
+	}, [recentRequest, status]);
+
+	const getFetchLoadingText = useCallback(() => {
+		if (status === request.REQUESTING) {
+			if (recentRequest === types.GET_PREPARATION_SLIP_BY_ID) {
+				return 'Fetching preparation slip...';
+			}
+
+			if (recentRequest === types.FULFILL_PREPARATION_SLIP) {
+				return 'Submitting preparation slip...';
+			}
+		}
+
+		return '';
+	}, [status, recentRequest]);
 
 	const fetchPreparationSlip = () => {
-		getPreparationSlipById(preparationSlipId, user?.id);
+		getPreparationSlipById(preparationSlipId, user?.id, ({ status }) => {
+			if (status === request.ERROR) {
+				history.replace('/404');
+			}
+		});
 	};
 
 	const searchProducts = (searchedText) => {
@@ -77,7 +114,7 @@ const PreparationSlips = ({ match }) => {
 					fulfilled_quantity_piece = 0,
 					assigned_person,
 				} = requestedProduct;
-				const { id: product_id, name } = product;
+				const { id: product_id, name, barcode } = product;
 
 				const productName = (
 					<div className="product-name">
@@ -90,6 +127,7 @@ const PreparationSlips = ({ match }) => {
 					payload: {
 						preparation_slip_id: preparationSlip.id,
 						id,
+						barcode,
 						name,
 						order_slip_product_id: id,
 						product_id,
@@ -181,15 +219,28 @@ const PreparationSlips = ({ match }) => {
 		}
 	};
 
-	const onCloseFulfillPreparationSlip = () => {
-		setFulfillPreparationSlipVisible(false);
+	const onFulfill = () => {
+		const products = allProducts?.map((product) => ({
+			order_slip_product_id: product?.order_slip_product_id,
+			product_id: product?.product_id,
+			assigned_person_id: product?.assigned_person_id,
+			quantity_piece: product?.quantity_piece,
+			fulfilled_quantity_piece: product?.fulfilled_quantity_piece || undefined,
+		}));
+
+		fulfillPreparationSlip({
+			id: preparationSlip.id,
+			is_prepared: true,
+			assigned_store_id: user.branch.id,
+			products,
+		});
 	};
 
 	return (
 		<Container
 			title="Fulfill Preparation Slip"
-			loading={getFetchLoading()}
-			loadingText="Fetching preparation slip..."
+			loading={status === request.REQUESTING}
+			loadingText={getFetchLoadingText()}
 		>
 			<KeyboardEventHandler
 				handleKeys={['up', 'down', 'f1', 'f2']}
@@ -237,6 +288,18 @@ const PreparationSlips = ({ match }) => {
 								<TableNormal columns={columnsRight} data={inputtedProducts} displayInPage />
 							</Col>
 						</Row>
+
+						<div className="btn-fulfill-container">
+							<Divider className="divider" dashed />
+
+							<Button
+								classNames="btn-fulfill"
+								text="Fulfill"
+								variant="primary"
+								onClick={onFulfill}
+								disabled={preparationSlip?.status === preparationSlipStatus.COMPLETED}
+							/>
+						</div>
 					</Box>
 
 					<FulfillSlipModal
@@ -244,7 +307,7 @@ const PreparationSlips = ({ match }) => {
 						otherProducts={allProducts}
 						updatePreparationSlipsByFetching={fetchPreparationSlip}
 						visible={fulfillPreparationSlipVisible}
-						onClose={onCloseFulfillPreparationSlip}
+						onClose={() => setFulfillPreparationSlipVisible(false)}
 					/>
 				</section>
 			</KeyboardEventHandler>

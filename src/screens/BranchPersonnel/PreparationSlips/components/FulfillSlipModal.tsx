@@ -76,6 +76,7 @@ export const FulfillSlipModal = ({
 
 		fulfillPreparationSlip({
 			id: preparationSlipProduct.preparation_slip_id,
+			is_prepared: false,
 			assigned_store_id: user.branch.id,
 			products: [
 				{
@@ -99,11 +100,16 @@ export const FulfillSlipModal = ({
 	};
 
 	const handleScan = (data) => {
-		console.log(data);
+		const barcode = preparationSlipProduct?.barcode?.toLowerCase() || '';
+		const scannedBarcode = data?.toLowerCase() || '';
+
+		if (barcode && scannedBarcode && barcode === scannedBarcode) {
+			setQuantity('1');
+		}
 	};
 
 	const handleError = (err) => {
-		console.error(err);
+		// message.error(err);
 	};
 
 	const close = () => {

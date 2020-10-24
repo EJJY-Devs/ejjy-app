@@ -42,6 +42,20 @@
 			margin-left: 8px;
 		}
 	}
+
+	.btn-fulfill-container {
+		padding: 0 25px 25px 25px;
+
+		.divider {
+			margin-top: 0;
+		}
+
+		.btn-fulfill {
+			display: block;
+			margin-left: auto;
+			width: 150px;
+		}
+	}
 }
 
 .FulfillSlipModal {

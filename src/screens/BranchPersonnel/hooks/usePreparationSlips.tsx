@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { actions, selectors, types } from '../../../ducks/BranchPersonnel/preparation-slips';
 import { request } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
-import { modifiedCallback } from '../../../utils/function';
+import { modifiedCallback, modifiedExtraCallback } from '../../../utils/function';
 
 const FULFILL_SUCCESS_MESSAGE = 'Preparation slip was fulfilled successfully';
 const FULFILL_ERROR_MESSAGE = 'An error occurred while fulfilling the preparation slip';
@@ -33,9 +33,13 @@ export const usePreparationSlips = () => {
 		getPreparationSlips({ assigned_personnel_id, callback });
 	};
 
-	const getPreparationSlipByIdRequest = (id, assigned_personnel_id) => {
+	const getPreparationSlipByIdRequest = (id, assigned_personnel_id, extraCallback = null) => {
 		setRecentRequest(types.GET_PREPARATION_SLIP_BY_ID);
-		getPreparationSlipById({ id, assigned_personnel_id, callback });
+		getPreparationSlipById({
+			id,
+			assigned_personnel_id,
+			callback: modifiedExtraCallback(callback, extraCallback),
+		});
 	};
 
 	const fulfillPreparationSlipRequest = (branch) => {

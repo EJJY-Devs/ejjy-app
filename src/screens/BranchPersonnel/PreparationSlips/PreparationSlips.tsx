@@ -8,7 +8,7 @@ import { Box, ButtonLink } from '../../../components/elements';
 import { selectors as authSelectors } from '../../../ducks/auth';
 import { types } from '../../../ducks/BranchPersonnel/preparation-slips';
 import { preparationSlipStatusOptions } from '../../../global/options';
-import { request } from '../../../global/types';
+import { preparationSlipStatus, request } from '../../../global/types';
 import {
 	calculateTableHeight,
 	formatDateTime,
@@ -45,6 +45,14 @@ const PreparationSlips = () => {
 			const { id, datetime_created, status } = preparationSlip;
 			const dateTime = formatDateTime(datetime_created);
 
+			const action =
+				status === preparationSlipStatus.NEW ? (
+					<AddButtonIcon
+						onClick={() => history.push(`/preparation-slips/${preparationSlip.id}`)}
+						tooltip="Fulfill"
+					/>
+				) : null;
+
 			return {
 				_id: id,
 				_datetime_created: dateTime,
@@ -52,12 +60,7 @@ const PreparationSlips = () => {
 				id: <ButtonLink text={id} onClick={() => onView(preparationSlip)} />,
 				datetime_created: dateTime,
 				status: getPreparationSlipStatus(status),
-				action: (
-					<AddButtonIcon
-						onClick={() => history.push(`/preparation-slips/${preparationSlip.id}`)}
-						tooltip="Fulfill"
-					/>
-				),
+				action,
 			};
 		});
 

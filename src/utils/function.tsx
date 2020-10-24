@@ -1,6 +1,6 @@
 import { message, Modal } from 'antd';
 import { floor, memoize } from 'lodash';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import React from 'react';
 import {
 	AddedToOSBadgePill,
@@ -72,9 +72,13 @@ export const confirmPassword = ({ title = 'Input Password', onSuccess }: Confirm
 	});
 };
 
-export const formatDateTime = memoize((datetime) => moment(datetime).format('MM/DD/YYYY h:mma'));
+export const formatDateTime = memoize((datetime) => dayjs(datetime).format('MM/DD/YYYY h:mma'));
 
-export const formatDate = memoize((date) => moment(date).format('MM/DD/YYYY'));
+export const formatDateTimeExtended = memoize((datetime) =>
+	dayjs(datetime).format('MMMM D, YYYY h:mma'),
+);
+
+export const formatDate = memoize((date) => dayjs(date).format('MM/DD/YYYY'));
 
 export const convertToBulk = (pieces, piecesInBulk) => floor(pieces / piecesInBulk);
 

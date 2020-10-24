@@ -1,7 +1,7 @@
 import React from 'react';
 import { AddIcon } from '../../../../components';
 import { Box, Button } from '../../../../components/elements';
-import { formatDateTime } from '../../../../utils/function';
+import { formatDateTimeExtended } from '../../../../utils/function';
 
 interface Props {
 	onDailyCheck?: any;
@@ -13,7 +13,7 @@ export const DailyCheckCard = ({ onDailyCheck, dateTimeRequested }: Props) => (
 		<div className="daily-check-container">
 			<div>
 				<p className="title">Daily Check</p>
-				<span className="date">{formatDateTime(dateTimeRequested)}</span>
+				<span className="date">{formatDateTimeExtended(dateTimeRequested)}</span>
 			</div>
 
 			<Button

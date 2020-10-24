@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { message, Modal, Spin } from 'antd';
 import React, { useEffect, useState } from 'react';
-import BarcodeReader from 'react-barcode-reader';
 import KeyboardEventHandler from 'react-keyboard-event-handler';
 import { useSelector } from 'react-redux';
 import { DetailsRow, DetailsSingle } from '../../../../components';
@@ -99,19 +98,6 @@ export const FulfillSlipModal = ({
 		}
 	};
 
-	const handleScan = (data) => {
-		const barcode = preparationSlipProduct?.barcode?.toLowerCase() || '';
-		const scannedBarcode = data?.toLowerCase() || '';
-
-		if (barcode && scannedBarcode && barcode === scannedBarcode) {
-			setQuantity('1');
-		}
-	};
-
-	const handleError = (err) => {
-		// message.error(err);
-	};
-
 	const close = () => {
 		setQuantity('');
 		onClose();
@@ -128,7 +114,6 @@ export const FulfillSlipModal = ({
 			closable
 		>
 			<Spin spinning={status === request.REQUESTING}>
-				<BarcodeReader onError={handleError} onScan={handleScan} />
 				<KeyboardEventHandler
 					handleKeys={['enter', 'esc']}
 					onKeyEvent={(key, e) => handleKeyPress(key)}

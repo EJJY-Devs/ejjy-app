@@ -15,6 +15,7 @@ import { usePreparationSlips } from '../hooks/usePreparationSlips';
 import { FulfillSlipModal } from './components/FulfillSlipModal';
 import { PreparationSlipDetails } from './components/PreparationSlipDetails';
 import './style.scss';
+import BarcodeReader from 'react-barcode-reader';
 
 const SEARCH_DEBOUNCE_TIME = 500;
 
@@ -37,6 +38,7 @@ const PreparationSlips = ({ match }) => {
 		getPreparationSlipById,
 		status,
 		recentRequest,
+		reset,
 	} = usePreparationSlips();
 
 	const [products, setProducts] = useState([]);
@@ -63,6 +65,7 @@ const PreparationSlips = ({ match }) => {
 				return;
 			}
 
+			reset();
 			searchProducts('');
 			formatAllProducts();
 			formatOrderedProducts();
@@ -72,9 +75,9 @@ const PreparationSlips = ({ match }) => {
 	// Effect: Fulfill success
 	useEffect(() => {
 		if (status === request.SUCCESS && recentRequest === types.FULFILL_PREPARATION_SLIP) {
-			history.replace('/preparation-slips');
+			fetchPreparationSlip();
 		}
-	}, [recentRequest, status]);
+	}, [status, recentRequest]);
 
 	const getFetchLoadingText = useCallback(() => {
 		if (status === request.REQUESTING) {
@@ -236,12 +239,72 @@ const PreparationSlips = ({ match }) => {
 		});
 	};
 
+	const handleScan = (test) => {
+		let data = `${test}`;
+		if (test === '4800047820182') {
+			data = 'PRODUCT0002';
+		}
+
+		const product = preparationSlip.products.find(({ product }) => {
+			const barcode = product?.barcode?.toLowerCase() || '';
+			const scannedBarcode = data?.toLowerCase() || '';
+
+			return barcode === scannedBarcode;
+		});
+
+		if (product) {
+			const newQuantity = product?.fulfilled_quantity_piece
+				? product?.fulfilled_quantity_piece + 1
+				: 1;
+
+			if (newQuantity > product.quantity_piece) {
+				message.error(`Total quantity must not be greater than ${product.quantity_piece}`);
+				return;
+			}
+
+			const products = preparationSlip.products
+				?.filter(({ id }) => id !== product.id)
+				?.map((product) => ({
+					order_slip_product_id: product?.id,
+					product_id: product?.product?.id,
+					assigned_person_id: product?.assigned_person?.id,
+					quantity_piece: product?.quantity_piece,
+					fulfilled_quantity_piece: product?.fulfilled_quantity_piece || undefined,
+				}));
+
+			reset();
+
+			fulfillPreparationSlip({
+				id: preparationSlip.id,
+				is_prepared: false,
+				assigned_store_id: user.branch.id,
+				products: [
+					{
+						order_slip_product_id: product?.id,
+						product_id: product?.product?.id,
+						assigned_person_id: product?.assigned_person?.id,
+						quantity_piece: product?.quantity_piece,
+						fulfilled_quantity_piece: newQuantity,
+					},
+					...products,
+				],
+			});
+		} else {
+			message.error(`Cannot find the scanned product: ${data}`);
+		}
+	};
+
+	const handleError = (err) => {
+		message.error(err);
+	};
+
 	return (
 		<Container
 			title="Fulfill Preparation Slip"
 			loading={status === request.REQUESTING}
 			loadingText={getFetchLoadingText()}
 		>
+			<BarcodeReader onError={handleError} onScan={handleScan} />
 			<KeyboardEventHandler
 				handleKeys={['up', 'down', 'f1', 'f2']}
 				onKeyEvent={(key, e) => handleKeyPress(key)}
@@ -270,7 +333,7 @@ const PreparationSlips = ({ match }) => {
 								classNames="search-input"
 								placeholder="Search product"
 								onChange={(event) => debounceSearched(event.target.value.trim())}
-								autoFocus
+								autoFocus={false}
 							/>
 						</div>
 

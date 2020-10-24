@@ -42,10 +42,10 @@ export const usePreparationSlips = () => {
 		});
 	};
 
-	const fulfillPreparationSlipRequest = (branch) => {
+	const fulfillPreparationSlipRequest = (data) => {
 		setRecentRequest(types.FULFILL_PREPARATION_SLIP);
 		fulfillPreparationSlip({
-			...branch,
+			...data,
 			callback: modifiedCallback(callback, FULFILL_SUCCESS_MESSAGE, FULFILL_ERROR_MESSAGE),
 		});
 	};

@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-// TODO:: Enable /disable the create buttons (out of stock and order slip)
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { TableHeaderOrderSlip } from '../../../../../components';

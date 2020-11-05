@@ -3,6 +3,7 @@ import { Redirect, Route, Switch } from 'react-router-dom';
 import { CommonRoute } from './components';
 import { Error404, Landing, Login } from './screens';
 import {
+	AssignUserScreens,
 	BranchesScreens,
 	CheckingScreens,
 	DashboardScreens,
@@ -34,6 +35,7 @@ const App = () => (
 			component={ViewDeliveryReceiptScreens}
 		/>
 		<CommonRoute path="/users" exact component={UsersScreens} />
+		<CommonRoute path="/users/assign/:id" exact component={AssignUserScreens} />
 		<CommonRoute path="/notifications" exact component={NotificationsScreens} />
 		<CommonRoute path="/order-slips" exact component={OrderSlipsScreens} />
 		<CommonRoute path="/preparation-slips" exact component={PreparationSlipsScreens} />

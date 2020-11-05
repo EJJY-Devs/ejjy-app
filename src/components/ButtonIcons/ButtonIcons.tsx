@@ -51,3 +51,12 @@ export const DeliverButtonIcon = ({ tooltip, onClick, classNames }: Props) => (
 		classNames={classNames}
 	/>
 );
+
+export const CancelButtonIcon = ({ tooltip, onClick, classNames }: Props) => (
+	<ButtonIcon
+		icon={<img src={require('../../assets/images/icon-cancel.svg')} alt="icon" />}
+		onClick={onClick}
+		tooltip={tooltip}
+		classNames={classNames}
+	/>
+);

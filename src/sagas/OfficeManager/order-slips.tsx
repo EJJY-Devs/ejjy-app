@@ -1,9 +1,9 @@
 import { call, put, retry, takeLatest } from 'redux-saga/effects';
-import { actions, types } from '../ducks/order-slips';
-import { actions as requisitionSlipActions } from '../ducks/requisition-slips';
-import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../global/constants';
-import { request } from '../global/types';
-import { service } from '../services/order-slips';
+import { actions, types } from '../../ducks/order-slips';
+import { actions as requisitionSlipActions } from '../../ducks/requisition-slips';
+import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../../global/constants';
+import { request } from '../../global/types';
+import { service } from '../../services/order-slips';
 
 /* WORKERS */
 function* list({ payload }: any) {

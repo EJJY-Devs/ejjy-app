@@ -1,17 +1,16 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { actions, selectors, types } from '../ducks/users';
-import { request } from '../global/types';
-import { useActionDispatch } from './useActionDispatch';
+import { actions, selectors, types } from '../../../ducks/OfficeManager/branch-machines';
+import { request } from '../../../global/types';
+import { useActionDispatch } from '../../../hooks/useActionDispatch';
 
-export const useUsers = () => {
+export const useBranchMachines = () => {
 	const [status, setStatus] = useState<any>(request.NONE);
 	const [errors, setErrors] = useState<any>([]);
 	const [recentRequest, setRecentRequest] = useState<any>();
-	const users = useSelector(selectors.selectUsers());
 
-	const getUsers = useActionDispatch(actions.getUsers);
+	const branchMachines = useSelector(selectors.selectBranchMachines());
+	const getBranchMachines = useActionDispatch(actions.getBranchMachines);
 
 	const reset = () => {
 		resetError();
@@ -22,9 +21,9 @@ export const useUsers = () => {
 
 	const resetStatus = () => setStatus(request.NONE);
 
-	const getUsersRequest = () => {
-		setRecentRequest(types.GET_USERS);
-		getUsers({ callback });
+	const getBranchMachinesRequest = () => {
+		setRecentRequest(types.GET_BRANCH_MACHINES);
+		getBranchMachines({ callback });
 	};
 
 	const callback = ({ status, errors = [] }) => {
@@ -33,8 +32,8 @@ export const useUsers = () => {
 	};
 
 	return {
-		users,
-		getUsers: getUsersRequest,
+		branchMachines,
+		getBranchMachines: getBranchMachinesRequest,
 		status,
 		errors,
 		recentRequest,

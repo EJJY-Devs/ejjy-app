@@ -2,3 +2,25 @@
 
 .Users {
 }
+
+.AssignUsers {
+	.details {
+		padding: 25px 25px 0 25px;
+	}
+
+	.cashiering-assignments {
+		padding: 0 25px 10px 25px;
+	}
+
+	.machine-selection {
+		display: flex;
+
+		.select {
+			margin-right: 8px;
+		}
+
+		button {
+			flex-shrink: 0;
+		}
+	}
+}

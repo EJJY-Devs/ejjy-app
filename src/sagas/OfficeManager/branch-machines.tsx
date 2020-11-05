@@ -1,8 +1,8 @@
 import { put, retry, takeLatest } from 'redux-saga/effects';
-import { actions, types } from '../ducks/users';
-import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../global/constants';
-import { request } from '../global/types';
-import { service } from '../services/users';
+import { actions, types } from '../../ducks/OfficeManager/branch-machines';
+import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../../global/constants';
+import { request } from '../../global/types';
+import { service } from '../../services/OfficeManager/branch-machines';
 
 /* WORKERS */
 function* list({ payload }: any) {
@@ -15,7 +15,9 @@ function* list({ payload }: any) {
 			page_size: MAX_PAGE_SIZE,
 		});
 
-		yield put(actions.save({ type: types.GET_USERS, users: response.data.results }));
+		yield put(
+			actions.save({ type: types.GET_BRANCH_MACHINES, branchMachines: response.data.results }),
+		);
 		callback({ status: request.SUCCESS });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
@@ -24,7 +26,7 @@ function* list({ payload }: any) {
 
 /* WATCHERS */
 const listWatcherSaga = function* listWatcherSaga() {
-	yield takeLatest(types.GET_USERS, list);
+	yield takeLatest(types.GET_BRANCH_MACHINES, list);
 };
 
 export default [listWatcherSaga()];

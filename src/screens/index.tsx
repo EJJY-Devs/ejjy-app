@@ -28,5 +28,5 @@ export { default as OfficeManagerProducts } from './OfficeManager/Products/Produ
 export { default as OfficeManagerRequisitionSlips } from './OfficeManager/RequisitionSlips/RequisitionSlips';
 export { default as OfficeManagerViewRequisitionSlip } from './OfficeManager/RequisitionSlips/ViewRequisitionSlip';
 export { default as OfficeManagerViewDeliveryReceipt } from './OfficeManager/RequisitionSlips/ViewDeliveryReceipt';
-
 export { default as OfficeManagerUsers } from './OfficeManager/Users/Users';
+export { default as OfficeManagerAssignUser } from './OfficeManager/Users/AssignUser';

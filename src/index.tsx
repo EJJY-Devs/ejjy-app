@@ -1,4 +1,8 @@
 import { ConnectedRouter } from 'connected-react-router';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
@@ -10,6 +14,12 @@ import configureStore from './configureStore';
 import './index.scss';
 import * as serviceWorker from './serviceWorker';
 import history from './utils/history';
+
+// Configure timezone
+dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault('Asia/Manila');
 
 // Start Interceptor
 const store = configureStore({}, history);

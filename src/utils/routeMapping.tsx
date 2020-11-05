@@ -12,6 +12,7 @@ import {
 	BranchPersonnelNotifications,
 	BranchPersonnelPreparationSlips,
 	BranchPersonnelProducts,
+	OfficeManagerAssignUser,
 	OfficeManagerBranches,
 	OfficeManagerDashboard,
 	OfficeManagerNotifications,
@@ -63,6 +64,10 @@ export const OrderSlipsScreens = {
 
 export const UsersScreens = {
 	[userTypes.OFFICE_MANAGER]: OfficeManagerUsers,
+};
+
+export const AssignUserScreens = {
+	[userTypes.OFFICE_MANAGER]: OfficeManagerAssignUser,
 };
 
 export const NotificationsScreens = {

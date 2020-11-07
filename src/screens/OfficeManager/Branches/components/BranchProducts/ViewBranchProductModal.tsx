@@ -22,7 +22,10 @@ export const ViewBranchProductModal = ({ branchProduct, branchName, visible, onC
 			closable
 		>
 			<DetailsRow>
-				<DetailsSingle label="Barcode" value={branchProduct?.product?.barcode} />
+				<DetailsSingle
+					label="Barcode"
+					value={branchProduct?.product?.barcode || branchProduct?.product?.textcode}
+				/>
 				<DetailsSingle label="Name" value={branchProduct?.product?.name} />
 
 				<Divider dashed />

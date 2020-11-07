@@ -31,6 +31,7 @@ export const BranchBalances = () => {
 				?.map((branchProduct) => ({
 					id: branchProduct.id,
 					branch_id: branchProduct.branch.id,
+					textcode: branchProduct.product.textcode,
 					barcode: branchProduct.product.barcode,
 					name: branchProduct.product.name,
 					current_balance: branchProduct.current_balance,
@@ -46,10 +47,11 @@ export const BranchBalances = () => {
 		return data
 			?.filter(({ branch_id }) => branch_id === branchId)
 			?.map((branchProduct) => {
-				const { barcode, name, max_balance, current_balance, status } = branchProduct;
+				const { barcode, name, textcode, max_balance, current_balance, status } = branchProduct;
 
 				return [
-					barcode,
+					{ isHidden: true, barcode, name, textcode },
+					barcode || textcode,
 					name,
 					`${current_balance} / ${max_balance}`,
 					getBranchProductStatus(status),

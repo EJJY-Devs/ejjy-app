@@ -56,14 +56,16 @@ export const TableNormal = ({
 							} else {
 								return (
 									<tr key={`tr-${index}`} style={{ height: `${ROW_HEIGHT}px` }}>
-										{row.map((item, index) => (
-											<td
-												key={`td-${index}`}
-												style={{ textAlign: columns?.[index].center ? 'center' : 'left' }}
-											>
-												{item}
-											</td>
-										))}
+										{row
+											.filter((item) => !item?.isHidden)
+											.map((item, index) => (
+												<td
+													key={`td-${index}`}
+													style={{ textAlign: columns?.[index].center ? 'center' : 'left' }}
+												>
+													{item}
+												</td>
+											))}
 									</tr>
 								);
 							}

@@ -135,7 +135,10 @@ export const EditBranchProductsForm = ({
 			{({ values, errors, touched }) => (
 				<Form className="form">
 					<DetailsRow>
-						<DetailsSingle label="Barcode" value={branchProduct?.product?.id} />
+						<DetailsSingle
+							label="Barcode"
+							value={branchProduct?.product?.barcode || branchProduct?.product?.textcode}
+						/>
 						<DetailsSingle label="Name" value={branchProduct?.product?.name} />
 
 						<Divider dashed />

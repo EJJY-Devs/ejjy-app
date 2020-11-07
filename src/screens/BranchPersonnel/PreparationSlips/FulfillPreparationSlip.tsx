@@ -101,12 +101,16 @@ const PreparationSlips = ({ match }) => {
 		});
 	};
 
-	const searchProducts = (searchedText) => {
+	const searchProducts = (keyword) => {
+		keyword = keyword?.toLowerCase();
+
 		const formattedProducts = preparationSlip?.products
 			?.filter(({ product }) => {
-				const barcode = product?.barcode?.toLowerCase() ?? '';
 				const name = product?.name?.toLowerCase() ?? '';
-				return barcode.includes(searchedText) || name.includes(searchedText);
+				const barcode = product?.barcode?.toLowerCase() ?? '';
+				const textcode = product?.textcode?.toLowerCase() ?? '';
+
+				return name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword);
 			})
 			?.sort((a, b) => a.fulfilled_quantity_piece - b.fulfilled_quantity_piece)
 			?.map((requestedProduct) => {

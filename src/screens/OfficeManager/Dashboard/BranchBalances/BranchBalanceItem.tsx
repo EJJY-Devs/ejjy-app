@@ -15,15 +15,23 @@ export const BranchBalanceItem = ({ dataSource }: Props) => {
 		setData(dataSource);
 	}, [dataSource]);
 
-	const onSearch = (searchedText) => {
-		setData(
-			dataSource.filter((item) => {
-				const barcode = item?.[0]?.toLowerCase() || '';
-				const name = item?.[1]?.toLowerCase() || '';
+	const onSearch = (keyword) => {
+		keyword = keyword?.toLowerCase();
 
-				return barcode.includes(searchedText) || name.includes(searchedText);
-			}),
-		);
+		const filteredData =
+			keyword.length > 0
+				? dataSource.filter((item) => {
+						const barcode = item?.[0]?.barcode?.toLowerCase() || '';
+						const textcode = item?.[0]?.textcode?.toLowerCase() || '';
+						const name = item?.[0]?.name?.toLowerCase() || '';
+
+						return (
+							name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword)
+						);
+				  })
+				: dataSource;
+
+		setData(filteredData);
 	};
 
 	return (

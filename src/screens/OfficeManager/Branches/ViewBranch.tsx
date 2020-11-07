@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { lowerCase } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Breadcrumb, Container, Table, TableActions, TableHeader } from '../../../components';
@@ -49,13 +48,14 @@ const ViewBranch = ({ match }: Props) => {
 		if (status === request.SUCCESS && recentRequest === types.GET_BRANCH_PRODUCTS_BY_BRANCH) {
 			const formattedBranchProducts = branchProducts.map((branchProduct) => {
 				const {
-					product: { barcode, name, max_balance },
+					product: { barcode, name, textcode, max_balance },
 					current_balance,
 				} = branchProduct;
 
 				return {
+					_textcode: textcode,
 					_barcode: barcode,
-					barcode: <ButtonLink text={barcode} onClick={() => onView(branchProduct)} />,
+					barcode: <ButtonLink text={barcode || textcode} onClick={() => onView(branchProduct)} />,
 					name,
 					balance: `${current_balance} / ${max_balance}`,
 					actions: <TableActions onEdit={() => onEdit(branchProduct)} />,
@@ -88,10 +88,18 @@ const ViewBranch = ({ match }: Props) => {
 	};
 
 	const onSearch = (keyword) => {
-		keyword = lowerCase(keyword);
+		keyword = keyword?.toLowerCase();
 		const filteredData =
 			keyword.length > 0
-				? data.filter(({ _barcode, name }) => _barcode.includes(keyword) || name.includes(keyword))
+				? data.filter((item) => {
+						const name = item?.name?.toLowerCase() ?? '';
+						const barcode = item?._barcode?.toLowerCase() ?? '';
+						const textcode = item?._textcode?.toLowerCase() ?? '';
+
+						return (
+							name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword)
+						);
+				  })
 				: data;
 
 		setTableData(filteredData);

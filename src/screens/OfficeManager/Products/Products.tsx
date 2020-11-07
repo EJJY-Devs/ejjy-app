@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { lowerCase } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Container, Table, TableActions, TableHeader } from '../../../components';
 import { Box, ButtonLink } from '../../../components/elements';
@@ -32,11 +31,12 @@ const Products = () => {
 	// Effect: Format products to be rendered in Table
 	useEffect(() => {
 		const formattedProducts = products.map((product) => {
-			const { id, barcode, name } = product;
+			const { id, barcode, name, textcode } = product;
 
 			return {
+				_textcode: textcode,
 				_barcode: barcode,
-				barcode: <ButtonLink text={barcode} onClick={() => onView(product)} />,
+				barcode: <ButtonLink text={barcode || textcode} onClick={() => onView(product)} />,
 				name,
 				actions: <TableActions onEdit={() => onEdit(product)} onRemove={() => removeProduct(id)} />,
 			};
@@ -67,10 +67,18 @@ const Products = () => {
 	};
 
 	const onSearch = (keyword) => {
-		keyword = lowerCase(keyword);
+		keyword = keyword?.toLowerCase();
 		const filteredData =
 			keyword.length > 0
-				? data.filter(({ _barcode, name }) => _barcode.includes(keyword) || name.includes(keyword))
+				? data.filter((item) => {
+						const name = item?.name?.toLowerCase() ?? '';
+						const barcode = item?._barcode?.toLowerCase() ?? '';
+						const textcode = item?._textcode?.toLowerCase() ?? '';
+
+						return (
+							name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword)
+						);
+				  })
 				: data;
 
 		setTableData(filteredData);

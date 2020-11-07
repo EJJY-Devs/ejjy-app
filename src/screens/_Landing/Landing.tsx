@@ -42,9 +42,11 @@ const Landing = () => {
 					break;
 				}
 				case userTypes.BRANCH_MANAGER: {
+					history.replace('/dashboard');
 					break;
 				}
 				case userTypes.BRANCH_PERSONNEL: {
+					history.replace('/dashboard');
 					break;
 				}
 			}

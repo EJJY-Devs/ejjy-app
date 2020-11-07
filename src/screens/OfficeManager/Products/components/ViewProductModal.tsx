@@ -22,7 +22,7 @@ export const ViewProductModal = ({ product, visible, onClose }: Props) => {
 			closable
 		>
 			<DetailsRow>
-				<DetailsSingle label="Barcode" value={product?.barcode} />
+				<DetailsSingle label="Barcode" value={product?.barcode || product?.textcode} />
 				<DetailsSingle label="Name" value={product?.name} />
 				<DetailsSingle label="Type" value={getProductType(product?.type)} />
 				<DetailsSingle

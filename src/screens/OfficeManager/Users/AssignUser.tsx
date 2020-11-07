@@ -19,6 +19,7 @@ import { useUsers } from '../hooks/useUsers';
 import { types } from '../../../ducks/OfficeManager/cashiering-assignments';
 import './style.scss';
 import { useHistory } from 'react-router-dom';
+import cn from 'classnames';
 
 const columns = [
 	{ title: 'Date', dataIndex: 'date' },
@@ -58,10 +59,12 @@ const AssignUser = ({ match }) => {
 	// Effect: Format cashiering assignments
 	useEffect(() => {
 		if (user && cashieringAssignments && branchMachines) {
+			const today = dayjs();
 			const days = getDays();
 			const machineOptions = getMachineOptions();
 
 			const formattedAssignments = days.map((item) => {
+				const isDateAfter = today.isAfter(item.date);
 				const assignment = cashieringAssignments.find((ca) =>
 					dayjs(ca.date, 'YYYY-MM-DD', true).isSame(item.date, 'date'),
 				);
@@ -77,14 +80,21 @@ const AssignUser = ({ match }) => {
 								placeholder="Cashiering Machines"
 								value={assignment.branch_machine_id}
 								onChange={(value) => onChangeAssignment(assignment.id, value)}
+								disabled={isDateAfter}
 							/>
-							<CancelButtonIcon
-								tooltip="Remove"
-								onClick={() => onRemoveAssignment(assignment.id)}
-							/>
+							{!isDateAfter && (
+								<CancelButtonIcon
+									tooltip="Remove"
+									onClick={() => onRemoveAssignment(assignment.id)}
+								/>
+							)}
 						</div>
 					) : (
-						<AddButtonIcon tooltip="Assign" onClick={() => onAssign(item.date)} />
+						<AddButtonIcon
+							classNames={cn('btn-assign', { disabled: isDateAfter })}
+							tooltip="Assign"
+							onClick={() => onAssign(item.date)}
+						/>
 					),
 				};
 			});

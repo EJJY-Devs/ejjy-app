@@ -12,6 +12,7 @@
 	display: block;
 
 	&.disabled {
+		pointer-events: none;
 		background-color: $color-main-background;
 	}
 }

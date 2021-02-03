@@ -2,6 +2,7 @@
 import { notification, Spin } from 'antd';
 import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
+import { IS_LIVE_APP } from '../../global/constants';
 import { request, userTypes } from '../../global/types';
 import { useAuth } from '../../hooks/useAuth';
 import { useBranches } from '../OfficeManager/hooks/useBranches';
@@ -29,9 +30,15 @@ const Landing = () => {
 					break;
 				}
 				case userTypes.BRANCH_MANAGER: {
+					if (IS_LIVE_APP) {
+						getBranches();
+					}
 					break;
 				}
 				case userTypes.BRANCH_PERSONNEL: {
+					if (IS_LIVE_APP) {
+						getBranches();
+					}
 					break;
 				}
 			}
@@ -50,10 +57,11 @@ const Landing = () => {
 					break;
 				}
 				case userTypes.BRANCH_MANAGER: {
-					history.replace('/dashboard');
+					redirectBranchManager();
 					break;
 				}
 				case userTypes.BRANCH_PERSONNEL: {
+					redirectBranchPersonel();
 					history.replace('/dashboard');
 					break;
 				}
@@ -62,6 +70,40 @@ const Landing = () => {
 	}, [user, getBranchesStatus]);
 
 	const redirectOfficeManager = () => {
+		const requests = [getBranchesStatus];
+
+		if (requests.includes(request.REQUESTING)) {
+			return;
+		} else if (requests.every((value) => value === request.SUCCESS)) {
+			history.replace('/dashboard');
+		} else if (requests.some((value) => value === request.ERROR)) {
+			history.replace('/404');
+		}
+	};
+
+	const redirectBranchManager = () => {
+		if (!IS_LIVE_APP) {
+			history.replace('/dashboard');
+			return;
+		}
+
+		const requests = [getBranchesStatus];
+
+		if (requests.includes(request.REQUESTING)) {
+			return;
+		} else if (requests.every((value) => value === request.SUCCESS)) {
+			history.replace('/dashboard');
+		} else if (requests.some((value) => value === request.ERROR)) {
+			history.replace('/404');
+		}
+	};
+
+	const redirectBranchPersonel = () => {
+		if (!IS_LIVE_APP) {
+			history.replace('/dashboard');
+			return;
+		}
+
 		const requests = [getBranchesStatus];
 
 		if (requests.includes(request.REQUESTING)) {

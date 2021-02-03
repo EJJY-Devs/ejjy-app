@@ -26,4 +26,7 @@ export const service = {
 		axios.post('tokens/acquire/', body, { baseURL, ...NO_VERIFICATION_CONFIG }),
 
 	logout: async (id: number, baseURL) => axios.post(`users/${id}/logout/`, null, { baseURL }),
+
+	logoutOnline: async (id: number, baseURL) =>
+		axios.post(`users/${id}/logout_online/`, null, { baseURL }),
 };

@@ -4,6 +4,20 @@
 	"private": true,
 	"homepage": "./",
 	"main": "./electron/main.js",
+	"scripts": {
+		"test": "react-scripts test",
+		"eject": "react-scripts eject",
+		"deploy": "python3 deploy.py",
+		"start:online": "env-cmd -f .env.online react-scripts start",
+		"start:local": "env-cmd -f .env.local react-scripts start",
+		"build:online": "env-cmd -f .env.online react-scripts build",
+		"build:local": "env-cmd -f .env.local react-scripts build",
+		"start:electron": "PORT=3001 env-cmd -f .env.local react-scripts start",
+		"dev:electron": "concurrently \"npm start:electron\" \"wait-on http://localhost:3001 && electron .\"",
+		"electron": "wait-on http://localhost:3001 && electron .",
+		"ebuild": "npm run build && node_modules/.bin/build",
+		"pack": "electron-packager ./ EJJY-Cashiering --platform=win32"
+	},
 	"dependencies": {
 		"@ant-design/icons": "^4.2.2",
 		"antd": "^4.6.2",
@@ -34,17 +48,6 @@
 		"sweetalert": "^2.1.2",
 		"typescript": "^3.7.5",
 		"yup": "^0.29.3"
-	},
-	"scripts": {
-		"start": "PORT=3001 react-scripts start",
-		"build": "react-scripts build",
-		"deploy": "python3 deploy.py",
-		"test": "react-scripts test",
-		"eject": "react-scripts eject",
-		"dev": "concurrently \"npm start\" \"wait-on http://localhost:3001 && electron .\"",
-		"electron": "wait-on http://localhost:3001 && electron .",
-		"ebuild": "npm run build && node_modules/.bin/build",
-		"pack": "electron-packager ./ EJJY-Cashiering --platform=win32"
 	},
 	"eslintConfig": {
 		"extends": "react-app"
@@ -80,6 +83,7 @@
 		"electron": "^11.2.1",
 		"electron-builder": "^22.9.1",
 		"electron-packager": "^15.2.0",
+		"env-cmd": "^10.1.0",
 		"node-sass": "^4.14.1",
 		"react-app-rewired": "^2.1.6",
 		"wait-on": "^5.2.1"

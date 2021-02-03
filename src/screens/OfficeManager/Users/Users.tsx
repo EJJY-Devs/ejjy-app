@@ -1,84 +1,96 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { lowerCase } from 'lodash';
+import { message, Tabs } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Container, Table, TableActions, TableHeader } from '../../../components';
+import { Container, TableActions } from '../../../components';
 import { Box } from '../../../components/elements';
-import { types } from '../../../ducks/OfficeManager/users';
-import { EMPTY_CELL } from '../../../global/constants';
-import { request, userTypes } from '../../../global/types';
-import { calculateTableHeight } from '../../../utils/function';
+import { request } from '../../../global/types';
+import { getUserTypeName } from '../../../utils/function';
+import { useBranches } from '../hooks/useBranches';
 import { useUsers } from '../hooks/useUsers';
+import { BranchUsers } from './components/BranchUsers';
 import './style.scss';
 
-const columns = [
-	{ title: 'Name', dataIndex: 'name' },
-	{ title: 'Branch', dataIndex: 'branch' },
-	{ title: 'Actions', dataIndex: 'actions' },
-];
+const { TabPane } = Tabs;
 
 const Users = () => {
-	const history = useHistory();
-
+	// STATES
 	const [data, setData] = useState([]);
-	const [tableData, setTableData] = useState([]);
+	const [queriedBranches, setQueriedBranches] = useState([]);
+	const [recentQueriedBranchId, setRecentQueriedBranchId] = useState(null);
 
-	const { users, getUsers, status, recentRequest } = useUsers();
+	// CUSTOM HOOKS
+	const history = useHistory();
+	const { branches } = useBranches();
+	const { users, getUsers, status, errors, reset } = useUsers();
 
+	// METHODS
 	useEffect(() => {
-		getUsers({
-			fields: 'id,first_name,last_name,user_type,branch',
-		});
-	}, []);
-
-	// Effect: Format users to be rendered in Table
-	useEffect(() => {
-		if (status === request.SUCCESS && recentRequest === types.GET_USERS && users) {
-			const formattedUsers = users
-				.filter((user) => user.user_type !== userTypes.OFFICE_MANAGER)
-				.map((user) => {
-					const name = `${user.first_name} ${user.last_name}`;
-					const branch = user?.branch?.name || EMPTY_CELL;
-
-					return {
-						_name: name,
-						_branch: branch,
-						name,
-						branch,
-						actions: <TableActions onEdit={() => history.push(`/users/assign/${user.id}`)} />,
-					};
-				});
-
-			setData(formattedUsers);
-			setTableData(formattedUsers);
+		if (branches?.length) {
+			onTabClick(branches?.[0]?.id);
 		}
-	}, [users, status, recentRequest]);
+	}, [branches]);
 
-	const onSearch = (keyword) => {
-		keyword = lowerCase(keyword);
-		const filteredData =
-			keyword.length > 0
-				? data.filter(({ _barcode, name }) => _barcode.includes(keyword) || name.includes(keyword))
-				: data;
+	useEffect(() => {
+		if (users?.length && recentQueriedBranchId) {
+			const newUsers = users
+				?.filter((user) => !data.find((item) => item.id === user.id))
+				?.map((user) => ({ ...user, branch_id: Number(recentQueriedBranchId) }));
 
-		setTableData(filteredData);
+			setData((value) => [...value, ...newUsers]);
+		}
+	}, [users]);
+
+	useEffect(() => {
+		if (status === request.ERROR && errors?.length) {
+			errors.forEach((error) => {
+				message.error(error);
+			});
+
+			reset();
+		}
+	}, [status, errors]);
+
+	const getTableDataSource = (branchId) => {
+		let newData = data
+			?.filter(({ branch_id }) => branch_id === branchId)
+			?.map((user) => {
+				const { id, first_name, last_name, user_type } = user;
+
+				return [
+					`${first_name} ${last_name}`,
+					getUserTypeName(user_type),
+					<TableActions onEdit={() => history.push(`/users/assign/${id}`)} />,
+				];
+			});
+		return newData;
+	};
+
+	const onTabClick = (branchId) => {
+		setRecentQueriedBranchId(branchId);
+
+		if (!queriedBranches.includes(branchId) && branchId) {
+			setQueriedBranches((value) => [...value, branchId.toString()]);
+			getUsers({ branchId, fields: 'id,first_name,last_name,user_type' });
+		}
 	};
 
 	return (
-		<Container
-			title="Users"
-			loading={status === request.REQUESTING}
-			loadingText="Fetching users..."
-		>
+		<Container title="Users" loading={status === request.REQUESTING}>
 			<section>
 				<Box>
-					<TableHeader onSearch={onSearch} />
-
-					<Table
-						columns={columns}
-						dataSource={tableData}
-						scroll={{ y: calculateTableHeight(tableData.length), x: '100%' }}
-					/>
+					<Tabs
+						defaultActiveKey={branches?.[0]?.id}
+						style={{ padding: '20px 25px' }}
+						type="card"
+						onTabClick={onTabClick}
+					>
+						{branches.map(({ name, id, online_url }) => (
+							<TabPane key={id} tab={name} disabled={!online_url}>
+								<BranchUsers dataSource={getTableDataSource(id)} />
+							</TabPane>
+						))}
+					</Tabs>
 				</Box>
 			</section>
 		</Container>

@@ -25,10 +25,8 @@ export const useUsers = () => {
 	const resetStatus = () => setStatus(request.NONE);
 
 	const getUsersRequest = (data: any = {}) => {
-		const { fields = '' } = data;
-
 		setRecentRequest(types.GET_USERS);
-		getUsers({ fields, callback });
+		getUsers({ ...data, callback });
 	};
 
 	const getUserByIdRequest = (id = 0, extraCallback = null) => {

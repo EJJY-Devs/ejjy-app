@@ -1,8 +1,13 @@
 import axios from 'axios';
 import { IGetRequest } from '../interfaces';
 
-export const service = {
-	list: async (params: IGetRequest, baseURL) => axios.get('/users/', { baseURL, params }),
+interface IListUsersRequest extends IGetRequest {
+	branch_id: number;
+}
 
-	getById: async (id, baseURL) => axios.get(`/users/${id}/`, { baseURL }),
+export const service = {
+	list: async (params: IListUsersRequest, baseURL) =>
+		axios.get('/online-users/', { baseURL, params }),
+
+	getById: async (id, baseURL) => axios.get(`/online-users/${id}/`, { baseURL }),
 };

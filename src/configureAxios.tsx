@@ -93,10 +93,12 @@ export default function configureAxios(store: any) {
 		const modifiedError = { ...error };
 
 		if (error.isAxiosError) {
-			if (typeof error.response.data === 'string') {
+			if (typeof error?.response?.data === 'string') {
 				modifiedError.errors = [error.response.data];
+			} else if (typeof error?.response?.data === 'object') {
+				modifiedError.errors = flatten(values(error?.response?.data));
 			} else {
-				modifiedError.errors = flatten(values(error.response.data));
+				modifiedError.errors = ['An error occurred'];
 			}
 		}
 

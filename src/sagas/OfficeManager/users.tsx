@@ -2,12 +2,12 @@ import { put, retry, takeLatest } from 'redux-saga/effects';
 import { actions, types } from '../../ducks/OfficeManager/users';
 import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../../global/constants';
 import { request } from '../../global/types';
-import { service } from '../../services/OfficeManager/users';
 import { ONLINE_API_URL } from '../../services/index';
+import { service } from '../../services/OfficeManager/users';
 
 /* WORKERS */
 function* list({ payload }: any) {
-	const { fields = '', callback } = payload;
+	const { fields = '', branchId, callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	try {
@@ -18,6 +18,7 @@ function* list({ payload }: any) {
 			{
 				page: 1,
 				page_size: MAX_PAGE_SIZE,
+				branch_id: branchId,
 				fields,
 			},
 			ONLINE_API_URL,

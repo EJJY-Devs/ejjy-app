@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 import { cloneDeep } from 'lodash';
 import { createAction, handleActions } from 'redux-actions';
 import { createSelector } from 'reselect';

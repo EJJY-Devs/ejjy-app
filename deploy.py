@@ -6,8 +6,8 @@ if __name__ == '__main__':
   os.system('npm install')
   print('DONE\n')
 
-  print('2. Building...')
-  os.system('npm run build')
+  print('2. Building Online Version...')
+  os.system('npm run build:online')
   print('DONE\n')
 
   print('3. Copying Build to Deployment...')

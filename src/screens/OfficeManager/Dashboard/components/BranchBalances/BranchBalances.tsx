@@ -17,7 +17,7 @@ export const BranchBalances = () => {
 	const [queriedBranches, setQueriedBranches] = useState([]);
 	const [recentQueriedBranchId, setRecentQueriedBranchId] = useState(null);
 
-	// CUSTTOM HOOKS
+	// CUSTOM HOOKS
 	const { branches } = useBranches();
 	const { getBranchDay, status: branchesDaysStatus } = useBranchesDays();
 	const {
@@ -25,6 +25,7 @@ export const BranchBalances = () => {
 		getBranchProductsByBranch,
 		status: branchProductsStatus,
 	} = useBranchProducts();
+
 	// METHODS
 	useEffect(() => {
 		if (branches) {

@@ -51,7 +51,7 @@ export const CreateEditBranchForm = ({ branch, onSubmit, onClose, loading }: Pro
 		>
 			{({ errors, touched }) => (
 				<Form className="form">
-					<Row>
+					<Row gutter={[15, 15]}>
 						<Col span={24}>
 							<FormInputLabel id="name" label="Name" />
 							{errors.name && touched.name ? <FieldError error={errors.name} /> : null}

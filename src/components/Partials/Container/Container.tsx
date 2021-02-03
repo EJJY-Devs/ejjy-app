@@ -45,7 +45,7 @@ export const Container = ({
 
 	useEffect(() => {
 		testConnection();
-		retrieveUser(user.id, user.login_count);
+		retrieveUser(user.id, user.login_count || user.online_login_count);
 	}, []);
 
 	const isDisabled = useCallback(() => {

@@ -5,13 +5,12 @@ import storage from 'redux-persist/lib/storage';
 import createSagaMiddleware from 'redux-saga';
 import rootReducer from './ducks/index';
 import { key as UI_KEY } from './ducks/ui';
+import { APP_KEY } from './global/constants';
 import rootSaga from './sagas/index';
-
-export const STORAGE_KEY = 'ejjy-app';
 
 export default function configureStore(initialState = {}, history: any): any {
 	const persistConfig = {
-		key: STORAGE_KEY,
+		key: APP_KEY,
 		storage,
 		blacklist: ['_persist', UI_KEY],
 		keyPrefix: '',

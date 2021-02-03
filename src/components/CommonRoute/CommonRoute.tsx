@@ -3,8 +3,8 @@ import { useSelector } from 'react-redux';
 import { Redirect, Route, useLocation } from 'react-router-dom';
 import { selectors } from '../../ducks/auth';
 
-const portal = ['/', '/login', '/login/branch'];
-const not404Pages = ['/', '/login', '/login/branch', '/landing'];
+const portal = ['/', '/login'];
+const not404Pages = ['/', '/login', '/landing'];
 
 export const CommonRoute = ({ path, exact, component }: any) => {
 	const { pathname: pathName } = useLocation();

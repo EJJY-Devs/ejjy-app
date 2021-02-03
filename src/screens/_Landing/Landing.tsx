@@ -2,7 +2,7 @@
 import { notification, Spin } from 'antd';
 import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
-import { IS_LIVE_APP } from '../../global/constants';
+import { IS_APP_LIVE } from '../../global/constants';
 import { request, userTypes } from '../../global/types';
 import { useAuth } from '../../hooks/useAuth';
 import { useBranches } from '../OfficeManager/hooks/useBranches';
@@ -30,13 +30,13 @@ const Landing = () => {
 					break;
 				}
 				case userTypes.BRANCH_MANAGER: {
-					if (IS_LIVE_APP) {
+					if (IS_APP_LIVE) {
 						getBranches();
 					}
 					break;
 				}
 				case userTypes.BRANCH_PERSONNEL: {
-					if (IS_LIVE_APP) {
+					if (IS_APP_LIVE) {
 						getBranches();
 					}
 					break;
@@ -82,7 +82,7 @@ const Landing = () => {
 	};
 
 	const redirectBranchManager = () => {
-		if (!IS_LIVE_APP) {
+		if (!IS_APP_LIVE) {
 			history.replace('/dashboard');
 			return;
 		}
@@ -99,7 +99,7 @@ const Landing = () => {
 	};
 
 	const redirectBranchPersonel = () => {
-		if (!IS_LIVE_APP) {
+		if (!IS_APP_LIVE) {
 			history.replace('/dashboard');
 			return;
 		}

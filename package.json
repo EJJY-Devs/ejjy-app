@@ -15,8 +15,7 @@
 		"start:electron": "PORT=3001 env-cmd -f .env.local react-scripts start",
 		"dev:electron": "concurrently \"npm start:electron\" \"wait-on http://localhost:3001 && electron .\"",
 		"electron": "wait-on http://localhost:3001 && electron .",
-		"ebuild": "npm run build && node_modules/.bin/build",
-		"pack": "electron-packager ./ EJJY-Cashiering --platform=win32"
+		"pack": "npm run build:local && electron-packager . EJJY-Local --no-prune --platform=win32 --ignore=/.vscode --ignore=/deployment --ignore=/node_modules --ignore=/public --ignore=/src --overwrite"
 	},
 	"dependencies": {
 		"@ant-design/icons": "^4.2.2",
@@ -36,6 +35,7 @@
 		"react-beforeunload": "^2.4.0",
 		"react-detect-offline": "^2.4.1",
 		"react-dom": "^16.13.1",
+		"react-helmet": "^6.1.0",
 		"react-keyboard-event-handler": "^1.5.4",
 		"react-redux": "^7.2.1",
 		"react-router-dom": "^5.2.0",

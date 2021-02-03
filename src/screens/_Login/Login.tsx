@@ -13,10 +13,7 @@ const Login = () => {
 
 	// METHODS
 	const onSubmit = (data: IFormValues) => {
-		login({
-			...data,
-			isFromBranch: pathName === '/login/branch',
-		});
+		login(data);
 	};
 
 	return (

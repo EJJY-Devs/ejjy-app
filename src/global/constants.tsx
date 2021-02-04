@@ -1,3 +1,4 @@
+// eslint-disable-next-line eqeqeq
 export const IS_APP_LIVE = process.env.REACT_APP_IS_LIVE == 'true';
 
 export const APP_KEY = process.env.REACT_APP_KEY;

@@ -18,15 +18,14 @@ import {
 	UsersScreens,
 	ViewBranchScreens,
 	ViewDeliveryReceiptScreens,
-	ViewRequisitionSlipScreens
+	ViewRequisitionSlipScreens,
 } from './utils/routeMapping';
-
 
 const App = () => (
 	<>
 		<Helmet>
-          <title>{ APP_TITLE }</title>
-        </Helmet>
+			<title>{APP_TITLE}</title>
+		</Helmet>
 		<Switch>
 			<CommonRoute path={['/', '/login']} exact component={Login} />
 			<CommonRoute path="/landing" exact component={Landing} />

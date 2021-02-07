@@ -1,14 +1,21 @@
-import { call, put, retry, takeLatest } from 'redux-saga/effects';
+import { call, put, retry, select, takeLatest } from 'redux-saga/effects';
+import { selectors as branchesSelectors } from '../../ducks/OfficeManager/branches';
 import { actions, types } from '../../ducks/OfficeManager/cashiering-assignments';
 import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../../global/constants';
 import { request } from '../../global/types';
-import { ONLINE_API_URL } from '../../services/index';
 import { service } from '../../services/OfficeManager/cashiering-assignments';
 
 /* WORKERS */
 function* listByUserId({ payload }: any) {
-	const { userId, callback } = payload;
+	const { userId, branchId, callback } = payload;
 	callback({ status: request.REQUESTING });
+
+	// Required: Branch must have an online URL (Requested by Office)
+	const baseURL = yield select(branchesSelectors.selectURLByBranchId(branchId));
+	if (!baseURL && branchId) {
+		callback({ status: request.ERROR, errors: 'Branch has no online url.' });
+		return;
+	}
 
 	try {
 		const response = yield retry(
@@ -20,7 +27,7 @@ function* listByUserId({ payload }: any) {
 				page_size: MAX_PAGE_SIZE,
 				user_id: userId,
 			},
-			ONLINE_API_URL,
+			baseURL,
 		);
 
 		yield put(
@@ -36,11 +43,18 @@ function* listByUserId({ payload }: any) {
 }
 
 function* create({ payload }: any) {
-	const { callback, ...data } = payload;
+	const { callback, branchId, ...data } = payload;
 	callback({ status: request.REQUESTING });
 
+	// Required: Branch must have an online URL (Requested by Office)
+	const baseURL = yield select(branchesSelectors.selectURLByBranchId(branchId));
+	if (!baseURL && branchId) {
+		callback({ status: request.ERROR, errors: 'Branch has no online url.' });
+		return;
+	}
+
 	try {
-		const response = yield call(service.create, data, ONLINE_API_URL);
+		const response = yield call(service.create, data, baseURL);
 
 		yield put(
 			actions.save({
@@ -55,11 +69,18 @@ function* create({ payload }: any) {
 }
 
 function* edit({ payload }: any) {
-	const { callback, ...data } = payload;
+	const { callback, branchId, ...data } = payload;
 	callback({ status: request.REQUESTING });
 
+	// Required: Branch must have an online URL (Requested by Office)
+	const baseURL = yield select(branchesSelectors.selectURLByBranchId(branchId));
+	if (!baseURL && branchId) {
+		callback({ status: request.ERROR, errors: 'Branch has no online url.' });
+		return;
+	}
+
 	try {
-		const response = yield call(service.edit, data, ONLINE_API_URL);
+		const response = yield call(service.edit, data, baseURL);
 
 		yield put(
 			actions.save({ type: types.EDIT_CASHIERING_ASSIGNMENT, cashieringAssignment: response.data }),
@@ -71,11 +92,18 @@ function* edit({ payload }: any) {
 }
 
 function* remove({ payload }: any) {
-	const { callback, id } = payload;
+	const { callback, branchId, id } = payload;
 	callback({ status: request.REQUESTING });
 
+	// Required: Branch must have an online URL (Requested by Office)
+	const baseURL = yield select(branchesSelectors.selectURLByBranchId(branchId));
+	if (!baseURL && branchId) {
+		callback({ status: request.ERROR, errors: 'Branch has no online url.' });
+		return;
+	}
+
 	try {
-		yield call(service.remove, id, ONLINE_API_URL);
+		yield call(service.remove, id, baseURL);
 
 		yield put(actions.save({ type: types.REMOVE_CASHIERING_ASSIGNMENT, id }));
 		callback({ status: request.SUCCESS });

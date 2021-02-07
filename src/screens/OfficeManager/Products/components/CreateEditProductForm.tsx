@@ -10,7 +10,11 @@ import {
 	FormTextareaLabel,
 	Label,
 } from '../../../../components/elements';
-import { productTypes, unitOfMeasurementTypes } from '../../../../global/types';
+import {
+	productCheckingTypes,
+	productTypes,
+	unitOfMeasurementTypes,
+} from '../../../../global/types';
 import { sleep } from '../../../../utils/function';
 
 interface ICreateProduct {
@@ -30,6 +34,9 @@ interface ICreateProduct {
 	price_per_piece: number;
 	price_per_bulk: number;
 	is_vat_exempted: boolean;
+	is_daily_checked?: boolean;
+	is_randomly_checked?: boolean;
+	checking?: string;
 }
 
 interface Props {
@@ -50,20 +57,24 @@ export const CreateEditProductForm = ({ product, onSubmit, onClose, loading }: P
 				name: product?.name || '',
 				type: product?.type || productTypes.WET,
 				unit_of_measurement: product?.unit_of_measurement || unitOfMeasurementTypes.WEIGHING,
+				checking: product?.is_daily_checked
+					? productCheckingTypes.DAILY
+					: productCheckingTypes.RANDOM,
 				print_details: product?.name || '',
 				description: product?.name || '',
-				allowable_spoilage: product?.allowable_spoilage * 100 || '',
-				pieces_in_bulk: product?.pieces_in_bulk || '',
+				allowable_spoilage: product?.allowable_spoilage * 100,
+				pieces_in_bulk: product?.pieces_in_bulk,
 				cost_per_piece: product?.cost_per_piece || '',
 				cost_per_bulk: product?.cost_per_bulk || '',
-				reorder_point: product?.reorder_point || '',
-				max_balance: product?.max_balance || '',
+				reorder_point: product?.reorder_point,
+				max_balance: product?.max_balance,
 				price_per_piece: product?.price_per_piece || '',
 				price_per_bulk: product?.price_per_bulk || '',
 				is_vat_exempted: product?.is_vat_exempted?.toString() || 'false',
 			},
 			Schema: Yup.object().shape(
 				{
+					checking: Yup.string().required().label('Checking'),
 					barcode: Yup.string()
 						.max(50, 'Barcode/Textcode must be at most 50 characters')
 						.test(
@@ -160,6 +171,19 @@ export const CreateEditProductForm = ({ product, onSubmit, onClose, loading }: P
 		},
 	];
 
+	const checkingTypes = [
+		{
+			id: productCheckingTypes.DAILY,
+			label: 'Daily',
+			value: productCheckingTypes.DAILY,
+		},
+		{
+			id: productCheckingTypes.RANDOM,
+			label: 'Random',
+			value: productCheckingTypes.RANDOM,
+		},
+	];
+
 	return (
 		<Formik
 			initialValues={getFormDetails().DefaultValues}
@@ -170,6 +194,8 @@ export const CreateEditProductForm = ({ product, onSubmit, onClose, loading }: P
 				setSubmitting(false);
 
 				values.id = product?.id;
+				values.is_daily_checked = values.checking === productCheckingTypes.DAILY;
+				values.is_randomly_checked = values.checking === productCheckingTypes.RANDOM;
 				onSubmit(values);
 			}}
 			enableReinitialize
@@ -227,6 +253,12 @@ export const CreateEditProductForm = ({ product, onSubmit, onClose, loading }: P
 						</Col>
 
 						<Divider dashed />
+
+						<Col sm={12} xs={24}>
+							<Label label="Checking" spacing />
+							<FormRadioButton name="checking" items={checkingTypes} />
+							{errors.checking && touched.checking ? <FieldError error={errors.checking} /> : null}
+						</Col>
 
 						<Col sm={12} xs={24}>
 							<Label label="Is Vat Exempted?" spacing />

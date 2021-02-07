@@ -98,3 +98,8 @@ export const transactionStatus = {
 	VOID_EDITED: 'void_edited',
 	VOID_CANCELLED: 'void_cancelled',
 };
+
+export const pendingTransactionTypes = {
+	PRODUCTS: 'products',
+	USERS: 'users',
+};

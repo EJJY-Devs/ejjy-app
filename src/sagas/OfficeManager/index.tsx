@@ -5,6 +5,7 @@ import cashieringAssignmentsSagas from './cashiering-assignments';
 import deliveryReceiptProducsSagas from './delivery-receipt-producs';
 import preparationSlipsSagas from './delivery-receipts';
 import orderSlipsSagas from './order-slips';
+import pendingTransactionsSagas from './pending-transactions';
 import productsSagas from './products';
 import usersSagas from './users';
 
@@ -18,4 +19,5 @@ export const officeManagerSagas = [
 	...orderSlipsSagas,
 	...productsSagas,
 	...usersSagas,
+	...pendingTransactionsSagas,
 ];

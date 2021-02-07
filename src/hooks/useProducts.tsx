@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { actions, selectors, types } from '../ducks/OfficeManager/products';
 import { request } from '../global/types';
-import { modifiedCallback } from '../utils/function';
+import { modifiedCallback, modifiedExtraCallback } from '../utils/function';
 import { useActionDispatch } from './useActionDispatch';
 
 const CREATE_SUCCESS_MESSAGE = 'Product was created successfully';
@@ -53,7 +53,7 @@ export const useProducts = () => {
 		});
 	};
 
-	const editProductRequest = (product) => {
+	const editProductRequest = (product, extraCallback = null) => {
 		setRecentRequest(types.EDIT_PRODUCT);
 		const clonedProduct = {
 			...product,
@@ -62,7 +62,10 @@ export const useProducts = () => {
 
 		editProduct({
 			...clonedProduct,
-			callback: modifiedCallback(callback, EDIT_SUCCESS_MESSAGE, EDIT_ERROR_MESSAGE),
+			callback: modifiedExtraCallback(
+				modifiedCallback(callback, EDIT_SUCCESS_MESSAGE, EDIT_ERROR_MESSAGE),
+				extraCallback,
+			),
 		});
 	};
 

@@ -68,11 +68,18 @@ function* listByBranch({ payload }: any) {
 }
 
 function* edit({ payload }: any) {
-	const { callback, ...data } = payload;
+	const { callback, branch_id, ...data } = payload;
 	callback({ status: request.REQUESTING });
 
+	// Required: Branch must have an online URL (Requested by Office)
+	const baseURL = yield select(branchesSelectors.selectURLByBranchId(branch_id));
+	if (!baseURL && branch_id) {
+		callback({ status: request.ERROR, errors: 'Branch has no online url.' });
+		return;
+	}
+
 	try {
-		const response = yield call(service.edit, data, LOCAL_API_URL);
+		const response = yield call(service.edit, data, baseURL);
 
 		yield put(actions.save({ type: types.EDIT_BRANCH_PRODUCT, branchProduct: response.data }));
 		callback({ status: request.SUCCESS });

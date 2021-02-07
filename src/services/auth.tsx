@@ -22,6 +22,9 @@ export const service = {
 	retrieve: async (id: number, params: IGetRequest, baseURL) =>
 		axios.get(`users/${id}/`, { baseURL, params }),
 
+	retrieveOnline: async (id: number, params: IGetRequest, baseURL) =>
+		axios.get(`online-users/${id}/`, { baseURL, params }),
+
 	acquireToken: async (body: IAcquireToken, baseURL) =>
 		axios.post('tokens/acquire/', body, { baseURL, ...NO_VERIFICATION_CONFIG }),
 

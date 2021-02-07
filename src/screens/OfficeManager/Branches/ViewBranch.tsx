@@ -50,7 +50,6 @@ const ViewBranch = ({ match }: Props) => {
 
 	// Effect: Fetch branch products
 	useEffect(() => {
-		console.log('branch?.online_url', branch?.online_url);
 		if (!branch?.online_url) {
 			history.replace('/branches');
 			message.error('Branch has no online url.');

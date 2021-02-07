@@ -14,7 +14,7 @@ import {
 } from '../../../components';
 import { Box, Select } from '../../../components/elements';
 import { types } from '../../../ducks/OfficeManager/cashiering-assignments';
-import { request } from '../../../global/types';
+import { request, userTypes } from '../../../global/types';
 import { calculateTableHeight } from '../../../utils/function';
 import { useBranchMachines } from '../hooks/useBranchMachines';
 import { useCashieringAssignments } from '../hooks/useCashieringAssignments';
@@ -34,8 +34,8 @@ const AssignUser = ({ match }) => {
 	// CUSTOM HOOKS
 	const userId = match?.params?.id;
 	const history = useHistory();
-	const { branchMachines } = useBranchMachines();
 	const { user, getUserById, status: userStatus } = useUsers();
+	const { branchMachines, getBranchMachines, status: branchesMachinesStatus } = useBranchMachines();
 	const {
 		cashieringAssignments,
 		getCashieringAssignmentsByUserId,
@@ -49,12 +49,16 @@ const AssignUser = ({ match }) => {
 	// METHODS
 	useEffect(() => {
 		getUserById(userId, userDoesNotExistCallback);
-		getCashieringAssignmentsByUserId(userId);
 	}, []);
 
 	const userDoesNotExistCallback = ({ status }) => {
 		if (status === request.ERROR) {
 			history.replace('/404');
+		} else if (status === request.SUCCESS) {
+			if ([userTypes.BRANCH_MANAGER, userTypes.BRANCH_PERSONNEL].includes(user?.user_type)) {
+				getBranchMachines(user?.branch?.id);
+				getCashieringAssignmentsByUserId({ userId, branchId: user?.branch?.id });
+			}
 		}
 	};
 
@@ -109,6 +113,7 @@ const AssignUser = ({ match }) => {
 		if (branchMachines.length) {
 			createCashieringAssignment({
 				user_id: userId,
+				branchId: user?.branch?.id,
 				branch_machine_id: branchMachines[0].id,
 				date: date.format('YYYY-MM-DD'),
 			});
@@ -118,12 +123,13 @@ const AssignUser = ({ match }) => {
 	const onChangeAssignment = (assignmentId, branchMachineId) => {
 		editCashieringAssignment({
 			id: assignmentId,
+			branchId: user?.branch?.id,
 			branch_machine_id: Number(branchMachineId),
 		});
 	};
 
 	const onRemoveAssignment = (assignmentId) => {
-		removeCashieringAssignment(assignmentId);
+		removeCashieringAssignment({ id: assignmentId, branchId: user?.branch?.id });
 	};
 
 	const getDays = useCallback(() => {
@@ -163,8 +169,14 @@ const AssignUser = ({ match }) => {
 		() =>
 			(cashieringAssignmentsStatus === request.REQUESTING &&
 				cashieringAssignmentsRecentRequest === types.GET_CASHIERING_ASSIGNMENTS_BY_USER_ID) ||
-			userStatus === request.REQUESTING,
-		[cashieringAssignmentsStatus, cashieringAssignmentsRecentRequest, userStatus],
+			userStatus === request.REQUESTING ||
+			branchesMachinesStatus === request.REQUESTING,
+		[
+			cashieringAssignmentsStatus,
+			cashieringAssignmentsRecentRequest,
+			userStatus,
+			branchesMachinesStatus,
+		],
 	);
 
 	const isChangingAssignments = useCallback(
@@ -185,19 +197,22 @@ const AssignUser = ({ match }) => {
 						</DetailsRow>
 					</div>
 
-					<div className="cashiering-assignments">
-						<Divider dashed />
-						<DetailsRow>
-							<DetailsSingle label="Assignments" value="" />
-						</DetailsRow>
-					</div>
-
-					<Table
-						columns={columns}
-						dataSource={data}
-						scroll={{ y: calculateTableHeight(data.length), x: '100%' }}
-						loading={isChangingAssignments()}
-					/>
+					{[userTypes.BRANCH_MANAGER, userTypes.BRANCH_PERSONNEL].includes(user?.user_type) && (
+						<>
+							<div className="cashiering-assignments">
+								<Divider dashed />
+								<DetailsRow>
+									<DetailsSingle label="Assignments" value="" />
+								</DetailsRow>
+							</div>
+							<Table
+								columns={columns}
+								dataSource={data}
+								scroll={{ y: calculateTableHeight(data.length), x: '100%' }}
+								loading={isChangingAssignments()}
+							/>
+						</>
+					)}
 				</Box>
 			</section>
 		</Container>

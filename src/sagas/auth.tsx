@@ -1,7 +1,7 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, delay, put, takeLatest } from 'redux-saga/effects';
 import { actions, types } from '../ducks/auth';
-import { IS_APP_LIVE } from '../global/constants';
-import { request } from '../global/types';
+import { AUTH_CHECKING_INTERVAL_MS, IS_APP_LIVE } from '../global/constants';
+import { request, userTypes } from '../global/types';
 import { service } from '../services/auth';
 import { LOCAL_API_URL, ONLINE_API_URL } from '../services/index';
 
@@ -14,6 +14,14 @@ function* login({ payload }: any) {
 		const loginBaseURL = IS_APP_LIVE ? ONLINE_API_URL : LOCAL_API_URL;
 		const endpoint = IS_APP_LIVE ? service.loginOnline : service.login;
 		const loginResponse = yield call(endpoint, { login: username, password }, loginBaseURL);
+
+		if (
+			[userTypes.ADMIN, userTypes.OFFICE_MANAGER].includes(loginResponse?.data?.user_type) &&
+			!IS_APP_LIVE
+		) {
+			callback(request.ERROR, ['Only branch manager and personnels can use the local app.']);
+			return;
+		}
 
 		if (loginResponse) {
 			let tokenBaseURL = IS_APP_LIVE ? ONLINE_API_URL : LOCAL_API_URL;
@@ -40,19 +48,22 @@ function* retrieve({ payload }: any) {
 	const { id, loginCount } = payload;
 
 	try {
-		// while (true) {
-		// 	if (id) {
-		// 		const baseURL = IS_APP_LIVE ? ONLINE_API_URL : LOCAL_API_URL;
-		// 		const { data } = yield call(service.retrieve, id, {}, baseURL);
-		// 		if (data?.login_count !== loginCount) {
-		// 			yield put(actions.logout({ id }));
-		// 			break;
-		// 		}
-		// 	} else {
-		// 		break;
-		// 	}
-		// 	yield delay(AUTH_CHECKING_INTERVAL_MS);
-		// }
+		while (true) {
+			if (id) {
+				const baseURL = IS_APP_LIVE ? ONLINE_API_URL : LOCAL_API_URL;
+				const endpoint = IS_APP_LIVE ? service.retrieveOnline : service.retrieve;
+				const { data } = yield call(endpoint, id, {}, baseURL);
+
+				const newLoginCount = IS_APP_LIVE ? data.online_login_count : data.login_count;
+				if (newLoginCount !== loginCount) {
+					yield put(actions.logout({ id }));
+					break;
+				}
+			} else {
+				break;
+			}
+			yield delay(AUTH_CHECKING_INTERVAL_MS);
+		}
 	} catch (e) {
 		console.error(e);
 	}

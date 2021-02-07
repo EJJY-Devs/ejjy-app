@@ -1,31 +1,54 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Modal } from 'antd';
-import React, { useEffect } from 'react';
+import { message, Modal } from 'antd';
+import React from 'react';
 import { FieldError } from '../../../../components/elements';
-import { types } from '../../../../ducks/OfficeManager/products';
 import { request } from '../../../../global/types';
 import { useProducts } from '../../../../hooks/useProducts';
-import { CreateEditProductForm } from './CreateEditProductForm';
 import '../style.scss';
+import { CreateEditProductForm } from './CreateEditProductForm';
 
 interface Props {
 	visible: boolean;
 	product: any;
+	onFetchPendingTransactions: any;
 	onClose: any;
 }
 
-export const CreateEditProductModal = ({ product, visible, onClose }: Props) => {
-	const { createProduct, editProduct, status, errors, recentRequest, reset } = useProducts();
+export const CreateEditProductModal = ({
+	product,
+	visible,
+	onFetchPendingTransactions,
+	onClose,
+}: Props) => {
+	// CUSTOM HOOKS
+	const {
+		createProduct,
+		editProduct,
+		status: productStatus,
+		errors: productErrors,
+		reset,
+	} = useProducts();
 
-	// Effect: Close modal if recent requests are Create, Edit or Remove
-	useEffect(() => {
-		const reloadListTypes = [types.CREATE_PRODUCT, types.EDIT_PRODUCT];
+	// METHODS
+	const onCreateProduct = (product) => {
+		createProduct(product);
+	};
 
-		if (status === request.SUCCESS && reloadListTypes.includes(recentRequest)) {
-			reset();
-			onClose();
-		}
-	}, [status, recentRequest]);
+	const onEditProduct = (product) => {
+		editProduct(product, ({ status, response }) => {
+			if (status === request.SUCCESS) {
+				if (response?.pending_database_transactions?.length) {
+					message.warning(
+						'We found an error while updating the product details in local branch. Please check the pending transaction table below.',
+					);
+					onFetchPendingTransactions();
+				}
+
+				reset();
+				onClose();
+			}
+		});
+	};
 
 	return (
 		<Modal
@@ -37,15 +60,15 @@ export const CreateEditProductModal = ({ product, visible, onClose }: Props) => 
 			centered
 			closable
 		>
-			{errors.map((error, index) => (
+			{productErrors.map((error, index) => (
 				<FieldError key={index} error={error} />
 			))}
 
 			<CreateEditProductForm
 				product={product}
-				onSubmit={product ? editProduct : createProduct}
+				onSubmit={product ? onEditProduct : onCreateProduct}
 				onClose={onClose}
-				loading={status === request.REQUESTING}
+				loading={productStatus === request.REQUESTING}
 			/>
 		</Modal>
 	);

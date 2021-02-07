@@ -3,7 +3,10 @@ import { useSelector } from 'react-redux';
 import { actions, selectors, types } from '../../../ducks/OfficeManager/users';
 import { request } from '../../../global/types';
 import { useActionDispatch } from '../../../hooks/useActionDispatch';
-import { modifiedExtraCallback } from '../../../utils/function';
+import { modifiedCallback, modifiedExtraCallback } from '../../../utils/function';
+
+const REMOVE_SUCCESS_MESSAGE = 'User was removed successfully';
+const REMOVE_ERROR_MESSAGE = 'An error occurred while removing the user';
 
 export const useUsers = () => {
 	const [status, setStatus] = useState<any>(request.NONE);
@@ -14,6 +17,8 @@ export const useUsers = () => {
 	const user = useSelector(selectors.selectUser());
 	const getUsers = useActionDispatch(actions.getUsers);
 	const getUserById = useActionDispatch(actions.getUserById);
+	const removeUser = useActionDispatch(actions.removeUser);
+	const editUser = useActionDispatch(actions.editUser);
 
 	const reset = () => {
 		resetError();
@@ -34,6 +39,22 @@ export const useUsers = () => {
 		getUserById({ id, callback: modifiedExtraCallback(callback, extraCallback) });
 	};
 
+	const editUserRequest = (data, extraCallback = null) => {
+		setRecentRequest(types.EDIT_USER);
+		editUser({
+			...data,
+			callback: modifiedExtraCallback(callback, extraCallback),
+		});
+	};
+
+	const removeUserRequest = (id) => {
+		setRecentRequest(types.REMOVE_USER);
+		removeUser({
+			id,
+			callback: modifiedCallback(callback, REMOVE_SUCCESS_MESSAGE, REMOVE_ERROR_MESSAGE),
+		});
+	};
+
 	const callback = ({ status, errors = [] }) => {
 		setStatus(status);
 		setErrors(errors);
@@ -44,6 +65,8 @@ export const useUsers = () => {
 		user,
 		getUsers: getUsersRequest,
 		getUserById: getUserByIdRequest,
+		editUser: editUserRequest,
+		removeUser: removeUserRequest,
 		status,
 		errors,
 		recentRequest,

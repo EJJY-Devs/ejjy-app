@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { actions, selectors, types } from '../ducks/branch-products';
 import { request } from '../global/types';
-import { modifiedCallback } from '../utils/function';
+import { modifiedCallback, modifiedExtraCallback } from '../utils/function';
 import { useActionDispatch } from './useActionDispatch';
 
 const EDIT_SUCCESS_MESSAGE = 'Branch product was edited successfully';
@@ -38,12 +38,15 @@ export const useBranchProducts = () => {
 		getBranchProductsByBranch({ branchId, callback });
 	};
 
-	const editBranchProductRequest = (branchProduct) => {
+	const editBranchProductRequest = (branchProduct, extraCallback = null) => {
 		setRecentRequest(types.EDIT_BRANCH_PRODUCT);
 		editBranchProduct({
 			...branchProduct,
 			allowable_spoilage: (branchProduct.allowable_spoilage || 0) / 100,
-			callback: modifiedCallback(callback, EDIT_SUCCESS_MESSAGE, EDIT_ERROR_MESSAGE),
+			callback: modifiedExtraCallback(
+				modifiedCallback(callback, EDIT_SUCCESS_MESSAGE, EDIT_ERROR_MESSAGE),
+				extraCallback,
+			),
 		});
 	};
 

@@ -36,9 +36,9 @@ export const useCashieringAssignments = () => {
 
 	const resetStatus = () => setStatus(request.NONE);
 
-	const getCashieringAssignmentsByUserIdRequest = (userId) => {
+	const getCashieringAssignmentsByUserIdRequest = (data) => {
 		setRecentRequest(types.GET_CASHIERING_ASSIGNMENTS_BY_USER_ID);
-		getCashieringAssignmentsByUserId({ userId, callback });
+		getCashieringAssignmentsByUserId({ ...data, callback });
 	};
 
 	const createCashieringAssignmentRequest = (data) => {
@@ -57,10 +57,10 @@ export const useCashieringAssignments = () => {
 		});
 	};
 
-	const removeCashieringAssignmentRequest = (id) => {
+	const removeCashieringAssignmentRequest = (data) => {
 		setRecentRequest(types.REMOVE_CASHIERING_ASSIGNMENT);
 		removeCashieringAssignment({
-			id,
+			...data,
 			callback: modifiedCallback(callback, REMOVE_SUCCESS_MESSAGE, REMOVE_ERROR_MESSAGE),
 		});
 	};

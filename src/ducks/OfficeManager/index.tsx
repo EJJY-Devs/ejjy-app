@@ -9,8 +9,11 @@ import deliveryReceiptProductsReducer, {
 	key as DELIVERY_RECEIPT_PRODUCTS_KEY,
 } from './delivery-receipt-products';
 import deliveryReceiptsReducer, { key as DELIVERY_RECEIPTS_KEY } from './delivery-receipts';
+import pendingTransactionsReducer, {
+	key as PENDING_TRANSACTIONS_KEY,
+} from './pending-transactions';
 import productsReducer, { key as PRODUCTS_KEY } from './products';
-import { default as usersReducer, key as USERS_KEY } from './users';
+import usersReducer, { key as USERS_KEY } from './users';
 
 export const officeManagerReducers = {
 	[PRODUCTS_KEY]: productsReducer,
@@ -22,4 +25,5 @@ export const officeManagerReducers = {
 	[USERS_KEY]: usersReducer,
 	[BRANCH_MACHINES_KEY]: branchMachinesReducer,
 	[CASHIERING_ASSIGNMENTS_KEY]: cashieringAssignmentsReducer,
+	[PENDING_TRANSACTIONS_KEY]: pendingTransactionsReducer,
 };

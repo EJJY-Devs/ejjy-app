@@ -12,6 +12,7 @@ import './style.scss';
 import { useNetwork } from '../../../hooks/useNetwork';
 import { useLocation } from 'react-router';
 import { ONLINE_ROUTES } from '../../../global/constants';
+import { IS_APP_LIVE } from '../../../global/constants';
 
 const { Header, Content } = Layout;
 
@@ -45,7 +46,7 @@ export const Container = ({
 
 	useEffect(() => {
 		testConnection();
-		retrieveUser(user.id, user.login_count || user.online_login_count);
+		retrieveUser(user.id, IS_APP_LIVE ? user.online_login_count : user.login_count);
 	}, []);
 
 	const isDisabled = useCallback(() => {

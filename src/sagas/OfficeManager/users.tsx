@@ -1,4 +1,5 @@
-import { put, retry, takeLatest } from 'redux-saga/effects';
+import { call, put, retry, select, takeLatest } from 'redux-saga/effects';
+import { selectors as branchesSelectors } from '../../ducks/OfficeManager/branches';
 import { actions, types } from '../../ducks/OfficeManager/users';
 import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../../global/constants';
 import { request } from '../../global/types';
@@ -6,22 +7,27 @@ import { ONLINE_API_URL } from '../../services/index';
 import { service } from '../../services/OfficeManager/users';
 
 /* WORKERS */
-function* list({ payload }: any) {
-	const { fields = '', branchId, callback } = payload;
+function* listOnline({ payload }: any) {
+	const { branchId, callback } = payload;
 	callback({ status: request.REQUESTING });
+
+	// Required: Branch must have an online URL (Requested by Office)
+	const baseURL = yield select(branchesSelectors.selectURLByBranchId(branchId));
+	if (!baseURL && branchId) {
+		callback({ status: request.ERROR, errors: 'Branch has no online url.' });
+		return;
+	}
 
 	try {
 		const response = yield retry(
 			MAX_RETRY,
 			RETRY_INTERVAL_MS,
-			service.list,
+			service.listOnline,
 			{
 				page: 1,
 				page_size: MAX_PAGE_SIZE,
-				branch_id: branchId,
-				fields,
 			},
-			ONLINE_API_URL,
+			baseURL || ONLINE_API_URL,
 		);
 
 		yield put(actions.save({ type: types.GET_USERS, users: response.data.results }));
@@ -31,12 +37,18 @@ function* list({ payload }: any) {
 	}
 }
 
-function* getById({ payload }: any) {
+function* getByIdOnline({ payload }: any) {
 	const { id, callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	try {
-		const response = yield retry(MAX_RETRY, RETRY_INTERVAL_MS, service.getById, id, ONLINE_API_URL);
+		const response = yield retry(
+			MAX_RETRY,
+			RETRY_INTERVAL_MS,
+			service.getByIdOnline,
+			id,
+			ONLINE_API_URL,
+		);
 
 		yield put(actions.save({ type: types.GET_USER_BY_ID, user: response.data }));
 		callback({ status: request.SUCCESS });
@@ -45,13 +57,54 @@ function* getById({ payload }: any) {
 	}
 }
 
+function* editOnline({ payload }: any) {
+	const { id, branch_id, callback } = payload;
+	callback({ status: request.REQUESTING });
+
+	try {
+		const response = yield call(service.editOnline, id, { branch_id }, ONLINE_API_URL);
+
+		yield put(actions.save({ type: types.EDIT_USER, id }));
+		callback({ status: request.SUCCESS, response: response.data });
+	} catch (e) {
+		callback({ status: request.ERROR, errors: e.errors, response: e.response });
+	}
+}
+
+function* remove({ payload }: any) {
+	const { id, callback } = payload;
+	callback({ status: request.REQUESTING });
+
+	try {
+		const response = yield call(service.removeOnline, id, ONLINE_API_URL);
+
+		yield put(actions.save({ type: types.REMOVE_USER, id }));
+		callback({ status: request.SUCCESS, response: response.data });
+	} catch (e) {
+		callback({ status: request.ERROR, errors: e.errors, response: e.response });
+	}
+}
+
 /* WATCHERS */
-const listWatcherSaga = function* listWatcherSaga() {
-	yield takeLatest(types.GET_USERS, list);
+const listOnlineWatcherSaga = function* listOnlineWatcherSaga() {
+	yield takeLatest(types.GET_USERS, listOnline);
 };
 
-const getByIdWatcherSaga = function* getByIdWatcherSaga() {
-	yield takeLatest(types.GET_USER_BY_ID, getById);
+const getByIdOnlineWatcherSaga = function* getByIdOnlineWatcherSaga() {
+	yield takeLatest(types.GET_USER_BY_ID, getByIdOnline);
 };
 
-export default [listWatcherSaga(), getByIdWatcherSaga()];
+const editOnlineWatcherSaga = function* editOnlineWatcherSaga() {
+	yield takeLatest(types.EDIT_USER, editOnline);
+};
+
+const removeWatcherSaga = function* removeWatcherSaga() {
+	yield takeLatest(types.REMOVE_USER, remove);
+};
+
+export default [
+	listOnlineWatcherSaga(),
+	getByIdOnlineWatcherSaga(),
+	editOnlineWatcherSaga(),
+	removeWatcherSaga(),
+];

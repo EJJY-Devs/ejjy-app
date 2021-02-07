@@ -3,11 +3,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Container, Table, TableActions, TableHeader } from '../../../components';
 import { Box, ButtonLink } from '../../../components/elements';
 import { types } from '../../../ducks/OfficeManager/products';
+import { types as pendingTransactionsTypes } from '../../../ducks/OfficeManager/pending-transactions';
 import { request } from '../../../global/types';
 import { useProducts } from '../../../hooks/useProducts';
-import { calculateTableHeight } from '../../../utils/function';
+import { calculateTableHeight, formatDateTime, showErrorMessages } from '../../../utils/function';
+import { usePendingTransactions } from '../hooks/usePendingTransactions';
 import { CreateEditProductModal } from './components/CreateEditProductModal';
 import { ViewProductModal } from './components/ViewProductModal';
+import { pendingTransactionTypes } from '../../../global/types';
 
 const columns = [
 	{ title: 'Barcode', dataIndex: 'barcode' },
@@ -15,19 +18,45 @@ const columns = [
 	{ title: 'Actions', dataIndex: 'actions' },
 ];
 
+const pendingTransactionColumns = [
+	{ title: 'Name', dataIndex: 'name' },
+	{ title: 'Branch', dataIndex: 'branch' },
+	{ title: 'Datetime', dataIndex: 'datetime_created' },
+	{ title: 'Actions', dataIndex: 'actions' },
+];
+
 const Products = () => {
+	// STATES
 	const [data, setData] = useState([]);
 	const [tableData, setTableData] = useState([]);
+	const [pendingTransactionsData, setPendingTransactionsTableData] = useState([]);
 	const [createEditProductModalVisible, setCreateEditProductModalVisible] = useState(false);
 	const [viewProductModalVisible, setViewProductModalVisible] = useState(false);
 	const [selectedProduct, setSelectedProduct] = useState(null);
 
-	const { products, getProducts, removeProduct, status, recentRequest } = useProducts();
+	// CUSTOM HOOKS
+	const {
+		products,
+		getProducts,
+		removeProduct,
+		status: productStatus,
+		recentRequest,
+	} = useProducts();
+	const {
+		pendingTransactions,
+		listPendingTransactions,
+		executePendingTransactions,
+		removePendingTransactions,
+		status: pendingTransactionsStatus,
+		recentRequest: pendingTransactionRecentRequest,
+	} = usePendingTransactions();
 
 	useEffect(() => {
 		getProducts();
+		listPendingTransactions(null);
 	}, []);
 
+	// METHODS
 	// Effect: Format products to be rendered in Table
 	useEffect(() => {
 		const formattedProducts = products.map((product) => {
@@ -46,9 +75,35 @@ const Products = () => {
 		setTableData(formattedProducts);
 	}, [products]);
 
+	// Effect: Format pending transactions to be rendered in Table
+	useEffect(() => {
+		const formattedPendingTransactions = pendingTransactions
+			.filter(({ request_model }) => request_model === pendingTransactionTypes.PRODUCTS)
+			.map((pendingTransaction) => {
+				const { name, branch, datetime_created } = pendingTransaction;
+
+				return {
+					name,
+					branch: branch?.name,
+					datetime_created: formatDateTime(datetime_created),
+					actions: (
+						<TableActions
+							onExecutePendingTransaction={() => onExecutePendingTransaction(pendingTransaction)}
+							onRemove={() => onRemovePendingTransaction(pendingTransaction.id, true)}
+						/>
+					),
+				};
+			});
+
+		setPendingTransactionsTableData(formattedPendingTransactions);
+	}, [pendingTransactions]);
+
 	const getFetchLoading = useCallback(
-		() => status === request.REQUESTING && recentRequest === types.GET_PRODUCTS,
-		[status, recentRequest],
+		() =>
+			(productStatus === request.REQUESTING && recentRequest === types.GET_PRODUCTS) ||
+			(pendingTransactionsStatus === request.REQUESTING &&
+				pendingTransactionRecentRequest === pendingTransactionsTypes.LIST_PENDING_TRANSACTIONS),
+		[productStatus, pendingTransactionsStatus, recentRequest, pendingTransactionRecentRequest],
 	);
 
 	const onView = (product) => {
@@ -84,17 +139,49 @@ const Products = () => {
 		setTableData(filteredData);
 	};
 
+	const onExecutePendingTransaction = (pendingTransaction) => {
+		executePendingTransactions(
+			{
+				...pendingTransaction,
+				request_body: JSON.parse(pendingTransaction?.request_body || '{}'),
+				request_query_params: JSON.parse(pendingTransaction?.request_query_params || '{}'),
+			},
+			({ status, error }) => {
+				if (status === request.SUCCESS) {
+					onRemovePendingTransaction(pendingTransaction.id, false);
+				} else if (status === request.ERROR) {
+					showErrorMessages(error);
+				}
+			},
+			true,
+		);
+	};
+
+	const onRemovePendingTransaction = (pendingTransactionId, showFeedbackMessage) => {
+		removePendingTransactions(
+			{ id: pendingTransactionId },
+			({ status, error }) => {
+				if (status === request.SUCCESS) {
+					listPendingTransactions(null);
+				} else if (status === request.ERROR) {
+					showErrorMessages(error);
+				}
+			},
+			showFeedbackMessage,
+		);
+	};
+
 	return (
-		<Container title="Products" loading={getFetchLoading()} loadingText="Fetching products...">
+		<Container title="Products" loading={getFetchLoading()} loadingText="Fetching data...">
 			<section className="Products">
 				<Box>
-					<TableHeader buttonName="Create Product" onSearch={onSearch} onCreate={onCreate} />
+					<TableHeader buttonName="Create Product" onSearch={onSearch} onCreate={null} />
 
 					<Table
 						columns={columns}
 						dataSource={tableData}
 						scroll={{ y: calculateTableHeight(tableData.length), x: '100%' }}
-						loading={status === request.REQUESTING && recentRequest !== types.GET_PRODUCTS}
+						loading={productStatus === request.REQUESTING && recentRequest !== types.GET_PRODUCTS}
 					/>
 
 					<ViewProductModal
@@ -106,7 +193,21 @@ const Products = () => {
 					<CreateEditProductModal
 						product={selectedProduct}
 						visible={createEditProductModalVisible}
+						onFetchPendingTransactions={listPendingTransactions}
 						onClose={() => setCreateEditProductModalVisible(false)}
+					/>
+				</Box>
+			</section>
+
+			<section className="PendingProductTransactions">
+				<Box>
+					<TableHeader title="Pending Product Transactions" />
+
+					<Table
+						columns={pendingTransactionColumns}
+						dataSource={pendingTransactionsData}
+						scroll={{ y: calculateTableHeight(pendingTransactionsData.length), x: '100%' }}
+						loading={pendingTransactionsStatus === request.REQUESTING}
 					/>
 				</Box>
 			</section>

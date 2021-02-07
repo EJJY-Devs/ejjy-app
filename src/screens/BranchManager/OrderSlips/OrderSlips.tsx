@@ -32,7 +32,7 @@ const OrderSlips = () => {
 
 	// Effect: Fetch order slips
 	useEffect(() => {
-		getOrderSlipsExtended(user.branch.id, null);
+		getOrderSlipsExtended(user?.branch?.id, null);
 	}, [user]);
 
 	// Effect: Format order slips to be rendered in Table

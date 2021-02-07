@@ -1,4 +1,4 @@
-import { Modal } from 'antd';
+import { message, Modal } from 'antd';
 import React, { useCallback, useEffect } from 'react';
 import { FieldError } from '../../../../components/elements';
 import { request } from '../../../../global/types';
@@ -9,11 +9,18 @@ import { EditUserForm } from './EditUserForm';
 interface Props {
 	visible: boolean;
 	user: any;
+	onFetchPendingTransactions: any;
 	onSuccess: any;
 	onClose: any;
 }
 
-export const EditUserModal = ({ user, visible, onSuccess, onClose }: Props) => {
+export const EditUserModal = ({
+	user,
+	visible,
+	onFetchPendingTransactions,
+	onSuccess,
+	onClose,
+}: Props) => {
 	// CUSTOM HOOKS
 	const { branches } = useBranches();
 	const { editUser, status, errors, reset } = useUsers();
@@ -36,9 +43,16 @@ export const EditUserModal = ({ user, visible, onSuccess, onClose }: Props) => {
 	);
 
 	const onEditUser = (data) => {
-		editUser(data, ({ status }) => {
+		editUser(data, ({ status, response }) => {
 			if (status === request.SUCCESS) {
-				onSuccess(data.branch_id);
+				if (response?.length) {
+					onSuccess(data.branch_id);
+					message.warning(
+						'We found an error while updating the product details in local branch. Please check the pending transaction table below.',
+					);
+					onFetchPendingTransactions();
+				}
+
 				reset();
 				onClose();
 			}

@@ -40,7 +40,7 @@ export const service = {
 	create: async (body: ICreateProduct, baseURL) => axios.post('/products/', body, { baseURL }),
 
 	edit: async (body: IEditProduct, baseURL) =>
-		axios.patch(`/products/${body.id}/`, body, { baseURL }),
+		axios.patch(`/products/${body.id}/online-update/`, body, { baseURL }),
 
-	remove: async (id, baseURL) => axios.delete(`/products/${id}/`, { baseURL }),
+	remove: async (id, baseURL) => axios.delete(`/products/${id}/online-destroy/`, { baseURL }),
 };

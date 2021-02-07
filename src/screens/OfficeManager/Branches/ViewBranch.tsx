@@ -4,7 +4,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { Breadcrumb, Container } from '../../../components';
-import { Box } from '../../../components/elements';
+import { Box, FieldError } from '../../../components/elements';
 import { selectors as branchesSelectors } from '../../../ducks/OfficeManager/branches';
 import { request } from '../../../global/types';
 import { useBranchesDays } from '../../../hooks/useBranchesDays';
@@ -42,11 +42,27 @@ const ViewBranch = ({ match }: Props) => {
 		branchProducts,
 		getBranchProductsByBranch,
 		status: branchProductsStatus,
+		errors: branchProductsErrors,
 	} = useBranchProducts();
-	const { transactions, listTransactions, status: transactionsStatus } = useTransactions();
-	const { sessions, listSessions, status: sessionsStatus } = useSessions();
-	const { branchDays, listBranchDays, status: branchesDaysStatus } = useBranchesDays();
-	const { branchMachines, getBranchMachines, status: branchesMachinesStatus } = useBranchMachines();
+	const {
+		transactions,
+		listTransactions,
+		status: transactionsStatus,
+		errors: transactionsErrors,
+	} = useTransactions();
+	const { sessions, listSessions, status: sessionsStatus, errors: sessionsErrors } = useSessions();
+	const {
+		branchDays,
+		listBranchDays,
+		status: branchesDaysStatus,
+		errors: branchesDaysErrors,
+	} = useBranchesDays();
+	const {
+		branchMachines,
+		getBranchMachines,
+		status: branchesMachinesStatus,
+		errors: branchesMachinesErrors,
+	} = useBranchMachines();
 
 	// Effect: Fetch branch products
 	useEffect(() => {
@@ -97,11 +113,25 @@ const ViewBranch = ({ match }: Props) => {
 				<Box className="ViewBranch">
 					<Tabs defaultActiveKey={tabs.PRODUCTS} style={{ padding: '20px 25px' }} type="card">
 						<Tabs.TabPane key={tabs.PRODUCTS} tab={tabs.PRODUCTS} disabled={!branch?.online_url}>
-							<ViewBranchProducts branchProducts={branchProducts} branch={branch} />
+							<>
+								{branchProductsErrors.map((error, index) => (
+									<FieldError key={index} error={error} />
+								))}
+								{branchProductsStatus === request.SUCCESS && (
+									<ViewBranchProducts branchProducts={branchProducts} branch={branch} />
+								)}
+							</>
 						</Tabs.TabPane>
 
 						<Tabs.TabPane key={tabs.MACHINES} tab={tabs.MACHINES} disabled={!branch?.online_url}>
-							<ViewBranchMachines branchMachines={branchMachines} />
+							<>
+								{branchesMachinesErrors.map((error, index) => (
+									<FieldError key={index} error={error} />
+								))}
+								{branchesMachinesStatus === request.SUCCESS && (
+									<ViewBranchMachines branchMachines={branchMachines} />
+								)}
+							</>
 						</Tabs.TabPane>
 
 						<Tabs.TabPane
@@ -109,15 +139,34 @@ const ViewBranch = ({ match }: Props) => {
 							tab={tabs.TRANSACTIONS}
 							disabled={!branch?.online_url}
 						>
-							<ViewBranchTransactions transactions={transactions} />
+							<>
+								{transactionsErrors.map((error, index) => (
+									<FieldError key={index} error={error} />
+								))}
+								{transactionsStatus === request.SUCCESS && (
+									<ViewBranchTransactions transactions={transactions} />
+								)}
+							</>
 						</Tabs.TabPane>
 
 						<Tabs.TabPane key={tabs.SESSIONS} tab={tabs.SESSIONS} disabled={!branch?.online_url}>
-							<ViewBranchSessions sessions={sessions} />
+							<>
+								{sessionsErrors.map((error, index) => (
+									<FieldError key={index} error={error} />
+								))}
+								{sessionsStatus === request.SUCCESS && <ViewBranchSessions sessions={sessions} />}
+							</>
 						</Tabs.TabPane>
 
 						<Tabs.TabPane key={tabs.DAYS} tab={tabs.DAYS} disabled={!branch?.online_url}>
-							<ViewBranchDays branchDays={branchDays} />
+							<>
+								{branchesDaysErrors.map((error, index) => (
+									<FieldError key={index} error={error} />
+								))}
+								{branchesDaysStatus === request.SUCCESS && (
+									<ViewBranchDays branchDays={branchDays} />
+								)}
+							</>
 						</Tabs.TabPane>
 					</Tabs>
 				</Box>

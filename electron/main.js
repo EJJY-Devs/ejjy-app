@@ -9,7 +9,8 @@ function createWindow() {
 		height: 600,
 		show: false,
 	});
-	const startURL = `file://${path.join(__dirname, '../build/index.html')}`;
+	// const startURL = `file://${path.join(__dirname, '../build/index.html')}`; // PROD
+	const startURL = 'http://localhost:3005'; // DEV
 	mainWindow.loadURL(startURL);
 
 	mainWindow.once('ready-to-show', () => {

@@ -62,10 +62,10 @@ function* remove({ payload }: any) {
 	callback({ status: request.REQUESTING });
 
 	try {
-		yield call(service.remove, id, ONLINE_API_URL);
+		const response = yield call(service.remove, id, ONLINE_API_URL);
 
 		yield put(actions.save({ type: types.REMOVE_PRODUCT, id }));
-		callback({ status: request.SUCCESS });
+		callback({ status: request.SUCCESS, response: response.data });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}

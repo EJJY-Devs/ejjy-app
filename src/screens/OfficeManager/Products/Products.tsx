@@ -11,6 +11,7 @@ import { usePendingTransactions } from '../hooks/usePendingTransactions';
 import { CreateEditProductModal } from './components/CreateEditProductModal';
 import { ViewProductModal } from './components/ViewProductModal';
 import { pendingTransactionTypes } from '../../../global/types';
+import { message } from 'antd';
 
 const columns = [
 	{ title: 'Barcode', dataIndex: 'barcode' },
@@ -67,13 +68,15 @@ const Products = () => {
 				_barcode: barcode,
 				barcode: <ButtonLink text={barcode || textcode} onClick={() => onView(product)} />,
 				name,
-				actions: <TableActions onEdit={() => onEdit(product)} onRemove={() => removeProduct(id)} />,
+				actions: pendingTransactionsData?.length ? null : (
+					<TableActions onEdit={() => onEdit(product)} onRemove={() => onRemoveProduct(id)} />
+				),
 			};
 		});
 
 		setData(formattedProducts);
 		setTableData(formattedProducts);
-	}, [products]);
+	}, [products, pendingTransactionsData]);
 
 	// Effect: Format pending transactions to be rendered in Table
 	useEffect(() => {
@@ -137,6 +140,19 @@ const Products = () => {
 				: data;
 
 		setTableData(filteredData);
+	};
+
+	const onRemoveProduct = (productId) => {
+		removeProduct(productId, ({ status, response }) => {
+			if (status === request.SUCCESS) {
+				if (response?.length) {
+					message.warning(
+						'We found an error while deleting the product details in local branch. Please check the pending transaction table below.',
+					);
+					listPendingTransactions(null);
+				}
+			}
+		});
 	};
 
 	const onExecutePendingTransaction = (pendingTransaction) => {

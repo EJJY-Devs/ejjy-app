@@ -12,9 +12,9 @@
 		"start:local": "env-cmd -f .env.local react-scripts start",
 		"build:online": "env-cmd -f .env.online react-scripts build",
 		"build:local": "env-cmd -f .env.local react-scripts build",
-		"start:electron": "PORT=3001 env-cmd -f .env.local react-scripts start",
-		"dev:electron": "concurrently \"npm start:electron\" \"wait-on http://localhost:3001 && electron .\"",
-		"electron": "wait-on http://localhost:3001 && electron .",
+		"start:electron": "PORT=3005 env-cmd -f .env.local react-scripts start",
+		"dev:electron": "concurrently \"npm run start:electron\" \"wait-on http://localhost:3005 && electron .\"",
+		"electron": "wait-on http://localhost:3005 && electron .",
 		"pack": "npm run build:local && electron-packager . EJJY-Local --no-prune --platform=win32 --ignore=/.vscode --ignore=/deployment --ignore=/node_modules --ignore=/public --ignore=/src --overwrite"
 	},
 	"dependencies": {

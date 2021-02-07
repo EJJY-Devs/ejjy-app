@@ -69,11 +69,14 @@ export const useProducts = () => {
 		});
 	};
 
-	const removeProductRequest = (id) => {
+	const removeProductRequest = (id, extraCallback = null) => {
 		setRecentRequest(types.REMOVE_PRODUCT);
 		removeProduct({
 			id,
-			callback: modifiedCallback(callback, REMOVE_SUCCESS_MESSAGE, REMOVE_ERROR_MESSAGE),
+			callback: modifiedExtraCallback(
+				modifiedCallback(callback, REMOVE_SUCCESS_MESSAGE, REMOVE_ERROR_MESSAGE),
+				extraCallback,
+			),
 		});
 	};
 

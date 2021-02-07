@@ -109,11 +109,13 @@ const Users = () => {
 							return [
 								`${first_name} ${last_name}`,
 								getUserTypeName(user_type),
-								<TableActions
-									onAssign={() => history.push(`/users/assign/${id}`)}
-									onEdit={() => onEditUser(user)}
-									// onRemove={() => removeUser(id)} Note: Removing of user not supported for now
-								/>,
+								pendingTransactionsData?.length ? null : (
+									<TableActions
+										onAssign={() => history.push(`/users/assign/${id}`)}
+										onEdit={() => onEditUser(user)}
+										// onRemove={() => removeUser(id)} Note: Removing of user not supported for now
+									/>
+								),
 							];
 						})
 				: [];
@@ -200,6 +202,7 @@ const Users = () => {
 					<EditUserModal
 						user={selectedUser}
 						visible={editUserModalVisible}
+						onFetchPendingTransactions={listPendingTransactions}
 						onSuccess={onSuccessEditUser}
 						onClose={() => setEditUserModalVisible(false)}
 					/>

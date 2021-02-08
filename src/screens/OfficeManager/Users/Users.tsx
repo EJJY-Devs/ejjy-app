@@ -83,7 +83,7 @@ const Users = () => {
 
 	useEffect(() => {
 		if (usersStatus === request.ERROR && errors?.length) {
-			errors.forEach((error) => {
+			errors?.forEach((error) => {
 				message.error(error);
 			});
 

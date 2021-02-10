@@ -44,3 +44,7 @@ export const ReorderBadgePill = ({ classNames }: Props) => (
 export const OutOfStocksBadgePill = ({ classNames }: Props) => (
 	<BadgePill classNames={classNames} label="Out of Stocks" variant="error" />
 );
+
+export const PendingApprovalBadgePill = ({ classNames }: Props) => (
+	<BadgePill classNames={classNames} label="Pending Approval" variant="secondary" />
+);

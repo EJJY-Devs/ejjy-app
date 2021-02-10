@@ -57,6 +57,19 @@ function* getByIdOnline({ payload }: any) {
 	}
 }
 
+function* createOnline({ payload }: any) {
+	const { callback, ...data } = payload;
+	callback({ status: request.REQUESTING });
+
+	try {
+		const response = yield call(service.createOnline, data, ONLINE_API_URL);
+
+		callback({ status: request.SUCCESS, response: response.data });
+	} catch (e) {
+		callback({ status: request.ERROR, errors: e.errors, response: e.response });
+	}
+}
+
 function* editOnline({ payload }: any) {
 	const { id, branch_id, callback } = payload;
 	callback({ status: request.REQUESTING });
@@ -94,6 +107,10 @@ const getByIdOnlineWatcherSaga = function* getByIdOnlineWatcherSaga() {
 	yield takeLatest(types.GET_USER_BY_ID, getByIdOnline);
 };
 
+const createOnlineWatcherSaga = function* createOnlineWatcherSaga() {
+	yield takeLatest(types.CREATE_USER, createOnline);
+};
+
 const editOnlineWatcherSaga = function* editOnlineWatcherSaga() {
 	yield takeLatest(types.EDIT_USER, editOnline);
 };
@@ -105,6 +122,7 @@ const removeWatcherSaga = function* removeWatcherSaga() {
 export default [
 	listOnlineWatcherSaga(),
 	getByIdOnlineWatcherSaga(),
+	createOnlineWatcherSaga(),
 	editOnlineWatcherSaga(),
 	removeWatcherSaga(),
 ];

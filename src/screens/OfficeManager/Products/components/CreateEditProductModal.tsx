@@ -31,23 +31,36 @@ export const CreateEditProductModal = ({
 
 	// METHODS
 	const onCreateProduct = (product) => {
-		createProduct(product);
-	};
-
-	const onEditProduct = (product) => {
-		editProduct(product, ({ status, response }) => {
+		createProduct(product, ({ status, response }) => {
 			if (status === request.SUCCESS) {
 				if (response?.pending_database_transactions?.length) {
-					message.warning(
-						'We found an error while updating the product details in local branch. Please check the pending transaction table below.',
-					);
-					onFetchPendingTransactions();
+					onPendingTransactions();
 				}
 
 				reset();
 				onClose();
 			}
 		});
+	};
+
+	const onEditProduct = (product) => {
+		editProduct(product, ({ status, response }) => {
+			if (status === request.SUCCESS) {
+				if (response?.pending_database_transactions?.length) {
+					onPendingTransactions();
+				}
+
+				reset();
+				onClose();
+			}
+		});
+	};
+
+	const onPendingTransactions = () => {
+		message.warning(
+			'We found an error while updating the product details in local branch. Please check the pending transaction table below.',
+		);
+		onFetchPendingTransactions();
 	};
 
 	return (

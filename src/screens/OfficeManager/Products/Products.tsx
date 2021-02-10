@@ -1,17 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { message } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Container, Table, TableActions, TableHeader } from '../../../components';
 import { Box, ButtonLink } from '../../../components/elements';
-import { types } from '../../../ducks/OfficeManager/products';
+import { PendingTransactionsSection } from '../../../components/PendingTransactionsSection/PendingTransactionsSection';
 import { types as pendingTransactionsTypes } from '../../../ducks/OfficeManager/pending-transactions';
-import { request } from '../../../global/types';
+import { types } from '../../../ducks/OfficeManager/products';
+import { pendingTransactionTypes, request } from '../../../global/types';
 import { useProducts } from '../../../hooks/useProducts';
-import { calculateTableHeight, formatDateTime, showErrorMessages } from '../../../utils/function';
+import { calculateTableHeight } from '../../../utils/function';
 import { usePendingTransactions } from '../hooks/usePendingTransactions';
 import { CreateEditProductModal } from './components/CreateEditProductModal';
 import { ViewProductModal } from './components/ViewProductModal';
-import { pendingTransactionTypes } from '../../../global/types';
-import { message } from 'antd';
 
 const columns = [
 	{ title: 'Barcode', dataIndex: 'barcode' },
@@ -19,18 +19,10 @@ const columns = [
 	{ title: 'Actions', dataIndex: 'actions' },
 ];
 
-const pendingTransactionColumns = [
-	{ title: 'Name', dataIndex: 'name' },
-	{ title: 'Branch', dataIndex: 'branch' },
-	{ title: 'Datetime', dataIndex: 'datetime_created' },
-	{ title: 'Actions', dataIndex: 'actions' },
-];
-
 const Products = () => {
 	// STATES
 	const [data, setData] = useState([]);
 	const [tableData, setTableData] = useState([]);
-	const [pendingTransactionsData, setPendingTransactionsTableData] = useState([]);
 	const [createEditProductModalVisible, setCreateEditProductModalVisible] = useState(false);
 	const [viewProductModalVisible, setViewProductModalVisible] = useState(false);
 	const [selectedProduct, setSelectedProduct] = useState(null);
@@ -46,20 +38,21 @@ const Products = () => {
 	const {
 		pendingTransactions,
 		listPendingTransactions,
-		executePendingTransactions,
-		removePendingTransactions,
 		status: pendingTransactionsStatus,
 		recentRequest: pendingTransactionRecentRequest,
 	} = usePendingTransactions();
 
 	useEffect(() => {
 		getProducts();
-		listPendingTransactions(null);
 	}, []);
 
 	// METHODS
 	// Effect: Format products to be rendered in Table
 	useEffect(() => {
+		let hasPendingTransactions = pendingTransactions.some(
+			({ request_model }) => request_model === pendingTransactionTypes.PRODUCTS,
+		);
+
 		const formattedProducts = products.map((product) => {
 			const { id, barcode, name, textcode } = product;
 
@@ -68,7 +61,7 @@ const Products = () => {
 				_barcode: barcode,
 				barcode: <ButtonLink text={barcode || textcode} onClick={() => onView(product)} />,
 				name,
-				actions: pendingTransactionsData?.length ? null : (
+				actions: hasPendingTransactions ? null : (
 					<TableActions onEdit={() => onEdit(product)} onRemove={() => onRemoveProduct(id)} />
 				),
 			};
@@ -76,30 +69,7 @@ const Products = () => {
 
 		setData(formattedProducts);
 		setTableData(formattedProducts);
-	}, [products, pendingTransactionsData]);
-
-	// Effect: Format pending transactions to be rendered in Table
-	useEffect(() => {
-		const formattedPendingTransactions = pendingTransactions
-			.filter(({ request_model }) => request_model === pendingTransactionTypes.PRODUCTS)
-			.map((pendingTransaction) => {
-				const { name, branch, datetime_created } = pendingTransaction;
-
-				return {
-					name,
-					branch: branch?.name,
-					datetime_created: formatDateTime(datetime_created),
-					actions: (
-						<TableActions
-							onExecutePendingTransaction={() => onExecutePendingTransaction(pendingTransaction)}
-							onRemove={() => onRemovePendingTransaction(pendingTransaction.id, true)}
-						/>
-					),
-				};
-			});
-
-		setPendingTransactionsTableData(formattedPendingTransactions);
-	}, [pendingTransactions]);
+	}, [products, pendingTransactions]);
 
 	const getFetchLoading = useCallback(
 		() =>
@@ -155,43 +125,11 @@ const Products = () => {
 		});
 	};
 
-	const onExecutePendingTransaction = (pendingTransaction) => {
-		executePendingTransactions(
-			{
-				...pendingTransaction,
-				request_body: JSON.parse(pendingTransaction?.request_body || '{}'),
-				request_query_params: JSON.parse(pendingTransaction?.request_query_params || '{}'),
-			},
-			({ status, error }) => {
-				if (status === request.SUCCESS) {
-					onRemovePendingTransaction(pendingTransaction.id, false);
-				} else if (status === request.ERROR) {
-					showErrorMessages(error);
-				}
-			},
-			true,
-		);
-	};
-
-	const onRemovePendingTransaction = (pendingTransactionId, showFeedbackMessage) => {
-		removePendingTransactions(
-			{ id: pendingTransactionId },
-			({ status, error }) => {
-				if (status === request.SUCCESS) {
-					listPendingTransactions(null);
-				} else if (status === request.ERROR) {
-					showErrorMessages(error);
-				}
-			},
-			showFeedbackMessage,
-		);
-	};
-
 	return (
 		<Container title="Products" loading={getFetchLoading()} loadingText="Fetching data...">
 			<section className="Products">
 				<Box>
-					<TableHeader buttonName="Create Product" onSearch={onSearch} onCreate={null} />
+					<TableHeader buttonName="Create Product" onSearch={onSearch} onCreate={onCreate} />
 
 					<Table
 						columns={columns}
@@ -215,18 +153,10 @@ const Products = () => {
 				</Box>
 			</section>
 
-			<section className="PendingProductTransactions">
-				<Box>
-					<TableHeader title="Pending Product Transactions" />
-
-					<Table
-						columns={pendingTransactionColumns}
-						dataSource={pendingTransactionsData}
-						scroll={{ y: calculateTableHeight(pendingTransactionsData.length), x: '100%' }}
-						loading={pendingTransactionsStatus === request.REQUESTING}
-					/>
-				</Box>
-			</section>
+			<PendingTransactionsSection
+				title="Pending Product Transactions"
+				transactionType={pendingTransactionTypes.PRODUCTS}
+			/>
 		</Container>
 	);
 };

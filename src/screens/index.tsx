@@ -5,6 +5,7 @@ export { default as Landing } from './_Landing/Landing';
 
 // Admin
 export { default as AdminDashboard } from './Admin/Dashboard/Dashboard';
+export { default as AdminPendingTransactions } from './Admin/PendingTransactions/PendingTransactions';
 
 // Branch Manager
 export { default as BranchManagerDashboard } from './BranchManager/Dashboard/Dashboard';

@@ -28,6 +28,14 @@ const SidebarItems = [
 		],
 	},
 	{
+		key: 'pending-transactions',
+		name: 'Pending Transactions',
+		activeIcon: require(`../../../assets/images/icon-notifications-active.svg`),
+		defaultIcon: require(`../../../assets/images/icon-notifications.svg`),
+		link: '/pending-transactions',
+		userTypes: [userTypes.ADMIN],
+	},
+	{
 		key: 'products',
 		name: 'Products',
 		activeIcon: require(`../../../assets/images/icon-product-active.svg`),

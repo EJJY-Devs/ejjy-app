@@ -36,8 +36,8 @@ function* create({ payload }: any) {
 	try {
 		const response = yield call(service.create, data, ONLINE_API_URL);
 
-		yield put(actions.save({ type: types.CREATE_PRODUCT, product: response.data }));
-		callback({ status: request.SUCCESS });
+		yield put(actions.save({ type: types.CREATE_PRODUCT, product: response.data?.product }));
+		callback({ status: request.SUCCESS, response: response.data });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}

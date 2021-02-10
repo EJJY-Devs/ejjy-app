@@ -12,6 +12,7 @@ import {
 	FulfillPreparationSlipScreens,
 	NotificationsScreens,
 	OrderSlipsScreens,
+	PendingTransactionsScreens,
 	PreparationSlipsScreens,
 	ProductsScreens,
 	RequisitionSlipsScreens,
@@ -30,6 +31,7 @@ const App = () => (
 			<CommonRoute path={['/', '/login']} exact component={Login} />
 			<CommonRoute path="/landing" exact component={Landing} />
 			<CommonRoute path="/dashboard" exact component={DashboardScreens} />
+			<CommonRoute path="/pending-transactions" exact component={PendingTransactionsScreens} />
 			<CommonRoute path="/products" exact component={ProductsScreens} />
 			<CommonRoute path="/branches" exact component={BranchesScreens} />
 			<CommonRoute path="/branches/:id" exact component={ViewBranchScreens} />

@@ -48,6 +48,18 @@ function* create({ payload }: any) {
 	}
 }
 
+function* edit({ payload }: any) {
+	const { callback, id, ...data } = payload;
+	callback({ status: request.REQUESTING });
+
+	try {
+		yield call(service.edit, id, data, ONLINE_API_URL);
+		callback({ status: request.SUCCESS });
+	} catch (e) {
+		callback({ status: request.ERROR, errors: e.errors });
+	}
+}
+
 function* remove({ payload }: any) {
 	const { callback, id } = payload;
 	callback({ status: request.REQUESTING });
@@ -55,7 +67,6 @@ function* remove({ payload }: any) {
 	try {
 		yield call(service.remove, id, ONLINE_API_URL);
 
-		yield put(actions.save({ type: types.REMOVE_PENDING_TRANSACTIONS, id }));
 		callback({ status: request.SUCCESS });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
@@ -89,6 +100,10 @@ const createWatcherSaga = function* createWatcherSaga() {
 	yield takeLatest(types.CREATE_PENDING_TRANSACTIONS, create);
 };
 
+const editWatcherSaga = function* editWatcherSaga() {
+	yield takeLatest(types.EDIT_PENDING_TRANSACTIONS, edit);
+};
+
 const removeWatcherSaga = function* removeWatcherSaga() {
 	yield takeLatest(types.REMOVE_PENDING_TRANSACTIONS, remove);
 };
@@ -97,4 +112,10 @@ const executeWatcherSaga = function* executeWatcherSaga() {
 	yield takeLatest(types.EXECUTE_PENDING_TRANSACTIONS, execute);
 };
 
-export default [listWatcherSaga(), createWatcherSaga(), removeWatcherSaga(), executeWatcherSaga()];
+export default [
+	listWatcherSaga(),
+	createWatcherSaga(),
+	editWatcherSaga(),
+	removeWatcherSaga(),
+	executeWatcherSaga(),
+];

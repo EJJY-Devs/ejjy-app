@@ -118,6 +118,7 @@ export const CreateEditProductForm = ({ product, onSubmit, onClose, loading }: P
 							then: Yup.number().required(),
 							otherwise: Yup.number().notRequired(),
 						})
+						.nullable()
 						.label('Allowable Spoilage'),
 					cost_per_piece: Yup.number().required().min(0).label('Cost per Piece'),
 					cost_per_bulk: Yup.number().required().min(0).label('Cost Per Bulk'),

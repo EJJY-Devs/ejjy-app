@@ -1,5 +1,5 @@
 import { message, Modal } from 'antd';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { FieldError } from '../../../../components/elements';
 import { request } from '../../../../global/types';
 import { useBranches } from '../../hooks/useBranches';
@@ -26,14 +26,6 @@ export const EditUserModal = ({
 	const { editUser, status, errors, reset } = useUsers();
 
 	// METHODS
-	// Effect: Close modal if recent requests are Create or Edit
-	useEffect(() => {
-		if (status === request.SUCCESS) {
-			reset();
-			onClose();
-		}
-	}, [status, reset, onClose]);
-
 	const getBranchOptions = useCallback(
 		() =>
 			branches
@@ -48,7 +40,7 @@ export const EditUserModal = ({
 				if (response?.length) {
 					onSuccess(data.branch_id);
 					message.warning(
-						'We found an error while updating the product details in local branch. Please check the pending transaction table below.',
+						'We found an error while updating the user in local branch. Please check the pending transaction table below.',
 					);
 					onFetchPendingTransactions();
 				}

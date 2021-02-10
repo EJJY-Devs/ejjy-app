@@ -2,36 +2,28 @@
 import { message, Tabs } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Container, Table, TableActions, TableHeader } from '../../../components';
-import { Box } from '../../../components/elements';
-import { pendingTransactionTypes, request } from '../../../global/types';
-import {
-	calculateTableHeight,
-	formatDateTime,
-	getUserTypeName,
-	showErrorMessages,
-} from '../../../utils/function';
+import { AddIcon, Container, TableActions } from '../../../components';
+import { Box, Button } from '../../../components/elements';
+import { PendingTransactionsSection } from '../../../components/PendingTransactionsSection/PendingTransactionsSection';
+import { types as pendingTransactionsTypes } from '../../../ducks/OfficeManager/pending-transactions';
+import { pendingTransactionTypes, request, userTypes } from '../../../global/types';
+import { getUserTypeName } from '../../../utils/function';
 import { useBranches } from '../hooks/useBranches';
 import { usePendingTransactions } from '../hooks/usePendingTransactions';
 import { useUsers } from '../hooks/useUsers';
 import { BranchUsers } from './components/BranchUsers';
+import { CreateUserModal } from './components/CreateUserModal';
 import { EditUserModal } from './components/EditUserModal';
 import './style.scss';
-import { types as pendingTransactionsTypes } from '../../../ducks/OfficeManager/pending-transactions';
 
 const { TabPane } = Tabs;
 
-const pendingTransactionColumns = [
-	{ title: 'Name', dataIndex: 'name' },
-	{ title: 'Branch', dataIndex: 'branch' },
-	{ title: 'Datetime', dataIndex: 'datetime_created' },
-	{ title: 'Actions', dataIndex: 'actions' },
-];
+const NO_BRANCHES_ID = 'no-branches-id';
 
 const Users = () => {
 	// STATES
-	const [pendingTransactionsData, setPendingTransactionsTableData] = useState([]);
 	const [editUserModalVisible, setEditUserModalVisible] = useState(false);
+	const [createUserModalVisible, setCreateUserModalVisible] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
 
 	// CUSTOM HOOKS
@@ -41,45 +33,15 @@ const Users = () => {
 	const {
 		pendingTransactions,
 		listPendingTransactions,
-		executePendingTransactions,
-		removePendingTransactions,
 		status: pendingTransactionsStatus,
 		recentRequest: pendingTransactionRecentRequest,
 	} = usePendingTransactions();
-
-	// METHODS
-	useEffect(() => {
-		listPendingTransactions(null);
-	}, []);
 
 	useEffect(() => {
 		if (branches?.length) {
 			onTabClick(branches?.[0]?.id);
 		}
 	}, [branches]);
-
-	// Effect: Format pending transactions to be rendered in Table
-	useEffect(() => {
-		const formattedPendingTransactions = pendingTransactions
-			.filter(({ request_model }) => request_model === pendingTransactionTypes.USERS)
-			.map((pendingTransaction) => {
-				const { name, branch, datetime_created } = pendingTransaction;
-
-				return {
-					name,
-					branch: branch?.name,
-					datetime_created: formatDateTime(datetime_created),
-					actions: (
-						<TableActions
-							onExecutePendingTransaction={() => onExecutePendingTransaction(pendingTransaction)}
-							onRemove={() => onRemovePendingTransaction(pendingTransaction.id, true)}
-						/>
-					),
-				};
-			});
-
-		setPendingTransactionsTableData(formattedPendingTransactions);
-	}, [pendingTransactions]);
 
 	useEffect(() => {
 		if (usersStatus === request.ERROR && errors?.length) {
@@ -100,19 +62,29 @@ const Users = () => {
 	);
 
 	const getTableDataSource = (branchId) => {
+		if (branchId === NO_BRANCHES_ID) {
+			branchId = undefined;
+		}
+
+		let hasPendingTransactions = pendingTransactions.some(
+			({ request_model }) => request_model === pendingTransactionTypes.USERS,
+		);
+
 		let newData =
 			usersStatus === request.SUCCESS
 				? users
 						?.filter(({ branch }) => branch?.id === branchId)
 						?.map((user) => {
 							const { id, first_name, last_name, user_type } = user;
+							const isBranchUsers = [userTypes.BRANCH_MANAGER, userTypes.BRANCH_PERSONNEL];
+
 							return [
 								`${first_name} ${last_name}`,
 								getUserTypeName(user_type),
-								pendingTransactionsData?.length ? null : (
+								hasPendingTransactions ? null : (
 									<TableActions
-										onAssign={() => history.push(`/users/assign/${id}`)}
-										onEdit={() => onEditUser(user)}
+										onAssign={branchId ? () => history.push(`/users/assign/${id}`) : null}
+										onEdit={isBranchUsers.includes(user_type) ? () => onEditUser(user) : null}
 										// onRemove={() => removeUser(id)} Note: Removing of user not supported for now
 									/>
 								),
@@ -124,7 +96,11 @@ const Users = () => {
 	};
 
 	const onTabClick = (branchId) => {
-		getUsers({ branchId });
+		if (branchId === NO_BRANCHES_ID) {
+			getUsers({});
+		} else {
+			getUsers({ branchId });
+		}
 	};
 
 	const onEditUser = (user) => {
@@ -132,41 +108,12 @@ const Users = () => {
 		setSelectedUser(user);
 	};
 
+	const onCreateUser = () => {
+		setCreateUserModalVisible(true);
+	};
+
 	const onSuccessEditUser = (branchId) => {
 		onTabClick(branchId);
-	};
-
-	const onExecutePendingTransaction = (pendingTransaction) => {
-		executePendingTransactions(
-			{
-				...pendingTransaction,
-				request_body: JSON.parse(pendingTransaction?.request_body || '{}'),
-				request_query_params: JSON.parse(pendingTransaction?.request_query_params || '{}'),
-			},
-			({ status, error }) => {
-				if (status === request.SUCCESS) {
-					onRemovePendingTransaction(pendingTransaction.id, false);
-				} else if (status === request.ERROR) {
-					console.log('error', error);
-					showErrorMessages(error);
-				}
-			},
-			true,
-		);
-	};
-
-	const onRemovePendingTransaction = (pendingTransactionId, showFeedbackMessage) => {
-		removePendingTransactions(
-			{ id: pendingTransactionId },
-			({ status, error }) => {
-				if (status === request.SUCCESS) {
-					listPendingTransactions(null);
-				} else if (status === request.ERROR) {
-					showErrorMessages(error);
-				}
-			},
-			showFeedbackMessage,
-		);
 	};
 
 	return (
@@ -174,29 +121,35 @@ const Users = () => {
 			<section>
 				<Box>
 					<Tabs
-						defaultActiveKey={branches?.[0]?.id}
-						style={{ padding: '20px 25px' }}
 						type="card"
+						defaultActiveKey={branches?.[0]?.id}
 						onTabClick={onTabClick}
+						tabBarExtraContent={
+							<Button
+								text="Create User"
+								variant="primary"
+								onClick={onCreateUser}
+								iconDirection="left"
+								icon={<AddIcon />}
+							/>
+						}
+						style={{ padding: '20px 25px' }}
 					>
 						{branches.map(({ name, id, online_url }) => (
 							<TabPane key={id} tab={name} disabled={!online_url}>
 								<BranchUsers dataSource={getTableDataSource(id)} />
 							</TabPane>
 						))}
+
+						<TabPane key={NO_BRANCHES_ID} tab="No Branches">
+							<BranchUsers dataSource={getTableDataSource(NO_BRANCHES_ID)} />
+						</TabPane>
 					</Tabs>
-				</Box>
-			</section>
 
-			<section className="PendingProductTransactions">
-				<Box>
-					<TableHeader title="Pending User Transactions" />
-
-					<Table
-						columns={pendingTransactionColumns}
-						dataSource={pendingTransactionsData}
-						scroll={{ y: calculateTableHeight(pendingTransactionsData.length), x: '100%' }}
-						loading={pendingTransactionsStatus === request.REQUESTING}
+					<CreateUserModal
+						visible={createUserModalVisible}
+						onSuccess={() => onTabClick(NO_BRANCHES_ID)}
+						onClose={() => setCreateUserModalVisible(false)}
 					/>
 
 					<EditUserModal
@@ -208,6 +161,11 @@ const Users = () => {
 					/>
 				</Box>
 			</section>
+
+			<PendingTransactionsSection
+				title="Pending User Transactions"
+				transactionType={pendingTransactionTypes.USERS}
+			/>
 		</Container>
 	);
 };

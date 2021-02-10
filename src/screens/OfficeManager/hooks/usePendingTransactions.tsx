@@ -19,6 +19,7 @@ export const usePendingTransactions = () => {
 	const pendingTransactions = useSelector(selectors.selectPendingTransactions());
 	const listPendingTransactions = useActionDispatch(actions.listPendingTransactions);
 	const createPendingTransactions = useActionDispatch(actions.createPendingTransactions);
+	const editPendingTransactions = useActionDispatch(actions.editPendingTransactions);
 	const removePendingTransactions = useActionDispatch(actions.removePendingTransactions);
 	const executePendingTransactions = useActionDispatch(actions.executePendingTransactions);
 
@@ -42,6 +43,14 @@ export const usePendingTransactions = () => {
 	const createPendingTransactionsRequest = (data, extraCallback = null) => {
 		setRecentRequest(types.CREATE_PENDING_TRANSACTIONS);
 		createPendingTransactions({
+			...data,
+			callback: modifiedExtraCallback(callback, extraCallback),
+		});
+	};
+
+	const editPendingTransactionsRequest = (data, extraCallback = null) => {
+		setRecentRequest(types.EDIT_PENDING_TRANSACTIONS);
+		editPendingTransactions({
 			...data,
 			callback: modifiedExtraCallback(callback, extraCallback),
 		});
@@ -82,6 +91,7 @@ export const usePendingTransactions = () => {
 		pendingTransactions,
 		listPendingTransactions: listPendingTransactionsRequest,
 		createPendingTransactions: createPendingTransactionsRequest,
+		editPendingTransactions: editPendingTransactionsRequest,
 		removePendingTransactions: removePendingTransactionsRequest,
 		executePendingTransactions: executePendingTransactionsRequest,
 		status,

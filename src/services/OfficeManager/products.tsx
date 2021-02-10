@@ -35,12 +35,13 @@ interface IEditProduct {
 }
 
 export const service = {
-	list: async (params: IGetRequest, baseURL) => axios.get('/products/', { baseURL, params }),
+	list: async (params: IGetRequest, baseURL) => axios.get('/online-products/', { baseURL, params }),
 
-	create: async (body: ICreateProduct, baseURL) => axios.post('/products/', body, { baseURL }),
+	create: async (body: ICreateProduct, baseURL) =>
+		axios.post('/online-products/', body, { baseURL }),
 
 	edit: async (body: IEditProduct, baseURL) =>
-		axios.patch(`/products/${body.id}/online-update/`, body, { baseURL }),
+		axios.patch(`/online-products/${body.id}/`, body, { baseURL }),
 
-	remove: async (id, baseURL) => axios.delete(`/products/${id}/online-destroy/`, { baseURL }),
+	remove: async (id, baseURL) => axios.delete(`/online-products/${id}/`, { baseURL }),
 };

@@ -8,6 +8,7 @@ export const types = {
 	GET_USERS: `${key}/GET_USERS`,
 	GET_USER_BY_ID: `${key}/GET_USER_BY_ID`,
 	REMOVE_USER: `${key}/REMOVE_USER`,
+	CREATE_USER: `${key}/CREATE_USER`,
 	EDIT_USER: `${key}/EDIT_USER`,
 };
 
@@ -47,8 +48,9 @@ export const actions = {
 	save: createAction(types.SAVE),
 	getUsers: createAction(types.GET_USERS),
 	getUserById: createAction(types.GET_USER_BY_ID),
-	removeUser: createAction(types.REMOVE_USER),
+	createUser: createAction(types.CREATE_USER),
 	editUser: createAction(types.EDIT_USER),
+	removeUser: createAction(types.REMOVE_USER),
 };
 
 const selectState = (state: any) => state[key] || initialState;

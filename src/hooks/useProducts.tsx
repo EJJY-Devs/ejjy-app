@@ -40,7 +40,7 @@ export const useProducts = () => {
 		getProducts({ callback });
 	};
 
-	const createProductRequest = (product) => {
+	const createProductRequest = (product, extraCallback = null) => {
 		setRecentRequest(types.CREATE_PRODUCT);
 		const clonedProduct = {
 			...product,
@@ -49,7 +49,10 @@ export const useProducts = () => {
 
 		createProduct({
 			...clonedProduct,
-			callback: modifiedCallback(callback, CREATE_SUCCESS_MESSAGE, CREATE_ERROR_MESSAGE),
+			callback: modifiedExtraCallback(
+				modifiedCallback(callback, CREATE_SUCCESS_MESSAGE, CREATE_ERROR_MESSAGE),
+				extraCallback,
+			),
 		});
 	};
 

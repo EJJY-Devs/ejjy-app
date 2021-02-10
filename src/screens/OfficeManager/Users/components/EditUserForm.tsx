@@ -2,7 +2,7 @@ import { Divider } from 'antd';
 import { Form, Formik } from 'formik';
 import React, { useCallback, useState } from 'react';
 import * as Yup from 'yup';
-import { Button, FieldError, FormSelect } from '../../../../components/elements';
+import { Button, FieldError, FormSelect, Label } from '../../../../components/elements';
 import { Option } from '../../../../components/elements/Select/Select';
 import { sleep } from '../../../../utils/function';
 
@@ -28,13 +28,13 @@ export const EditUserForm = ({ user, branchOptions, onSubmit, onClose, loading }
 		() => ({
 			DefaultValues: {
 				id: user?.id,
-				branch_id: user?.branch?.id || null,
+				branch_id: user?.branch?.id || branchOptions?.[0]?.value,
 			},
 			Schema: Yup.object().shape({
 				branch_id: Yup.string().required().label('Branch'),
 			}),
 		}),
-		[user],
+		[user, branchOptions],
 	);
 
 	return (
@@ -52,6 +52,7 @@ export const EditUserForm = ({ user, branchOptions, onSubmit, onClose, loading }
 		>
 			{({ errors, touched }) => (
 				<Form className="form">
+					<Label label="Branch" spacing />
 					<FormSelect id="branch_id" options={branchOptions} />
 					{errors.branch_id && touched.branch_id ? <FieldError error={errors.branch_id} /> : null}
 

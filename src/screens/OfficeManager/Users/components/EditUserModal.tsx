@@ -38,13 +38,13 @@ export const EditUserModal = ({
 		editUser(data, ({ status, response }) => {
 			if (status === request.SUCCESS) {
 				if (response?.length) {
-					onSuccess(data.branch_id);
 					message.warning(
 						'We found an error while updating the user in local branch. Please check the pending transaction table below.',
 					);
 					onFetchPendingTransactions();
 				}
 
+				onSuccess(data.branch_id);
 				reset();
 				onClose();
 			}

@@ -29,7 +29,7 @@ const Users = () => {
 	// CUSTOM HOOKS
 	const history = useHistory();
 	const { branches } = useBranches();
-	const { users, getUsers, status: usersStatus, errors, reset } = useUsers();
+	const { users, getUsers, removeUser, status: usersStatus, errors, reset } = useUsers();
 	const {
 		pendingTransactions,
 		listPendingTransactions,
@@ -85,7 +85,7 @@ const Users = () => {
 									<TableActions
 										onAssign={branchId ? () => history.push(`/users/assign/${id}`) : null}
 										onEdit={isBranchUsers.includes(user_type) ? () => onEditUser(user) : null}
-										// onRemove={() => removeUser(id)} Note: Removing of user not supported for now
+										onRemove={isBranchUsers.includes(user_type) ? () => onRemoveUser(user) : null}
 									/>
 								),
 							];
@@ -110,6 +110,21 @@ const Users = () => {
 
 	const onCreateUser = () => {
 		setCreateUserModalVisible(true);
+	};
+
+	const onRemoveUser = (user) => {
+		removeUser(user.id, ({ status, response }) => {
+			if (status === request.SUCCESS) {
+				if (response?.length) {
+					message.warning(
+						'We found an error while deleting the user in local branch. Please check the pending transaction table below.',
+					);
+					listPendingTransactions(null);
+				}
+
+				onTabClick(user?.branch?.id || NO_BRANCHES_ID);
+			}
+		});
 	};
 
 	const onSuccessEditUser = (branchId) => {

@@ -68,11 +68,14 @@ export const useUsers = () => {
 		});
 	};
 
-	const removeUserRequest = (id) => {
+	const removeUserRequest = (id, extraCallback = null) => {
 		setRecentRequest(types.REMOVE_USER);
 		removeUser({
 			id,
-			callback: modifiedCallback(callback, REMOVE_SUCCESS_MESSAGE, REMOVE_ERROR_MESSAGE),
+			callback: modifiedExtraCallback(
+				modifiedCallback(callback, REMOVE_SUCCESS_MESSAGE, REMOVE_ERROR_MESSAGE),
+				extraCallback,
+			),
 		});
 	};
 

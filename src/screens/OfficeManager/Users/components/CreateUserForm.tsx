@@ -103,9 +103,7 @@ export const CreateUserForm = ({ onSubmit, onClose, loading }: Props) => {
 							{errors.last_name && touched.last_name ? (
 								<FieldError error={errors.last_name} />
 							) : null}
-						</Col>
-
-						<Divider dashed />
+						</Col>	
 
 						<Col sm={12} xs={24}>
 							<FormInputLabel id="email" label="Email Address" />

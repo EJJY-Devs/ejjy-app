@@ -81,6 +81,11 @@ export const selectors = {
 			selectState,
 			(state) => state.branches.find((branch) => branch.id == id)?.online_url ?? undefined,
 		),
+	selectBackUpURLByBranchId: (id) =>
+		createSelector(
+			selectState,
+			(state) => state.branches.find((branch) => branch.id == id)?.backup_server_url ?? undefined,
+		),
 };
 
 export default reducer;

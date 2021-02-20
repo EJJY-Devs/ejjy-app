@@ -10,25 +10,44 @@ function* list({ payload }: any) {
 	const { branch_id, callback } = payload;
 	callback({ status: request.REQUESTING });
 
+	// Required: Branch must have an online URL (Requested by Office)
+	const baseURL = yield select(branchesSelectors.selectURLByBranchId(branch_id));
+	if (!baseURL && branch_id) {
+		callback({ status: request.ERROR, errors: 'Branch has no online url.' });
+		return;
+	}
+
+	let data = {
+		page: 1,
+		page_size: MAX_PAGE_SIZE,
+	};
+
+	let isFetchedFromBackupURL = false;
+
 	try {
-		// Required: Branch must have an online URL (Requested by Office)
-		const baseURL = yield select(branchesSelectors.selectURLByBranchId(branch_id));
-		if (!baseURL && branch_id) {
-			callback({ status: request.ERROR, errors: 'Branch has no online url.' });
-			return;
+		let response = null;
+
+		try {
+			// Fetch in branch url
+			response = yield call(service.list, data, baseURL);
+		} catch (e) {
+			// Retry to fetch in backup branch url
+			const baseBackupURL = yield select(branchesSelectors.selectBackUpURLByBranchId(branch_id));
+			if (baseURL && baseBackupURL) {
+				try {
+					// Fetch branch url
+					response = yield call(service.list, data, baseBackupURL);
+					isFetchedFromBackupURL = true;
+				} catch (e) {
+					throw e;
+				}
+			} else {
+				throw e;
+			}
 		}
 
-		const response = yield call(
-			service.list,
-			{
-				page: 1,
-				page_size: MAX_PAGE_SIZE,
-			},
-			baseURL,
-		);
-
 		yield put(actions.save({ type: types.LIST_SESSIONS, sessions: response.data.results }));
-		callback({ status: request.SUCCESS });
+		callback({ status: request.SUCCESS, isFetchedFromBackupURL });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}

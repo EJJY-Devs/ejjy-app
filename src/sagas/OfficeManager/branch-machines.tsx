@@ -1,7 +1,7 @@
-import { put, retry, select, takeLatest } from 'redux-saga/effects';
+import { call, put, select, takeLatest } from 'redux-saga/effects';
 import { actions, types } from '../../ducks/OfficeManager/branch-machines';
 import { selectors as branchesSelectors } from '../../ducks/OfficeManager/branches';
-import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../../global/constants';
+import { MAX_PAGE_SIZE } from '../../global/constants';
 import { request } from '../../global/types';
 import { LOCAL_API_URL } from '../../services';
 import { service } from '../../services/OfficeManager/branch-machines';
@@ -18,22 +18,39 @@ function* list({ payload }: any) {
 		return;
 	}
 
+	let data = {
+		page: 1,
+		page_size: MAX_PAGE_SIZE,
+	};
+
+	let isFetchedFromBackupURL = false;
+
 	try {
-		const response = yield retry(
-			MAX_RETRY,
-			RETRY_INTERVAL_MS,
-			service.list,
-			{
-				page: 1,
-				page_size: MAX_PAGE_SIZE,
-			},
-			baseURL || LOCAL_API_URL,
-		);
+		let response = null;
+
+		try {
+			// Fetch in branch url
+			response = yield call(service.list, data, baseURL || LOCAL_API_URL);
+		} catch (e) {
+			// Retry to fetch in backup branch url
+			const baseBackupURL = yield select(branchesSelectors.selectBackUpURLByBranchId(branchId));
+			if (baseURL && baseBackupURL) {
+				try {
+					// Fetch branch url
+					response = yield call(service.list, data, baseBackupURL);
+					isFetchedFromBackupURL = true;
+				} catch (e) {
+					throw e;
+				}
+			} else {
+				throw e;
+			}
+		}
 
 		yield put(
 			actions.save({ type: types.GET_BRANCH_MACHINES, branchMachines: response.data.results }),
 		);
-		callback({ status: request.SUCCESS });
+		callback({ status: request.SUCCESS, isFetchedFromBackupURL });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}

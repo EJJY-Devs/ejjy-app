@@ -78,7 +78,10 @@ function* listByBranch({ payload }: any) {
 				branchProducts: response.data,
 			}),
 		);
-		callback({ status: request.SUCCESS, isFetchedFromBackupURL });
+		callback({
+			status: request.SUCCESS,
+			warnings: isFetchedFromBackupURL ? ['Fetched data is outdated.'] : [],
+		});
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}

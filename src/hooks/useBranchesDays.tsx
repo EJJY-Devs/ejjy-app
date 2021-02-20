@@ -7,6 +7,7 @@ import { useActionDispatch } from './useActionDispatch';
 export const useBranchesDays = () => {
 	const [status, setStatus] = useState<any>(request.NONE);
 	const [errors, setErrors] = useState<any>([]);
+	const [warnings, setWarnings] = useState<any>([]);
 	const [recentRequest, setRecentRequest] = useState<any>();
 
 	const branchDay = useSelector(selectors.selectBranchDay());
@@ -59,9 +60,10 @@ export const useBranchesDays = () => {
 		});
 	};
 
-	const callback = ({ status, errors = [] }) => {
+	const callback = ({ status, errors = [], warnings = [] }) => {
 		setStatus(status);
 		setErrors(errors);
+		setWarnings(warnings);
 	};
 
 	return {
@@ -73,6 +75,7 @@ export const useBranchesDays = () => {
 		editBranchDay: editBranchDayRequest,
 		status,
 		errors,
+		warnings,
 		recentRequest,
 		reset,
 		resetStatus,

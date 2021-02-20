@@ -17,6 +17,7 @@ const REMOVE_ERROR_MESSAGE = 'An error occurred while removing the user';
 export const useUsers = () => {
 	const [status, setStatus] = useState<any>(request.NONE);
 	const [errors, setErrors] = useState<any>([]);
+	const [warnings, setWarnings] = useState<any>([]);
 	const [recentRequest, setRecentRequest] = useState<any>();
 
 	const users = useSelector(selectors.selectUsers());
@@ -79,9 +80,10 @@ export const useUsers = () => {
 		});
 	};
 
-	const callback = ({ status, errors = [] }) => {
+	const callback = ({ status, errors = [], warnings = [] }) => {
 		setStatus(status);
 		setErrors(errors);
+		setWarnings(warnings);
 	};
 
 	return {
@@ -94,6 +96,7 @@ export const useUsers = () => {
 		removeUser: removeUserRequest,
 		status,
 		errors,
+		warnings,
 		recentRequest,
 		reset,
 		resetStatus,

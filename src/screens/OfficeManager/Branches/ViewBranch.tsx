@@ -4,7 +4,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { Breadcrumb, Container } from '../../../components';
-import { Box, FieldError } from '../../../components/elements';
+import { Box, FieldError, FieldWarning } from '../../../components/elements';
 import { selectors as branchesSelectors } from '../../../ducks/OfficeManager/branches';
 import { request } from '../../../global/types';
 import { useBranchesDays } from '../../../hooks/useBranchesDays';
@@ -43,25 +43,35 @@ const ViewBranch = ({ match }: Props) => {
 		getBranchProductsByBranch,
 		status: branchProductsStatus,
 		errors: branchProductsErrors,
+		warnings: branchProductsWarnings,
 	} = useBranchProducts();
 	const {
 		transactions,
 		listTransactions,
 		status: transactionsStatus,
 		errors: transactionsErrors,
+		warnings: transactionsWarnings,
 	} = useTransactions();
-	const { sessions, listSessions, status: sessionsStatus, errors: sessionsErrors } = useSessions();
+	const {
+		sessions,
+		listSessions,
+		status: sessionsStatus,
+		errors: sessionsErrors,
+		warnings: sessionsWarnings,
+	} = useSessions();
 	const {
 		branchDays,
 		listBranchDays,
 		status: branchesDaysStatus,
 		errors: branchesDaysErrors,
+		warnings: branchesDaysWarnings,
 	} = useBranchesDays();
 	const {
 		branchMachines,
 		getBranchMachines,
 		status: branchesMachinesStatus,
 		errors: branchesMachinesErrors,
+		warnings: branchesMachinesWarnings,
 	} = useBranchMachines();
 
 	// Effect: Fetch branch products
@@ -117,6 +127,9 @@ const ViewBranch = ({ match }: Props) => {
 								{branchProductsErrors.map((error, index) => (
 									<FieldError key={index} error={error} />
 								))}
+								{branchProductsWarnings.map((warning, index) => (
+									<FieldWarning key={index} error={warning} />
+								))}
 								{branchProductsStatus === request.SUCCESS && (
 									<ViewBranchProducts branchProducts={branchProducts} branch={branch} />
 								)}
@@ -127,6 +140,9 @@ const ViewBranch = ({ match }: Props) => {
 							<>
 								{branchesMachinesErrors.map((error, index) => (
 									<FieldError key={index} error={error} />
+								))}
+								{branchesMachinesWarnings.map((warning, index) => (
+									<FieldWarning key={index} error={warning} />
 								))}
 								{branchesMachinesStatus === request.SUCCESS && (
 									<ViewBranchMachines branchMachines={branchMachines} />
@@ -143,6 +159,9 @@ const ViewBranch = ({ match }: Props) => {
 								{transactionsErrors.map((error, index) => (
 									<FieldError key={index} error={error} />
 								))}
+								{transactionsWarnings.map((warning, index) => (
+									<FieldWarning key={index} error={warning} />
+								))}
 								{transactionsStatus === request.SUCCESS && (
 									<ViewBranchTransactions transactions={transactions} />
 								)}
@@ -154,6 +173,9 @@ const ViewBranch = ({ match }: Props) => {
 								{sessionsErrors.map((error, index) => (
 									<FieldError key={index} error={error} />
 								))}
+								{sessionsWarnings.map((warning, index) => (
+									<FieldWarning key={index} error={warning} />
+								))}
 								{sessionsStatus === request.SUCCESS && <ViewBranchSessions sessions={sessions} />}
 							</>
 						</Tabs.TabPane>
@@ -162,6 +184,9 @@ const ViewBranch = ({ match }: Props) => {
 							<>
 								{branchesDaysErrors.map((error, index) => (
 									<FieldError key={index} error={error} />
+								))}
+								{branchesDaysWarnings.map((warning, index) => (
+									<FieldWarning key={index} error={warning} />
 								))}
 								{branchesDaysStatus === request.SUCCESS && (
 									<ViewBranchDays branchDays={branchDays} />

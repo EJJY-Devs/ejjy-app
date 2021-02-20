@@ -1,0 +1,19 @@
+@import '../../../assets/styles/variables';
+@import '../../../assets/styles/mixins';
+
+.FieldWarning {
+	@include flex($align-items: center);
+	margin-top: 8px;
+	margin-bottom: 5px;
+
+	.icon {
+		color: $color-secondary;
+		font-size: 13px;
+	}
+
+	.text {
+		margin-left: 5px;
+		color: $color-secondary;
+		@include font(0.75rem);
+	}
+}

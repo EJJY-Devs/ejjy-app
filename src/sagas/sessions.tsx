@@ -47,7 +47,10 @@ function* list({ payload }: any) {
 		}
 
 		yield put(actions.save({ type: types.LIST_SESSIONS, sessions: response.data.results }));
-		callback({ status: request.SUCCESS, isFetchedFromBackupURL });
+		callback({
+			status: request.SUCCESS,
+			warnings: isFetchedFromBackupURL ? ['Fetched data is outdated.'] : [],
+		});
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}

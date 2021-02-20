@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Divider } from 'antd';
+import { Divider, message } from 'antd';
 import cn from 'classnames';
 import dayjs from 'dayjs';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -43,6 +43,7 @@ const AssignUser = ({ match }) => {
 		editCashieringAssignment,
 		removeCashieringAssignment,
 		status: cashieringAssignmentsStatus,
+		warnings: cashieringAssignmentsWarnings,
 		recentRequest: cashieringAssignmentsRecentRequest,
 	} = useCashieringAssignments();
 
@@ -50,6 +51,14 @@ const AssignUser = ({ match }) => {
 	useEffect(() => {
 		getUserById(userId, userDoesNotExistCallback);
 	}, []);
+
+	useEffect(() => {
+		if (cashieringAssignmentsStatus === request.SUCCESS && cashieringAssignmentsWarnings?.length) {
+			cashieringAssignmentsWarnings?.forEach((warning) => {
+				message.warning(warning);
+			});
+		}
+	}, [cashieringAssignmentsStatus, cashieringAssignmentsWarnings]);
 
 	const userDoesNotExistCallback = ({ status }) => {
 		if (status === request.ERROR) {

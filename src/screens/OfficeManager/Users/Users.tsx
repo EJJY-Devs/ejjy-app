@@ -29,7 +29,7 @@ const Users = () => {
 	// CUSTOM HOOKS
 	const history = useHistory();
 	const { branches } = useBranches();
-	const { users, getUsers, removeUser, status: usersStatus, errors, reset } = useUsers();
+	const { users, getUsers, removeUser, status: usersStatus, errors, warnings, reset } = useUsers();
 	const {
 		pendingTransactions,
 		listPendingTransactions,
@@ -52,6 +52,16 @@ const Users = () => {
 			reset();
 		}
 	}, [usersStatus, errors]);
+
+	useEffect(() => {
+		if (usersStatus === request.SUCCESS && warnings?.length) {
+			warnings?.forEach((warning) => {
+				message.warning(warning);
+			});
+
+			reset();
+		}
+	}, [usersStatus, warnings]);
 
 	const getFetchLoading = useCallback(
 		() =>

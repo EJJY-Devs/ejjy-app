@@ -7,6 +7,7 @@ import { useActionDispatch } from '../../../hooks/useActionDispatch';
 export const useBranchMachines = () => {
 	const [status, setStatus] = useState<any>(request.NONE);
 	const [errors, setErrors] = useState<any>([]);
+	const [warnings, setWarnings] = useState<any>([]);
 	const [recentRequest, setRecentRequest] = useState<any>();
 
 	const branchMachines = useSelector(selectors.selectBranchMachines());
@@ -26,9 +27,10 @@ export const useBranchMachines = () => {
 		getBranchMachines({ branchId, callback });
 	};
 
-	const callback = ({ status, errors = [] }) => {
+	const callback = ({ status, errors = [], warnings = [] }) => {
 		setStatus(status);
 		setErrors(errors);
+		setWarnings(warnings);
 	};
 
 	return {
@@ -36,6 +38,7 @@ export const useBranchMachines = () => {
 		getBranchMachines: getBranchMachinesRequest,
 		status,
 		errors,
+		warnings,
 		recentRequest,
 		reset,
 		resetStatus,

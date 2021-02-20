@@ -7,6 +7,7 @@ import { useActionDispatch } from './useActionDispatch';
 export const useTransactions = () => {
 	const [status, setStatus] = useState<any>(request.NONE);
 	const [errors, setErrors] = useState<any>([]);
+	const [warnings, setWarnings] = useState<any>([]);
 	const [recentRequest, setRecentRequest] = useState<any>();
 	const transactions = useSelector(selectors.selectTransactions());
 
@@ -30,9 +31,10 @@ export const useTransactions = () => {
 		});
 	};
 
-	const callback = ({ status, errors = [] }) => {
+	const callback = ({ status, errors = [], warnings = [] }) => {
 		setStatus(status);
 		setErrors(errors);
+		setWarnings(warnings);
 	};
 
 	return {
@@ -40,6 +42,7 @@ export const useTransactions = () => {
 		listTransactions: listTransactionsRequest,
 		status,
 		errors,
+		warnings,
 		recentRequest,
 		reset,
 		resetStatus,

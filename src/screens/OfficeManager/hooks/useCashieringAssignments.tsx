@@ -17,6 +17,7 @@ const REMOVE_ERROR_MESSAGE = 'An error occurred while removing the assignment';
 export const useCashieringAssignments = () => {
 	const [status, setStatus] = useState<any>(request.NONE);
 	const [errors, setErrors] = useState<any>([]);
+	const [warnings, setWarnings] = useState<any>([]);
 	const [recentRequest, setRecentRequest] = useState<any>();
 
 	const cashieringAssignments = useSelector(selectors.selectCashieringAssignments());
@@ -65,9 +66,10 @@ export const useCashieringAssignments = () => {
 		});
 	};
 
-	const callback = ({ status, errors = [] }) => {
+	const callback = ({ status, errors = [], warnings = [] }) => {
 		setStatus(status);
 		setErrors(errors);
+		setWarnings(warnings);
 	};
 
 	return {
@@ -78,6 +80,7 @@ export const useCashieringAssignments = () => {
 		removeCashieringAssignment: removeCashieringAssignmentRequest,
 		status,
 		errors,
+		warnings,
 		recentRequest,
 		reset,
 		resetStatus,

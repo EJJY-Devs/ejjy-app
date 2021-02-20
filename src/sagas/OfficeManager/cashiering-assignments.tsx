@@ -53,7 +53,10 @@ function* listByUserId({ payload }: any) {
 				cashieringAssignments: response.data.results,
 			}),
 		);
-		callback({ status: request.SUCCESS, isFetchedFromBackupURL });
+		callback({
+			status: request.SUCCESS,
+			warnings: isFetchedFromBackupURL ? ['Fetched data is outdated.'] : [],
+		});
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}

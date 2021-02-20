@@ -12,6 +12,7 @@ const EDIT_ERROR_MESSAGE = 'An error occurred while editing the branch product';
 export const useBranchProducts = () => {
 	const [status, setStatus] = useState<any>(request.NONE);
 	const [errors, setErrors] = useState<any>([]);
+	const [warnings, setWarnings] = useState<any>([]);
 	const [recentRequest, setRecentRequest] = useState<any>();
 
 	const branchProducts = useSelector(selectors.selectBranchProducts());
@@ -50,9 +51,10 @@ export const useBranchProducts = () => {
 		});
 	};
 
-	const callback = ({ status, errors = [] }) => {
+	const callback = ({ status, errors = [], warnings = [] }) => {
 		setStatus(status);
 		setErrors(errors);
+		setWarnings(warnings);
 	};
 
 	return {
@@ -62,6 +64,7 @@ export const useBranchProducts = () => {
 		editBranchProduct: editBranchProductRequest,
 		status,
 		errors,
+		warnings,
 		recentRequest,
 		reset,
 		resetStatus,

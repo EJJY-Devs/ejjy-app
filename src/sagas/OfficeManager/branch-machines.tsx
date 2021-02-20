@@ -50,7 +50,10 @@ function* list({ payload }: any) {
 		yield put(
 			actions.save({ type: types.GET_BRANCH_MACHINES, branchMachines: response.data.results }),
 		);
-		callback({ status: request.SUCCESS, isFetchedFromBackupURL });
+		callback({
+			status: request.SUCCESS,
+			warnings: isFetchedFromBackupURL ? ['Fetched data is outdated.'] : [],
+		});
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}

@@ -2,6 +2,8 @@ import axios from 'axios';
 import { IGetRequest } from '../interfaces';
 
 export const service = {
+	list: async (params: IGetRequest, baseURL) => axios.get('/users/', { baseURL, params }),
+
 	listOnline: async (params: IGetRequest, baseURL) =>
 		axios.get('/online-users/', { baseURL, params }),
 

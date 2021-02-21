@@ -27,17 +27,18 @@ function* listOnline({ payload }: any) {
 
 	try {
 		let response = null;
+		const endpoint = baseURL ? service.list : service.listOnline;
 
 		try {
 			// Fetch in branch url
-			response = yield call(service.listOnline, data, baseURL || ONLINE_API_URL);
+			response = yield call(endpoint, data, baseURL || ONLINE_API_URL);
 		} catch (e) {
 			// Retry to fetch in backup branch url
 			const baseBackupURL = yield select(branchesSelectors.selectBackUpURLByBranchId(branchId));
 			if (baseURL && baseBackupURL) {
 				try {
 					// Fetch branch url
-					response = yield call(service.listOnline, data, baseBackupURL);
+					response = yield call(endpoint, data, baseBackupURL);
 					isFetchedFromBackupURL = true;
 				} catch (e) {
 					throw e;

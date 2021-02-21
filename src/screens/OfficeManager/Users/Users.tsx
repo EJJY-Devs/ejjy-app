@@ -58,8 +58,6 @@ const Users = () => {
 			warnings?.forEach((warning) => {
 				message.warning(warning);
 			});
-
-			reset();
 		}
 	}, [usersStatus, warnings]);
 
@@ -80,13 +78,13 @@ const Users = () => {
 			({ request_model }) => request_model === pendingTransactionTypes.USERS,
 		);
 
+		const isBranchUsers = [userTypes.BRANCH_MANAGER, userTypes.BRANCH_PERSONNEL];
 		let newData =
 			usersStatus === request.SUCCESS
 				? users
-						?.filter(({ branch }) => branch?.id === branchId)
+						?.filter(({ user_type }) => isBranchUsers.includes(user_type))
 						?.map((user) => {
 							const { id, first_name, last_name, user_type } = user;
-							const isBranchUsers = [userTypes.BRANCH_MANAGER, userTypes.BRANCH_PERSONNEL];
 
 							return [
 								`${first_name} ${last_name}`,

@@ -145,7 +145,7 @@ const ViewBranch = ({ match }: Props) => {
 									<FieldWarning key={index} error={warning} />
 								))}
 								{branchesMachinesStatus === request.SUCCESS && (
-									<ViewBranchMachines branchMachines={branchMachines} />
+									<ViewBranchMachines branchId={branchId} branchMachines={branchMachines} />
 								)}
 							</>
 						</Tabs.TabPane>

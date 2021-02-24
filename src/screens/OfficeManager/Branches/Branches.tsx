@@ -6,7 +6,7 @@ import { Box } from '../../../components/elements';
 import { request } from '../../../global/types';
 import { calculateTableHeight, sleep } from '../../../utils/function';
 import { useBranches } from '../hooks/useBranches';
-import { CreateEditBranchModal } from './components/CreateEditBranchModal';
+import { CreateEditBranchModal } from './components/Branch/CreateEditBranchModal';
 import './style.scss';
 
 const columns = [

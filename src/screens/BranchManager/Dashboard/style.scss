@@ -1,8 +1,11 @@
 @import '../../../assets/styles/main';
 
 .Dashboard {
-}
+	.BackupServerUrl {
+		padding: 20px 25px;
 
-// .MachineReportTable {
-//   margin-top:
-// }
+		.button-column {
+			@include flex(center, flex-end);
+		}
+	}
+}

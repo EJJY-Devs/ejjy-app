@@ -7,10 +7,12 @@ import { CashieringCard } from '../../../components/CashieringCard/CashieringCar
 import { selectors as authSelectors } from '../../../ducks/auth';
 import { request } from '../../../global/types';
 import { useBranchesDays } from '../../../hooks/useBranchesDays';
+import { BackupServerUrlForm } from './components/BackupServerUrlForm';
 import { MachineReportTable } from './components/MachineReportTable';
 import './style.scss';
 
 const Dashboard = () => {
+	// CUSTOM HOOKS
 	const {
 		branchDay,
 		getBranchDay,
@@ -21,6 +23,7 @@ const Dashboard = () => {
 	} = useBranchesDays();
 	const user = useSelector(authSelectors.selectUser());
 
+	// EFFECTS
 	useEffect(() => {
 		getBranchDay(user?.branch?.id);
 	}, []);
@@ -43,6 +46,8 @@ const Dashboard = () => {
 	return (
 		<Container title="Dashboard">
 			<section className="Dashboard">
+				<BackupServerUrlForm />
+
 				<CashieringCard
 					branchDay={branchDay}
 					onClick={branchDay ? onEndDay : onStartDay}

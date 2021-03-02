@@ -30,7 +30,7 @@ export const BackupServerUrlForm = () => {
 	}, [localBranchSettings]);
 
 	const onSaveSettings = () => {
-		if (isEmpty(localBranchSettings)) {
+		if (isEmpty(backupServerUrl)) {
 			message.error('Please make sure to fill all the fields.');
 			return;
 		}

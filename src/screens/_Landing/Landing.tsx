@@ -11,7 +11,7 @@ import './style.scss';
 const Landing = () => {
 	const history = useHistory();
 
-	const { user } = useAuth();
+	const { user, logout } = useAuth();
 	const { getBranches, status: getBranchesStatus } = useBranches();
 
 	useEffect(() => {
@@ -77,7 +77,7 @@ const Landing = () => {
 		} else if (requests.every((value) => value === request.SUCCESS)) {
 			history.replace('/dashboard');
 		} else if (requests.some((value) => value === request.ERROR)) {
-			history.replace('/404');
+			logout(user?.id);
 		}
 	};
 
@@ -94,7 +94,7 @@ const Landing = () => {
 		} else if (requests.every((value) => value === request.SUCCESS)) {
 			history.replace('/dashboard');
 		} else if (requests.some((value) => value === request.ERROR)) {
-			history.replace('/404');
+			logout(user?.id);
 		}
 	};
 
@@ -111,7 +111,7 @@ const Landing = () => {
 		} else if (requests.every((value) => value === request.SUCCESS)) {
 			history.replace('/dashboard');
 		} else if (requests.some((value) => value === request.ERROR)) {
-			history.replace('/404');
+			logout(user?.id);
 		}
 	};
 

@@ -1,25 +1,24 @@
-import { call, put, select, takeLatest } from 'redux-saga/effects';
+import { call, select, takeLatest } from 'redux-saga/effects';
 import { selectors as branchesSelectors } from '../ducks/OfficeManager/branches';
-import { actions, types } from '../ducks/sessions';
-import { MAX_PAGE_SIZE } from '../global/constants';
+import { types } from '../ducks/sessions';
 import { request } from '../global/types';
 import { service } from '../services/sessions';
 
 /* WORKERS */
 function* list({ payload }: any) {
-	const { branch_id, callback } = payload;
+	const { page, pageSize, branchId, callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	// Required: Branch must have an online URL (Requested by Office)
-	const baseURL = yield select(branchesSelectors.selectURLByBranchId(branch_id));
-	if (!baseURL && branch_id) {
+	const baseURL = yield select(branchesSelectors.selectURLByBranchId(branchId));
+	if (!baseURL && branchId) {
 		callback({ status: request.ERROR, errors: 'Branch has no online url.' });
 		return;
 	}
 
 	let data = {
-		page: 1,
-		page_size: MAX_PAGE_SIZE,
+		page,
+		page_size: pageSize,
 	};
 
 	let isFetchedFromBackupURL = false;
@@ -32,7 +31,7 @@ function* list({ payload }: any) {
 			response = yield call(service.list, data, baseURL);
 		} catch (e) {
 			// Retry to fetch in backup branch url
-			const baseBackupURL = yield select(branchesSelectors.selectBackUpURLByBranchId(branch_id));
+			const baseBackupURL = yield select(branchesSelectors.selectBackUpURLByBranchId(branchId));
 			if (baseURL && baseBackupURL) {
 				try {
 					// Fetch branch url
@@ -46,10 +45,10 @@ function* list({ payload }: any) {
 			}
 		}
 
-		yield put(actions.save({ type: types.LIST_SESSIONS, sessions: response.data.results }));
 		callback({
 			status: request.SUCCESS,
 			warnings: isFetchedFromBackupURL ? ['Fetched data is outdated.'] : [],
+			data: response.data,
 		});
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });

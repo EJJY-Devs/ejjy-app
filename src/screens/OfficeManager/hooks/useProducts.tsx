@@ -1,10 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { message } from 'antd';
 import { useEffect, useState } from 'react';
-import { actions, types } from '../ducks/branch-products';
-import { MAX_PAGE_SIZE } from '../global/constants';
-import { request } from '../global/types';
-import { modifiedCallback, modifiedExtraCallback, onCallback } from '../utils/function';
+import { actions, types } from '../../../ducks/OfficeManager/products';
+import { MAX_PAGE_SIZE } from '../../../global/constants';
+import { request } from '../../../global/types';
+import { useActionDispatch } from '../../../hooks/useActionDispatch';
+import { modifiedCallback, modifiedExtraCallback, onCallback } from '../../../utils/function';
 import {
 	addInCachedData,
 	generateNewCachedData,
@@ -12,20 +13,24 @@ import {
 	indexHasCachedData,
 	removeInCachedData,
 	updateInCachedData,
-} from '../utils/pagination';
-import { useActionDispatch } from './useActionDispatch';
+} from '../../../utils/pagination';
 
 const LIST_ERROR_MESSAGE = 'An error occurred while fetching products';
 
-const EDIT_SUCCESS_MESSAGE = 'Branch product was edited successfully';
-const EDIT_ERROR_MESSAGE = 'An error occurred while editing the branch product';
+const CREATE_SUCCESS_MESSAGE = 'Product was created successfully';
+const CREATE_ERROR_MESSAGE = 'An error occurred while creating the product';
 
-export const useBranchProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
+const EDIT_SUCCESS_MESSAGE = 'Product was edited successfully';
+const EDIT_ERROR_MESSAGE = 'An error occurred while editing the product';
+
+const REMOVE_SUCCESS_MESSAGE = 'Product was removed successfully';
+const REMOVE_ERROR_MESSAGE = 'An error occurred while removing the product';
+
+export const useProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 	// STATES
 	const [status, setStatus] = useState<any>(request.NONE);
 	const [errors, setErrors] = useState<any>([]);
 	const [recentRequest, setRecentRequest] = useState<any>();
-	const [warnings, setWarnings] = useState<any>([]);
 
 	// PAGINATION
 	const [allData, setAllData] = useState([]);
@@ -34,8 +39,10 @@ export const useBranchProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 	const [currentPageData, setCurrentPageData] = useState([]);
 
 	// ACTIONS
-	const getBranchProductsByBranchAction = useActionDispatch(actions.getBranchProductsByBranch);
-	const editBranchProduct = useActionDispatch(actions.editBranchProduct);
+	const getProductsAction = useActionDispatch(actions.getProducts);
+	const createProduct = useActionDispatch(actions.createProduct);
+	const editProduct = useActionDispatch(actions.editProduct);
+	const removeProduct = useActionDispatch(actions.removeProduct);
 
 	// GENERAL METHODS
 	const resetError = () => setErrors([]);
@@ -84,7 +91,7 @@ export const useBranchProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 	};
 
 	// REQUEST METHODS
-	const getBranchProductsByBranch = (data) => {
+	const getProducts = (data) => {
 		const { page } = data;
 		setCurrentPage(page);
 
@@ -109,20 +116,35 @@ export const useBranchProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 				onError: () => message.error(LIST_ERROR_MESSAGE),
 			};
 
-			executeRequest(
-				{ ...data, pageSize },
-				callback,
-				getBranchProductsByBranchAction,
-				types.GET_BRANCH_PRODUCTS_BY_BRANCH,
-			);
+			executeRequest({ ...data, pageSize }, callback, getProductsAction, types.CREATE_PRODUCT);
 		}
 	};
 
-	const editBranchProductRequest = (branchProduct, extraCallback = null) => {
-		setRecentRequest(types.EDIT_BRANCH_PRODUCT);
-		editBranchProduct({
-			...branchProduct,
-			allowable_spoilage: (branchProduct.allowable_spoilage || 0) / 100,
+	const createProductRequest = (product, extraCallback = null) => {
+		setRecentRequest(types.CREATE_PRODUCT);
+		const clonedProduct = {
+			...product,
+			allowable_spoilage: (product.allowable_spoilage || 0) / 100,
+		};
+
+		createProduct({
+			...clonedProduct,
+			callback: modifiedExtraCallback(
+				modifiedCallback(callback, CREATE_SUCCESS_MESSAGE, CREATE_ERROR_MESSAGE),
+				extraCallback,
+			),
+		});
+	};
+
+	const editProductRequest = (product, extraCallback = null) => {
+		setRecentRequest(types.EDIT_PRODUCT);
+		const clonedProduct = {
+			...product,
+			allowable_spoilage: (product.allowable_spoilage || 0) / 100,
+		};
+
+		editProduct({
+			...clonedProduct,
 			callback: modifiedExtraCallback(
 				modifiedCallback(callback, EDIT_SUCCESS_MESSAGE, EDIT_ERROR_MESSAGE),
 				extraCallback,
@@ -130,25 +152,36 @@ export const useBranchProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 		});
 	};
 
-	const callback = ({ status, errors = [], warnings = [] }) => {
+	const removeProductRequest = (id, extraCallback = null) => {
+		setRecentRequest(types.REMOVE_PRODUCT);
+		removeProduct({
+			id,
+			callback: modifiedExtraCallback(
+				modifiedCallback(callback, REMOVE_SUCCESS_MESSAGE, REMOVE_ERROR_MESSAGE),
+				extraCallback,
+			),
+		});
+	};
+
+	const callback = ({ status, errors = [] }) => {
 		setStatus(status);
 		setErrors(errors);
-		setWarnings(warnings);
 	};
 
 	return {
-		branchProducts: currentPageData,
+		products: currentPageData,
 		pageCount,
 		currentPage,
 		addItemInPagination,
 		updateItemInPagination,
 		removeItemInPagination,
 
-		getBranchProductsByBranch,
-		editBranchProduct: editBranchProductRequest,
+		getProducts,
+		createProduct: createProductRequest,
+		editProduct: editProductRequest,
+		removeProduct: removeProductRequest,
 		status,
 		errors,
-		warnings,
 		recentRequest,
 		reset,
 		resetStatus,

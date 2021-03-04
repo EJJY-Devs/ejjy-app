@@ -12,9 +12,10 @@ interface Props {
 	onClick: any;
 	loading: boolean;
 	classNames?: string;
+	disabled: boolean;
 }
 
-export const CashieringCard = ({ branchDay, onClick, loading, classNames }: Props) => {
+export const CashieringCard = ({ branchDay, onClick, loading, disabled, classNames }: Props) => {
 	const getTitle = useCallback(() => {
 		if (branchDay?.datetime_ended) {
 			return 'Day has been ended.';
@@ -75,10 +76,15 @@ export const CashieringCard = ({ branchDay, onClick, loading, classNames }: Prop
 							text={branchDay ? 'End Day' : 'Start Day'}
 							variant="primary"
 							onClick={confirm}
+							disabled={disabled}
 						/>
 					)}
 				</div>
 			</Spin>
 		</Box>
 	);
+};
+
+CashieringCard.defaultProps = {
+	disabled: false,
 };

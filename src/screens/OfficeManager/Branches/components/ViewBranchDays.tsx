@@ -1,21 +1,43 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Pagination } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { TableHeader, TableNormal } from '../../../../components';
+import { FieldError, FieldWarning } from '../../../../components/elements';
 import { EMPTY_CELL } from '../../../../global/constants';
 import { formatDateTimeShortMonth } from '../../../../utils/function';
+import { useBranchesDays } from '../../../../hooks/useBranchesDays';
+import { request } from '../../../../global/types';
 
 interface Props {
-	branchDays: any;
+	branchId: any;
 }
+
+const PAGE_SIZE = 5;
 
 const columns = [{ name: 'User' }, { name: 'Date & Time' }];
 
-export const ViewBranchDays = ({ branchDays }: Props) => {
-	// States
-
-	// TODO Implement searching later on
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [data, setData] = useState([]);
+export const ViewBranchDays = ({ branchId }: Props) => {
+	// STATES
 	const [tableData, setTableData] = useState([]);
+
+	// CUSTOM HOOKS
+	const {
+		branchDays,
+		pageCount,
+		currentPage,
+
+		listBranchDays,
+		status,
+		errors,
+		warnings,
+	} = useBranchesDays({
+		pageSize: PAGE_SIZE,
+	});
+
+	// METHODS
+	useEffect(() => {
+		listBranchDays({ branchId, page: 1 });
+	}, []);
 
 	// Effect: Format branch days to be rendered in Table
 	useEffect(() => {
@@ -28,7 +50,7 @@ export const ViewBranchDays = ({ branchDays }: Props) => {
 				getDateTime(datetime_created, datetime_ended),
 			];
 		});
-		setData(formattedBranchDays);
+
 		setTableData(formattedBranchDays);
 	}, [branchDays]);
 
@@ -69,11 +91,31 @@ export const ViewBranchDays = ({ branchDays }: Props) => {
 		);
 	};
 
+	const onPageChange = (page) => {
+		listBranchDays({ branchId, page });
+	};
+
 	return (
 		<div className="ViewBranchDays">
+			{errors.map((error, index) => (
+				<FieldError key={index} error={error} />
+			))}
+			{warnings.map((warning, index) => (
+				<FieldWarning key={index} error={warning} />
+			))}
+
 			<TableHeader title="Days" />
 
-			<TableNormal columns={columns} data={tableData} />
+			<TableNormal columns={columns} data={tableData} loading={status === request.REQUESTING} />
+
+			<Pagination
+				className="table-pagination"
+				current={currentPage}
+				total={pageCount}
+				pageSize={PAGE_SIZE}
+				onChange={onPageChange}
+				disabled={!tableData}
+			/>
 		</div>
 	);
 };

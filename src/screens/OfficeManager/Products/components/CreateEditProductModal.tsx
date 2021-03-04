@@ -1,15 +1,16 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { message, Modal } from 'antd';
 import React from 'react';
 import { FieldError } from '../../../../components/elements';
 import { request } from '../../../../global/types';
-import { useProducts } from '../../../../hooks/useProducts';
+import { useProducts } from '../../hooks/useProducts';
 import '../style.scss';
 import { CreateEditProductForm } from './CreateEditProductForm';
 
 interface Props {
-	visible: boolean;
 	product: any;
+	visible: boolean;
+	addItemInPagination: any;
+	updateItemInPagination: any;
 	onFetchPendingTransactions: any;
 	onClose: any;
 }
@@ -17,17 +18,13 @@ interface Props {
 export const CreateEditProductModal = ({
 	product,
 	visible,
+	addItemInPagination,
+	updateItemInPagination,
 	onFetchPendingTransactions,
 	onClose,
 }: Props) => {
 	// CUSTOM HOOKS
-	const {
-		createProduct,
-		editProduct,
-		status: productStatus,
-		errors: productErrors,
-		reset,
-	} = useProducts();
+	const { createProduct, editProduct, status, errors, reset } = useProducts();
 
 	// METHODS
 	const onCreateProduct = (product) => {
@@ -37,6 +34,7 @@ export const CreateEditProductModal = ({
 					onPendingTransactions();
 				}
 
+				addItemInPagination(product);
 				reset();
 				onClose();
 			}
@@ -50,6 +48,7 @@ export const CreateEditProductModal = ({
 					onPendingTransactions();
 				}
 
+				updateItemInPagination(product);
 				reset();
 				onClose();
 			}
@@ -73,7 +72,7 @@ export const CreateEditProductModal = ({
 			centered
 			closable
 		>
-			{productErrors.map((error, index) => (
+			{errors.map((error, index) => (
 				<FieldError key={index} error={error} />
 			))}
 
@@ -81,7 +80,7 @@ export const CreateEditProductModal = ({
 				product={product}
 				onSubmit={product ? onEditProduct : onCreateProduct}
 				onClose={onClose}
-				loading={productStatus === request.REQUESTING}
+				loading={status === request.REQUESTING}
 			/>
 		</Modal>
 	);

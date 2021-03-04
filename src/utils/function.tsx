@@ -1,5 +1,5 @@
 import { message, Modal } from 'antd';
-import { floor, memoize } from 'lodash';
+import { floor, isArray, isString, memoize } from 'lodash';
 import dayjs from 'dayjs';
 import React from 'react';
 import {
@@ -112,8 +112,14 @@ export const modifiedExtraCallback = (callback, extraCallback = null) => {
 	};
 };
 
-export const showErrorMessages = (errors = []) => {
-	if (errors.length > 0) {
+export const showErrorMessages = (errors) => {
+	if (errors) {
+		return;
+	}
+
+	if (isString(errors)) {
+		message.error(errors);
+	} else if (isArray(errors)) {
 		errors.forEach((error) => message.error(error));
 	}
 };
@@ -413,3 +419,15 @@ export const getTransactionStatus = memoize((status) => {
 export const isUserFromBranch = memoize((user_role) => {
 	return [userTypes.BRANCH_MANAGER, userTypes.BRANCH_PERSONNEL].includes(user_role);
 });
+
+export const onCallback = (callback, onSuccess = null, onError = null) => (response) => {
+	callback(response);
+
+	if (onSuccess && response?.status === request.SUCCESS) {
+		onSuccess(response);
+	}
+
+	if (onError && response?.status === request.ERROR) {
+		onError(response);
+	}
+};

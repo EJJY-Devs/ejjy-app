@@ -7,10 +7,7 @@ import { Breadcrumb, Container } from '../../../components';
 import { Box, FieldError, FieldWarning } from '../../../components/elements';
 import { selectors as branchesSelectors } from '../../../ducks/OfficeManager/branches';
 import { request } from '../../../global/types';
-import { useBranchesDays } from '../../../hooks/useBranchesDays';
 import { useBranchProducts } from '../../../hooks/useBranchProducts';
-import { useSessions } from '../../../hooks/useSessions';
-import { useTransactions } from '../../../hooks/useTransactions';
 import { useBranchMachines } from '../hooks/useBranchMachines';
 import { ViewBranchDays } from './components/ViewBranchDays';
 import { ViewBranchMachines } from './components/ViewBranchMachines';
@@ -46,27 +43,6 @@ const ViewBranch = ({ match }: Props) => {
 		warnings: branchProductsWarnings,
 	} = useBranchProducts();
 	const {
-		transactions,
-		listTransactions,
-		status: transactionsStatus,
-		errors: transactionsErrors,
-		warnings: transactionsWarnings,
-	} = useTransactions();
-	const {
-		sessions,
-		listSessions,
-		status: sessionsStatus,
-		errors: sessionsErrors,
-		warnings: sessionsWarnings,
-	} = useSessions();
-	const {
-		branchDays,
-		listBranchDays,
-		status: branchesDaysStatus,
-		errors: branchesDaysErrors,
-		warnings: branchesDaysWarnings,
-	} = useBranchesDays();
-	const {
 		branchMachines,
 		getBranchMachines,
 		status: branchesMachinesStatus,
@@ -82,28 +58,12 @@ const ViewBranch = ({ match }: Props) => {
 		} else {
 			getBranchProductsByBranch(branchId);
 			getBranchMachines(branchId);
-			listTransactions(branchId);
-			listSessions(branchId);
-			listBranchDays(branchId);
 		}
 	}, [branchId, branch]);
 
 	const getFetchLoading = useCallback(
-		() =>
-			[
-				branchProductsStatus,
-				transactionsStatus,
-				sessionsStatus,
-				branchesDaysStatus,
-				branchesMachinesStatus,
-			].includes(request.REQUESTING),
-		[
-			branchProductsStatus,
-			transactionsStatus,
-			sessionsStatus,
-			branchesDaysStatus,
-			branchesMachinesStatus,
-		],
+		() => [branchProductsStatus, branchesMachinesStatus].includes(request.REQUESTING),
+		[branchProductsStatus, branchesMachinesStatus],
 	);
 
 	const getBreadcrumbItems = useCallback(
@@ -155,43 +115,15 @@ const ViewBranch = ({ match }: Props) => {
 							tab={tabs.TRANSACTIONS}
 							disabled={!branch?.online_url}
 						>
-							<>
-								{transactionsErrors.map((error, index) => (
-									<FieldError key={index} error={error} />
-								))}
-								{transactionsWarnings.map((warning, index) => (
-									<FieldWarning key={index} error={warning} />
-								))}
-								{transactionsStatus === request.SUCCESS && (
-									<ViewBranchTransactions transactions={transactions} />
-								)}
-							</>
+							<ViewBranchTransactions branchId={branchId} />
 						</Tabs.TabPane>
 
 						<Tabs.TabPane key={tabs.SESSIONS} tab={tabs.SESSIONS} disabled={!branch?.online_url}>
-							<>
-								{sessionsErrors.map((error, index) => (
-									<FieldError key={index} error={error} />
-								))}
-								{sessionsWarnings.map((warning, index) => (
-									<FieldWarning key={index} error={warning} />
-								))}
-								{sessionsStatus === request.SUCCESS && <ViewBranchSessions sessions={sessions} />}
-							</>
+							<ViewBranchSessions branchId={branchId} />
 						</Tabs.TabPane>
 
 						<Tabs.TabPane key={tabs.DAYS} tab={tabs.DAYS} disabled={!branch?.online_url}>
-							<>
-								{branchesDaysErrors.map((error, index) => (
-									<FieldError key={index} error={error} />
-								))}
-								{branchesDaysWarnings.map((warning, index) => (
-									<FieldWarning key={index} error={warning} />
-								))}
-								{branchesDaysStatus === request.SUCCESS && (
-									<ViewBranchDays branchDays={branchDays} />
-								)}
-							</>
+							<ViewBranchDays branchId={branchId} />
 						</Tabs.TabPane>
 					</Tabs>
 				</Box>

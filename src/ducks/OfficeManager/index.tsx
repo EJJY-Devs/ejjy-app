@@ -12,11 +12,9 @@ import deliveryReceiptsReducer, { key as DELIVERY_RECEIPTS_KEY } from './deliver
 import pendingTransactionsReducer, {
 	key as PENDING_TRANSACTIONS_KEY,
 } from './pending-transactions';
-import productsReducer, { key as PRODUCTS_KEY } from './products';
 import usersReducer, { key as USERS_KEY } from './users';
 
 export const officeManagerReducers = {
-	[PRODUCTS_KEY]: productsReducer,
 	[BRANCHES_KEY]: branchesReducer,
 	[ORDER_SLIPS_KEY]: orderSlipsReducer,
 	[DELIVERY_RECEIPTS_KEY]: deliveryReceiptsReducer,

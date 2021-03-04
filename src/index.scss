@@ -77,3 +77,9 @@ body {
 		font-size: 12px;
 	}
 }
+
+.table-pagination {
+	@include flex(center, center);
+	padding: 20px 0;
+	font-family: $font-primary;
+}

@@ -13,7 +13,6 @@ export const types = {
 
 const initialState = {
 	branchDay: null,
-	branchDays: [],
 };
 
 const reducer = handleActions(
@@ -23,10 +22,6 @@ const reducer = handleActions(
 			let newData = {};
 
 			switch (type) {
-				case types.LIST_BRANCH_DAYS: {
-					newData = { branchDays: payload.branchDays };
-					break;
-				}
 				case types.GET_BRANCH_DAY:
 				case types.CREATE_BRANCH_DAY:
 				case types.EDIT_BRANCH_DAY: {
@@ -52,7 +47,6 @@ export const actions = {
 const selectState = (state: any) => state[key] || initialState;
 export const selectors = {
 	selectBranchDay: () => createSelector(selectState, (state) => state.branchDay),
-	selectBranchDays: () => createSelector(selectState, (state) => state.branchDays),
 };
 
 export default reducer;

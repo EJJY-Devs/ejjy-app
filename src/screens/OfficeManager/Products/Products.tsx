@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { message } from 'antd';
+import { message, Pagination } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Container, Table, TableActions, TableHeader } from '../../../components';
 import { Box, ButtonLink } from '../../../components/elements';
@@ -7,11 +7,13 @@ import { PendingTransactionsSection } from '../../../components/PendingTransacti
 import { types as pendingTransactionsTypes } from '../../../ducks/OfficeManager/pending-transactions';
 import { types } from '../../../ducks/OfficeManager/products';
 import { pendingTransactionTypes, request } from '../../../global/types';
-import { useProducts } from '../../../hooks/useProducts';
 import { calculateTableHeight } from '../../../utils/function';
 import { usePendingTransactions } from '../hooks/usePendingTransactions';
+import { useProducts } from '../hooks/useProducts';
 import { CreateEditProductModal } from './components/CreateEditProductModal';
 import { ViewProductModal } from './components/ViewProductModal';
+
+const PAGE_SIZE = 5;
 
 const columns = [
 	{ title: 'Barcode', dataIndex: 'barcode' },
@@ -30,11 +32,18 @@ const Products = () => {
 	// CUSTOM HOOKS
 	const {
 		products,
+		pageCount,
+		currentPage,
+		addItemInPagination,
+		updateItemInPagination,
+		removeItemInPagination,
+
 		getProducts,
 		removeProduct,
 		status: productStatus,
 		recentRequest,
-	} = useProducts();
+	} = useProducts({ pageSize: PAGE_SIZE });
+
 	const {
 		pendingTransactions,
 		listPendingTransactions,
@@ -43,7 +52,7 @@ const Products = () => {
 	} = usePendingTransactions();
 
 	useEffect(() => {
-		getProducts();
+		getProducts({ page: 1 });
 	}, []);
 
 	// METHODS
@@ -53,19 +62,23 @@ const Products = () => {
 			({ request_model }) => request_model === pendingTransactionTypes.PRODUCTS,
 		);
 
-		const formattedProducts = products.map((product) => {
-			const { id, barcode, name, textcode } = product;
+		const formattedProducts =
+			products?.map((product) => {
+				const { barcode, name, textcode } = product;
 
-			return {
-				_textcode: textcode,
-				_barcode: barcode,
-				barcode: <ButtonLink text={barcode || textcode} onClick={() => onView(product)} />,
-				name,
-				actions: hasPendingTransactions ? null : (
-					<TableActions onEdit={() => onEdit(product)} onRemove={() => onRemoveProduct(id)} />
-				),
-			};
-		});
+				return {
+					_textcode: textcode,
+					_barcode: barcode,
+					barcode: <ButtonLink text={barcode || textcode} onClick={() => onView(product)} />,
+					name,
+					actions: hasPendingTransactions ? null : (
+						<TableActions
+							onEdit={() => onEdit(product)}
+							onRemove={() => onRemoveProduct(product)}
+						/>
+					),
+				};
+			}) || [];
 
 		setData(formattedProducts);
 		setTableData(formattedProducts);
@@ -78,6 +91,10 @@ const Products = () => {
 				pendingTransactionRecentRequest === pendingTransactionsTypes.LIST_PENDING_TRANSACTIONS),
 		[productStatus, pendingTransactionsStatus, recentRequest, pendingTransactionRecentRequest],
 	);
+
+	const onPageChange = (page) => {
+		getProducts({ page });
+	};
 
 	const onView = (product) => {
 		setSelectedProduct(product);
@@ -112,8 +129,8 @@ const Products = () => {
 		setTableData(filteredData);
 	};
 
-	const onRemoveProduct = (productId) => {
-		removeProduct(productId, ({ status, response }) => {
+	const onRemoveProduct = (product) => {
+		removeProduct(product.id, ({ status, response }) => {
 			if (status === request.SUCCESS) {
 				if (response?.length) {
 					message.warning(
@@ -121,6 +138,8 @@ const Products = () => {
 					);
 					listPendingTransactions(null);
 				}
+
+				removeItemInPagination(product);
 			}
 		});
 	};
@@ -138,6 +157,15 @@ const Products = () => {
 						loading={productStatus === request.REQUESTING && recentRequest !== types.GET_PRODUCTS}
 					/>
 
+					<Pagination
+						className="table-pagination"
+						current={currentPage}
+						total={pageCount}
+						pageSize={PAGE_SIZE}
+						onChange={onPageChange}
+						disabled={!tableData}
+					/>
+
 					<ViewProductModal
 						product={selectedProduct}
 						visible={viewProductModalVisible}
@@ -146,6 +174,8 @@ const Products = () => {
 
 					<CreateEditProductModal
 						product={selectedProduct}
+						addItemInPagination={addItemInPagination}
+						updateItemInPagination={updateItemInPagination}
 						visible={createEditProductModalVisible}
 						onFetchPendingTransactions={listPendingTransactions}
 						onClose={() => setCreateEditProductModalVisible(false)}

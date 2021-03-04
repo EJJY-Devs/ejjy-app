@@ -1,23 +1,46 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Pagination } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { TableHeader, TableNormal } from '../../../../components';
-import { ButtonLink } from '../../../../components/elements';
+import { ButtonLink, FieldError, FieldWarning } from '../../../../components/elements';
 import { EMPTY_CELL } from '../../../../global/constants';
+import { request } from '../../../../global/types';
+import { useTransactions } from '../../../../hooks/useTransactions';
 import { getTransactionStatus, numberWithCommas } from '../../../../utils/function';
 import { ViewTransactionModal } from './ViewTransactionModal';
 
 interface Props {
-	transactions: any;
+	branchId: any;
 }
+
+const PAGE_SIZE = 5;
 
 const columns = [{ name: 'ID' }, { name: 'Invoice' }, { name: 'Amount' }, { name: 'Status' }];
 
-export const ViewBranchTransactions = ({ transactions }: Props) => {
-	// TODO Implement searching later on
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [data, setData] = useState([]);
+export const ViewBranchTransactions = ({ branchId }: Props) => {
+	// STATES
 	const [tableData, setTableData] = useState([]);
 	const [viewTransactionModalVisible, setViewTransactionModalVisible] = useState(false);
 	const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+	// CUSTOM HOOKS
+	const {
+		transactions,
+		pageCount,
+		currentPage,
+
+		listTransactions,
+		status,
+		errors,
+		warnings,
+	} = useTransactions({
+		pageSize: PAGE_SIZE,
+	});
+
+	// METHODS
+	useEffect(() => {
+		listTransactions({ branchId, page: 1 });
+	}, []);
 
 	// Effect: Format branch transactions to be rendered in Table
 	useEffect(() => {
@@ -33,7 +56,6 @@ export const ViewBranchTransactions = ({ transactions }: Props) => {
 			];
 		});
 
-		setData(formattedBranchTransactions);
 		setTableData(formattedBranchTransactions);
 	}, [transactions]);
 
@@ -42,11 +64,31 @@ export const ViewBranchTransactions = ({ transactions }: Props) => {
 		setViewTransactionModalVisible(true);
 	};
 
+	const onPageChange = (page) => {
+		listTransactions({ branchId, page });
+	};
+
 	return (
 		<>
+			{errors.map((error, index) => (
+				<FieldError key={index} error={error} />
+			))}
+			{warnings.map((warning, index) => (
+				<FieldWarning key={index} error={warning} />
+			))}
+
 			<TableHeader title="Transactions" />
 
-			<TableNormal columns={columns} data={tableData} />
+			<TableNormal columns={columns} data={tableData} loading={status === request.REQUESTING} />
+
+			<Pagination
+				className="table-pagination"
+				current={currentPage}
+				total={pageCount}
+				pageSize={PAGE_SIZE}
+				onChange={onPageChange}
+				disabled={!tableData}
+			/>
 
 			<ViewTransactionModal
 				transaction={selectedTransaction}

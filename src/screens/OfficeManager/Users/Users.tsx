@@ -7,7 +7,7 @@ import { Box, Button } from '../../../components/elements';
 import { PendingTransactionsSection } from '../../../components/PendingTransactionsSection/PendingTransactionsSection';
 import { types as pendingTransactionsTypes } from '../../../ducks/OfficeManager/pending-transactions';
 import { pendingTransactionTypes, request, userTypes } from '../../../global/types';
-import { getUserTypeName } from '../../../utils/function';
+import { getUserTypeName, showErrorMessages } from '../../../utils/function';
 import { useBranches } from '../hooks/useBranches';
 import { usePendingTransactions } from '../hooks/usePendingTransactions';
 import { useUsers } from '../hooks/useUsers';
@@ -45,10 +45,7 @@ const Users = () => {
 
 	useEffect(() => {
 		if (usersStatus === request.ERROR && errors?.length) {
-			errors?.forEach((error) => {
-				message.error(error);
-			});
-
+			showErrorMessages(errors);
 			reset();
 		}
 	}, [usersStatus, errors]);

@@ -1,19 +1,43 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Pagination } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { TableHeader, TableNormal } from '../../../../components';
+import { FieldError, FieldWarning } from '../../../../components/elements';
 import { EMPTY_CELL } from '../../../../global/constants';
+import { request } from '../../../../global/types';
+import { useSessions } from '../../../../hooks/useSessions';
 import { formatDateTimeShortMonth } from '../../../../utils/function';
 
 interface Props {
-	sessions: any;
+	branchId: any;
 }
+
+const PAGE_SIZE = 5;
 
 const columns = [{ name: 'User' }, { name: 'Machine' }, { name: 'Date & Time' }];
 
-export const ViewBranchSessions = ({ sessions }: Props) => {
-	// TODO Implement searching later on
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [data, setData] = useState([]);
+export const ViewBranchSessions = ({ branchId }: Props) => {
+	// STATES
 	const [tableData, setTableData] = useState([]);
+
+	// CUSTOM HOOKS
+	const {
+		sessions,
+		pageCount,
+		currentPage,
+
+		listSessions,
+		status,
+		errors,
+		warnings,
+	} = useSessions({
+		pageSize: PAGE_SIZE,
+	});
+
+	// METHODS
+	useEffect(() => {
+		listSessions({ branchId, page: 1 });
+	}, []);
 
 	// Effect: Format branch sessions to be rendered in Table
 	useEffect(() => {
@@ -28,7 +52,6 @@ export const ViewBranchSessions = ({ sessions }: Props) => {
 			];
 		});
 
-		setData(formattedBranchSession);
 		setTableData(formattedBranchSession);
 	}, [sessions]);
 
@@ -51,11 +74,31 @@ export const ViewBranchSessions = ({ sessions }: Props) => {
 		);
 	};
 
+	const onPageChange = (page) => {
+		listSessions({ branchId, page });
+	};
+
 	return (
 		<div className="ViewBranchSessions">
+			{errors.map((error, index) => (
+				<FieldError key={index} error={error} />
+			))}
+			{warnings.map((warning, index) => (
+				<FieldWarning key={index} error={warning} />
+			))}
+
 			<TableHeader title="Sessions" />
 
-			<TableNormal columns={columns} data={tableData} />
+			<TableNormal columns={columns} data={tableData} loading={status === request.REQUESTING} />
+
+			<Pagination
+				className="table-pagination"
+				current={currentPage}
+				total={pageCount}
+				pageSize={PAGE_SIZE}
+				onChange={onPageChange}
+				disabled={!tableData}
+			/>
 		</div>
 	);
 };

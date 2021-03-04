@@ -4,8 +4,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Box } from '../../../../../components/elements';
 import { request } from '../../../../../global/types';
 import { useBranchesDays } from '../../../../../hooks/useBranchesDays';
-import { useBranchProducts } from '../../../../../hooks/useBranchProducts';
-import { getBranchProductStatus } from '../../../../../utils/function';
 import { useBranches } from '../../../hooks/useBranches';
 import { BranchBalanceItem } from './BranchBalanceItem';
 
@@ -14,17 +12,11 @@ const { TabPane } = Tabs;
 export const BranchBalances = () => {
 	// STATES
 	const [data, setData] = useState([]);
-	const [queriedBranches, setQueriedBranches] = useState([]);
-	const [recentQueriedBranchId, setRecentQueriedBranchId] = useState(null);
+	const [currentActiveKey, setCurrentActiveKey] = useState([]);
 
 	// CUSTOM HOOKS
 	const { branches } = useBranches();
 	const { getBranchDay, status: branchesDaysStatus } = useBranchesDays();
-	const {
-		branchProducts,
-		getBranchProductsByBranch,
-		status: branchProductsStatus,
-	} = useBranchProducts();
 
 	// METHODS
 	useEffect(() => {
@@ -33,55 +25,20 @@ export const BranchBalances = () => {
 		}
 	}, [branches]);
 
-	useEffect(() => {
-		if (branchProducts && recentQueriedBranchId) {
-			const newBranchProducts = branchProducts
-				?.filter((branchProduct) => !data.find((item) => item.id === branchProduct.id))
-				?.map((branchProduct) => ({
-					id: branchProduct.id,
-					branch_id: recentQueriedBranchId,
-					textcode: branchProduct.product.textcode,
-					barcode: branchProduct.product.barcode,
-					name: branchProduct.product.name,
-					current_balance: branchProduct.current_balance,
-					max_balance: branchProduct.max_balance,
-					status: branchProduct.product_status,
-				}));
-			setData((value) => [...value, ...newBranchProducts]);
-		}
-	}, [branchProducts]);
-
-	const getTableDataSource = (branchId) => {
-		return data
-			?.filter(({ branch_id }) => branch_id === branchId)
-			?.map((branchProduct) => {
-				const { barcode, name, textcode, max_balance, current_balance, status } = branchProduct;
-
-				return [
-					{ isHidden: true, barcode, name, textcode },
-					barcode || textcode,
-					name,
-					`${current_balance} / ${max_balance}`,
-					getBranchProductStatus(status),
-				];
-			});
-	};
-
 	const onTabClick = (branchId) => {
-		setRecentQueriedBranchId(branchId);
+		setCurrentActiveKey(branchId);
 
-		if (!queriedBranches.includes(branchId) && branchId) {
-			setQueriedBranches((value) => [...value, branchId.toString()]);
-			getBranchProductsByBranch(branchId);
-		}
+		// if (!currentActiveKey.includes(branchId) && branchId) {
+		// 	setCurrentActiveKey((value) => [...value, branchId.toString()]);
+		// 	getBranchProductsByBranch(branchId);
+		// }
 
 		getBranchDay(branchId);
 	};
 
-	const getStatus = useCallback(
-		() => branchesDaysStatus === request.REQUESTING || branchProductsStatus === request.REQUESTING,
-		[branchesDaysStatus, branchProductsStatus],
-	);
+	const getStatus = useCallback(() => branchesDaysStatus === request.REQUESTING, [
+		branchesDaysStatus,
+	]);
 
 	return (
 		<Spin size="large" spinning={getStatus()}>
@@ -94,7 +51,12 @@ export const BranchBalances = () => {
 				>
 					{branches.map(({ name, id, online_url }) => (
 						<TabPane key={id} tab={name} disabled={!online_url}>
-							<BranchBalanceItem branchId={id} dataSource={getTableDataSource(id)} />
+							<BranchBalanceItem
+								isActive={id === currentActiveKey}
+								branchId={id}
+								dataSource={[]}
+								disabled={!online_url}
+							/>
 						</TabPane>
 					))}
 				</Tabs>

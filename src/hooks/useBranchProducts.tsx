@@ -6,11 +6,9 @@ import { MAX_PAGE_SIZE } from '../global/constants';
 import { request } from '../global/types';
 import { modifiedCallback, modifiedExtraCallback, onCallback } from '../utils/function';
 import {
-	addInCachedData,
 	generateNewCachedData,
 	getDataForCurrentPage,
 	indexHasCachedData,
-	removeInCachedData,
 	updateInCachedData,
 } from '../utils/pagination';
 import { useActionDispatch } from './useActionDispatch';
@@ -71,16 +69,8 @@ export const useBranchProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 		);
 	}, [allData, currentPage]);
 
-	const addItemInPagination = (item) => {
-		setAllData((data) => addInCachedData({ data, item }));
-	};
-
 	const updateItemInPagination = (item) => {
 		setAllData((data) => updateInCachedData({ data, item }));
-	};
-
-	const removeItemInPagination = (item) => {
-		setAllData((data) => removeInCachedData({ data, item }));
 	};
 
 	// REQUEST METHODS
@@ -140,9 +130,7 @@ export const useBranchProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 		branchProducts: currentPageData,
 		pageCount,
 		currentPage,
-		addItemInPagination,
 		updateItemInPagination,
-		removeItemInPagination,
 
 		getBranchProductsByBranch,
 		editBranchProduct: editBranchProductRequest,

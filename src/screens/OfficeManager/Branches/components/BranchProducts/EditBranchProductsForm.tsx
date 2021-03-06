@@ -32,20 +32,13 @@ interface IEditBranchProduct {
 }
 
 interface Props {
-	branchId: number;
 	branchProduct: any;
 	onSubmit: any;
 	onClose: any;
 	loading: boolean;
 }
 
-export const EditBranchProductsForm = ({
-	branchId,
-	branchProduct,
-	onSubmit,
-	onClose,
-	loading,
-}: Props) => {
+export const EditBranchProductsForm = ({ branchProduct, onSubmit, onClose, loading }: Props) => {
 	const [isSubmitting, setSubmitting] = useState(false);
 
 	const getFormDetails = useCallback(
@@ -144,7 +137,6 @@ export const EditBranchProductsForm = ({
 				setSubmitting(false);
 
 				values.id = branchProduct?.id;
-				values.branch_id = branchId;
 				values.is_daily_checked = values.checking === productCheckingTypes.DAILY;
 				values.is_randomly_checked = values.checking === productCheckingTypes.RANDOM;
 				onSubmit(values);

@@ -1,24 +1,46 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { Pagination } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { TableActions, TableHeader, TableNormal } from '../../../../components';
-import { ButtonLink } from '../../../../components/elements';
+import { ButtonLink, FieldError, FieldWarning } from '../../../../components/elements';
+import { request } from '../../../../global/types';
+import { useBranchProducts } from '../../../../hooks/useBranchProducts';
 import { EditBranchProductsModal } from './BranchProducts/EditBranchProductsModal';
 import { ViewBranchProductModal } from './BranchProducts/ViewBranchProductModal';
 
 interface Props {
-	branchProducts: any;
 	branch: any;
 }
 
+const PAGE_SIZE = 5;
+
 const columns = [{ name: 'Barcode' }, { name: 'Name' }, { name: 'Balance' }, { name: 'Actions' }];
 
-export const ViewBranchProducts = ({ branchProducts, branch }: Props) => {
-	// States
-	const [data, setData] = useState([]);
+export const ViewBranchProducts = ({ branch }: Props) => {
+	// STATES
+	// const [data, setData] = useState([]);
 	const [tableData, setTableData] = useState([]);
 	const [editBranchProductModalVisible, setEditBranchProductModalVisible] = useState(false);
 	const [viewBranchProductModalVisible, setViewBranchProductModalVisible] = useState(false);
 	const [selectedBranchProduct, setSelectedBranchProduct] = useState(null);
+
+	// CUSTOM HOOKS
+	const {
+		branchProducts,
+		pageCount,
+		currentPage,
+		updateItemInPagination,
+
+		getBranchProductsByBranch,
+		status,
+		errors,
+		warnings,
+	} = useBranchProducts({ pageSize: PAGE_SIZE });
+
+	// EFFECTS
+	useEffect(() => {
+		getBranchProductsByBranch({ branchId: branch?.id, page: 1 });
+	}, []);
 
 	// Effect: Format branch products to be rendered in Table
 	useEffect(() => {
@@ -38,7 +60,7 @@ export const ViewBranchProducts = ({ branchProducts, branch }: Props) => {
 			];
 		});
 
-		setData(formattedBranchProducts);
+		// setData(formattedBranchProducts);
 		setTableData(formattedBranchProducts);
 	}, [branchProducts]);
 
@@ -52,30 +74,50 @@ export const ViewBranchProducts = ({ branchProducts, branch }: Props) => {
 		setEditBranchProductModalVisible(true);
 	};
 
-	const onSearch = (keyword) => {
-		keyword = keyword?.toLowerCase();
-
-		const filteredData =
-			keyword.length > 0
-				? data.filter((item) => {
-						const barcode = item?.[0]?.barcode?.toLowerCase() || '';
-						const textcode = item?.[0]?.textcode?.toLowerCase() || '';
-						const name = item?.[0]?.name?.toLowerCase() || '';
-
-						return (
-							name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword)
-						);
-				  })
-				: data;
-
-		setData(filteredData);
+	const onPageChange = (page) => {
+		getBranchProductsByBranch({ branchId: branch?.id, page });
 	};
+
+	// const onSearch = (keyword) => {
+	// 	keyword = keyword?.toLowerCase();
+
+	// 	const filteredData =
+	// 		keyword.length > 0
+	// 			? data.filter((item) => {
+	// 					const barcode = item?.[0]?.barcode?.toLowerCase() || '';
+	// 					const textcode = item?.[0]?.textcode?.toLowerCase() || '';
+	// 					const name = item?.[0]?.name?.toLowerCase() || '';
+
+	// 					return (
+	// 						name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword)
+	// 					);
+	// 			  })
+	// 			: data;
+
+	// 	setData(filteredData);
+	// };
 
 	return (
 		<>
-			<TableHeader title="Products" buttonName="Create Branch Product" onSearch={onSearch} />
+			{errors.map((error, index) => (
+				<FieldError key={index} error={error} />
+			))}
+			{warnings.map((warning, index) => (
+				<FieldWarning key={index} error={warning} />
+			))}
 
-			<TableNormal columns={columns} data={tableData} />
+			<TableHeader title="Products" buttonName="Create Branch Product" />
+
+			<TableNormal columns={columns} data={tableData} loading={status === request.REQUESTING} />
+
+			<Pagination
+				className="table-pagination"
+				current={currentPage}
+				total={pageCount}
+				pageSize={PAGE_SIZE}
+				onChange={onPageChange}
+				disabled={!tableData}
+			/>
 
 			<ViewBranchProductModal
 				branchName={branch?.name}
@@ -87,6 +129,7 @@ export const ViewBranchProducts = ({ branchProducts, branch }: Props) => {
 			<EditBranchProductsModal
 				branch={branch}
 				branchProduct={selectedBranchProduct}
+				updateItemInPagination={updateItemInPagination}
 				visible={editBranchProductModalVisible}
 				onClose={() => setEditBranchProductModalVisible(false)}
 			/>

@@ -1,12 +1,12 @@
 /* eslint-disable eqeqeq */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { lowerCase, upperFirst } from 'lodash';
+import { Pagination } from 'antd';
+import { upperFirst } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Table } from '../../../components';
 import { Box } from '../../../components/elements';
 import { TableHeaderRequisitionSlip } from '../../../components/Table/TableHeaders/TableHeaderRequisitionSlip';
-import { types } from '../../../ducks/requisition-slips';
 import { EMPTY_CELL } from '../../../global/constants';
 import { requisitionSlipActionsOptionsWithAll } from '../../../global/options';
 import { request, requisitionSlipActions, userTypes } from '../../../global/types';
@@ -39,25 +39,27 @@ const pendingRequisitionSlipActions = [
 	requisitionSlipActions.F_DS1_CREATED,
 ];
 
+const PAGE_SIZE = 1;
+
 const RequisitionSlips = () => {
+	// STATES
 	const [data, setData] = useState([]);
-	const [tableData, setTableData] = useState([]);
 	const [selectedStatus, setSelectedStatus] = useState('all');
 	const [selectedBranch, setSelectedBranch] = useState('all');
 
+	// CUSTOM HOOKS
+	const { branches } = useBranches();
 	const {
 		requisitionSlips,
+		pageCount,
+		currentPage,
 		getRequisitionSlipsExtended,
 		status,
-		recentRequest,
-	} = useRequisitionSlips();
+	} = useRequisitionSlips({
+		pageSize: PAGE_SIZE,
+	});
 
-	const { branches } = useBranches();
-
-	useEffect(() => {
-		getRequisitionSlipsExtended();
-	}, []);
-
+	// METHODS
 	// Effect: Format requisitionSlips to be rendered in Table
 	useEffect(() => {
 		const formattedProducts = requisitionSlips.map((requisitionSlip) => {
@@ -81,31 +83,19 @@ const RequisitionSlips = () => {
 		});
 
 		setData(formattedProducts);
-		setTableData(formattedProducts);
 	}, [requisitionSlips]);
 
 	// Filter by status and branch
 	useEffect(() => {
-		const filteredData = data.filter(({ _status, _branch }) => {
-			let isSelected = true;
-
-			if (selectedStatus !== 'all') {
-				isSelected = _status === selectedStatus;
-			}
-
-			if (selectedBranch !== 'all') {
-				isSelected = _branch == selectedBranch;
-			}
-
-			return isSelected;
-		});
-		setTableData(filteredData);
+		getRequisitionSlipsExtended(
+			{
+				branchId: selectedBranch === 'all' ? null : selectedBranch,
+				status: selectedStatus === 'all' ? null : selectedStatus,
+				page: 1,
+			},
+			true,
+		);
 	}, [selectedStatus, selectedBranch]);
-
-	const getFetchLoading = useCallback(
-		() => status === request.REQUESTING && recentRequest === types.GET_REQUISITION_SLIPS_EXTENDED,
-		[status, recentRequest],
-	);
 
 	const getBranchOptions = useCallback(
 		() => [
@@ -127,27 +117,29 @@ const RequisitionSlips = () => {
 	);
 
 	const onSearch = (keyword) => {
-		keyword = lowerCase(keyword);
-		const filteredData =
-			keyword.length > 0
-				? data.filter(
-						({ _id, _datetime_created, _type }) =>
-							_id.toString() === keyword ||
-							_datetime_created.includes(keyword) ||
-							_type.includes(keyword),
-				  )
-				: data;
+		// keyword = lowerCase(keyword);
+		// const filteredData =
+		// 	keyword.length > 0
+		// 		? data.filter(
+		// 				({ _id, _datetime_created, _type }) =>
+		// 					_id.toString() === keyword ||
+		// 					_datetime_created.includes(keyword) ||
+		// 					_type.includes(keyword),
+		// 		  )
+		// 		: data;
+		// setTableData(filteredData);
+	};
 
-		setTableData(filteredData);
+	const onPageChange = (page) => {
+		getRequisitionSlipsExtended({
+			branchId: selectedBranch === 'all' ? null : selectedBranch,
+			status: selectedStatus === 'all' ? null : selectedStatus,
+			page,
+		});
 	};
 
 	return (
-		<Container
-			title="F-RS1"
-			description="Requests from branches"
-			loading={getFetchLoading()}
-			loadingText="Fetching requisition slips..."
-		>
+		<Container title="F-RS1" description="Requests from branches">
 			<section className="RequisitionSlips">
 				<Box>
 					<TableHeaderRequisitionSlip
@@ -161,9 +153,18 @@ const RequisitionSlips = () => {
 
 					<Table
 						columns={columns}
-						dataSource={tableData}
-						scroll={{ y: calculateTableHeight(tableData.length), x: '100%' }}
+						dataSource={data}
+						scroll={{ y: calculateTableHeight(data.length), x: '100%' }}
 						loading={status === request.REQUESTING}
+					/>
+
+					<Pagination
+						className="table-pagination"
+						current={currentPage}
+						total={pageCount}
+						pageSize={PAGE_SIZE}
+						onChange={onPageChange}
+						disabled={!data}
 					/>
 				</Box>
 			</section>

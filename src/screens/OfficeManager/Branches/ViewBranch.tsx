@@ -7,7 +7,6 @@ import { Breadcrumb, Container } from '../../../components';
 import { Box, FieldError, FieldWarning } from '../../../components/elements';
 import { selectors as branchesSelectors } from '../../../ducks/OfficeManager/branches';
 import { request } from '../../../global/types';
-import { useBranchProducts } from '../../../hooks/useBranchProducts';
 import { useBranchMachines } from '../hooks/useBranchMachines';
 import { ViewBranchDays } from './components/ViewBranchDays';
 import { ViewBranchMachines } from './components/ViewBranchMachines';
@@ -36,13 +35,6 @@ const ViewBranch = ({ match }: Props) => {
 	// CUSTOM HOOKS
 	const history = useHistory();
 	const {
-		branchProducts,
-		getBranchProductsByBranch,
-		status: branchProductsStatus,
-		errors: branchProductsErrors,
-		warnings: branchProductsWarnings,
-	} = useBranchProducts();
-	const {
 		branchMachines,
 		getBranchMachines,
 		status: branchesMachinesStatus,
@@ -56,15 +48,13 @@ const ViewBranch = ({ match }: Props) => {
 			history.replace('/branches');
 			message.error('Branch has no online url.');
 		} else {
-			getBranchProductsByBranch(branchId);
 			getBranchMachines(branchId);
 		}
 	}, [branchId, branch]);
 
-	const getFetchLoading = useCallback(
-		() => [branchProductsStatus, branchesMachinesStatus].includes(request.REQUESTING),
-		[branchProductsStatus, branchesMachinesStatus],
-	);
+	const getFetchLoading = useCallback(() => [branchesMachinesStatus].includes(request.REQUESTING), [
+		branchesMachinesStatus,
+	]);
 
 	const getBreadcrumbItems = useCallback(
 		() => [{ name: 'Branches', link: '/branches' }, { name: branch?.name }],
@@ -83,17 +73,7 @@ const ViewBranch = ({ match }: Props) => {
 				<Box className="ViewBranch">
 					<Tabs defaultActiveKey={tabs.PRODUCTS} style={{ padding: '20px 25px' }} type="card">
 						<Tabs.TabPane key={tabs.PRODUCTS} tab={tabs.PRODUCTS} disabled={!branch?.online_url}>
-							<>
-								{branchProductsErrors.map((error, index) => (
-									<FieldError key={index} error={error} />
-								))}
-								{branchProductsWarnings.map((warning, index) => (
-									<FieldWarning key={index} error={warning} />
-								))}
-								{branchProductsStatus === request.SUCCESS && (
-									<ViewBranchProducts branchProducts={branchProducts} branch={branch} />
-								)}
-							</>
+							<ViewBranchProducts branch={branch} />
 						</Tabs.TabPane>
 
 						<Tabs.TabPane key={tabs.MACHINES} tab={tabs.MACHINES} disabled={!branch?.online_url}>

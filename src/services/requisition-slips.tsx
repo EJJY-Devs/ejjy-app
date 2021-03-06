@@ -25,20 +25,25 @@ interface IEditRequisitionSlip {
 		| 'f_ds1_error';
 }
 
-interface IBranchIdGetRequestRequisitionSlip {
+interface IGetRequisitionSlip extends IGetRequest {
+	branch_id?: number;
+	status?: string;
+}
+
+interface IGetRequestRequisitionSlipBranchId {
 	preparing_branch_id?: number;
 }
 
 export const service = {
-	list: async (params: IGetRequest, baseURL) =>
+	list: async (params: IGetRequisitionSlip, baseURL) =>
 		axios.get('/requisition-slips/', { baseURL, params }),
 
-	listExtended: async (params: IGetRequest, baseURL) =>
+	listExtended: async (params: IGetRequisitionSlip, baseURL) =>
 		axios.get('/requisition-slips/extended/', { baseURL, params }),
 
-	getById: async (id, baseURL) => axios.get(`/requisition-slips/${id}/extended/`),
+	getById: async (id, baseURL) => axios.get(`/requisition-slips/${id}/extended/`, { baseURL }),
 
-	getByIdAndBranch: async (params: IBranchIdGetRequestRequisitionSlip, id: number, baseURL) =>
+	getByIdAndBranch: async (params: IGetRequestRequisitionSlipBranchId, id: number, baseURL) =>
 		axios.get(`/requisition-slips/${id}/with-preparing-branch-details/`, { baseURL, params }),
 
 	create: async (body: ICreateRequisitionSlip, baseURL) =>

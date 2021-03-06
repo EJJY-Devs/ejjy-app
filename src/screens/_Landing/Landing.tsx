@@ -49,7 +49,7 @@ const Landing = () => {
 		if (user) {
 			switch (user?.user_type) {
 				case userTypes.ADMIN: {
-					history.replace('/dashboard');
+					history.replace('dashboard');
 					break;
 				}
 				case userTypes.OFFICE_MANAGER: {
@@ -62,7 +62,7 @@ const Landing = () => {
 				}
 				case userTypes.BRANCH_PERSONNEL: {
 					redirectBranchPersonel();
-					history.replace('/dashboard');
+					history.replace('dashboard');
 					break;
 				}
 			}
@@ -75,7 +75,7 @@ const Landing = () => {
 		if (requests.includes(request.REQUESTING)) {
 			return;
 		} else if (requests.every((value) => value === request.SUCCESS)) {
-			history.replace('/dashboard');
+			history.replace('dashboard');
 		} else if (requests.some((value) => value === request.ERROR)) {
 			logout(user?.id);
 		}
@@ -83,7 +83,7 @@ const Landing = () => {
 
 	const redirectBranchManager = () => {
 		if (!IS_APP_LIVE) {
-			history.replace('/dashboard');
+			history.replace('dashboard');
 			return;
 		}
 
@@ -92,7 +92,7 @@ const Landing = () => {
 		if (requests.includes(request.REQUESTING)) {
 			return;
 		} else if (requests.every((value) => value === request.SUCCESS)) {
-			history.replace('/dashboard');
+			history.replace('dashboard');
 		} else if (requests.some((value) => value === request.ERROR)) {
 			logout(user?.id);
 		}
@@ -100,7 +100,7 @@ const Landing = () => {
 
 	const redirectBranchPersonel = () => {
 		if (!IS_APP_LIVE) {
-			history.replace('/dashboard');
+			history.replace('dashboard');
 			return;
 		}
 
@@ -109,7 +109,7 @@ const Landing = () => {
 		if (requests.includes(request.REQUESTING)) {
 			return;
 		} else if (requests.every((value) => value === request.SUCCESS)) {
-			history.replace('/dashboard');
+			history.replace('dashboard');
 		} else if (requests.some((value) => value === request.ERROR)) {
 			logout(user?.id);
 		}

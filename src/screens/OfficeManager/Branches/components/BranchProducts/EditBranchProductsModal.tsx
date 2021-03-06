@@ -1,8 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Modal } from 'antd';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FieldError } from '../../../../../components/elements';
-import { types } from '../../../../../ducks/branch-products';
 import { request } from '../../../../../global/types';
 import { useBranchProducts } from '../../../../../hooks/useBranchProducts';
 import { EditBranchProductsForm } from './EditBranchProductsForm';
@@ -10,20 +9,31 @@ import { EditBranchProductsForm } from './EditBranchProductsForm';
 interface Props {
 	branch: any;
 	branchProduct: any;
+	updateItemInPagination: any;
 	visible: boolean;
 	onClose: any;
 }
 
-export const EditBranchProductsModal = ({ branch, branchProduct, visible, onClose }: Props) => {
-	const { editBranchProduct, status, errors, recentRequest, reset } = useBranchProducts();
+export const EditBranchProductsModal = ({
+	branch,
+	branchProduct,
+	updateItemInPagination,
+	visible,
+	onClose,
+}: Props) => {
+	// CUSTOM HOOKS
+	const { editBranchProduct, status, errors, reset } = useBranchProducts();
 
-	// Effect: Close modal if recent requests are Create, Edit or Remove
-	useEffect(() => {
-		if (status === request.SUCCESS && recentRequest === types.EDIT_BRANCH_PRODUCT) {
-			onClose();
-			reset();
-		}
-	}, [status, recentRequest]);
+	// EFFECTS
+	const onEditBranchProduct = (product) => {
+		editBranchProduct({ ...product, branchId: branch?.id }, ({ status, data }) => {
+			if (status === request.SUCCESS) {
+				updateItemInPagination(data);
+				reset();
+				onClose();
+			}
+		});
+	};
 
 	return (
 		<Modal
@@ -40,9 +50,8 @@ export const EditBranchProductsModal = ({ branch, branchProduct, visible, onClos
 			))}
 
 			<EditBranchProductsForm
-				branchId={branch?.id}
 				branchProduct={branchProduct}
-				onSubmit={editBranchProduct}
+				onSubmit={onEditBranchProduct}
 				onClose={onClose}
 				loading={status === request.REQUESTING}
 			/>

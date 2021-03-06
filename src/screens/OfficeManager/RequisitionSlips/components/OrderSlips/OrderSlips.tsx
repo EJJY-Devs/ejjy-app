@@ -48,16 +48,15 @@ export const OrderSlips = ({ fetchRequisitionSlip, requisitionSlipId }: Props) =
 	const [createEditOrderSlipVisible, setCreateEditOrderSlipVisible] = useState(false);
 	const [createOutOfStockSlipVisible, setCreateOutOfStockVisible] = useState(false);
 
-	const branches = useSelector(branchesSelectors.selectBranches());
-
+	// CUSTOM HOOKS
 	const {
+		requisitionSlip,
+		requisitionSlipsByBranch,
 		getRequisitionSlipsByIdAndBranch,
 		status: requisitionSlipStatus,
 		recentRequest: requisitionSlipRecentRequest,
 	} = useRequisitionSlips();
-
 	const { createDeliveryReceipt, status: deliveryReceiptStatus } = useDeliveryReceipt();
-
 	const {
 		orderSlips,
 		getOrderSlipsExtended,
@@ -65,10 +64,10 @@ export const OrderSlips = ({ fetchRequisitionSlip, requisitionSlipId }: Props) =
 		recentRequest: orderSlipRecentRequest,
 	} = useOrderSlips();
 
-	const requisitionSlip = useSelector(prSelectors.selectRequisitionSlip());
-	const requisitionSlipsByBranch = useSelector(prSelectors.selectRequisitionSlipsByBranch());
+	const branches = useSelector(branchesSelectors.selectBranches());
 	const setRequisitionSlipAction = useActionDispatch(prActions.setRequisitionSlipAction);
 
+	// METHODS
 	// Effect: Fetch order slips
 	useEffect(() => {
 		if (requisitionSlipId) {

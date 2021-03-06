@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Container, Table, TableHeader } from '../../../components';
 import { Box } from '../../../components/elements';
 import { selectors as authSelectors } from '../../../ducks/auth';
-import { EMPTY_CELL } from '../../../global/constants';
+import { EMPTY_CELL, MAX_PAGE_SIZE } from '../../../global/constants';
 import { requisitionSlipActionsOptionsWithAll } from '../../../global/options';
 import { request, requisitionSlipActions, userTypes } from '../../../global/types';
 import { useBranchProducts } from '../../../hooks/useBranchProducts';
@@ -51,7 +51,7 @@ const RequisitionSlips = () => {
 
 	useEffect(() => {
 		getRequisitionSlipsExtended(user?.branch?.id);
-		getBranchProductsByBranch(user?.branch?.id);
+		getBranchProductsByBranch({ branchId: user?.branch?.id, page: 1 });
 	}, []);
 
 	// Effect: Format requisitionSlips to be rendered in Table

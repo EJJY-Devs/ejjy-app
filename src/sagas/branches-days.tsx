@@ -49,7 +49,7 @@ function* list({ payload }: any) {
 
 		callback({
 			status: request.SUCCESS,
-			warnings: isFetchedFromBackupURL ? ['Fetched data is outdated.'] : [],
+			warnings: isFetchedFromBackupURL ? ['Data was fetched from a backup server.'] : [],
 			data: response.data,
 		});
 	} catch (e) {
@@ -100,7 +100,7 @@ function* getBranchDay({ payload }: any) {
 		yield put(actions.save({ type: types.GET_BRANCH_DAY, branchDay: response.data }));
 		callback({
 			status: request.SUCCESS,
-			warnings: isFetchedFromBackupURL ? ['Fetched data is outdated.'] : [],
+			warnings: isFetchedFromBackupURL ? ['Data was fetched from a backup server.'] : [],
 		});
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });

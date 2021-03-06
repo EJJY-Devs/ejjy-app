@@ -55,7 +55,7 @@ function* listByUserId({ payload }: any) {
 		);
 		callback({
 			status: request.SUCCESS,
-			warnings: isFetchedFromBackupURL ? ['Fetched data is outdated.'] : [],
+			warnings: isFetchedFromBackupURL ? ['Data was fetched from a backup server.'] : [],
 		});
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });

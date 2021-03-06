@@ -1,10 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { message } from 'antd';
+import { message, Pagination } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { TableNormal } from '../../../../../components';
 import { CashieringCard } from '../../../../../components/CashieringCard/CashieringCard';
-import { SearchInput } from '../../../../../components/elements';
 import { selectors as authSelectors } from '../../../../../ducks/auth';
 import { request } from '../../../../../global/types';
 import { useBranchesDays } from '../../../../../hooks/useBranchesDays';
@@ -29,6 +28,7 @@ export const BranchBalanceItem = ({ isActive, branchId, dataSource, disabled }: 
 	// CUSTOM HOOKS
 	const {
 		branchDay,
+		getBranchDay,
 		createBranchDay,
 		editBranchDay,
 		status: branchesDaysStatus,
@@ -38,34 +38,32 @@ export const BranchBalanceItem = ({ isActive, branchId, dataSource, disabled }: 
 		branchProducts,
 		pageCount,
 		currentPage,
-		addItemInPagination,
-		updateItemInPagination,
-		removeItemInPagination,
-
 		getBranchProductsByBranch,
-		status: branchProductStatus,
+		status,
 	} = useBranchProducts({ pageSize: PAGE_SIZE });
 	const user = useSelector(authSelectors.selectUser());
 
 	// METHODS
 	useEffect(() => {
+		getBranchDay(branchId);
 		getBranchProductsByBranch({ page: 1, branchId });
 	}, []);
 
 	useEffect(() => {
 		const newBranchProducts = branchProducts?.map((branchProduct) => {
-			const { barcode, name, textcode, max_balance, current_balance, status } = branchProduct;
+			const { product, max_balance, current_balance, product_status } = branchProduct;
+			const { barcode, name, textcode } = product;
 
 			return [
 				{ isHidden: true, barcode, name, textcode },
 				barcode || textcode,
 				name,
 				`${current_balance} / ${max_balance}`,
-				getBranchProductStatus(status),
+				getBranchProductStatus(product_status),
 			];
 		});
 
-		setData((value) => [...value, ...newBranchProducts]);
+		setData(newBranchProducts);
 	}, [branchProducts]);
 
 	// Effect: Display errors from branch cashiering
@@ -83,23 +81,27 @@ export const BranchBalanceItem = ({ isActive, branchId, dataSource, disabled }: 
 		editBranchDay(branchDay.id, user.id);
 	};
 
-	const onSearch = (keyword) => {
-		keyword = keyword?.toLowerCase();
+	// const onSearch = (keyword) => {
+	// 	keyword = keyword?.toLowerCase();
 
-		const filteredData =
-			keyword.length > 0
-				? dataSource.filter((item) => {
-						const barcode = item?.[0]?.barcode?.toLowerCase() || '';
-						const textcode = item?.[0]?.textcode?.toLowerCase() || '';
-						const name = item?.[0]?.name?.toLowerCase() || '';
+	// 	const filteredData =
+	// 		keyword.length > 0
+	// 			? dataSource.filter((item) => {
+	// 					const barcode = item?.[0]?.barcode?.toLowerCase() || '';
+	// 					const textcode = item?.[0]?.textcode?.toLowerCase() || '';
+	// 					const name = item?.[0]?.name?.toLowerCase() || '';
 
-						return (
-							name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword)
-						);
-				  })
-				: dataSource;
+	// 					return (
+	// 						name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword)
+	// 					);
+	// 			  })
+	// 			: dataSource;
 
-		setData(filteredData);
+	// 	setData(filteredData);
+	// };
+
+	const onPageChange = (page) => {
+		getBranchProductsByBranch({ page, branchId });
 	};
 
 	return (
@@ -112,21 +114,21 @@ export const BranchBalanceItem = ({ isActive, branchId, dataSource, disabled }: 
 				disabled={disabled}
 			/>
 
-			<SearchInput
+			{/* <SearchInput
 				classNames="tab-search-input"
 				placeholder="Search product"
 				onChange={(event) => onSearch(event.target.value.trim())}
-			/>
-			<TableNormal columns={columns} data={data} />
+			/> */}
+			<TableNormal columns={columns} data={data} loading={status === request.REQUESTING} />
 
-			{/* <Pagination
+			<Pagination
 				className="table-pagination"
 				current={currentPage}
 				total={pageCount}
 				pageSize={PAGE_SIZE}
 				onChange={onPageChange}
-				disabled={!tableData}
-			/> */}
+				disabled={!data}
+			/>
 		</>
 	);
 };

@@ -1,13 +1,13 @@
 import { call, put, retry, takeLatest } from 'redux-saga/effects';
 import { actions, types } from '../ducks/requisition-slips';
-import { MAX_PAGE_SIZE, MAX_RETRY, RETRY_INTERVAL_MS } from '../global/constants';
+import { MAX_RETRY, RETRY_INTERVAL_MS } from '../global/constants';
 import { request } from '../global/types';
 import { ONLINE_API_URL } from '../services';
 import { service } from '../services/requisition-slips';
 
 /* WORKERS */
 function* list({ payload }: any) {
-	const { callback } = payload;
+	const { page, pageSize, branchId, status, callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	try {
@@ -16,23 +16,22 @@ function* list({ payload }: any) {
 			RETRY_INTERVAL_MS,
 			service.list,
 			{
-				page: 1,
-				page_size: MAX_PAGE_SIZE,
+				page,
+				page_size: pageSize,
+				branch_id: branchId,
+				status,
 			},
 			ONLINE_API_URL,
 		);
 
-		yield put(
-			actions.save({ type: types.GET_REQUISITION_SLIPS, requisitionSlips: response.data.results }),
-		);
-		callback({ status: request.SUCCESS });
+		callback({ status: request.SUCCESS, data: response.data });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}
 }
 
 function* listExtended({ payload }: any) {
-	const { callback } = payload;
+	const { page, pageSize, branchId, status, callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	try {
@@ -41,19 +40,15 @@ function* listExtended({ payload }: any) {
 			RETRY_INTERVAL_MS,
 			service.listExtended,
 			{
-				page: 1,
-				page_size: MAX_PAGE_SIZE,
+				page,
+				page_size: pageSize,
+				branch_id: branchId,
+				status,
 			},
 			ONLINE_API_URL,
 		);
 
-		yield put(
-			actions.save({
-				type: types.GET_REQUISITION_SLIPS_EXTENDED,
-				requisitionSlips: response.data.results,
-			}),
-		);
-		callback({ status: request.SUCCESS });
+		callback({ status: request.SUCCESS, data: response.data });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}

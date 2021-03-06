@@ -1,9 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useCallback, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { Breadcrumb, Container } from '../../../components';
-import { selectors } from '../../../ducks/requisition-slips';
 import { request } from '../../../global/types';
 import { useRequisitionSlips } from '../../../hooks/useRequisitionSlips';
 import { OrderSlips } from './components/OrderSlips/OrderSlips';
@@ -20,11 +18,11 @@ const ViewRequisitionSlip = ({ match }: Props) => {
 	const history = useHistory();
 
 	const {
+		requisitionSlip,
 		getRequisitionSlipsById,
 		removeRequisitionSlipByBranch,
-		status: requisitionSlipStatus,
+		status,
 	} = useRequisitionSlips();
-	const requisitionSlip = useSelector(selectors.selectRequisitionSlip());
 
 	// Effect: Fetch requisition slip
 	useEffect(() => {
@@ -53,10 +51,7 @@ const ViewRequisitionSlip = ({ match }: Props) => {
 			breadcrumb={<Breadcrumb items={getBreadcrumbItems()} />}
 		>
 			<section className="ViewRequisitionSlip">
-				<RequestedProducts
-					requisitionSlip={requisitionSlip}
-					requisitionSlipStatus={requisitionSlipStatus}
-				/>
+				<RequestedProducts requisitionSlip={requisitionSlip} requisitionSlipStatus={status} />
 
 				<OrderSlips requisitionSlipId={requisitionSlipId} />
 			</section>

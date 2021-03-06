@@ -21,7 +21,6 @@ export const types = {
 };
 
 const initialState = {
-	requisitionSlips: [],
 	requisitionSlip: null,
 	requisitionSlipsByBranch: {},
 	requisitionSlipForOutOfStock: null,
@@ -34,11 +33,6 @@ const reducer = handleActions(
 			let newData = {};
 
 			switch (type) {
-				case types.GET_REQUISITION_SLIPS:
-				case types.GET_REQUISITION_SLIPS_EXTENDED: {
-					newData = { requisitionSlips: payload.requisitionSlips };
-					break;
-				}
 				case types.GET_REQUISITION_SLIP_BY_ID: {
 					newData = { requisitionSlip: payload.requisitionSlip };
 					break;
@@ -53,10 +47,6 @@ const reducer = handleActions(
 					}
 
 					newData = { requisitionSlipsByBranch };
-					break;
-				}
-				case types.CREATE_REQUISITION_SLIP: {
-					newData = { requisitionSlips: [payload.requisitionSlip, ...state.requisitionSlips] };
 					break;
 				}
 				case BMDeliveryReceiptTypes.RECEIVE_DELIVERY_RECEIPT: {
@@ -89,6 +79,7 @@ export const actions = {
 	save: createAction(types.SAVE),
 	getRequisitionSlips: createAction(types.GET_REQUISITION_SLIPS),
 	getRequisitionSlipsExtended: createAction(types.GET_REQUISITION_SLIPS_EXTENDED),
+
 	getRequisitionSlipById: createAction(types.GET_REQUISITION_SLIP_BY_ID),
 	getRequisitionSlipByIdAndBranch: createAction(types.GET_REQUISITION_SLIP_BY_ID_AND_BRANCH),
 	createRequisitionSlip: createAction(types.CREATE_REQUISITION_SLIP),
@@ -106,11 +97,10 @@ export const selectors = {
 		createSelector(selectState, (state) => state.requisitionSlipsByBranch),
 	selectRequisitionSlipForOutOfStock: () =>
 		createSelector(selectState, (state) => state.requisitionSlipForOutOfStock),
-	selectRequisitionSlips: () => createSelector(selectState, (state) => state.requisitionSlips),
-	selectRequisitionSlipById: (id) =>
-		createSelector(selectState, (state) =>
-			state.requisitionSlips.find((requisitionSlip) => requisitionSlip.id === id),
-		),
+	// selectRequisitionSlipById: (id) =>
+	// 	createSelector(selectState, (state) =>
+	// 		state.requisitionSlips.find((requisitionSlip) => requisitionSlip.id === id),
+	// 	),
 };
 
 export default reducer;

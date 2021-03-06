@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { Pagination } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Table, TableHeader } from '../../../components';
@@ -11,6 +12,8 @@ import { useBranchProducts } from '../../../hooks/useBranchProducts';
 import { calculateTableHeight, getBranchProductStatus } from '../../../utils/function';
 import { ViewProductModal } from './components/ViewProductModal';
 
+const PAGE_SIZE = 5;
+
 const columns = [
 	{ title: 'Barcode', dataIndex: 'barcode' },
 	{ title: 'Name', dataIndex: 'name' },
@@ -19,19 +22,28 @@ const columns = [
 ];
 
 const Products = () => {
-	// States
-	const [data, setData] = useState([]);
+	// STATES
+	// const [data, setData] = useState([]);
 	const [tableData, setTableData] = useState([]);
 	const [viewBranchProductModalVisible, setViewBranchProductModalVisible] = useState(false);
 	const [selectedBranchProduct, setSelectedBranchProduct] = useState(null);
 
-	// Custom hooks
+	// CUSTOM HOOKS
 	const { user } = useAuth();
-	const { branchProducts, getBranchProductsByBranch, status, recentRequest } = useBranchProducts();
+	const {
+		branchProducts,
+		pageCount,
+		currentPage,
+		getBranchProductsByBranch,
+		status,
+		recentRequest,
+	} = useBranchProducts({
+		pageSize: PAGE_SIZE,
+	});
 
-	// Effect: Fetch branch products
+	// METHODS
 	useEffect(() => {
-		getBranchProductsByBranch(user?.branch?.id);
+		getBranchProductsByBranch({ branchId: user?.branch?.id, page: 1 });
 	}, []);
 
 	// Effect: Format branch products to be rendered in Table
@@ -69,7 +81,7 @@ const Products = () => {
 				};
 			});
 
-			setData(formattedBranchProducts);
+			// setData(formattedBranchProducts);
 			setTableData(formattedBranchProducts);
 		}
 	}, [branchProducts, status, recentRequest]);
@@ -84,34 +96,47 @@ const Products = () => {
 		setViewBranchProductModalVisible(true);
 	};
 
-	const onSearch = (keyword) => {
-		keyword = keyword?.toLowerCase();
-		const filteredData =
-			keyword.length > 0
-				? data.filter((item) => {
-						const name = item?.name?.toLowerCase() ?? '';
-						const barcode = item?._barcode?.toLowerCase() ?? '';
-						const textcode = item?._textcode?.toLowerCase() ?? '';
-
-						return (
-							name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword)
-						);
-				  })
-				: data;
-
-		setTableData(filteredData);
+	const onPageChange = (page) => {
+		getBranchProductsByBranch({ branchId: user?.branch?.id, page });
 	};
+
+	// const onSearch = (keyword) => {
+	// 	keyword = keyword?.toLowerCase();
+	// 	const filteredData =
+	// 		keyword.length > 0
+	// 			? data.filter((item) => {
+	// 					const name = item?.name?.toLowerCase() ?? '';
+	// 					const barcode = item?._barcode?.toLowerCase() ?? '';
+	// 					const textcode = item?._textcode?.toLowerCase() ?? '';
+
+	// 					return (
+	// 						name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword)
+	// 					);
+	// 			  })
+	// 			: data;
+
+	// 	setTableData(filteredData);
+	// };
 
 	return (
 		<Container title="Products" loadingText="Fetching products..." loading={getFetchLoading()}>
 			<section>
 				<Box>
-					<TableHeader title="Products" buttonName="Create Branch Product" onSearch={onSearch} />
+					<TableHeader title="Products" buttonName="Create Branch Product" />
 
 					<Table
 						columns={columns}
 						dataSource={tableData}
 						scroll={{ y: calculateTableHeight(tableData.length), x: '100%' }}
+					/>
+
+					<Pagination
+						className="table-pagination"
+						current={currentPage}
+						total={pageCount}
+						pageSize={PAGE_SIZE}
+						onChange={onPageChange}
+						disabled={!tableData}
 					/>
 
 					<ViewProductModal

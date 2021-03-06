@@ -1,14 +1,13 @@
 import { call, select, takeLatest } from 'redux-saga/effects';
 import { types } from '../ducks/branch-products';
 import { selectors as branchesSelectors } from '../ducks/OfficeManager/branches';
-import { MAX_PAGE_SIZE } from '../global/constants';
 import { request } from '../global/types';
 import { LOCAL_API_URL } from '../services';
 import { service } from '../services/branch-products';
 
 /* WORKERS */
 function* listByBranch({ payload }: any) {
-	const { branchId, callback } = payload;
+	const { page, pageSize, branchId, callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	// Required: Branch must have an online URL (Requested by Office)
@@ -19,8 +18,8 @@ function* listByBranch({ payload }: any) {
 	}
 
 	let data = {
-		page: 1,
-		page_size: MAX_PAGE_SIZE,
+		page,
+		page_size: pageSize,
 	};
 
 	let isFetchedFromBackupURL = false;
@@ -49,7 +48,7 @@ function* listByBranch({ payload }: any) {
 
 		callback({
 			status: request.SUCCESS,
-			warnings: isFetchedFromBackupURL ? ['Fetched data is outdated.'] : [],
+			warnings: isFetchedFromBackupURL ? ['Data was fetched from a backup server.'] : [],
 			data: response.data,
 		});
 	} catch (e) {
@@ -70,7 +69,6 @@ function* edit({ payload }: any) {
 
 	try {
 		const response = yield call(service.edit, data, baseURL);
-
 		callback({ status: request.SUCCESS, data: response.data });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });

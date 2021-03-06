@@ -8,7 +8,7 @@ import {
 	actions as prActions,
 	selectors as prSelectors,
 } from '../../../../../ducks/requisition-slips';
-import { requisitionSlipActions, request, orderSlipStatus } from '../../../../../global/types';
+import { orderSlipStatus, request, requisitionSlipActions } from '../../../../../global/types';
 import { useActionDispatch } from '../../../../../hooks/useActionDispatch';
 import { useOrderSlips } from '../../../hooks/useOrderSlips';
 import { OrderSlipsTable } from './OrderSlipsTable';
@@ -22,13 +22,12 @@ interface Props {
 const pendingOrderSlipStatus = [orderSlipStatus.DELIVERED];
 
 export const OrderSlips = ({ requisitionSlipId }: Props) => {
-	// State: Selection
+	// STATES
 	const [selectedOrderSlip, setSelectedOrderSlip] = useState(null);
-
-	// State: Modal
 	const [viewOrderSlipVisible, setViewOrderSlipVisible] = useState(false);
 	const [receiveDeliveryReceiptVisible, setReceiveDeliveryReceiptVisible] = useState(false);
 
+	// CUSTOM HOOKS
 	const {
 		orderSlips,
 		getOrderSlipsExtended,
@@ -39,6 +38,7 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 	const requisitionSlip = useSelector(prSelectors.selectRequisitionSlip());
 	const setRequisitionSlipAction = useActionDispatch(prActions.setRequisitionSlipAction);
 
+	// METHODS
 	// Effect: Fetch requisition slip
 	useEffect(() => {
 		if (requisitionSlipId) {

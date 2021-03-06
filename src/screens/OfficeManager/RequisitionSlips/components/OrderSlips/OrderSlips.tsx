@@ -6,17 +6,13 @@ import { TableHeaderOrderSlip } from '../../../../../components';
 import { Box } from '../../../../../components/elements';
 import { selectors as branchesSelectors } from '../../../../../ducks/OfficeManager/branches';
 import { types as orderSlipsTypes } from '../../../../../ducks/order-slips';
+import { actions as prActions, types as prTypes } from '../../../../../ducks/requisition-slips';
 import {
-	actions as prActions,
-	selectors as prSelectors,
-	types as prTypes,
-} from '../../../../../ducks/requisition-slips';
-import {
-	requisitionSlipActions,
-	requisitionSlipProductStatus,
+	orderSlipStatus,
 	quantityTypes,
 	request,
-	orderSlipStatus,
+	requisitionSlipActions,
+	requisitionSlipProductStatus,
 } from '../../../../../global/types';
 import { useActionDispatch } from '../../../../../hooks/useActionDispatch';
 import { useRequisitionSlips } from '../../../../../hooks/useRequisitionSlips';

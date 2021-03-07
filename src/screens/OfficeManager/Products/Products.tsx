@@ -24,7 +24,6 @@ const columns = [
 const Products = () => {
 	// STATES
 	const [data, setData] = useState([]);
-	const [tableData, setTableData] = useState([]);
 	const [createEditProductModalVisible, setCreateEditProductModalVisible] = useState(false);
 	const [viewProductModalVisible, setViewProductModalVisible] = useState(false);
 	const [selectedProduct, setSelectedProduct] = useState(null);
@@ -81,7 +80,6 @@ const Products = () => {
 			}) || [];
 
 		setData(formattedProducts);
-		setTableData(formattedProducts);
 	}, [products, pendingTransactions]);
 
 	const getFetchLoading = useCallback(
@@ -113,20 +111,7 @@ const Products = () => {
 
 	const onSearch = (keyword) => {
 		keyword = keyword?.toLowerCase();
-		const filteredData =
-			keyword.length > 0
-				? data.filter((item) => {
-						const name = item?.name?.toLowerCase() ?? '';
-						const barcode = item?._barcode?.toLowerCase() ?? '';
-						const textcode = item?._textcode?.toLowerCase() ?? '';
-
-						return (
-							name.includes(keyword) || barcode.includes(keyword) || textcode.includes(keyword)
-						);
-				  })
-				: data;
-
-		setTableData(filteredData);
+		getProducts({ search: keyword, page: 1 }, true);
 	};
 
 	const onRemoveProduct = (product) => {
@@ -152,8 +137,8 @@ const Products = () => {
 
 					<Table
 						columns={columns}
-						dataSource={tableData}
-						scroll={{ y: calculateTableHeight(tableData.length), x: '100%' }}
+						dataSource={data}
+						scroll={{ y: calculateTableHeight(data.length), x: '100%' }}
 						loading={productStatus === request.REQUESTING && recentRequest !== types.GET_PRODUCTS}
 					/>
 
@@ -163,7 +148,7 @@ const Products = () => {
 						total={pageCount}
 						pageSize={PAGE_SIZE}
 						onChange={onPageChange}
-						disabled={!tableData}
+						disabled={!data}
 					/>
 
 					<ViewProductModal

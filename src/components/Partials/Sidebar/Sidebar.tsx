@@ -49,7 +49,7 @@ const SidebarItems = [
 		activeIcon: require(`../../../assets/images/icon-branches-active.svg`),
 		defaultIcon: require(`../../../assets/images/icon-branches.svg`),
 		link: '/branches',
-		userTypes: [userTypes.OFFICE_MANAGER],
+		userTypes: [userTypes.ADMIN, userTypes.OFFICE_MANAGER],
 	},
 	{
 		key: 'requisition-slips',

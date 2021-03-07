@@ -1,7 +1,9 @@
 import { userTypes } from '../global/types';
 import {
+	AdminBranches,
 	AdminDashboard,
 	AdminPendingTransactions,
+	AdminViewBranch,
 	BranchManagerChecking,
 	BranchManagerDashboard,
 	BranchManagerNotifications,
@@ -44,10 +46,12 @@ export const ProductsScreens = {
 };
 
 export const BranchesScreens = {
+	[userTypes.ADMIN]: AdminBranches,
 	[userTypes.OFFICE_MANAGER]: OfficeManagerBranches,
 };
 
 export const ViewBranchScreens = {
+	[userTypes.ADMIN]: AdminViewBranch,
 	[userTypes.OFFICE_MANAGER]: OfficeManagerViewBranch,
 };
 

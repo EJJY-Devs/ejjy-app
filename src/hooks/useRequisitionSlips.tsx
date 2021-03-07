@@ -72,6 +72,7 @@ export const useRequisitionSlips = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 		setAllData([]);
 		setPageCount(0);
 		setCurrentPage(1);
+		setCurrentPageData([]);
 	};
 
 	const requestCallback = ({ status: requestStatus, errors: requestErrors = [] }) => {
@@ -128,9 +129,9 @@ export const useRequisitionSlips = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 		) {
 			const callback = {
 				onSuccess: ({ data: { results: toBeAddedData, count } }) => {
-					setAllData(
+					setAllData((currentAllData) =>
 						generateNewCachedData({
-							existingData: allData,
+							existingData: currentAllData,
 							toBeAddedData,
 							index: (page - 1) * pageSize,
 						}),
@@ -166,9 +167,9 @@ export const useRequisitionSlips = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 		) {
 			const callback = {
 				onSuccess: ({ data: { results: toBeAddedData, count } }) => {
-					setAllData(
+					setAllData((currentAllData) =>
 						generateNewCachedData({
-							existingData: allData,
+							existingData: currentAllData,
 							toBeAddedData,
 							index: (page - 1) * pageSize,
 						}),

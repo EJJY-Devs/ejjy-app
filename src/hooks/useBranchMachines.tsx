@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { actions, selectors, types } from '../../../ducks/OfficeManager/branch-machines';
-import { request } from '../../../global/types';
-import { useActionDispatch } from '../../../hooks/useActionDispatch';
-import { modifiedCallback, modifiedExtraCallback } from '../../../utils/function';
+import { actions, selectors, types } from '../ducks/OfficeManager/branch-machines';
+import { request } from '../global/types';
+import { useActionDispatch } from './useActionDispatch';
+import { modifiedCallback, modifiedExtraCallback } from '../utils/function';
 
 const CREATE_SUCCESS_MESSAGE = 'Branch machine was created successfully';
 const CREATE_ERROR_MESSAGE = 'An error occurred while creating the branch machine';

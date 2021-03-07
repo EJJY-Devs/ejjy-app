@@ -7,7 +7,7 @@ import { service } from '../services/branch-products';
 
 /* WORKERS */
 function* listByBranch({ payload }: any) {
-	const { page, pageSize, branchId, callback } = payload;
+	const { page, pageSize, branchId, search, callback } = payload;
 	callback({ status: request.REQUESTING });
 
 	// Required: Branch must have an online URL (Requested by Office)
@@ -20,6 +20,7 @@ function* listByBranch({ payload }: any) {
 	let data = {
 		page,
 		page_size: pageSize,
+		search,
 	};
 
 	let isFetchedFromBackupURL = false;
@@ -48,7 +49,9 @@ function* listByBranch({ payload }: any) {
 
 		callback({
 			status: request.SUCCESS,
-			warnings: isFetchedFromBackupURL ? ['Data was fetched from a backup server.'] : [],
+			warnings: isFetchedFromBackupURL
+				? ['Data Source: Backup Server, data might be outdated.']
+				: [],
 			data: response.data,
 		});
 	} catch (e) {

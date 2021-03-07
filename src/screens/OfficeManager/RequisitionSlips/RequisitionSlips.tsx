@@ -116,20 +116,6 @@ const RequisitionSlips = () => {
 		[requisitionSlips],
 	);
 
-	const onSearch = (keyword) => {
-		// keyword = lowerCase(keyword);
-		// const filteredData =
-		// 	keyword.length > 0
-		// 		? data.filter(
-		// 				({ _id, _datetime_created, _type }) =>
-		// 					_id.toString() === keyword ||
-		// 					_datetime_created.includes(keyword) ||
-		// 					_type.includes(keyword),
-		// 		  )
-		// 		: data;
-		// setTableData(filteredData);
-	};
-
 	const onPageChange = (page) => {
 		getRequisitionSlipsExtended({
 			branchId: selectedBranch === 'all' ? null : selectedBranch,
@@ -147,7 +133,6 @@ const RequisitionSlips = () => {
 						onStatusSelect={(status) => setSelectedStatus(status)}
 						branches={getBranchOptions()}
 						onBranchSelect={(branch) => setSelectedBranch(branch)}
-						onSearch={onSearch}
 						pending={getPendingCount()}
 					/>
 

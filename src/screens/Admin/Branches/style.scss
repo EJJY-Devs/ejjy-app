@@ -1,0 +1,67 @@
+@import '../../../assets/styles/main';
+
+.Branches {
+	.header {
+		@include flex(flex-end, center);
+		padding: 25px;
+	}
+}
+
+.ViewBranch {
+	.ant-tabs-nav {
+		margin: 0 !important;
+	}
+
+	.TableHeader {
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+	}
+
+	.ViewBranchDays {
+		.branch-day-column {
+			.first-row {
+				margin-bottom: 6px;
+			}
+
+			.label {
+				font-weight: bold;
+				width: 50px;
+				display: inline-block;
+			}
+
+			.value {
+				font-weight: 400;
+			}
+		}
+	}
+
+	.ViewBranchSessions {
+		.branch-session-column {
+			.first-row {
+				margin-bottom: 6px;
+			}
+
+			.label {
+				font-weight: bold;
+				width: 50px;
+				display: inline-block;
+			}
+
+			.value {
+				font-weight: 400;
+			}
+		}
+	}
+}
+
+.ViewTransactionModal {
+	.official-receipt-label {
+		@include font(20px, bold);
+		text-align: center;
+	}
+
+	.value-center {
+		display: block;
+		text-align: center;
+	}
+}

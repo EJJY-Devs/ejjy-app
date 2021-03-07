@@ -16,7 +16,7 @@ import { Box, Select } from '../../../components/elements';
 import { types } from '../../../ducks/OfficeManager/cashiering-assignments';
 import { request, userTypes } from '../../../global/types';
 import { calculateTableHeight } from '../../../utils/function';
-import { useBranchMachines } from '../hooks/useBranchMachines';
+import { useBranchMachines } from '../../../hooks/useBranchMachines';
 import { useCashieringAssignments } from '../hooks/useCashieringAssignments';
 import { useUsers } from '../hooks/useUsers';
 import './style.scss';
@@ -61,10 +61,12 @@ const AssignUser = ({ match }) => {
 	}, [cashieringAssignmentsStatus, cashieringAssignmentsWarnings]);
 
 	const userDoesNotExistCallback = ({ status }) => {
+		console.log('user?.user_type', user?.user_type);
 		if (status === request.ERROR) {
 			history.replace('/404');
 		} else if (status === request.SUCCESS) {
 			if ([userTypes.BRANCH_MANAGER, userTypes.BRANCH_PERSONNEL].includes(user?.user_type)) {
+				console.log('test');
 				getBranchMachines(user?.branch?.id);
 				getCashieringAssignmentsByUserId({ userId, branchId: user?.branch?.id });
 			}
@@ -119,6 +121,7 @@ const AssignUser = ({ match }) => {
 	}, [user, cashieringAssignments, branchMachines]);
 
 	const onAssign = (date) => {
+		console.log('branch machines', branchMachines.length);
 		if (branchMachines.length) {
 			createCashieringAssignment({
 				user_id: userId,

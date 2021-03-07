@@ -7,7 +7,7 @@ import { request } from '../../../../global/types';
 import { useAuth } from '../../../../hooks/useAuth';
 import { useXreadReports } from '../../../../hooks/useXreadReports';
 import { calculateTableHeight, showErrorMessages } from '../../../../utils/function';
-import { useBranchMachines } from '../../../OfficeManager/hooks/useBranchMachines';
+import { useBranchMachines } from '../../../../hooks/useBranchMachines';
 import { ViewReportModal } from './ViewReportModal';
 
 const columns = [

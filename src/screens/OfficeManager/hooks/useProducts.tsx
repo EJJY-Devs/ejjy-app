@@ -54,6 +54,13 @@ export const useProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 		resetStatus();
 	};
 
+	const resetPagination = () => {
+		setAllData([]);
+		setPageCount(0);
+		setCurrentPage(1);
+		setCurrentPageData([]);
+	};
+
 	const requestCallback = ({ status: requestStatus, errors: requestErrors = [] }) => {
 		setStatus(requestStatus);
 		setErrors(requestErrors);
@@ -91,7 +98,11 @@ export const useProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 	};
 
 	// REQUEST METHODS
-	const getProducts = (data) => {
+	const getProducts = (data, shouldReset = false) => {
+		if (shouldReset) {
+			resetPagination();
+		}
+
 		const { page } = data;
 		setCurrentPage(page);
 
@@ -99,13 +110,14 @@ export const useProducts = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 			!indexHasCachedData({
 				existingData: allData,
 				index: (page - 1) * pageSize,
-			})
+			}) ||
+			shouldReset
 		) {
 			const callback = {
 				onSuccess: ({ data: { results: toBeAddedData, count } }) => {
-					setAllData(
+					setAllData((currentAllData) =>
 						generateNewCachedData({
-							existingData: allData,
+							existingData: currentAllData,
 							toBeAddedData,
 							index: (page - 1) * pageSize,
 						}),

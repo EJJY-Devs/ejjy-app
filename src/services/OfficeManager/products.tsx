@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { IGetRequest } from '../interfaces';
 
+interface IGetProducts extends IGetRequest {
+	search?: string;
+}
+
 interface ICreateProduct {
 	barcode: string;
 	name: string;
@@ -35,7 +39,8 @@ interface IEditProduct {
 }
 
 export const service = {
-	list: async (params: IGetRequest, baseURL) => axios.get('/online-products/', { baseURL, params }),
+	list: async (params: IGetProducts, baseURL) =>
+		axios.get('/online-products/', { baseURL, params }),
 
 	create: async (body: ICreateProduct, baseURL) =>
 		axios.post('/online-products/', body, { baseURL }),

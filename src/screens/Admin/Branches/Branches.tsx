@@ -5,7 +5,7 @@ import { Container, Table, TableActions, TableHeader } from '../../../components
 import { Box } from '../../../components/elements';
 import { request } from '../../../global/types';
 import { calculateTableHeight, sleep } from '../../../utils/function';
-import { useBranches } from '../hooks/useBranches';
+import { useBranches } from '../../OfficeManager/hooks/useBranches';
 import { CreateEditBranchModal } from './components/Branch/CreateEditBranchModal';
 import './style.scss';
 

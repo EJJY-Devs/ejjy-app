@@ -16,11 +16,15 @@ interface IEditBranchProduct {
 	allowable_spoilage?: number;
 }
 
+interface IGetBranchProducts extends IGetRequest {
+	search?: string;
+}
+
 export const service = {
-	list: async (params: IGetRequest, baseURL) =>
+	list: async (params: IGetBranchProducts, baseURL) =>
 		axios.get('/branches-products/extended/', { baseURL, params }),
 
-	listByBranch: async (params: IGetRequest, baseURL) =>
+	listByBranch: async (params: IGetBranchProducts, baseURL) =>
 		axios.get('branches-products/with-branch-manager-details/', { baseURL, params }),
 
 	edit: async (body: IEditBranchProduct, baseURL) =>

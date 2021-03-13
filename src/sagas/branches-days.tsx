@@ -1,7 +1,7 @@
 import { call, put, select, takeLatest } from 'redux-saga/effects';
 import { actions, types } from '../ducks/branches-days';
 import { selectors as branchesSelectors } from '../ducks/OfficeManager/branches';
-import { MAX_PAGE_SIZE } from '../global/constants';
+import { IS_APP_LIVE, MAX_PAGE_SIZE } from '../global/constants';
 import { request } from '../global/types';
 import { LOCAL_API_URL } from '../services';
 import { service } from '../services/branches-days';
@@ -30,7 +30,7 @@ function* list({ payload }: any) {
 
 		try {
 			// Fetch in branch url
-			response = yield call(service.list, data, baseURL || LOCAL_API_URL);
+			response = yield call(service.list, data, IS_APP_LIVE ? baseURL : LOCAL_API_URL);
 		} catch (e) {
 			// Retry to fetch in backup branch url
 			const baseBackupURL = yield select(branchesSelectors.selectBackUpURLByBranchId(branchId));
@@ -80,7 +80,7 @@ function* getBranchDay({ payload }: any) {
 
 		try {
 			// Fetch in branch url
-			response = yield call(service.get, data, baseURL || LOCAL_API_URL);
+			response = yield call(service.get, data, IS_APP_LIVE ? baseURL : LOCAL_API_URL);
 		} catch (e) {
 			// Retry to fetch in backup branch url
 			const baseBackupURL = yield select(branchesSelectors.selectBackUpURLByBranchId(branch_id));
@@ -119,7 +119,11 @@ function* create({ payload }: any) {
 	}
 
 	try {
-		const response = yield call(service.create, { started_by_id }, baseURL || LOCAL_API_URL);
+		const response = yield call(
+			service.create,
+			{ started_by_id },
+			IS_APP_LIVE ? baseURL : LOCAL_API_URL,
+		);
 
 		yield put(actions.save({ type: types.CREATE_BRANCH_DAY, branchDay: response.data }));
 		callback({ status: request.SUCCESS });
@@ -140,7 +144,12 @@ function* edit({ payload }: any) {
 	}
 
 	try {
-		const response = yield call(service.edit, id, { ended_by_id }, baseURL || LOCAL_API_URL);
+		const response = yield call(
+			service.edit,
+			id,
+			{ ended_by_id },
+			IS_APP_LIVE ? baseURL : LOCAL_API_URL,
+		);
 
 		yield put(actions.save({ type: types.EDIT_BRANCH_DAY, branchDay: response.data }));
 		callback({ status: request.SUCCESS });

@@ -33,7 +33,13 @@ function* list({ payload }: any) {
 }
 
 function* listExtended({ payload }: any) {
-	const { requisition_slip_id = null, assigned_store_id = null, callback } = payload;
+	const {
+		page,
+		pageSize,
+		requisition_slip_id = null,
+		assigned_store_id = null,
+		callback,
+	} = payload;
 	callback({ status: request.REQUESTING });
 
 	try {
@@ -42,18 +48,15 @@ function* listExtended({ payload }: any) {
 			RETRY_INTERVAL_MS,
 			service.listExtended,
 			{
-				page: 1,
-				page_size: MAX_PAGE_SIZE,
+				page,
+				page_size: pageSize,
 				requisition_slip_id,
 				assigned_store_id,
 			},
 			ONLINE_API_URL,
 		);
 
-		yield put(
-			actions.save({ type: types.GET_ORDER_SLIPS_EXTENDED, orderSlips: response.data.results }),
-		);
-		callback({ status: request.SUCCESS });
+		callback({ status: request.SUCCESS, data: response.data });
 	} catch (e) {
 		callback({ status: request.ERROR, errors: e.errors });
 	}

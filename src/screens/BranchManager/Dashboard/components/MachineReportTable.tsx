@@ -16,13 +16,16 @@ const columns = [
 ];
 
 export const MachineReportTable = () => {
+	// STATES
 	const [viewReportModalVisible, setViewReportModalVisible] = useState(false);
 	const [data, setData] = useState([]);
 
+	// CUSTOM HOOKS
 	const { user } = useAuth();
 	const { branchMachines, getBranchMachines, status: branchMachinesStatus } = useBranchMachines();
 	const { xreadReport, createXreadReport, status: xReadReportStatus } = useXreadReports();
 
+	// METHODS
 	useEffect(() => {
 		getBranchMachines(user?.branch?.id);
 	}, []);
@@ -40,6 +43,7 @@ export const MachineReportTable = () => {
 	const viewReport = (machineId) => {
 		createXreadReport(
 			{
+				branchId: user?.branch?.id,
 				userId: user.id,
 				branchMachineId: machineId,
 			},

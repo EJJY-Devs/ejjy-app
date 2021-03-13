@@ -1,4 +1,5 @@
-import { call, put, retry, takeLatest } from 'redux-saga/effects';
+import { call, put, retry, select, takeLatest } from 'redux-saga/effects';
+import { selectors as branchesSelectors } from '../ducks/OfficeManager/branches';
 import { actions, types } from '../ducks/requisition-slips';
 import { MAX_RETRY, RETRY_INTERVAL_MS } from '../global/constants';
 import { request } from '../global/types';
@@ -58,14 +59,19 @@ function* getByIdAndBranch({ payload }: any) {
 	const { id, branchId, callback } = payload;
 	callback({ status: request.REQUESTING });
 
+	// Required: Branch must have an online URL (Requested by Office)
+	const baseURL = yield select(branchesSelectors.selectURLByBranchId(branchId));
+	if (!baseURL && branchId) {
+		callback({ status: request.ERROR, errors: 'Branch has no online url.' });
+		return;
+	}
+
 	try {
-		const response = yield retry(
-			MAX_RETRY,
-			RETRY_INTERVAL_MS,
+		const response = yield call(
 			service.getByIdAndBranch,
 			{ preparing_branch_id: branchId },
 			id,
-			ONLINE_API_URL,
+			baseURL,
 		);
 
 		yield put(

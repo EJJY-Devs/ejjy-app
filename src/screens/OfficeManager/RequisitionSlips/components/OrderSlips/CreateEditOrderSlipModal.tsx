@@ -56,7 +56,9 @@ export const CreateEditOrderSlipModal = ({
 	const getBranchOptions = useCallback(
 		() =>
 			branches
-				.filter((branch) => branch.id !== requisitionSlip?.requesting_user?.branch?.id)
+				.filter(
+					({ id, online_url }) => id !== requisitionSlip?.requesting_user?.branch?.id && online_url,
+				)
 				.map((branch) => ({
 					value: branch?.id,
 					name: branch?.name,

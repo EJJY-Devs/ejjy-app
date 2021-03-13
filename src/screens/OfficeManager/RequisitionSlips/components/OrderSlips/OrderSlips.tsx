@@ -15,10 +15,12 @@ import {
 	requisitionSlipProductStatus,
 } from '../../../../../global/types';
 import { useActionDispatch } from '../../../../../hooks/useActionDispatch';
+import { useBranchProducts } from '../../../../../hooks/useBranchProducts';
 import { useRequisitionSlips } from '../../../../../hooks/useRequisitionSlips';
 import { convertToBulk } from '../../../../../utils/function';
 import { useDeliveryReceipt } from '../../../hooks/useDeliveryReceipt';
 import { useOrderSlips } from '../../../hooks/useOrderSlips';
+import { useUsers } from '../../../hooks/useUsers';
 import { CreateEditOrderSlipModal } from './CreateEditOrderSlipModal';
 import { OrderSlipsTable } from './OrderSlipsTable';
 import { SetOutOfStockModal } from './SetOutOfStockModal';
@@ -42,7 +44,7 @@ export const OrderSlips = ({ fetchRequisitionSlip, requisitionSlipId }: Props) =
 	// State: Modal
 	const [viewOrderSlipVisible, setViewOrderSlipVisible] = useState(false);
 	const [createEditOrderSlipVisible, setCreateEditOrderSlipVisible] = useState(false);
-	const [createOutOfStockSlipVisible, setCreateOutOfStockVisible] = useState(false);
+	const [createOutOfStockVisible, setCreateOutOfStockVisible] = useState(false);
 
 	// CUSTOM HOOKS
 	const {
@@ -59,6 +61,20 @@ export const OrderSlips = ({ fetchRequisitionSlip, requisitionSlipId }: Props) =
 		status: orderSlipStatus,
 		recentRequest: orderSlipRecentRequest,
 	} = useOrderSlips();
+	const {
+		branchProducts,
+		getBranchProductsByBranch,
+		status: branchProductsStatus,
+		errors: branchProductsErrors,
+		warnings: branchProductsWarnings,
+	} = useBranchProducts();
+	const {
+		users,
+		getUsers,
+		status: usersStatus,
+		errors: usersErrors,
+		warnings: usersWarnings,
+	} = useUsers();
 
 	const branches = useSelector(branchesSelectors.selectBranches());
 	const setRequisitionSlipAction = useActionDispatch(prActions.setRequisitionSlipAction);
@@ -275,7 +291,7 @@ export const OrderSlips = ({ fetchRequisitionSlip, requisitionSlipId }: Props) =
 			<SetOutOfStockModal
 				updateRequisitionSlipByFetching={fetchRequisitionSlip}
 				requisitionSlipId={requisitionSlip?.id}
-				visible={createOutOfStockSlipVisible}
+				visible={createOutOfStockVisible}
 				onClose={() => setCreateOutOfStockVisible(false)}
 			/>
 		</Box>

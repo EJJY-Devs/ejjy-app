@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { Pagination } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Container, Table, TableHeader } from '../../../components';
@@ -22,17 +23,28 @@ const columns = [
 
 const pendingOrderSlipStatus = [orderSlipStatus.PREPARING];
 
+const PAGE_SIZE = 10;
+
 const OrderSlips = () => {
+	// STATES
 	const [orderSlipsData, setOrderSlipsData] = useState([]);
 	const [selectedOrderSlip, setSelectedOrderSlip] = useState(null);
 	const [viewOrderSlipVisible, setViewOrderSlipVisible] = useState(false);
 
+	// CUSTOM HOOKS
 	const user = useSelector(authSelectors.selectUser());
-	const { orderSlips, getOrderSlipsExtended, status } = useOrderSlips();
+	const { orderSlips, getOrderSlipsExtended, pageCount, currentPage, status } = useOrderSlips({
+		pageSize: PAGE_SIZE,
+	});
 
+	// METHODS
 	// Effect: Fetch order slips
 	useEffect(() => {
-		getOrderSlipsExtended(user?.branch?.id, null);
+		getOrderSlipsExtended({
+			assigned_store_id: user?.branch?.id,
+			requisition_slip_id: null,
+			page: 1,
+		});
 	}, [user]);
 
 	// Effect: Format order slips to be rendered in Table
@@ -67,6 +79,14 @@ const OrderSlips = () => {
 		[orderSlips],
 	);
 
+	const onPageChange = (page) => {
+		getOrderSlipsExtended({
+			assigned_store_id: user?.branch?.id,
+			requisition_slip_id: null,
+			page,
+		});
+	};
+
 	return (
 		<Container title="Order Slips">
 			<section className="OrderSlips">
@@ -78,6 +98,15 @@ const OrderSlips = () => {
 						dataSource={orderSlipsData}
 						scroll={{ y: calculateTableHeight(orderSlipsData.length), x: '100%' }}
 						loading={status === request.REQUESTING}
+					/>
+
+					<Pagination
+						className="table-pagination"
+						current={currentPage}
+						total={pageCount}
+						pageSize={PAGE_SIZE}
+						onChange={onPageChange}
+						disabled={!orderSlips?.length}
 					/>
 
 					<ViewOrderSlipModal

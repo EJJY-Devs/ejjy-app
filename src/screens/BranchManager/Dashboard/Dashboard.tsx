@@ -18,29 +18,33 @@ const Dashboard = () => {
 		getBranchDay,
 		createBranchDay,
 		editBranchDay,
-		status: branchesDaysStatus,
-		errors: branchesDaysErrors,
+		status,
+		errors,
 	} = useBranchesDays();
 	const user = useSelector(authSelectors.selectUser());
 
-	// EFFECTS
+	// METHODS
+	useEffect(() => {
+		getBranchDay(user?.branch?.id);
+	}, []);
+
 	useEffect(() => {
 		getBranchDay(user?.branch?.id);
 	}, []);
 
 	// Effect: Display errors from branch cashiering
 	useEffect(() => {
-		if (branchesDaysErrors?.length && branchesDaysStatus === request.ERROR) {
-			message.error(branchesDaysErrors);
+		if (errors?.length && status === request.ERROR) {
+			message.error(errors);
 		}
-	}, [branchesDaysErrors, branchesDaysStatus]);
+	}, [errors, status]);
 
 	const onStartDay = () => {
 		createBranchDay(user?.branch?.id, user.id);
 	};
 
 	const onEndDay = () => {
-		editBranchDay(branchDay.id, user.id);
+		editBranchDay(user?.branch?.id, branchDay.id, user.id);
 	};
 
 	return (
@@ -51,7 +55,7 @@ const Dashboard = () => {
 				<CashieringCard
 					branchDay={branchDay}
 					onClick={branchDay ? onEndDay : onStartDay}
-					loading={branchesDaysStatus === request.REQUESTING}
+					loading={status === request.REQUESTING}
 				/>
 
 				<MachineReportTable />

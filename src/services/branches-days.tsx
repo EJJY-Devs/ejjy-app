@@ -19,5 +19,5 @@ export const service = {
 		axios.post('/branches-days/', body, { baseURL }),
 
 	edit: async (id: number, body: IEditBranchDay, baseURL) =>
-		axios.patch(`/branches-days/${id}/`, body, baseURL),
+		axios.patch(`/branches-days/${id}/`, body, { baseURL }),
 };

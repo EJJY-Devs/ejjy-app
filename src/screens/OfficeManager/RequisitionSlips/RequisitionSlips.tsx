@@ -39,7 +39,7 @@ const pendingRequisitionSlipActions = [
 	requisitionSlipActions.F_DS1_CREATED,
 ];
 
-const PAGE_SIZE = 1;
+const PAGE_SIZE = 10;
 
 const RequisitionSlips = () => {
 	// STATES

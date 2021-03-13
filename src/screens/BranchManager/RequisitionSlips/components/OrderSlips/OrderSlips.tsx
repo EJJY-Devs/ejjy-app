@@ -42,7 +42,11 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 	// Effect: Fetch requisition slip
 	useEffect(() => {
 		if (requisitionSlipId) {
-			getOrderSlipsExtended(null, requisitionSlipId);
+			getOrderSlipsExtended({
+				assigned_store_id: null,
+				requisition_slip_id: requisitionSlipId,
+				page: 1,
+			});
 		}
 	}, [requisitionSlipId]);
 

@@ -138,10 +138,11 @@ export const useBranchesDays = ({ pageSize = MAX_PAGE_SIZE } = {}) => {
 		});
 	};
 
-	const editBranchDayRequest = (branchDayId, endedById) => {
+	const editBranchDayRequest = (branchId, branchDayId, endedById) => {
 		setRecentRequest(types.EDIT_BRANCH_DAY);
 		editBranchDay({
 			id: branchDayId,
+			branch_id: branchId,
 			ended_by_id: endedById,
 			callback,
 		});

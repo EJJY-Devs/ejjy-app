@@ -113,10 +113,6 @@ export const modifiedExtraCallback = (callback, extraCallback = null) => {
 };
 
 export const showErrorMessages = (errors) => {
-	if (errors) {
-		return;
-	}
-
 	if (isString(errors)) {
 		message.error(errors);
 	} else if (isArray(errors)) {

@@ -78,7 +78,7 @@ export const BranchBalanceItem = ({ isActive, branchId, dataSource, disabled }: 
 	};
 
 	const onEndDay = () => {
-		editBranchDay(branchDay.id, user.id);
+		editBranchDay(branchId, branchDay.id, user.id);
 	};
 
 	// const onSearch = (keyword) => {

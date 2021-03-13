@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { lowerCase, upperFirst } from 'lodash';
+import { Pagination } from 'antd';
+import { upperFirst } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
@@ -34,23 +35,41 @@ const pendingRequisitionSlipActions = [
 	requisitionSlipActions.F_DS1_DELIVERING,
 ];
 
-const RequisitionSlips = () => {
-	const user = useSelector(authSelectors.selectUser());
+const PAGE_SIZE = 10;
 
+const RequisitionSlips = () => {
+	// STATES
 	const [data, setData] = useState([]);
-	const [tableData, setTableData] = useState([]);
+	const [selectedStatus, setSelectedStatus] = useState('all');
 	const [createModalVisible, setCreateModalVisible] = useState(false);
 
-	const { requisitionSlips, getRequisitionSlipsExtended, status } = useRequisitionSlips();
-
+	// CUSTOM HOOKS
+	const user = useSelector(authSelectors.selectUser());
+	const {
+		requisitionSlips,
+		pageCount,
+		currentPage,
+		getRequisitionSlipsExtended,
+		status,
+	} = useRequisitionSlips({
+		pageSize: PAGE_SIZE,
+	});
 	const {
 		branchProducts,
 		getBranchProductsByBranch,
 		status: branchProductsStatus,
 	} = useBranchProducts();
 
+	// METHODS
 	useEffect(() => {
-		getRequisitionSlipsExtended(user?.branch?.id);
+		getRequisitionSlipsExtended(
+			{
+				branchId: user?.branch?.id,
+				status: selectedStatus === 'all' ? null : selectedStatus,
+				page: 1,
+			},
+			true,
+		);
 		getBranchProductsByBranch({ branchId: user?.branch?.id, page: 1 });
 	}, []);
 
@@ -83,7 +102,6 @@ const RequisitionSlips = () => {
 		});
 
 		setData(formattedProducts);
-		setTableData(formattedProducts);
 	}, [requisitionSlips]);
 
 	const getPendingCount = useCallback(
@@ -96,25 +114,15 @@ const RequisitionSlips = () => {
 		[requisitionSlips],
 	);
 
-	const onSearch = (keyword) => {
-		keyword = lowerCase(keyword);
-		const filteredData =
-			keyword.length > 0
-				? data.filter(
-						({ _id, _datetime_created, _type }) =>
-							_id.toString() === keyword ||
-							_datetime_created.includes(keyword) ||
-							_type.includes(keyword),
-				  )
-				: data;
-
-		setTableData(filteredData);
-	};
-
-	const onStatusSelect = (selectedStatus) => {
-		const filteredData =
-			selectedStatus !== 'all' ? data.filter(({ _status }) => _status === selectedStatus) : data;
-		setTableData(filteredData);
+	const onPageChange = (page) => {
+		getRequisitionSlipsExtended(
+			{
+				branchId: user?.branch?.id,
+				status: selectedStatus === 'all' ? null : selectedStatus,
+				page,
+			},
+			true,
+		);
 	};
 
 	return (
@@ -124,17 +132,25 @@ const RequisitionSlips = () => {
 					<TableHeader
 						buttonName="Create Requisition Slip"
 						statuses={requisitionSlipActionsOptionsWithAll}
-						onStatusSelect={onStatusSelect}
-						onSearch={onSearch}
+						onStatusSelect={(status) => setSelectedStatus(status)}
 						onCreate={() => setCreateModalVisible(true)}
 						pending={getPendingCount()}
 					/>
 
 					<Table
 						columns={columns}
-						dataSource={tableData}
-						scroll={{ y: calculateTableHeight(tableData.length), x: '100%' }}
+						dataSource={data}
+						scroll={{ y: calculateTableHeight(data.length), x: '100%' }}
 						loading={status === request.REQUESTING || branchProductsStatus === request.REQUESTING}
+					/>
+
+					<Pagination
+						className="table-pagination"
+						current={currentPage}
+						total={pageCount}
+						pageSize={PAGE_SIZE}
+						onChange={onPageChange}
+						disabled={!data}
 					/>
 
 					<CreateRequisitionSlipModal

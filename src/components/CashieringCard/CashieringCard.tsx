@@ -39,7 +39,7 @@ export const CashieringCard = ({ branchDay, onClick, loading, disabled, classNam
 	const confirm = () => {
 		swal({
 			title: 'Confirmation',
-			text: `Are you sure you want to ${branchDay ? 'End Day' : 'Start Day'}?`,
+			text: `Are you sure you want to ${branchDay ? 'End Day' : 'Open Day'}?`,
 			icon: 'warning',
 			buttons: {
 				cancel: {
@@ -73,7 +73,7 @@ export const CashieringCard = ({ branchDay, onClick, loading, disabled, classNam
 
 					{!branchDay?.datetime_ended && (
 						<Button
-							text={branchDay ? 'End Day' : 'Start Day'}
+							text={branchDay ? 'End Day' : 'Open Day'}
 							variant="primary"
 							onClick={confirm}
 							disabled={disabled}

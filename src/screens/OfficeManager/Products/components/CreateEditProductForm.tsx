@@ -11,6 +11,7 @@ import {
 	Label,
 } from '../../../../components/elements';
 import {
+	productCategoryTypes,
 	productCheckingTypes,
 	productTypes,
 	unitOfMeasurementTypes,
@@ -24,6 +25,7 @@ interface ICreateProduct {
 	name: string;
 	type: 'Wet' | 'Dry';
 	unit_of_measurement: 'Weighing' | 'Non-Weighing';
+	product_category?: any;
 	print_details: string;
 	description: string;
 	allowable_spoilage?: number | string;
@@ -71,6 +73,7 @@ export const CreateEditProductForm = ({ product, onSubmit, onClose, loading }: P
 				price_per_piece: product?.price_per_piece || '',
 				price_per_bulk: product?.price_per_bulk || '',
 				is_vat_exempted: product?.is_vat_exempted?.toString() || 'false',
+				product_category: product?.product_category || productCategoryTypes.NONE,
 			},
 			Schema: Yup.object().shape(
 				{
@@ -104,6 +107,7 @@ export const CreateEditProductForm = ({ product, onSubmit, onClose, loading }: P
 					name: Yup.string().required().max(70).label('Name'),
 					type: Yup.string().label('Type'),
 					unit_of_measurement: Yup.string().label('Unit of Measurement'),
+					product_category: Yup.string().label('Product Category'),
 					print_details: Yup.string().required().label('Print Details'),
 					description: Yup.string().required().label('Description'),
 					pieces_in_bulk: Yup.number().required().min(0).label('Pieces in Bulk'),
@@ -185,6 +189,29 @@ export const CreateEditProductForm = ({ product, onSubmit, onClose, loading }: P
 		},
 	];
 
+	const productCategories = [
+		{
+			id: productCategoryTypes.NONE,
+			label: 'None',
+			value: productCategoryTypes.NONE,
+		},
+		{
+			id: productCategoryTypes.ASSORTED,
+			label: 'Assorted',
+			value: productCategoryTypes.ASSORTED,
+		},
+		{
+			id: productCategoryTypes.BABOY,
+			label: 'Baboy',
+			value: productCategoryTypes.BABOY,
+		},
+		{
+			id: productCategoryTypes.MANOK,
+			label: 'Manok',
+			value: productCategoryTypes.MANOK,
+		},
+	];
+
 	return (
 		<Formik
 			initialValues={getFormDetails().DefaultValues}
@@ -197,6 +224,8 @@ export const CreateEditProductForm = ({ product, onSubmit, onClose, loading }: P
 				values.id = product?.id;
 				values.is_daily_checked = values.checking === productCheckingTypes.DAILY;
 				values.is_randomly_checked = values.checking === productCheckingTypes.RANDOM;
+				values.product_category =
+					values.product_category === productCategoryTypes.NONE ? null : values.product_category;
 				onSubmit(values);
 			}}
 			enableReinitialize
@@ -236,6 +265,14 @@ export const CreateEditProductForm = ({ product, onSubmit, onClose, loading }: P
 							<FormRadioButton name="unit_of_measurement" items={unitOfMeasurement} />
 							{errors.unit_of_measurement && touched.unit_of_measurement ? (
 								<FieldError error={errors.unit_of_measurement} />
+							) : null}
+						</Col>
+
+						<Col span={24}>
+							<Label label="Product Category" spacing />
+							<FormRadioButton name="product_category" items={productCategories} />
+							{errors.product_category && touched.product_category ? (
+								<FieldError error={errors.product_category} />
 							) : null}
 						</Col>
 

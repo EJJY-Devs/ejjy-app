@@ -3,6 +3,7 @@ import React from 'react';
 import { DetailsHalf, DetailsRow, DetailsSingle } from '../../../../components';
 import { Button } from '../../../../components/elements';
 import { getProductType, getUnitOfMeasurement } from '../../../../utils/function';
+import { upperFirst } from 'lodash';
 
 interface Props {
 	visible: boolean;
@@ -28,6 +29,10 @@ export const ViewProductModal = ({ product, visible, onClose }: Props) => {
 				<DetailsSingle
 					label="Unit of Measurement"
 					value={getUnitOfMeasurement(product?.unit_of_measurement)}
+				/>
+				<DetailsSingle
+					label="Product Category"
+					value={upperFirst(product?.product_category) || 'None'}
 				/>
 				<DetailsSingle label="Print Details" value={product?.print_details} />
 				<DetailsSingle label="Description" value={product?.description} />

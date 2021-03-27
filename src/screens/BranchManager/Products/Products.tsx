@@ -12,7 +12,7 @@ import { useBranchProducts } from '../../../hooks/useBranchProducts';
 import { calculateTableHeight, getBranchProductStatus } from '../../../utils/function';
 import { ViewProductModal } from './components/ViewProductModal';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const columns = [
 	{ title: 'Barcode', dataIndex: 'barcode' },

@@ -13,7 +13,7 @@ import { useProducts } from '../hooks/useProducts';
 import { CreateEditProductModal } from './components/CreateEditProductModal';
 import { ViewProductModal } from './components/ViewProductModal';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const columns = [
 	{ title: 'Barcode', dataIndex: 'barcode' },

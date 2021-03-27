@@ -12,7 +12,7 @@ interface Props {
 	branchId: any;
 }
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const columns = [{ name: 'User' }, { name: 'Machine' }, { name: 'Date & Time' }];
 

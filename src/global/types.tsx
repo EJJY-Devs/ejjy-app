@@ -103,3 +103,10 @@ export const pendingTransactionTypes = {
 	PRODUCTS: 'products',
 	USERS: 'users',
 };
+
+export const productCategoryTypes = {
+	ASSORTED: 'assorted',
+	BABOY: 'baboy',
+	MANOK: 'manok',
+	NONE: 'none',
+};

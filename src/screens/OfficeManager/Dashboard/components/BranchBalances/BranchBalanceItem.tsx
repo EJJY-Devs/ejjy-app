@@ -12,7 +12,7 @@ import { getBranchProductStatus } from '../../../../../utils/function';
 
 const columns = [{ name: 'Barcode' }, { name: 'Name' }, { name: 'Balance' }, { name: 'Status' }];
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 interface Props {
 	dataSource?: any;

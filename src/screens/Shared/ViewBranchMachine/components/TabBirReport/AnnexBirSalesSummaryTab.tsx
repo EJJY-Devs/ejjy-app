@@ -19,7 +19,7 @@ import {
 	timeRangeTypes,
 } from 'global';
 import { useQueryParams, useSiteSettings } from 'hooks';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
@@ -49,7 +49,7 @@ const columns: ColumnsType = [
 		title: 'Sales Issued w/ Manual SI/OR (per RR 16-2018)',
 		dataIndex: 'salesIssueWithManual',
 	},
-	{ title: 'Gross Sales for the Day', dataIndex: 'grossSalesForTheDay' },
+	{ title: 'Gross Sales of the Day', dataIndex: 'grossSalesForTheDay' },
 	{ title: 'VATable Sales', dataIndex: 'vatableSales' },
 	{ title: 'VAT Amount', dataIndex: 'vatAmount' },
 	{ title: 'VAT-Exempt Sales', dataIndex: 'vatExemptSales' },
@@ -103,6 +103,7 @@ const columns: ColumnsType = [
 export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
+	const containerRef = useRef<HTMLDivElement | null>(null);
 
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
@@ -127,11 +128,11 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
 	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
-		title: `AnnexE1.pdf`,
+		title: 'AnnexE1.pdf',
+		containerRef,
 		jsPdfSettings: {
 			orientation: 'l',
 			unit: 'px',
-			format: [2020, 840],
 			putOnlyUsedFonts: true,
 		},
 		print: async () => {
@@ -154,53 +155,105 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 	// METHODS
 	useEffect(() => {
 		if (birReportsData?.list) {
-			const data = birReportsData.list.map((report) => ({
-				key: report.id,
-				date: formatDate(report.date),
-				beginningOrNumber: report?.beginning_or?.or_number || EMPTY_CELL,
-				endingOrNumber: report?.ending_or?.or_number || EMPTY_CELL,
+			const data = birReportsData.list.map((report) => {
+				const hasNoTransaction = Number(report.gross_sales_for_the_day) === 0;
 
-				grandAccumulatedSalesEndingBalance: formatInPeso(
-					report.grand_accumulated_sales_ending_balance,
-				),
-				grandAccumulatedSalesBeginningBalance: formatInPeso(
-					report.grand_accumulated_sales_beginning_balance,
-				),
-				salesIssueWithManual: formatInPeso(report.sales_issue_with_manual),
-				grossSalesForTheDay: formatInPeso(report.gross_sales_for_the_day),
+				return {
+					key: report.id,
+					date: formatDate(report.date),
+					beginningOrNumber: hasNoTransaction
+						? EMPTY_CELL
+						: report?.beginning_or?.or_number,
+					endingOrNumber: hasNoTransaction
+						? EMPTY_CELL
+						: report?.ending_or?.or_number,
 
-				vatableSales: formatInPeso(report.vatable_sales),
-				vatAmount: formatInPeso(report.vat_amount),
-				vatExemptSales: formatInPeso(report.vat_exempt_sales),
-				zeroRatedSales: formatInPeso(report.zero_rated_sales),
+					grandAccumulatedSalesEndingBalance: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.grand_accumulated_sales_ending_balance),
+					grandAccumulatedSalesBeginningBalance: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.grand_accumulated_sales_beginning_balance),
+					salesIssueWithManual: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.sales_issue_with_manual),
+					grossSalesForTheDay: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.gross_sales_for_the_day),
 
-				scDiscount: formatInPeso(report.sc_discount),
-				pwdDiscount: formatInPeso(report.pwd_discount),
-				naacDiscount: formatInPeso(report.naac_discount),
-				spDiscount: formatInPeso(report.sp_discount),
-				othersDiscount: formatInPeso(report.others_discount),
-				returns: formatInPeso(report.returns),
-				void: formatInPeso(report.void),
-				totalDeductions: formatInPeso(report.total_deductions),
+					vatableSales: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.vatable_sales),
+					vatAmount: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.vat_amount),
+					vatExemptSales: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.vat_exempt_sales),
+					zeroRatedSales: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.zero_rated_sales),
 
-				vatScDiscount: formatInPeso(report.vat_sc_discount),
-				vatPwdDiscount: formatInPeso(report.vat_pwd_discount),
-				vatOthersDiscount: formatInPeso(report.vat_others_discount),
-				vatOnReturns: formatInPeso(report.vat_returns),
-				vatOthers: formatInPeso(report.vat_others),
-				totalVatAdjusted: formatInPeso(report.total_vat_adjusted),
+					scDiscount: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.sc_discount),
+					pwdDiscount: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.pwd_discount),
+					naacDiscount: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.naac_discount),
+					spDiscount: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.sp_discount),
+					othersDiscount: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.others_discount),
+					returns: hasNoTransaction ? EMPTY_CELL : formatInPeso(report.returns),
+					void: hasNoTransaction ? EMPTY_CELL : formatInPeso(report.void),
+					totalDeductions: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.total_deductions),
 
-				vatPayable: formatInPeso(report.vat_payable),
-				netSales: formatInPeso(report.net_sales),
-				salesOverrunOrOverflow: formatInPeso(report.sales_overrun_or_overflow),
-				totalIncome: formatInPeso(report.total_income),
-				resetCounter: report.reset_counter,
-				zCounter: report.z_counter || '',
-				remarks:
-					Number(report.gross_sales_for_the_day) === 0
-						? NO_TRANSACTION_REMARK
-						: report.remarks,
-			}));
+					vatScDiscount: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.vat_sc_discount),
+					vatPwdDiscount: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.vat_pwd_discount),
+					vatOthersDiscount: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.vat_others_discount),
+					vatOnReturns: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.vat_returns),
+					vatOthers: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.vat_others),
+					totalVatAdjusted: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.total_vat_adjusted),
+
+					vatPayable: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.vat_payable),
+					netSales: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.net_sales),
+					salesOverrunOrOverflow: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.sales_overrun_or_overflow),
+					totalIncome: hasNoTransaction
+						? EMPTY_CELL
+						: formatInPeso(report.total_income),
+					resetCounter: hasNoTransaction ? EMPTY_CELL : report.reset_counter,
+					zCounter: hasNoTransaction ? EMPTY_CELL : report.z_counter || '',
+					remarks:
+						Number(report.gross_sales_for_the_day) === 0
+							? NO_TRANSACTION_REMARK
+							: report.remarks,
+				};
+			});
 
 			setDataSource(data);
 		}
@@ -268,9 +321,14 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 			/>
 
 			<div
+				ref={containerRef}
 				// eslint-disable-next-line react/no-danger
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
-				style={{ display: 'none' }}
+				style={{
+					visibility: 'hidden',
+					whiteSpace: 'nowrap',
+					position: 'absolute',
+				}}
 			/>
 		</>
 	);

@@ -90,7 +90,7 @@ export const TabCreditTransactions = ({ disabled }: Props) => {
 			let remarks = null;
 			if (status === transactionStatuses.FULLY_PAID) {
 				remarks = <Tag color="green">Completed</Tag>;
-			} else if (status === transactionStatuses.FULLY_PAID) {
+			} else if (status === transactionStatuses.VOID_CANCELLED) {
 				remarks = <Tag color="red">Cancelled</Tag>;
 			}
 

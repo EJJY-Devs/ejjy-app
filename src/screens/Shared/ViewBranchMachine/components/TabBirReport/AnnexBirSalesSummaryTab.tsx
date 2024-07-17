@@ -29,9 +29,9 @@ import {
 } from 'utils';
 import { birAnnexTransactionsTabs as tabs } from 'ejjy-global/dist/components/BirAnnexTransactions/data';
 
-interface Props {
+type Props = {
 	branchMachineId: number;
-}
+};
 
 const columns: ColumnsType = [
 	{ title: 'Date', dataIndex: 'date', fixed: 'left' },
@@ -129,9 +129,12 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 	});
 	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
 		title: 'AnnexE1.pdf',
-		containerRef,
+		container: {
+			containerRef,
+			widthAdd: 30,
+			heightAdd: 30,
+		},
 		jsPdfSettings: {
-			orientation: 'l',
 			unit: 'px',
 			putOnlyUsedFonts: true,
 		},
@@ -248,10 +251,7 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 						: formatInPeso(report.total_income),
 					resetCounter: hasNoTransaction ? EMPTY_CELL : report.reset_counter,
 					zCounter: hasNoTransaction ? EMPTY_CELL : report.z_counter || '',
-					remarks:
-						Number(report.gross_sales_for_the_day) === 0
-							? NO_TRANSACTION_REMARK
-							: report.remarks,
+					remarks: hasNoTransaction ? NO_TRANSACTION_REMARK : report.remarks,
 				};
 			});
 
@@ -325,9 +325,9 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 				// eslint-disable-next-line react/no-danger
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{
-					visibility: 'hidden',
-					whiteSpace: 'nowrap',
+					width: 'fit-content',
 					position: 'absolute',
+					visibility: 'hidden',
 				}}
 			/>
 		</>

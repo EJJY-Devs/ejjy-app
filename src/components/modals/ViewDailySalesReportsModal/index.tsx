@@ -44,7 +44,6 @@ export const ViewDailySalesReportsModal = ({
 	onClose,
 }: Props) => {
 	// STATES
-	// STATES
 	const [dataSource, setDataSource] = useState<TableRow[]>([]);
 	const [
 		selectedDailySales,
@@ -68,6 +67,7 @@ export const ViewDailySalesReportsModal = ({
 			...params,
 			isWithDailySalesData: true,
 			branchMachineName: branchMachine.name,
+			timeRange: params[TIME_RANGE_PARAM_KEY] as string,
 		},
 		serviceOptions: { baseURL: MACHINE_SERVER_URL },
 	});

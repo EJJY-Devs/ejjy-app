@@ -8,6 +8,7 @@ import {
 } from 'components';
 import { Label } from 'components/elements';
 import {
+	Branch,
 	ViewTransactionModal,
 	filterOption,
 	useTransactions,
@@ -22,7 +23,7 @@ import {
 import { useBranchMachines, useQueryParams, useSiteSettingsNew } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { convertIntoArray, formatInPeso, getId } from 'utils';
+import { convertIntoArray, formatInPeso, getId, getLocalApiUrl } from 'utils';
 import { TransactionsCancelled } from './components/TransactionsCancelled';
 
 const columns: ColumnsType = [
@@ -55,9 +56,9 @@ const transactionStatusOptions = [
 	},
 ];
 
-interface Props {
-	branch: any;
-}
+type Props = {
+	branch: Branch;
+};
 
 export const TabTransactions = ({ branch }: Props) => {
 	// STATES
@@ -75,6 +76,9 @@ export const TabTransactions = ({ branch }: Props) => {
 		params: {
 			...params,
 			branchId: branch.id,
+		},
+		serviceOptions: {
+			baseURL: getLocalApiUrl(),
 		},
 	});
 
@@ -157,9 +161,9 @@ export const TabTransactions = ({ branch }: Props) => {
 	);
 };
 
-interface FilterProps {
+type FilterProps = {
 	isLoading: boolean;
-}
+};
 
 const Filter = ({ isLoading }: FilterProps) => {
 	const { params, setQueryParams } = useQueryParams();

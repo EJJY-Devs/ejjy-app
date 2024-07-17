@@ -43,7 +43,7 @@ export const Summary = ({ branchMachineId }: Props) => {
 						<Col md={8} sm={0} xs={0} />
 						<Col md={8} sm={8} xs={24}>
 							<Statistic
-								title="Gross Sales From POS"
+								title="Gross Sales of the Day"
 								value={formatInPeso(summary?.total_gross_sales)}
 							/>
 						</Col>
@@ -113,7 +113,7 @@ export const Summary = ({ branchMachineId }: Props) => {
 					<Row gutter={[16, 16]}>
 						<Col md={8} sm={8} xs={24}>
 							<Statistic
-								title="Gross Sales From POS"
+								title="Gross Sales of the Day"
 								value={formatInPeso(summary?.total_gross_sales)}
 							/>
 						</Col>

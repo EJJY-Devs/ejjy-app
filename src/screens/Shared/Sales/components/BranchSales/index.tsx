@@ -15,7 +15,7 @@ const columns: ColumnsType = [
 	{ title: 'Cash Out', dataIndex: 'cashOut' },
 	{ title: 'Cash On Hand', dataIndex: 'cashOnHand' },
 	{ title: 'Credit Sales', dataIndex: 'creditSales' },
-	{ title: 'Gross Sales From POS', dataIndex: 'grossSales' },
+	{ title: 'Gross Sales of the Day', dataIndex: 'grossSales' },
 	{ title: 'Voided Transactions', dataIndex: 'voidedTransactions' },
 	{ title: 'Discounts', dataIndex: 'discounts' },
 	{ title: 'Net Sales (VAT Inclusive)', dataIndex: 'netSalesVAT' },
@@ -110,7 +110,7 @@ export const BranchSales = ({ branchId }: Props) => {
 					<Row gutter={[16, 16]}>
 						<Col md={5}>
 							<Statistic
-								title="Gross Sales from POS"
+								title="Gross Sales of the Day"
 								value={formatInPeso(summary.cashSales + summary.creditSales)}
 							/>
 						</Col>

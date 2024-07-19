@@ -6,6 +6,8 @@ import { PdfButtons } from 'components/Printing';
 import {
 	getFullName,
 	printOrderOfPayment,
+	useAccounts,
+	useOrderOfPayments,
 	ViewTransactionModal,
 } from 'ejjy-global';
 import {
@@ -17,16 +19,15 @@ import {
 	SEARCH_DEBOUNCE_TIME,
 	timeRangeTypes,
 } from 'global';
-import {
-	useAccounts,
-	useOrderOfPayments,
-	usePdf,
-	useQueryParams,
-	useSiteSettingsNew,
-} from 'hooks';
+import { usePdf, useQueryParams, useSiteSettingsNew } from 'hooks';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
-import { convertIntoArray, formatDateTime, formatInPeso } from 'utils';
+import {
+	convertIntoArray,
+	formatDateTime,
+	formatInPeso,
+	getLocalApiUrl,
+} from 'utils';
 
 const columns: ColumnsType = [
 	{ title: 'OP #', dataIndex: 'id' },
@@ -48,14 +49,15 @@ export const TabOrderOfPayments = () => {
 	const { params, setQueryParams } = useQueryParams();
 	const { data: siteSettings } = useSiteSettingsNew();
 	const {
-		data: { orderOfPayments, total },
+		data: orderOfPaymentsData,
 		isFetching: isFetchingOrderOfPayments,
 		error: orderOfPaymentsError,
 	} = useOrderOfPayments({
 		params: {
 			...params,
-			timeRange: params?.timeRange || timeRangeTypes.DAILY,
+			timeRange: (params?.timeRange || timeRangeTypes.DAILY) as string,
 		},
+		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
 	const { isLoadingPdf, previewPdf, downloadPdf } = usePdf({
 		jsPdfSettings: { format: 'legal' },
@@ -64,75 +66,77 @@ export const TabOrderOfPayments = () => {
 
 	// METHODS
 	useEffect(() => {
-		const formattedOrderOfPayments = orderOfPayments.map((orderOfPayment) => {
-			const {
-				id,
-				datetime_created,
-				amount,
-				payor,
-				purpose,
-				extra_description,
-				charge_sales_transaction,
-			} = orderOfPayment;
+		const formattedOrderOfPayments = orderOfPaymentsData?.list.map(
+			(orderOfPayment) => {
+				const {
+					id,
+					datetime_created,
+					amount,
+					payor,
+					purpose,
+					extra_description,
+					charge_sales_transaction,
+				} = orderOfPayment;
 
-			let purposeDescription = extra_description;
-			if (purpose === orderOfPaymentPurposes.PARTIAL_PAYMENT) {
-				purposeDescription = 'Partial Payment';
-			} else if (purpose === orderOfPaymentPurposes.FULL_PAYMENT) {
-				purposeDescription = 'Full Payment';
-			}
+				let purposeDescription = extra_description;
+				if (purpose === orderOfPaymentPurposes.PARTIAL_PAYMENT) {
+					purposeDescription = 'Partial Payment';
+				} else if (purpose === orderOfPaymentPurposes.FULL_PAYMENT) {
+					purposeDescription = 'Full Payment';
+				}
 
-			return {
-				key: id,
-				id,
-				datetime: formatDateTime(datetime_created),
-				payor: getFullName(payor),
-				address: payor.home_address,
-				amountOfPayment: formatInPeso(amount),
-				purpose: purposeDescription,
-				chargeSalesInvoice: charge_sales_transaction?.invoice ? (
-					<>
-						<Button
-							className="pa-0"
-							type="link"
-							onClick={() => setSelectedTransaction(charge_sales_transaction)}
-						>
-							{charge_sales_transaction.invoice.or_number}
-						</Button>
-						<span>
-							{' '}
-							-{' '}
-							{formatDateTime(
-								charge_sales_transaction.invoice.datetime_created,
-							)}
-						</span>
-					</>
-				) : (
-					EMPTY_CELL
-				),
-				actions: (
-					<PdfButtons
-						key="pdf"
-						downloadPdf={() =>
-							downloadPdf({
-								title: `OP_${orderOfPayment.id}.pdf`,
-								printData: orderOfPayment,
-							})
-						}
-						isDisabled={isLoadingPdf}
-						previewPdf={() =>
-							previewPdf({
-								title: `OP_${orderOfPayment.id}.pdf`,
-								printData: orderOfPayment,
-							})
-						}
-					/>
-				),
-			};
-		});
+				return {
+					key: id,
+					id,
+					datetime: formatDateTime(datetime_created),
+					payor: getFullName(payor),
+					address: payor.home_address,
+					amountOfPayment: formatInPeso(amount),
+					purpose: purposeDescription,
+					chargeSalesInvoice: charge_sales_transaction?.invoice ? (
+						<>
+							<Button
+								className="pa-0"
+								type="link"
+								onClick={() => setSelectedTransaction(charge_sales_transaction)}
+							>
+								{charge_sales_transaction.invoice.or_number}
+							</Button>
+							<span>
+								{' '}
+								-{' '}
+								{formatDateTime(
+									charge_sales_transaction.invoice.datetime_created,
+								)}
+							</span>
+						</>
+					) : (
+						EMPTY_CELL
+					),
+					actions: (
+						<PdfButtons
+							key="pdf"
+							downloadPdf={() =>
+								downloadPdf({
+									title: `OP_${orderOfPayment.id}.pdf`,
+									printData: orderOfPayment,
+								})
+							}
+							isDisabled={isLoadingPdf}
+							previewPdf={() =>
+								previewPdf({
+									title: `OP_${orderOfPayment.id}.pdf`,
+									printData: orderOfPayment,
+								})
+							}
+						/>
+					),
+				};
+			},
+		);
 
 		setDataSource(formattedOrderOfPayments);
-	}, [orderOfPayments]);
+	}, [orderOfPaymentsData?.list]);
 
 	return (
 		<div>
@@ -151,7 +155,7 @@ export const TabOrderOfPayments = () => {
 				loading={isFetchingOrderOfPayments || isLoadingPdf}
 				pagination={{
 					current: Number(params.page) || DEFAULT_PAGE,
-					total,
+					total: orderOfPaymentsData?.total || 0,
 					pageSize: Number(params.pageSize) || DEFAULT_PAGE_SIZE,
 					onChange: (page, newPageSize) => {
 						setQueryParams({
@@ -188,10 +192,10 @@ const Filter = ({ isLoading }: FilterProps) => {
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const {
-		data: { accounts },
-		isFetching: isFetchingAccounts,
-	} = useAccounts({ params: { search: accountSearch } });
+	const { data: accountsData, isFetching: isFetchingAccounts } = useAccounts({
+		params: { search: accountSearch },
+		serviceOptions: { baseURL: getLocalApiUrl() },
+	});
 
 	// METHODS
 	const handleSearchDebounced = useCallback(
@@ -218,7 +222,7 @@ const Filter = ({ isLoading }: FilterProps) => {
 					}}
 					onSearch={handleSearchDebounced}
 				>
-					{accounts.map((account) => (
+					{accountsData?.list?.map((account) => (
 						<Select.Option key={account.id} value={account.id}>
 							{getFullName(account)}
 						</Select.Option>

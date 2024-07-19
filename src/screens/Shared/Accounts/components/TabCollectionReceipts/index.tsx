@@ -1,9 +1,14 @@
-import { Button, Table } from 'antd';
+import { Button, Col, Row, Select, Spin, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import { RequestErrors, TableHeader } from 'components';
+import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
+import { Label } from 'components/elements';
 import {
 	CollectionReceipt,
+	formatDateTime,
 	getFullName,
+	SEARCH_DEBOUNCE_TIME,
+	timeRangeTypes,
+	useAccounts,
 	useCollectionReceipts,
 	ViewCollectionReceiptModal,
 } from 'ejjy-global';
@@ -14,15 +19,16 @@ import {
 	refetchOptions,
 } from 'global';
 import { useQueryParams, useSiteSettings } from 'hooks';
-import React, { useEffect, useState } from 'react';
+import _ from 'lodash';
+import React, { useCallback, useEffect, useState } from 'react';
 import { convertIntoArray, formatInPeso, getLocalApiUrl } from 'utils';
 
 const columns: ColumnsType = [
 	{ title: 'CR #', dataIndex: 'id' },
 	{ title: 'OP #', dataIndex: 'orderOfPaymentId' },
+	{ title: 'Date & Time Created', dataIndex: 'datetime' },
 	{ title: 'Payor', dataIndex: 'payor' },
 	{ title: 'Amount', dataIndex: 'amount' },
-	{ title: 'Actions', dataIndex: 'actions' },
 ];
 
 export const TabCollectionReceipts = () => {
@@ -43,10 +49,12 @@ export const TabCollectionReceipts = () => {
 	const {
 		data: collectionReceiptsData,
 		isFetching: isFetchingCollectionReceipts,
-		isFetched: isCollectionReceiptsFetched,
 		error: collectionReceiptsError,
 	} = useCollectionReceipts({
-		params,
+		params: {
+			...params,
+			timeRange: (params?.timeRange || timeRangeTypes.DAILY) as string,
+		},
 		options: refetchOptions,
 		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
@@ -54,8 +62,13 @@ export const TabCollectionReceipts = () => {
 	// METHODS
 	useEffect(() => {
 		const data = collectionReceiptsData?.list.map((collectionReceipt) => {
-			const { id, amount, order_of_payment } = collectionReceipt;
-			const { payor } = order_of_payment;
+			const {
+				id,
+				amount,
+				order_of_payment,
+				datetime_created,
+			} = collectionReceipt;
+			const { payor, id: orderOfPaymentId } = order_of_payment;
 
 			return {
 				key: id,
@@ -68,7 +81,8 @@ export const TabCollectionReceipts = () => {
 						{id}
 					</Button>
 				),
-				orderOfPaymentId: order_of_payment.id,
+				orderOfPaymentId,
+				datetime: formatDateTime(datetime_created),
 				payor: getFullName(payor),
 				amount: formatInPeso(amount),
 			};
@@ -89,13 +103,12 @@ export const TabCollectionReceipts = () => {
 				withSpaceBottom
 			/>
 
+			<Filter isLoading={isFetchingCollectionReceipts} />
+
 			<Table
 				columns={columns}
 				dataSource={dataSource}
-				loading={
-					(isFetchingCollectionReceipts && !isCollectionReceiptsFetched) ||
-					isFetchingSiteSettings
-				}
+				loading={isFetchingCollectionReceipts || isFetchingSiteSettings}
 				pagination={{
 					current: Number(params.page) || DEFAULT_PAGE,
 					total: collectionReceiptsData?.total || 0,
@@ -122,5 +135,59 @@ export const TabCollectionReceipts = () => {
 				/>
 			)}
 		</>
+	);
+};
+
+type FilterProps = {
+	isLoading: boolean;
+};
+
+const Filter = ({ isLoading }: FilterProps) => {
+	// STATES
+	const [accountSearch, setAccountSearch] = useState('');
+
+	// CUSTOM HOOKS
+	const { params, setQueryParams } = useQueryParams();
+	const { data: accountsData, isFetching: isFetchingAccounts } = useAccounts({
+		params: { search: accountSearch },
+		serviceOptions: { baseURL: getLocalApiUrl() },
+	});
+
+	// METHODS
+	const handleSearchDebounced = useCallback(
+		_.debounce((search) => {
+			setAccountSearch(search);
+		}, SEARCH_DEBOUNCE_TIME),
+		[],
+	);
+
+	return (
+		<Row className="mb-4" gutter={[16, 16]}>
+			<Col lg={12} span={24}>
+				<Label label="Payor" spacing />
+				<Select
+					className="w-100"
+					defaultActiveFirstOption={false}
+					filterOption={false}
+					notFoundContent={isFetchingAccounts ? <Spin size="small" /> : null}
+					value={params.payorId ? Number(params.payorId) : null}
+					allowClear
+					showSearch
+					onChange={(value) => {
+						setQueryParams({ payorId: value }, { shouldResetPage: true });
+					}}
+					onSearch={handleSearchDebounced}
+				>
+					{accountsData?.list?.map((account) => (
+						<Select.Option key={account.id} value={account.id}>
+							{getFullName(account)}
+						</Select.Option>
+					))}
+				</Select>
+			</Col>
+			<Col lg={12} span={24}>
+				<TimeRangeFilter disabled={isLoading} />
+			</Col>
+		</Row>
 	);
 };

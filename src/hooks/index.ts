@@ -37,7 +37,6 @@ export { default as useDiscountOptions } from './useDiscountOptions';
 export { default as useLogs } from './useLogs';
 export { default as useNetwork } from './useNetwork';
 export * from './useOrderOfPayments';
-export { default as useOrderOfPayments } from './useOrderOfPayments';
 export * from './usePdf';
 export { default as usePdf } from './usePdf';
 export { default as usePingOnlineServer } from './usePingOnlineServer';

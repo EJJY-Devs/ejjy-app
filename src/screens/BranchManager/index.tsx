@@ -306,8 +306,6 @@ const BranchManager = () => {
 		<Container sidebarItems={getSidebarItems()}>
 			{!IS_APP_LIVE && <TimeMismatchBoundary />}
 
-			<AppIcons />
-
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
 					<Route component={Dashboard} path="/branch-manager/dashboard" />

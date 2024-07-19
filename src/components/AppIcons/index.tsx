@@ -79,7 +79,7 @@ const Component = () => {
 
 	return (
 		<div className="AppIcons">
-			{isUserFromBranch(user.user_type) && (
+			{user && isUserFromBranch(user.user_type) && (
 				<Tooltip title="Connectivity Status">
 					<WifiOutlined
 						className={cn('AppIcons_icon', {

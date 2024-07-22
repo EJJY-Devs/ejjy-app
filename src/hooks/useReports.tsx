@@ -107,13 +107,12 @@ export const useGenerateReports = () => {
 			wrapServiceWithCatch(
 				ReportsService.generate(
 					{
-						branch_id: Number(branchId),
+						branch_id: branchId ? Number(branchId) : undefined,
 					},
 					getLocalApiUrl(),
 				),
 			),
 		{
-			enabled: !!branchId,
 			refetchInterval: REFETCH_INTERVAL_MS,
 			refetchIntervalInBackground: true,
 			notifyOnChangeProps: [],

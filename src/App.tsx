@@ -1,5 +1,10 @@
 import { Spin } from 'antd';
-import { CommonRoute, NoAuthRoute, PageInformation } from 'components';
+import {
+	AppIcons,
+	CommonRoute,
+	NoAuthRoute,
+	PageInformation,
+} from 'components';
 import {
 	APP_BRANCH_KEY_KEY,
 	APP_LOCAL_BRANCH_ID_KEY,
@@ -129,6 +134,8 @@ const App = () => {
 			/>
 
 			<PageInformation />
+
+			<AppIcons />
 
 			<Spin
 				className="GlobalSpinner"

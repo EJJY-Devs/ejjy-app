@@ -11,9 +11,10 @@ import React from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
-	getGoogleApiUrl,
 	getId,
+	getLocalApiUrl,
 	getLocalBranchId,
+	getOnlineApiUrl,
 	isUserFromBranch,
 	isUserFromOffice,
 } from 'utils';
@@ -74,8 +75,8 @@ export const EditBranchProductsModal = ({ product, onClose }: Props) => {
 				productId: getId(product),
 				data: formData,
 				serverUrl: isUserFromBranch(user.user_type)
-					? undefined
-					: getGoogleApiUrl(),
+					? getLocalApiUrl()
+					: getOnlineApiUrl(),
 			});
 		}
 

@@ -14,6 +14,7 @@ import {
 	convertIntoArray,
 	getGoogleApiUrl,
 	getId,
+	getLocalApiUrl,
 	getLocalBranchId,
 	isUserFromBranch,
 	isUserFromOffice,
@@ -84,7 +85,7 @@ export const PricesModal = ({ product, onClose }: Props) => {
 				productId: getId(product),
 				data: branchProductFormData,
 				serverUrl: isUserFromBranch(user.user_type)
-					? undefined
+					? getLocalApiUrl()
 					: getGoogleApiUrl(),
 			});
 		}

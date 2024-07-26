@@ -16,6 +16,7 @@ import {
 	ViewTransactionModal,
 	filterOption,
 	formatInPeso,
+	getComputedDiscount,
 	getDiscountFields,
 	getFullName,
 	timeRangeTypes,
@@ -136,7 +137,7 @@ export const TabDiscountedTransactions = ({
 					idNumber: cliendId || EMPTY_CELL,
 					discountName: discountOption.name,
 					grossAmount: formatInPeso(transaction.gross_amount),
-					discount: formatInPeso(transaction.overall_discount),
+					discount: formatInPeso(getComputedDiscount(transaction)),
 					vatAmount: formatInPeso(transaction.invoice.vat_amount),
 					amountDue: formatInPeso(transaction.total_amount),
 				};

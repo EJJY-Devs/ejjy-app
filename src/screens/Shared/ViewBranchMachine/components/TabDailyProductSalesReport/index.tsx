@@ -8,7 +8,14 @@ import {
 	TransactionStatus,
 } from 'components';
 import { Label } from 'components/elements';
-import { ViewTransactionModal, getProductCode } from 'ejjy-global';
+import {
+	NaacFields,
+	PWDFields,
+	SpecialDiscountCode,
+	ViewTransactionModal,
+	getDiscountFields,
+	getProductCode,
+} from 'ejjy-global';
 import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
@@ -33,7 +40,8 @@ import {
 
 const columns: ColumnsType = [
 	{ title: 'Date & Time', dataIndex: 'dateTime', width: 125 },
-	{ title: 'Client Code / Name', dataIndex: 'client', width: 150 },
+	{ title: 'Client Name', dataIndex: 'clientName' },
+	{ title: 'ID Number', dataIndex: 'idNumber' },
 	{ title: 'Invoice Number', dataIndex: 'invoiceNumber', width: 150 },
 	{ title: 'Invoice Type', dataIndex: 'invoiceType', width: 150 },
 	{ title: 'Quantity', dataIndex: 'quantity' },
@@ -105,16 +113,26 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 				<TransactionStatus transaction={transaction} />
 			);
 
+			const discountOption = transaction.adjustment_remarks.discount_option;
+			let cliendId = transaction.client?.id?.toString();
+			let clientName = transaction.client?.name;
+
+			if (transaction.discountOption.is_special_discount) {
+				const fields = getDiscountFields(
+					discountOption.code as SpecialDiscountCode,
+					transaction.discount_option_additional_fields_values || '',
+				);
+
+				cliendId = fields?.id;
+				clientName =
+					(fields as NaacFields)?.coach || (fields as PWDFields)?.name;
+			}
+
 			return {
 				key: id,
 				dateTime: formatDateTime(datetime_created),
-				client: transaction.client ? (
-					`${transaction.client.id || ''} / ${transaction.client.name || ''}`
-				) : (
-					<>
-						<span>walk-in</span> {modeOfPayment}
-					</>
-				),
+				clientName: clientName || EMPTY_CELL,
+				idNumber: cliendId || EMPTY_CELL,
 				invoiceNumber: transaction.invoice ? (
 					<Button
 						type="link"

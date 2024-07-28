@@ -33,7 +33,9 @@ const Component = () => {
 	}, []);
 
 	const startPrinterConfiguration = () => {
-		if (getAppReceiptPrinterName()) {
+		const printerName = getAppReceiptPrinterName();
+
+		if (printerName) {
 			handlePrinterClick();
 
 			// setup a callback
@@ -50,7 +52,7 @@ const Component = () => {
 				});
 
 				qz.printers
-					.find(getAppReceiptPrinterName())
+					.find(printerName)
 					.then((printer) => {
 						qz.printers.startListening(printer).then(() => {
 							setUserInterface({ isPrinterConnected: true });

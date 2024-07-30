@@ -102,10 +102,6 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 			} = transactionProduct;
 			const product = branch_product?.product || {};
 
-			const modeOfPayment = (
-				<ModeOfPayment modeOfPayment={transaction.payment.mode} />
-			);
-
 			const remarks = [
 				transactionStatuses.VOID_CANCELLED,
 				transactionStatuses.VOID_EDITED,
@@ -113,7 +109,7 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 				<TransactionStatus transaction={transaction} />
 			);
 
-			const discountOption = transaction.adjustment_remarks.discount_option;
+			const discountOption = transaction.discount_option;
 			let cliendId = transaction.client?.id?.toString();
 			let clientName = transaction.client?.name;
 

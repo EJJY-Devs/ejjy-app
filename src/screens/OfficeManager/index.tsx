@@ -1,5 +1,5 @@
-import { AppIcons, Container } from 'components';
-import { useGenerateReports } from 'hooks';
+import { Container } from 'components';
+import { useGenerateReports, useUploadData } from 'hooks';
 import React, { useCallback } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 import {
@@ -44,9 +44,9 @@ import { Users } from './Users';
 const OfficeManager = () => {
 	useNotificationConnectivity();
 	useNotificationDtr();
-	// useUploadData({
-	// 	params: { isBackOffice: false },
-	// });
+	useUploadData({
+		params: { isBackOffice: false },
+	});
 
 	const { connectivityCount, dtrCount } = useNotificationStore(
 		(state: any) => ({

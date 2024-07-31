@@ -6,7 +6,13 @@ import {
 	FormInputLabel,
 	Label,
 } from 'components/elements';
-import { filterOption, getFullName, Transaction } from 'ejjy-global';
+import {
+	filterOption,
+	getFullName,
+	isUserFromBranch,
+	Transaction,
+	User,
+} from 'ejjy-global';
 import { ErrorMessage, Form, Formik } from 'formik';
 import { orderOfPaymentPurposes, SEARCH_DEBOUNCE_TIME } from 'global';
 import {
@@ -17,7 +23,7 @@ import {
 import _, { debounce } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useUserStore } from 'stores';
-import { convertIntoArray, formatInPeso, getId } from 'utils';
+import { convertIntoArray, formatInPeso } from 'utils';
 import { Payor } from 'utils/type';
 import * as Yup from 'yup';
 
@@ -70,7 +76,7 @@ export const CreateOrderOfPaymentModal = ({
 		}
 
 		await createOrderOfPayment({
-			createdById: getId(user),
+			createdById: isUserFromBranch(user.user_type) ? user.id : user.online_id,
 			payorId: formData.payorId,
 			amount: formData.amount,
 			purpose: formData.purpose,
@@ -112,6 +118,7 @@ export const CreateOrderOfPaymentModal = ({
 				isLoading={isCreatingOrderOfPayment || isCheckingInvoiceValidity}
 				payor={payor}
 				transaction={transaction}
+				user={user}
 				onClose={onClose}
 				onSubmit={handleCreate}
 			/>
@@ -119,17 +126,19 @@ export const CreateOrderOfPaymentModal = ({
 	);
 };
 
-interface FormProps {
+type FormProps = {
 	payor: Payor;
 	transaction?: Transaction;
+	user: User;
 	isLoading: boolean;
 	onSubmit: (formData) => void;
 	onClose: () => void;
-}
+};
 
 export const CreateOrderOfPaymentForm = ({
 	payor,
 	transaction,
+	user,
 	isLoading,
 	onSubmit,
 	onClose,
@@ -159,7 +168,9 @@ export const CreateOrderOfPaymentForm = ({
 	const getFormDetails = useCallback(
 		() => ({
 			defaultValues: {
-				payorId: getId(payor.account),
+				payorId: isUserFromBranch(user.user_type)
+					? payor.account.id
+					: payor.account.online_id,
 				amount: transaction?.total_amount || '',
 				purpose: transaction ? orderOfPaymentPurposes.FULL_PAYMENT : null,
 				purposeOthers: '',

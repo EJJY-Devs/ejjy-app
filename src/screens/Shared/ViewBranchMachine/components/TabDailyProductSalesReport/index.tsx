@@ -113,7 +113,7 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 			let cliendId = transaction.client?.id?.toString();
 			let clientName = transaction.client?.name;
 
-			if (transaction.discountOption.is_special_discount) {
+			if (discountOption.is_special_discount) {
 				const fields = getDiscountFields(
 					discountOption.code as SpecialDiscountCode,
 					transaction.discount_option_additional_fields_values || '',

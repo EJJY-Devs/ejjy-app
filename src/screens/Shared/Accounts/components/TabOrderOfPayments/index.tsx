@@ -6,6 +6,7 @@ import { PdfButtons } from 'components/Printing';
 import {
 	getFullName,
 	printOrderOfPayment,
+	ServiceType,
 	useAccounts,
 	useOrderOfPayments,
 	ViewTransactionModal,
@@ -57,7 +58,10 @@ export const TabOrderOfPayments = () => {
 			...params,
 			timeRange: (params?.timeRange || timeRangeTypes.DAILY) as string,
 		},
-		serviceOptions: { baseURL: getLocalApiUrl() },
+		serviceOptions: {
+			type: ServiceType.OFFLINE,
+			baseURL: getLocalApiUrl(),
+		},
 	});
 	const { isLoadingPdf, previewPdf, downloadPdf } = usePdf({
 		jsPdfSettings: { format: 'legal' },

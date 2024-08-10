@@ -58,9 +58,9 @@ const ALL_STATUS = [
 	transactionStatuses.FULLY_PAID,
 ].join(',');
 
-interface Props {
+type Props = {
 	branchMachineId: number;
-}
+};
 
 export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 	// STATES
@@ -148,7 +148,7 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 				invoiceNumber: transaction.invoice ? (
 					<Button
 						type="link"
-						onClick={() => setSelectedTransaction(transaction.id)}
+						onClick={() => setSelectedTransaction(transaction)}
 					>
 						{transaction.invoice.or_number}
 					</Button>
@@ -221,9 +221,9 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 	);
 };
 
-interface FilterProps {
+type FilterProps = {
 	isLoading: boolean;
-}
+};
 
 const Filter = ({ isLoading }: FilterProps) => {
 	const { params, setQueryParams } = useQueryParams();

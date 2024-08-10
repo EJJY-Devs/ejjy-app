@@ -1,13 +1,9 @@
-import { isUserFromBranch } from 'ejjy-global';
 import { useMutation } from 'react-query';
 import { OrderOfPaymentsService } from 'services';
-import { useUserStore } from 'stores';
-import { getLocalApiUrl, getOnlineApiUrl } from 'utils';
+import { getOnlineApiUrl } from 'utils';
 
-export const useOrderOfPaymentsCreate = (options = {}) => {
-	const user = useUserStore((state) => state.user);
-
-	return useMutation<any, any, any>(
+export const useOrderOfPaymentsCreate = (options = {}) =>
+	useMutation<any, any, any>(
 		({
 			createdById,
 			payorId,
@@ -25,9 +21,7 @@ export const useOrderOfPaymentsCreate = (options = {}) => {
 					extra_description: extraDescription,
 					charge_sales_transaction_id: chargeSalesTransactionId,
 				},
-				isUserFromBranch(user.user_type) ? getLocalApiUrl() : getOnlineApiUrl(),
-				// getLocalApiUrl(), //TODO: For demo purposes, once upload to gcloud is enabled, revert to online API URL
+				getOnlineApiUrl(),
 			),
 		options,
 	);
-};

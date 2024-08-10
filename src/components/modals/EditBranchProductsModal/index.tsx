@@ -69,7 +69,13 @@ export const EditBranchProductsModal = ({ product, onClose }: Props) => {
 
 	// METHODS
 	const handleSubmit = async ({ formData, isBulkEdit }) => {
-		if (formData.length > 0) {
+		if (isBulkEdit) {
+			await editProduct({
+				...formData[0],
+				id: getId(product),
+				actingUserId: getId(user),
+			});
+		} else if (formData.length > 0) {
 			await editBranchProductPriceCost({
 				actingUserId: getId(user),
 				productId: getId(product),
@@ -77,14 +83,6 @@ export const EditBranchProductsModal = ({ product, onClose }: Props) => {
 				serverUrl: isUserFromBranch(user.user_type)
 					? getLocalApiUrl()
 					: getOnlineApiUrl(),
-			});
-		}
-
-		if (isBulkEdit) {
-			await editProduct({
-				...formData[0],
-				id: getId(product),
-				actingUserId: getId(user),
 			});
 		}
 

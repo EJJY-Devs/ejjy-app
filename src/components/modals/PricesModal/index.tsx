@@ -79,17 +79,6 @@ export const PricesModal = ({ product, onClose }: Props) => {
 		priceMarkdownFormData,
 		isBulkEdit,
 	}) => {
-		if (branchProductFormData.length > 0) {
-			await editBranchProductPriceCost({
-				actingUserId: getId(user),
-				productId: getId(product),
-				data: branchProductFormData,
-				serverUrl: isUserFromBranch(user.user_type)
-					? getLocalApiUrl()
-					: getGoogleApiUrl(),
-			});
-		}
-
 		if (priceMarkdownFormData.length > 0) {
 			await createPriceMarkdown({
 				productId: getId(product),
@@ -102,6 +91,15 @@ export const PricesModal = ({ product, onClose }: Props) => {
 				...branchProductFormData[0],
 				id: getId(product),
 				actingUserId: getId(user),
+			});
+		} else if (branchProductFormData.length > 0) {
+			await editBranchProductPriceCost({
+				actingUserId: getId(user),
+				productId: getId(product),
+				data: branchProductFormData,
+				serverUrl: isUserFromBranch(user.user_type)
+					? getLocalApiUrl()
+					: getGoogleApiUrl(),
 			});
 		}
 

@@ -30,7 +30,7 @@ import {
 	useSiteSettingsNew,
 	useTransactionProducts,
 } from 'hooks';
-import React, { useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import {
 	convertIntoArray,
 	formatDateTime,
@@ -111,7 +111,7 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 
 			const discountOption = transaction.discount_option;
 			let cliendId = transaction.client?.id?.toString();
-			let clientName = transaction.client?.name;
+			let clientName: string | ReactNode[] = transaction.client?.name;
 
 			if (discountOption?.is_special_discount) {
 				const fields = getDiscountFields(
@@ -122,6 +122,22 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 				cliendId = fields?.id;
 				clientName =
 					(fields as NaacFields)?.coach || (fields as PWDFields)?.name;
+			} else if (transaction.discount_option_additional_fields_values?.length) {
+				const discountOptionFields = JSON.parse(
+					transaction.discount_option_additional_fields_values,
+				);
+
+				const fields = Object.keys(discountOptionFields).map((key) => ({
+					key,
+					value: discountOptionFields[key],
+				}));
+
+				clientName = fields.map(({ key, value }) => (
+					<tr key={key}>
+						<td style={{ width: 130 }}>{key}:</td>
+						<td>{value}</td>
+					</tr>
+				));
 			}
 
 			return {

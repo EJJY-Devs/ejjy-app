@@ -28,7 +28,7 @@ import {
 } from 'ejjy-global';
 import { pageSizeOptions } from 'global';
 import { useSiteSettingsNew } from 'hooks';
-import React, { useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { convertIntoArray, getLocalApiUrl, isStandAlone } from 'utils';
 
 const columns: ColumnsType = [
@@ -110,7 +110,7 @@ export const TabDiscountedTransactions = ({
 			const data = transactionsData.list.map((transaction) => {
 				const discountOption = transaction.adjustment_remarks.discount_option;
 				let cliendId = transaction.client?.id?.toString();
-				let clientName = transaction.client?.name;
+				let clientName: string | ReactNode[] = transaction.client?.name;
 
 				if (discountOption.is_special_discount) {
 					const fields = getDiscountFields(
@@ -121,6 +121,24 @@ export const TabDiscountedTransactions = ({
 					cliendId = fields?.id;
 					clientName =
 						(fields as NaacFields)?.coach || (fields as PWDFields)?.name;
+				} else if (
+					transaction.discount_option_additional_fields_values?.length
+				) {
+					const discountOptionFields = JSON.parse(
+						transaction.discount_option_additional_fields_values,
+					);
+
+					const fields = Object.keys(discountOptionFields).map((key) => ({
+						key,
+						value: discountOptionFields[key],
+					}));
+
+					clientName = fields.map(({ key, value }) => (
+						<tr key={key}>
+							<td style={{ width: 130 }}>{key}:</td>
+							<td>{value}</td>
+						</tr>
+					));
 				}
 
 				return {

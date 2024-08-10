@@ -134,10 +134,9 @@ export const TabDiscountedTransactions = ({
 					}));
 
 					clientName = fields.map(({ key, value }) => (
-						<tr key={key}>
-							<td style={{ width: 130 }}>{key}:</td>
-							<td>{value}</td>
-						</tr>
+						<div key={key}>
+							{key}: {value}
+						</div>
 					));
 				}
 

@@ -36,6 +36,7 @@ import {
 	formatDateTime,
 	formatInPeso,
 	formatQuantity,
+	getLocalApiUrl,
 } from 'utils';
 
 const columns: ColumnsType = [
@@ -65,7 +66,7 @@ type Props = {
 export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
-	const [selectedTransaction, setSelectedTransaction] = useState(null);
+	const [selectedTransactionId, setSelectedTransactionId] = useState(null);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -147,7 +148,7 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 				invoiceNumber: transaction.invoice ? (
 					<Button
 						type="link"
-						onClick={() => setSelectedTransaction(transaction)}
+						onClick={() => setSelectedTransactionId(transaction.id)}
 					>
 						{transaction.invoice.or_number}
 					</Button>
@@ -209,11 +210,12 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 				bordered
 			/>
 
-			{selectedTransaction && (
+			{selectedTransactionId && (
 				<ViewTransactionModal
+					serviceOptions={{ baseURL: getLocalApiUrl() }}
 					siteSettings={siteSettings}
-					transaction={selectedTransaction}
-					onClose={() => setSelectedTransaction(null)}
+					transaction={selectedTransactionId}
+					onClose={() => setSelectedTransactionId(null)}
 				/>
 			)}
 		</>

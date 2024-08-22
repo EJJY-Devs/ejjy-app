@@ -136,8 +136,8 @@ export const ModifyProductForm = ({
 				pricePerBulk: product?.price_per_bulk || 1,
 				pricePerPiece: product?.price_per_piece || '',
 				specialPrice: product?.special_price || '',
-				creditPrice: product?.special_price || '',
-				wholeSalePrice: product?.special_price || '',
+				creditPrice: product?.credit_price || '',
+				wholeSalePrice: product?.wholesale_price || '',
 
 				printDetails: product?.print_details || '',
 				priceTagPrintDetails: product?.price_tag_print_details || '',

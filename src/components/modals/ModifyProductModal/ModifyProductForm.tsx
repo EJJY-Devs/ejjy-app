@@ -122,6 +122,9 @@ export const ModifyProductForm = ({
 				costPerPiece: product?.cost_per_piece || '',
 				pricePerBulk: product?.price_per_bulk || '',
 				pricePerPiece: product?.price_per_piece || '',
+				specialPrice: product?.special_price || '',
+				creditPrice: product?.special_price || '',
+				wholeSalePrice: product?.special_price || '',
 
 				printDetails: product?.print_details || '',
 				priceTagPrintDetails: product?.price_tag_print_details || '',
@@ -210,21 +213,36 @@ export const ModifyProductForm = ({
 						.moreThan(0)
 						.nullable()
 						.label('Cost per Piece'),
-					costPerBulk: Yup.number()
-						.required()
-						.moreThan(0)
-						.nullable()
-						.label('Cost Per Bulk'),
+					// costPerBulk: Yup.number()
+					// 	.required()
+					// 	.moreThan(0)
+					// 	.nullable()
+					// 	.label('Cost Per Bulk'),
 					pricePerPiece: Yup.number()
 						.required()
 						.moreThan(0)
 						.nullable()
-						.label('Regular Price (Piece)'),
-					pricePerBulk: Yup.number()
+						.label('Regular Price'),
+					// pricePerBulk: Yup.number()
+					// 	.required()
+					// 	.moreThan(0)
+					// 	.nullable()
+					// 	.label('Regular Price (Bulk)'),
+					creditPrice: Yup.number()
 						.required()
 						.moreThan(0)
 						.nullable()
-						.label('Regular Price (Bulk)'),
+						.label('Credit Price'),
+					wholeSalePrice: Yup.number()
+						.required()
+						.moreThan(0)
+						.nullable()
+						.label('Wholesale Price'),
+					specialPrice: Yup.number()
+						.required()
+						.moreThan(0)
+						.nullable()
+						.label('Special Price'),
 					pointSystemTagId: Yup.string().nullable().label('Point System Tag'),
 				},
 				[['barcode', 'textcode']],
@@ -309,7 +327,6 @@ export const ModifyProductForm = ({
 					<ScrollToFieldError />
 
 					<Row gutter={[16, 16]}>
-
 						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'sellingBarcode',
@@ -335,7 +352,6 @@ export const ModifyProductForm = ({
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>
-
 
 						<Col sm={12} span={24}>
 							{renderInputField({
@@ -376,7 +392,6 @@ export const ModifyProductForm = ({
 								},
 							})}
 						</Col>
-
 
 						<Col sm={12} span={24}>
 							<Label label="Product Category" spacing />
@@ -515,7 +530,6 @@ export const ModifyProductForm = ({
 							/>
 						</Col>
 
-
 						<Divider dashed>
 							PRICES
 							<br />
@@ -525,7 +539,7 @@ export const ModifyProductForm = ({
 						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'costPerPiece',
-								label: 'Cost (Piece)',
+								label: 'Cost',
 								setFieldValue,
 								values,
 								type: inputTypes.MONEY,
@@ -534,8 +548,8 @@ export const ModifyProductForm = ({
 
 						<Col sm={12} span={24}>
 							{renderInputField({
-								name: 'costPerBulk',
-								label: 'Cost (Bulk)',
+								name: 'specialPrice',
+								label: 'Special Price',
 								setFieldValue,
 								values,
 								type: inputTypes.MONEY,
@@ -545,7 +559,7 @@ export const ModifyProductForm = ({
 						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'pricePerPiece',
-								label: 'Regular Price (Piece)',
+								label: 'Regular Price',
 								setFieldValue,
 								values,
 								type: inputTypes.MONEY,
@@ -554,8 +568,18 @@ export const ModifyProductForm = ({
 
 						<Col sm={12} span={24}>
 							{renderInputField({
-								name: 'pricePerBulk',
-								label: 'Regular Price (Bulk)',
+								name: 'wholeSalePrice',
+								label: 'Wholesale Price',
+								setFieldValue,
+								values,
+								type: inputTypes.MONEY,
+							})}
+						</Col>
+
+						<Col sm={12} span={24}>
+							{renderInputField({
+								name: 'creditPrice',
+								label: 'Credit Price',
 								setFieldValue,
 								values,
 								type: inputTypes.MONEY,

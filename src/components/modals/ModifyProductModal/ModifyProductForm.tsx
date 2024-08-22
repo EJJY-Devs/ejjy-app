@@ -64,7 +64,7 @@ const inStockOptions = [
 	{
 		id: 'decline',
 		label: 'Decline',
-		value: 'False',
+		value: 'false',
 	},
 ];
 

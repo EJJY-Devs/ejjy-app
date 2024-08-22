@@ -55,6 +55,19 @@ const unitOfMeasurementOptions = [
 	},
 ];
 
+const inStockOptions = [
+	{
+		id: 'retain',
+		label: 'Retain',
+		value: 'true',
+	},
+	{
+		id: 'decline',
+		label: 'Decline',
+		value: 'False',
+	},
+];
+
 const isVatExemptedOptions = [
 	{
 		id: 'vat',
@@ -416,7 +429,7 @@ export const ModifyProductForm = ({
 
 						<Col span={24}>
 							<Label label="In Stock" spacing />
-							<FormRadioButton id="isSoldInBranch" items={booleanOptions} />
+							<FormRadioButton id="isSoldInBranch" items={inStockOptions} />
 							<ErrorMessage
 								name="isSoldInBranch"
 								render={(error) => <FieldError error={error} />}

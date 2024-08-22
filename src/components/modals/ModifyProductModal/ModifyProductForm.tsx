@@ -145,17 +145,6 @@ export const ModifyProductForm = ({
 			},
 			Schema: Yup.object().shape(
 				{
-					barcode: Yup.string()
-						.max(50)
-						.test(
-							'barcode-selling-required-1',
-							'Input either a Product Barcode or Scale Barcode',
-							function test(value) {
-								// NOTE: We need to use a no-named function so
-								// we can use 'this' and access the other form field value.
-								return value || this.parent.sellingBarcode;
-							},
-						),
 					textcode: Yup.string().max(50),
 					sellingBarcode: Yup.string()
 						.max(50)
@@ -169,7 +158,6 @@ export const ModifyProductForm = ({
 							},
 						)
 						.label('Scale Barcode'),
-					packingBarcode: Yup.string().max(50).label('Packing Barcode'),
 
 					name: Yup.string().required().max(70).label('Name').trim(),
 					type: Yup.string().label('TT-001'),
@@ -183,35 +171,6 @@ export const ModifyProductForm = ({
 						.required()
 						.label('Print Details (Price Tag)')
 						.trim(),
-					description: Yup.string().required().label('Description').trim(),
-					piecesInBulk: Yup.number()
-						.required()
-						.moreThan(0)
-						.nullable()
-						.label('Pieces in Bulk'),
-					conversionAmount: Yup.number()
-						.when(['barcode', 'sellingBarcode'], {
-							is: (barcode, sellingBarcode) => barcode || sellingBarcode,
-							then: Yup.number().required().moreThan(0),
-							otherwise: Yup.number().notRequired().nullable(),
-						})
-						.label('Conversion (Grams)'),
-					allowableSpoilage: Yup.number()
-						.when(['unitOfMeasurement'], {
-							is: (unitOfMeasurementValue) =>
-								unitOfMeasurementValue === unitOfMeasurementTypes.WEIGHING,
-							then: Yup.number().integer().min(0).max(100).required(),
-							otherwise: Yup.number().notRequired().nullable(),
-						})
-						.label('Allowable Spoilage'),
-					hasQuantityAllowance: Yup.boolean()
-						.when(['unitOfMeasurement'], {
-							is: (unitOfMeasurementValue) =>
-								unitOfMeasurementValue === unitOfMeasurementTypes.WEIGHING,
-							then: Yup.boolean().required(),
-							otherwise: Yup.boolean().notRequired().nullable(),
-						})
-						.label('Qty Allowance'),
 					reorderPoint: Yup.number()
 						.required()
 						.moreThan(0)
@@ -338,17 +297,8 @@ export const ModifyProductForm = ({
 			validationSchema={getFormDetails().Schema}
 			enableReinitialize
 			onSubmit={async (formData) => {
-				const isWeighing =
-					formData.unitOfMeasurement === unitOfMeasurementTypes.WEIGHING;
-
 				const data = {
 					...formData,
-					hasQuantityAllowance: isWeighing
-						? formData.hasQuantityAllowance
-						: product?.has_quantity_allowance,
-					allowableSpoilage: isWeighing
-						? Number(formData.allowableSpoilage) / 100
-						: undefined,
 				};
 
 				onSubmit(data);
@@ -359,34 +309,6 @@ export const ModifyProductForm = ({
 					<ScrollToFieldError />
 
 					<Row gutter={[16, 16]}>
-						<Col sm={12} span={24}>
-							{renderInputField({
-								name: 'barcode',
-								label: 'Barcode',
-								setFieldValue,
-								values,
-							})}
-						</Col>
-
-						<Col sm={12} span={24}>
-							<Label label="&nbsp;" spacing />
-							<FormRadioButton
-								id="unitOfMeasurement"
-								items={unitOfMeasurementOptions}
-								onChange={(value) => {
-									if (value === unitOfMeasurementTypes.WEIGHING) {
-										setFieldValue(
-											'sellingBarcode',
-											product?.selling_barcode || '',
-										);
-									}
-								}}
-							/>
-							<ErrorMessage
-								name="unitOfMeasurement"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
 
 						<Col sm={12} span={24}>
 							{renderInputField({
@@ -407,7 +329,6 @@ export const ModifyProductForm = ({
 							<FormRadioButton
 								id="sellingBarcodeUnitOfMeasurement"
 								items={unitOfMeasurementOptions}
-								disabled
 							/>
 							<ErrorMessage
 								name="sellingBarcodeUnitOfMeasurement"
@@ -415,27 +336,6 @@ export const ModifyProductForm = ({
 							/>
 						</Col>
 
-						<Col sm={12} span={24}>
-							{renderInputField({
-								name: 'packingBarcode',
-								label: 'Packing Barcode',
-								setFieldValue,
-								values,
-							})}
-						</Col>
-
-						<Col sm={12} span={24}>
-							<Label label="&nbsp;" spacing />
-							<FormRadioButton
-								disabled={!values.packingBarcode}
-								id="packingBarcodeUnitOfMeasurement"
-								items={unitOfMeasurementOptions}
-							/>
-							<ErrorMessage
-								name="packingBarcodeUnitOfMeasurement"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
 
 						<Col sm={12} span={24}>
 							{renderInputField({
@@ -477,14 +377,6 @@ export const ModifyProductForm = ({
 							})}
 						</Col>
 
-						<Col span={24}>
-							{renderInputField({
-								name: 'description',
-								label: 'Description',
-								setFieldValue,
-								values,
-							})}
-						</Col>
 
 						<Col sm={12} span={24}>
 							<Label label="Product Category" spacing />
@@ -562,25 +454,6 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label label="Qty Allowance" spacing />
-							<FormRadioButton
-								disabled={
-									values?.unitOfMeasurement !== unitOfMeasurementTypes.WEIGHING
-								}
-								id="hasQuantityAllowance"
-								items={booleanOptions}
-							/>
-							<ErrorMessage
-								name="hasQuantityAllowance"
-								render={(error) => <FieldError error={error} />}
-							/>
-							{values?.unitOfMeasurement !==
-								unitOfMeasurementTypes.WEIGHING && (
-								<FieldWarning message="Qty Allowance won't be included when submited" />
-							)}
-						</Col>
-
-						<Col sm={12} span={24}>
 							<Label id="pointSystemTagId" label="Point System Tag" spacing />
 							<Select
 								className="w-100"
@@ -642,48 +515,6 @@ export const ModifyProductForm = ({
 							/>
 						</Col>
 
-						<Col sm={12} span={24}>
-							{renderInputField({
-								name: 'piecesInBulk',
-								label: 'Pieces in Bulk',
-								setFieldValue,
-								values,
-								type: inputTypes.NUMBER,
-							})}
-						</Col>
-
-						{(values.barcode || values.sellingBarcode) && (
-							<Col sm={12} span={24}>
-								{renderInputField({
-									name: 'conversionAmount',
-									label: 'Conversion (Grams)',
-									setFieldValue,
-									values,
-									type: inputTypes.NUMBER,
-								})}
-							</Col>
-						)}
-
-						<Col sm={12} span={24}>
-							<Label label="" spacing />
-							{renderInputField({
-								name: 'allowableSpoilage',
-								label: 'Allowable Spoilage (%)',
-								setFieldValue,
-								values,
-								type: inputTypes.NUMBER,
-								options: {
-									disabled:
-										values?.unitOfMeasurement !==
-										unitOfMeasurementTypes.WEIGHING,
-								},
-							})}
-
-							{values?.unitOfMeasurement !==
-								unitOfMeasurementTypes.WEIGHING && (
-								<FieldWarning message="Allowable Spoilage won't be included when submited." />
-							)}
-						</Col>
 
 						<Divider dashed>
 							PRICES

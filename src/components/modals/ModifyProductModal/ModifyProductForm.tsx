@@ -97,7 +97,7 @@ export const ModifyProductForm = ({
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: {
-				allowableSpoilage: product?.allowable_spoilage * 100 || '',
+				allowableSpoilage: product?.allowable_spoilage * 100 || 0.1,
 				barcode: product?.barcode || '',
 				sellingBarcode: product?.selling_barcode || '',
 				packingBarcode: product?.packing_barcode || '',
@@ -115,12 +115,12 @@ export const ModifyProductForm = ({
 					  })
 					: '',
 				name: product?.name || '',
-				piecesInBulk: product?.pieces_in_bulk,
-				conversionAmount: product?.conversion_amount || '',
+				piecesInBulk: product?.pieces_in_bulk || 1,
+				conversionAmount: product?.conversion_amount || 1,
 				pointSystemTagId: getId(product?.point_system_tag),
-				costPerBulk: product?.cost_per_bulk || '',
+				costPerBulk: product?.cost_per_bulk || 1,
 				costPerPiece: product?.cost_per_piece || '',
-				pricePerBulk: product?.price_per_bulk || '',
+				pricePerBulk: product?.price_per_bulk || 1,
 				pricePerPiece: product?.price_per_piece || '',
 				specialPrice: product?.special_price || '',
 				creditPrice: product?.special_price || '',

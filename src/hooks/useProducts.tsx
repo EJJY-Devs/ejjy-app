@@ -80,6 +80,9 @@ export const useProductCreate = () => {
 			textcode,
 			type,
 			unitOfMeasurement,
+			wholeSalePrice,
+			creditPrice,
+			specialPrice,
 		}: any) =>
 			ProductsService.create(
 				{
@@ -113,6 +116,9 @@ export const useProductCreate = () => {
 					textcode,
 					type,
 					unit_of_measurement: unitOfMeasurement,
+					wholesale_price: wholeSalePrice,
+					credit_price: creditPrice,
+					special_price: specialPrice,
 				},
 				getGoogleApiUrl(), // TODO: Need to change this to accomodate if standalone. Dapat mu-send sa online api if standalone
 			),
@@ -177,6 +183,9 @@ export const useProductEdit = () => {
 			textcode,
 			type,
 			unitOfMeasurement,
+			wholeSalePrice,
+			creditPrice,
+			specialPrice,
 		}: any) =>
 			ProductsService.edit(
 				id,
@@ -215,6 +224,9 @@ export const useProductEdit = () => {
 					textcode,
 					type,
 					unit_of_measurement: unitOfMeasurement,
+					wholesale_price: wholeSalePrice,
+					credit_price: creditPrice,
+					special_price: specialPrice,
 				},
 				getGoogleApiUrl(),
 			),

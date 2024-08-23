@@ -42,6 +42,9 @@ interface Modify {
 	textcode: number;
 	type: 'Wet' | 'Dry';
 	unit_of_measurement: 'Weighing' | 'Non-Weighing';
+	wholesale_price: number;
+	credit_price: number;
+	special_price: number;
 }
 
 interface Delete extends IListRequest {

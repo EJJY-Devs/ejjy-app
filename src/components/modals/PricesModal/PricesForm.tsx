@@ -459,6 +459,7 @@ export const PricesForm = ({
 												name: `${index}.markdownPricePerPiece1`,
 												label: 'Wholesale Price (Piece)',
 												placeholder:
+													product?.wholesale_price ||
 													branchProduct.initialMarkdownPricePerPiece1,
 												value: branchProduct.markdownPricePerPiece1,
 												setFieldValue,
@@ -468,7 +469,9 @@ export const PricesForm = ({
 											{renderInputField({
 												name: `${index}.markdownPricePerBulk1`,
 												label: 'Wholesale Price (Bulk)',
-												placeholder: branchProduct.initialMarkdownPricePerBulk1,
+												placeholder:
+													product?.wholesale_price ||
+													branchProduct.initialMarkdownPricePerBulk1,
 												value: branchProduct.markdownPricePerBulk1,
 												setFieldValue,
 											})}
@@ -479,6 +482,7 @@ export const PricesForm = ({
 												name: `${index}.markdownPricePerPiece2`,
 												label: 'Special Price (Piece)',
 												placeholder:
+													product?.special_price ||
 													branchProduct.initialMarkdownPricePerPiece2,
 												value: branchProduct.markdownPricePerPiece2,
 												setFieldValue,
@@ -488,7 +492,9 @@ export const PricesForm = ({
 											{renderInputField({
 												name: `${index}.markdownPricePerBulk2`,
 												label: 'Special Price (Bulk)',
-												placeholder: branchProduct.initialMarkdownPricePerBulk2,
+												placeholder:
+													product?.special_price ||
+													branchProduct.initialMarkdownPricePerBulk2,
 												value: branchProduct.markdownPricePerBulk2,
 												setFieldValue,
 											})}
@@ -513,7 +519,9 @@ export const PricesForm = ({
 														</Tooltip>
 													</Space>
 												),
-												placeholder: branchProduct.initialCreditPricePerPiece,
+												placeholder:
+													product?.credit_price ||
+													branchProduct.initialCreditPricePerPiece,
 												value: branchProduct.creditPricePerPiece,
 												setFieldValue,
 											})}
@@ -533,7 +541,9 @@ export const PricesForm = ({
 														</Tooltip>
 													</Space>
 												),
-												placeholder: branchProduct.initialCreditPricePerBulk,
+												placeholder:
+													product?.credit_price ||
+													branchProduct.initialCreditPricePerBulk,
 												value: branchProduct.creditPricePerBulk,
 												setFieldValue,
 											})}

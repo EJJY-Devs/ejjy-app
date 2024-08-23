@@ -110,15 +110,15 @@ export const ModifyProductForm = ({
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: {
-				allowableSpoilage: product?.allowable_spoilage * 100 || 0.1,
+				allowableSpoilage: product?.allowable_spoilage || 0.1,
 				barcode: product?.barcode || '',
 				sellingBarcode: product?.selling_barcode || '',
 				packingBarcode: product?.packing_barcode || '',
 				description: product?.description || '',
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
 				isShownInScaleList: product?.is_shown_in_scale_list || false,
-				isDailyChecked: undefined,
-				isRandomlyChecked: undefined,
+				isDailyChecked: product?.is_daily_checked || false,
+				isRandomlyChecked: product?.is_randomly_checked || 'Daily',
 				isSoldInBranch: undefined,
 				isVatExempted: (!!product?.is_vat_exempted).toString(),
 				maxBalance: product?.max_balance

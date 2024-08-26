@@ -309,17 +309,6 @@ export const PricesForm = ({
 												setFieldValue,
 											})}
 										</Col>
-										{/* <Col sm={12} span={24}>
-											{renderInputField({
-												name: `${index}.costPerBulk`,
-												label: 'Cost (Bulk)',
-												placeholder:
-													product?.cost_per_bulk ||
-													branchProduct.initialCostPerBulk,
-												value: branchProduct.costPerBulk,
-												setFieldValue,
-											})}
-										</Col> */}
 
 										<Col sm={12} span={24}>
 											{renderInputField({
@@ -344,29 +333,6 @@ export const PricesForm = ({
 												},
 											})}
 										</Col>
-										{/* <Col sm={12} span={24}>
-											{renderInputField({
-												name: `${index}.pricePerBulk`,
-												label: 'Regular Price (Bulk)',
-												placeholder:
-													product?.price_per_bulk ||
-													branchProduct.initialPricePerBulk,
-												value: branchProduct.pricePerBulk,
-												setFieldValue: (name, newValue) => {
-													setFieldValue(name, newValue);
-													// setFieldValue(
-													// 	`${index}.creditPricePerBulk`,
-													// 	Number(newValue) +
-													// 		branchProduct.initialCreditPricePerBulkDifference,
-													// );
-													// setFieldValue(
-													// 	`${index}.governmentCreditPricePerBulk`,
-													// 	Number(newValue) +
-													// 		branchProduct.initialGovernmentCreditPricePerBulkDifference,
-													// );
-												},
-											})}
-										</Col> */}
 
 										<Col sm={12} span={24}>
 											{renderInputField({
@@ -379,17 +345,6 @@ export const PricesForm = ({
 												setFieldValue,
 											})}
 										</Col>
-										{/* <Col sm={12} span={24}>
-											{renderInputField({
-												name: `${index}.markdownPricePerBulk1`,
-												label: 'Wholesale Price (Bulk)',
-												placeholder:
-													product?.wholesale_price ||
-													branchProduct.initialMarkdownPricePerBulk1,
-												value: branchProduct.markdownPricePerBulk1,
-												setFieldValue,
-											})}
-										</Col> */}
 
 										<Col sm={12} span={24}>
 											{renderInputField({
@@ -402,17 +357,6 @@ export const PricesForm = ({
 												setFieldValue,
 											})}
 										</Col>
-										{/* <Col sm={12} span={24}>
-											{renderInputField({
-												name: `${index}.markdownPricePerBulk2`,
-												label: 'Special Price (Bulk)',
-												placeholder:
-													product?.special_price ||
-													branchProduct.initialMarkdownPricePerBulk2,
-												value: branchProduct.markdownPricePerBulk2,
-												setFieldValue,
-											})}
-										</Col> */}
 
 										<Col sm={12} span={24}>
 											{renderInputField({
@@ -446,71 +390,6 @@ export const PricesForm = ({
 												value: branchProduct.creditPrice,
 											})}
 										</Col>
-										{/* <Col sm={12} span={24}>
-											{renderInputField({
-												name: `${index}.creditPricePerBulk`,
-												label: (
-													<Space>
-														<span>Credit Price (Bulk)</span>
-														<Tooltip title="Difference between credit price and regular price">
-															<Tag color="blue">
-																{formatInPeso(
-																	branchProduct.initialCreditPricePerBulkDifference,
-																)}
-															</Tag>
-														</Tooltip>
-													</Space>
-												),
-												placeholder:
-													product?.credit_price ||
-													branchProduct.initialCreditPricePerBulk,
-												value: branchProduct.creditPricePerBulk,
-												setFieldValue,
-											})}
-										</Col> */}
-
-										{/* <Col sm={12} span={24}>
-											{renderInputField({
-												name: `${index}.governmentCreditPricePerPiece`,
-												label: (
-													<Space>
-														<span>Government Credit Price (Piece)</span>
-														<Tooltip title="Difference between credit price and regular price">
-															<Tag color="blue">
-																{formatInPeso(
-																	branchProduct.initialGovernmentCreditPricePerPieceDifference,
-																)}
-															</Tag>
-														</Tooltip>
-													</Space>
-												),
-												placeholder:
-													branchProduct.initialGovernmentCreditPricePerPiece,
-												value: branchProduct.governmentCreditPricePerPiece,
-												setFieldValue,
-											})}
-										</Col> */}
-										{/* <Col sm={12} span={24}>
-											{renderInputField({
-												name: `${index}.governmentCreditPricePerBulk`,
-												label: (
-													<Space>
-														<span>Government Credit Price (Bulk)</span>
-														<Tooltip title="Difference between credit price and regular price">
-															<Tag color="blue">
-																{formatInPeso(
-																	branchProduct.initialGovernmentCreditPricePerBulkDifference,
-																)}
-															</Tag>
-														</Tooltip>
-													</Space>
-												),
-												placeholder:
-													branchProduct.initialGovernmentCreditPricePerBulk,
-												value: branchProduct.governmentCreditPricePerBulk,
-												setFieldValue,
-											})}
-										</Col> */}
 
 										<Col span={24}>
 											<Divider className="my-0" />

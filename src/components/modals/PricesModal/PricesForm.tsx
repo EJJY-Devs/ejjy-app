@@ -298,7 +298,7 @@ export const PricesForm = ({
 									}
 								>
 									<Row gutter={[16, 16]}>
-										<Col span={24}>
+										<Col sm={12} span={24}>
 											{renderInputField({
 												name: `${index}.costPerPiece`,
 												label: 'Cost',
@@ -437,6 +437,17 @@ export const PricesForm = ({
 													branchProduct.CreditPrice || product?.credit_price,
 												value: branchProduct.creditPrice,
 												setFieldValue,
+											})}
+										</Col>
+
+										<Col sm={12} span={24}>
+											{renderInputField({
+												name: 'poPrice',
+												label: 'PO Price',
+												setFieldValue,
+												placeholder:
+													branchProduct.CreditPrice || product?.credit_price,
+												value: branchProduct.creditPrice,
 											})}
 										</Col>
 										{/* <Col sm={12} span={24}>

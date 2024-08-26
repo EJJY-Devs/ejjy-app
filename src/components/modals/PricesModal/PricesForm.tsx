@@ -321,10 +321,6 @@ export const PricesForm = ({
 											})}
 										</Col> */}
 
-										<Col span={24}>
-											<Divider className="my-0" />
-										</Col>
-
 										<Col sm={12} span={24}>
 											{renderInputField({
 												name: `${index}.pricePerPiece`,

@@ -150,8 +150,8 @@ export const PricesForm = ({
 
 							// NOTE: UI changes only
 							initialCreditPriceDifference:
-								Number(branchProduct?.price_per_piece) -
-								Number(branchProduct?.credit_price),
+								Number(branchProduct?.credit_price) -
+								Number(branchProduct?.price_per_piece),
 						};
 				  }),
 			Schema: Yup.array(
@@ -332,16 +332,15 @@ export const PricesForm = ({
 												value: branchProduct.pricePerPiece,
 												setFieldValue: (name, newValue) => {
 													setFieldValue(name, newValue);
-													// setFieldValue(
-													// 	`${index}.creditPrice`,
-													// 	Number(newValue) +
-													// 		branchProduct.initialCreditPriceDifference,
-													// );
-													// setFieldValue(
-													// 	`${index}.governmentCreditPricePerPiece`,
-													// 	Number(newValue) +
-													// 		branchProduct.initialGovernmentCreditPricePerPieceDifference,
-													// );
+													// Automatically update other prices based on the new value of pricePerPiece
+
+													setFieldValue(
+														`${index}.creditPrice`,
+														Number(newValue) +
+															branchProduct.initialCreditPriceDifference,
+													);
+
+													setFieldValue(`${index}.poPrice`, newValue);
 												},
 											})}
 										</Col>

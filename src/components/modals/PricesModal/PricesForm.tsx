@@ -149,18 +149,9 @@ export const PricesForm = ({
 							initialCreditPrice: branchProduct?.credit_price || '',
 
 							// NOTE: UI changes only
-							// initialCreditPriceDifference:
-							// 	Number(branchProduct?.price_per_piece) -
-							// 	Number(branchProduct?.government_credit_price_per_piece),
-							// initialCreditPricePerBulkDifference:
-							// 	Number(branchProduct?.price_per_bulk) -
-							// 	Number(branchProduct?.government_credit_price_per_bulk),
-							// initialGovernmentCreditPricePerPieceDifference:
-							// 	Number(branchProduct?.price_per_piece) -
-							// 	Number(branchProduct?.government_credit_price_per_piece),
-							// initialGovernmentCreditPricePerBulkDifference:
-							// 	Number(branchProduct?.price_per_bulk) -
-							// 	Number(branchProduct?.government_credit_price_per_bulk),
+							initialCreditPriceDifference:
+								Number(branchProduct?.price_per_piece) -
+								Number(branchProduct?.credit_price),
 						};
 				  }),
 			Schema: Yup.array(
@@ -433,6 +424,13 @@ export const PricesForm = ({
 												label: (
 													<Space>
 														<span>Credit Price</span>
+														<Tooltip title="Difference between credit price and regular price">
+															<Tag color="blue">
+																{formatInPeso(
+																	branchProduct.initialCreditPriceDifference,
+																)}
+															</Tag>
+														</Tooltip>
 													</Space>
 												),
 												placeholder:

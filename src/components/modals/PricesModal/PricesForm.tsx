@@ -312,6 +312,18 @@ export const PricesForm = ({
 
 										<Col sm={12} span={24}>
 											{renderInputField({
+												name: `${index}.wholeSalePrice`,
+												label: 'Wholesale Price',
+												placeholder:
+													branchProduct.initialWholeSalePrice ||
+													product?.wholesale_price,
+												value: branchProduct.wholeSalePrice,
+												setFieldValue,
+											})}
+										</Col>
+
+										<Col sm={12} span={24}>
+											{renderInputField({
 												name: `${index}.pricePerPiece`,
 												label: 'Regular Price',
 												placeholder:
@@ -331,18 +343,6 @@ export const PricesForm = ({
 													// 		branchProduct.initialGovernmentCreditPricePerPieceDifference,
 													// );
 												},
-											})}
-										</Col>
-
-										<Col sm={12} span={24}>
-											{renderInputField({
-												name: `${index}.wholeSalePrice`,
-												label: 'Wholesale Price',
-												placeholder:
-													branchProduct.initialWholeSalePrice ||
-													product?.wholesale_price,
-												value: branchProduct.wholeSalePrice,
-												setFieldValue,
 											})}
 										</Col>
 

@@ -355,18 +355,6 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label label="&nbsp;" spacing />
-							<FormRadioButton
-								id="sellingBarcodeUnitOfMeasurement"
-								items={unitOfMeasurementOptions}
-							/>
-							<ErrorMessage
-								name="sellingBarcodeUnitOfMeasurement"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'textcode',
 								label: 'Textcode',
@@ -384,7 +372,19 @@ export const ModifyProductForm = ({
 							})}
 						</Col>
 
-						<Col span={24}>
+						<Col sm={12} span={24}>
+							<Label label="&nbsp;" spacing />
+							<FormRadioButton
+								id="sellingBarcodeUnitOfMeasurement"
+								items={unitOfMeasurementOptions}
+							/>
+							<ErrorMessage
+								name="sellingBarcodeUnitOfMeasurement"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'printDetails',
 								label: 'Print Details (Receipt)',
@@ -393,7 +393,16 @@ export const ModifyProductForm = ({
 							})}
 						</Col>
 
-						<Col span={24}>
+						<Col sm={12} span={24}>
+							<Label label="Include In Scale" spacing />
+							<FormRadioButton id="isShownInScaleList" items={booleanOptions} />
+							<ErrorMessage
+								name="isShownInScaleList"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'priceTagPrintDetails',
 								label: 'Print Details (Price Tag)',
@@ -407,69 +416,6 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label label="Product Category" spacing />
-							<FormSelect
-								id="productCategory"
-								options={getProductCategoriesOptions()}
-							/>
-							<ErrorMessage
-								name="productCategory"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Col sm={12} span={24}>
-							<Label label="Include In Scale" spacing />
-							<FormRadioButton id="isShownInScaleList" items={booleanOptions} />
-							<ErrorMessage
-								name="isShownInScaleList"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Col span={24}>
-							<Label label="In Stock" spacing />
-							<FormRadioButton id="isSoldInBranch" items={inStockOptions} />
-							<ErrorMessage
-								name="isSoldInBranch"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Col span={24}>
-							<Label label="Checking" spacing />
-							<FormRadioButton
-								id="checking"
-								items={checkingTypesOptions}
-								onChange={(value) => {
-									setFieldValue(
-										'isDailyChecked',
-										value === productCheckingTypes.DAILY,
-									);
-									setFieldValue(
-										'isRandomlyChecked',
-										value === productCheckingTypes.RANDOM,
-									);
-								}}
-							/>
-							<ErrorMessage
-								name="checking"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Divider dashed>TAGS</Divider>
-
-						<Col sm={12} span={24}>
-							<Label label="TT-001" spacing />
-							<FormRadioButton id="type" items={productTypeOptions} />
-							<ErrorMessage
-								name="type"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Col sm={12} span={24}>
 							<Label label="TT-003" spacing />
 							<FormRadioButton
 								id="isVatExempted"
@@ -477,6 +423,18 @@ export const ModifyProductForm = ({
 							/>
 							<ErrorMessage
 								name="isVatExempted"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
+							<Label label="Product Category" spacing />
+							<FormSelect
+								id="productCategory"
+								options={getProductCategoriesOptions()}
+							/>
+							<ErrorMessage
+								name="productCategory"
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>
@@ -505,6 +463,46 @@ export const ModifyProductForm = ({
 							</Select>
 							<ErrorMessage
 								name="pointSystemTagId"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
+							<Label label="In Stock" spacing />
+							<FormRadioButton id="isSoldInBranch" items={inStockOptions} />
+							<ErrorMessage
+								name="isSoldInBranch"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
+							<Label label="Checking" spacing />
+							<FormRadioButton
+								id="checking"
+								items={checkingTypesOptions}
+								onChange={(value) => {
+									setFieldValue(
+										'isDailyChecked',
+										value === productCheckingTypes.DAILY,
+									);
+									setFieldValue(
+										'isRandomlyChecked',
+										value === productCheckingTypes.RANDOM,
+									);
+								}}
+							/>
+							<ErrorMessage
+								name="checking"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
+							<Label label="TT-001" spacing />
+							<FormRadioButton id="type" items={productTypeOptions} />
+							<ErrorMessage
+								name="type"
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>
@@ -561,8 +559,8 @@ export const ModifyProductForm = ({
 
 						<Col sm={12} span={24}>
 							{renderInputField({
-								name: 'specialPrice',
-								label: 'Special Price',
+								name: 'wholeSalePrice',
+								label: 'Wholesale Price',
 								setFieldValue,
 								values,
 								type: inputTypes.MONEY,
@@ -581,8 +579,8 @@ export const ModifyProductForm = ({
 
 						<Col sm={12} span={24}>
 							{renderInputField({
-								name: 'wholeSalePrice',
-								label: 'Wholesale Price',
+								name: 'specialPrice',
+								label: 'Special Price',
 								setFieldValue,
 								values,
 								type: inputTypes.MONEY,

@@ -491,7 +491,7 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label label="In Stock" spacing />
+							<Label label="&nbsp;" spacing />
 							<FormRadioButton id="isSoldInBranch" items={inStockOptions} />
 							<ErrorMessage
 								name="isSoldInBranch"
@@ -500,7 +500,7 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label label="Checking" spacing />
+							<Label label="&nbsp;" spacing />
 							<FormRadioButton
 								id="checking"
 								items={checkingTypesOptions}

@@ -154,6 +154,7 @@ export const ModifyProductForm = ({
 				specialPrice: product?.special_price || '',
 				creditPrice: product?.credit_price || '',
 				wholeSalePrice: product?.wholesale_price || '',
+				poPrice: '',
 
 				printDetails: product?.print_details || '',
 				priceTagPrintDetails: product?.price_tag_print_details || '',
@@ -276,6 +277,11 @@ export const ModifyProductForm = ({
 						.moreThan(0)
 						.nullable()
 						.label('Special Price'),
+					poPrice: Yup.number()
+						.required()
+						.moreThan(0)
+						.nullable()
+						.label('PO Price'),
 					pointSystemTagId: Yup.string().nullable().label('Point System Tag'),
 				},
 				[['barcode', 'textcode']],
@@ -585,7 +591,15 @@ export const ModifyProductForm = ({
 							{renderInputField({
 								name: 'pricePerPiece',
 								label: 'Regular Price',
-								setFieldValue,
+								setFieldValue: (field, value) => {
+									setFieldValue(field, value);
+
+									// Update other prices to follow the regular price
+									setFieldValue('wholeSalePrice', value);
+									setFieldValue('specialPrice', value);
+									setFieldValue('creditPrice', value);
+									setFieldValue('poPrice', value);
+								},
 								values,
 								type: inputTypes.MONEY,
 							})}

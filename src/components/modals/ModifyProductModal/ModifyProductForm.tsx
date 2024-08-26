@@ -498,15 +498,6 @@ export const ModifyProductForm = ({
 							/>
 						</Col>
 
-						<Col sm={12} span={24}>
-							<Label label="TT-001" spacing />
-							<FormRadioButton id="type" items={productTypeOptions} />
-							<ErrorMessage
-								name="type"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
 						<Divider dashed>QUANTITY</Divider>
 
 						<Col sm={12} span={24}>

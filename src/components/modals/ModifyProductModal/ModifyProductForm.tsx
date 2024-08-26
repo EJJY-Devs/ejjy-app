@@ -610,6 +610,16 @@ export const ModifyProductForm = ({
 								type: inputTypes.MONEY,
 							})}
 						</Col>
+
+						<Col sm={12} span={24}>
+							{renderInputField({
+								name: 'poPrice',
+								label: 'PO Price',
+								setFieldValue,
+								values,
+								type: inputTypes.MONEY,
+							})}
+						</Col>
 					</Row>
 
 					<div className="ModalCustomFooter">

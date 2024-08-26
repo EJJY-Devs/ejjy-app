@@ -81,6 +81,19 @@ const isVatExemptedOptions = [
 	},
 ];
 
+const isInScaleOptions = [
+	{
+		id: 'inScale',
+		label: 'Show in Scale',
+		value: 'true',
+	},
+	{
+		id: 'notInScale',
+		label: 'Hide in Scale',
+		value: 'false',
+	},
+];
+
 interface Props {
 	isLoading: boolean;
 	onClose: any;
@@ -116,7 +129,7 @@ export const ModifyProductForm = ({
 				packingBarcode: product?.packing_barcode || '',
 				description: product?.description || '',
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
-				isShownInScaleList: product?.is_shown_in_scale_list || false,
+				isShownInScaleList: product?.is_shown_in_scale_list || 'true',
 				checking: productCheckingTypes.DAILY,
 				isSoldInBranch: 'true',
 				isVatExempted: (!!product?.is_vat_exempted).toString(),
@@ -393,8 +406,11 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label label="Include In Scale" spacing />
-							<FormRadioButton id="isShownInScaleList" items={booleanOptions} />
+							<Label label="&nbsp;" spacing />
+							<FormRadioButton
+								id="isShownInScaleList"
+								items={isInScaleOptions}
+							/>
 							<ErrorMessage
 								name="isShownInScaleList"
 								render={(error) => <FieldError error={error} />}

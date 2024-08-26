@@ -154,7 +154,7 @@ export const ModifyProductForm = ({
 				specialPrice: product?.special_price || '',
 				creditPrice: product?.credit_price || '',
 				wholeSalePrice: product?.wholesale_price || '',
-				poPrice: '',
+				poPrice: product?.credit_price || '',
 
 				printDetails: product?.print_details || '',
 				priceTagPrintDetails: product?.price_tag_print_details || '',
@@ -593,7 +593,6 @@ export const ModifyProductForm = ({
 								label: 'Regular Price',
 								setFieldValue: (field, value) => {
 									setFieldValue(field, value);
-
 									// Update other prices to follow the regular price
 									setFieldValue('wholeSalePrice', value);
 									setFieldValue('specialPrice', value);

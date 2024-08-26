@@ -91,6 +91,9 @@ export const PricesForm = ({
 		}
 	}, [branches, isBulkEdit]);
 
+	const initialCreditPriceDifference =
+		product?.credit_price - product?.price_per_piece;
+
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: isBulkEdit
@@ -150,8 +153,8 @@ export const PricesForm = ({
 
 							// NOTE: UI changes only
 							initialCreditPriceDifference:
-								Number(branchProduct?.credit_price) -
-								Number(branchProduct?.price_per_piece),
+								Number(branchProduct?.initialCreditPrice) -
+								Number(branchProduct?.initialPricePerPiece),
 						};
 				  }),
 			Schema: Yup.array(
@@ -336,8 +339,10 @@ export const PricesForm = ({
 
 													setFieldValue(
 														`${index}.creditPrice`,
-														Number(newValue) +
-															branchProduct.initialCreditPriceDifference,
+														branchProduct?.initialCreditPriceDifference
+															? Number(newValue) +
+																	branchProduct.initialCreditPriceDifference
+															: Number(newValue) + initialCreditPriceDifference,
 													);
 
 													setFieldValue(`${index}.poPrice`, newValue);
@@ -365,9 +370,11 @@ export const PricesForm = ({
 														<span>Credit Price</span>
 														<Tooltip title="Difference between credit price and regular price">
 															<Tag color="blue">
-																{formatInPeso(
-																	branchProduct.initialCreditPriceDifference,
-																)}
+																{branchProduct.initialCreditPriceDifference
+																	? formatInPeso(
+																			branchProduct.initialCreditPriceDifference,
+																	  )
+																	: formatInPeso(initialCreditPriceDifference)}
 															</Tag>
 														</Tooltip>
 													</Space>

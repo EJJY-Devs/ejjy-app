@@ -440,7 +440,7 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label id="pointSystemTagId" label="Point System Tag" spacing />
+							<Label id="pointSystemTagId" label="Loyalty Program" spacing />
 							<Select
 								className="w-100"
 								filterOption={filterOption}

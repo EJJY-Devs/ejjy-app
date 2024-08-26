@@ -198,12 +198,12 @@ export const userTypeBranchOptions = [
 export const checkingTypesOptions = [
 	{
 		id: productCheckingTypes.DAILY,
-		label: 'Daily',
+		label: 'Daily Audit',
 		value: productCheckingTypes.DAILY,
 	},
 	{
 		id: productCheckingTypes.RANDOM,
-		label: 'Random',
+		label: 'Random Audit',
 		value: productCheckingTypes.RANDOM,
 	},
 ];

@@ -58,12 +58,12 @@ const unitOfMeasurementOptions = [
 const inStockOptions = [
 	{
 		id: 'retain',
-		label: 'Retain',
+		label: 'Retain Product',
 		value: 'true',
 	},
 	{
 		id: 'decline',
-		label: 'Decline',
+		label: 'Decline Product',
 		value: 'false',
 	},
 ];

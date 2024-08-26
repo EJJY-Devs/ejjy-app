@@ -117,9 +117,8 @@ export const ModifyProductForm = ({
 				description: product?.description || '',
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
 				isShownInScaleList: product?.is_shown_in_scale_list || false,
-				isDailyChecked: product?.is_daily_checked || false,
-				isRandomlyChecked: product?.is_randomly_checked || 'Daily',
-				isSoldInBranch: undefined,
+				checking: productCheckingTypes.DAILY,
+				isSoldInBranch: 'true',
 				isVatExempted: (!!product?.is_vat_exempted).toString(),
 				maxBalance: product?.max_balance
 					? formatQuantity({
@@ -416,7 +415,7 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label label="TT-003" spacing />
+							<Label label="&nbsp;" spacing />
 							<FormRadioButton
 								id="isVatExempted"
 								items={isVatExemptedOptions}

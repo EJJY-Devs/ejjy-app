@@ -389,10 +389,24 @@ export const PricesForm = ({
 										<Col sm={12} span={24}>
 											{renderInputField({
 												name: 'poPrice',
-												label: 'PO Price',
+												label: (
+													<Space>
+														<span>PO Price</span>
+														<Tooltip title="Difference between PO price and regular price">
+															<Tag color="blue">
+																{branchProduct.initialCreditPriceDifference
+																	? formatInPeso(
+																			branchProduct.initialCreditPriceDifference,
+																	  )
+																	: formatInPeso(initialCreditPriceDifference)}
+															</Tag>
+														</Tooltip>
+													</Space>
+												),
 												setFieldValue,
 												placeholder:
 													branchProduct.CreditPrice || product?.credit_price,
+
 												value: branchProduct.creditPrice,
 											})}
 										</Col>

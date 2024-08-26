@@ -129,11 +129,7 @@ export const ModifyProductForm = ({
 				packingBarcode: product?.packing_barcode || '',
 				description: product?.description || '',
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
-				isShownInScaleList:
-					product?.is_shown_in_scale_list === null ||
-					product?.is_shown_in_scale_list === undefined
-						? 'true'
-						: (!!product.is_shown_in_scale_list).toString(),
+				isShownInScaleList: String(product?.is_shown_in_scale_list ?? true),
 				checking: productCheckingTypes.DAILY,
 				isSoldInBranch: 'true',
 				isVatExempted: (!!product?.is_vat_exempted).toString(),

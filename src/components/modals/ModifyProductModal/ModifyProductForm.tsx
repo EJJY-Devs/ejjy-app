@@ -129,7 +129,11 @@ export const ModifyProductForm = ({
 				packingBarcode: product?.packing_barcode || '',
 				description: product?.description || '',
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
-				isShownInScaleList: product?.is_shown_in_scale_list || 'true',
+				isShownInScaleList:
+					product?.is_shown_in_scale_list === null ||
+					product?.is_shown_in_scale_list === undefined
+						? 'true'
+						: (!!product.is_shown_in_scale_list).toString(),
 				checking: productCheckingTypes.DAILY,
 				isSoldInBranch: 'true',
 				isVatExempted: (!!product?.is_vat_exempted).toString(),
@@ -165,8 +169,10 @@ export const ModifyProductForm = ({
 				unitOfMeasurement:
 					product?.unit_of_measurement || unitOfMeasurementTypes.NON_WEIGHING,
 				sellingBarcodeUnitOfMeasurement:
-					product?.selling_barcode_unit_of_measurement ||
-					unitOfMeasurementTypes.WEIGHING,
+					product?.unit_of_measurement === 'weighing'
+						? unitOfMeasurementTypes.WEIGHING
+						: product?.selling_barcode_unit_of_measurement ||
+						  unitOfMeasurementTypes.WEIGHING,
 				packingBarcodeUnitOfMeasurement:
 					product?.packing_barcode_unit_of_measurement ||
 					unitOfMeasurementTypes.NON_WEIGHING,
@@ -189,7 +195,9 @@ export const ModifyProductForm = ({
 
 					name: Yup.string().required().max(70).label('Name').trim(),
 					type: Yup.string().label('TT-001'),
-					unitOfMeasurement: Yup.string().label('TT-002'),
+					sellingBarcodeUnitOfMeasurement: Yup.string().label(
+						'sellingBarcodeUnitOfMeasurement',
+					),
 					productCategory: Yup.string().label('Product Category'),
 					printDetails: Yup.string()
 						.required()

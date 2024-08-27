@@ -58,12 +58,12 @@ const unitOfMeasurementOptions = [
 const inStockOptions = [
 	{
 		id: 'retain',
-		label: 'Retain',
+		label: 'Retain Product',
 		value: 'true',
 	},
 	{
 		id: 'decline',
-		label: 'Decline',
+		label: 'Decline Product',
 		value: 'false',
 	},
 ];
@@ -78,6 +78,19 @@ const isVatExemptedOptions = [
 		id: 'vae',
 		label: 'VAT-EXEMPT',
 		value: 'true',
+	},
+];
+
+const isInScaleOptions = [
+	{
+		id: 'inScale',
+		label: 'Show in Scale',
+		value: 'true',
+	},
+	{
+		id: 'notInScale',
+		label: 'Hide in Scale',
+		value: 'false',
 	},
 ];
 
@@ -116,10 +129,9 @@ export const ModifyProductForm = ({
 				packingBarcode: product?.packing_barcode || '',
 				description: product?.description || '',
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
-				isShownInScaleList: product?.is_shown_in_scale_list || false,
-				isDailyChecked: product?.is_daily_checked || false,
-				isRandomlyChecked: product?.is_randomly_checked || 'Daily',
-				isSoldInBranch: undefined,
+				isShownInScaleList: String(product?.is_shown_in_scale_list ?? true),
+				checking: productCheckingTypes.DAILY,
+				isSoldInBranch: 'true',
 				isVatExempted: (!!product?.is_vat_exempted).toString(),
 				maxBalance: product?.max_balance
 					? formatQuantity({
@@ -153,8 +165,10 @@ export const ModifyProductForm = ({
 				unitOfMeasurement:
 					product?.unit_of_measurement || unitOfMeasurementTypes.NON_WEIGHING,
 				sellingBarcodeUnitOfMeasurement:
-					product?.selling_barcode_unit_of_measurement ||
-					unitOfMeasurementTypes.WEIGHING,
+					product?.unit_of_measurement === 'weighing'
+						? unitOfMeasurementTypes.WEIGHING
+						: product?.selling_barcode_unit_of_measurement ||
+						  unitOfMeasurementTypes.WEIGHING,
 				packingBarcodeUnitOfMeasurement:
 					product?.packing_barcode_unit_of_measurement ||
 					unitOfMeasurementTypes.NON_WEIGHING,
@@ -177,7 +191,9 @@ export const ModifyProductForm = ({
 
 					name: Yup.string().required().max(70).label('Name').trim(),
 					type: Yup.string().label('TT-001'),
-					unitOfMeasurement: Yup.string().label('TT-002'),
+					sellingBarcodeUnitOfMeasurement: Yup.string().label(
+						'sellingBarcodeUnitOfMeasurement',
+					),
 					productCategory: Yup.string().label('Product Category'),
 					printDetails: Yup.string()
 						.required()
@@ -355,18 +371,6 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label label="&nbsp;" spacing />
-							<FormRadioButton
-								id="sellingBarcodeUnitOfMeasurement"
-								items={unitOfMeasurementOptions}
-							/>
-							<ErrorMessage
-								name="sellingBarcodeUnitOfMeasurement"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'textcode',
 								label: 'Textcode',
@@ -384,7 +388,19 @@ export const ModifyProductForm = ({
 							})}
 						</Col>
 
-						<Col span={24}>
+						<Col sm={12} span={24}>
+							<Label label="&nbsp;" spacing />
+							<FormRadioButton
+								id="sellingBarcodeUnitOfMeasurement"
+								items={unitOfMeasurementOptions}
+							/>
+							<ErrorMessage
+								name="sellingBarcodeUnitOfMeasurement"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'printDetails',
 								label: 'Print Details (Receipt)',
@@ -393,7 +409,19 @@ export const ModifyProductForm = ({
 							})}
 						</Col>
 
-						<Col span={24}>
+						<Col sm={12} span={24}>
+							<Label label="&nbsp;" spacing />
+							<FormRadioButton
+								id="isShownInScaleList"
+								items={isInScaleOptions}
+							/>
+							<ErrorMessage
+								name="isShownInScaleList"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'priceTagPrintDetails',
 								label: 'Print Details (Price Tag)',
@@ -404,6 +432,18 @@ export const ModifyProductForm = ({
 									autoSize: { minRows: 1, maxRows: 2 },
 								},
 							})}
+						</Col>
+
+						<Col sm={12} span={24}>
+							<Label label="&nbsp;" spacing />
+							<FormRadioButton
+								id="isVatExempted"
+								items={isVatExemptedOptions}
+							/>
+							<ErrorMessage
+								name="isVatExempted"
+								render={(error) => <FieldError error={error} />}
+							/>
 						</Col>
 
 						<Col sm={12} span={24}>
@@ -419,70 +459,7 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label label="Include In Scale" spacing />
-							<FormRadioButton id="isShownInScaleList" items={booleanOptions} />
-							<ErrorMessage
-								name="isShownInScaleList"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Col span={24}>
-							<Label label="In Stock" spacing />
-							<FormRadioButton id="isSoldInBranch" items={inStockOptions} />
-							<ErrorMessage
-								name="isSoldInBranch"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Col span={24}>
-							<Label label="Checking" spacing />
-							<FormRadioButton
-								id="checking"
-								items={checkingTypesOptions}
-								onChange={(value) => {
-									setFieldValue(
-										'isDailyChecked',
-										value === productCheckingTypes.DAILY,
-									);
-									setFieldValue(
-										'isRandomlyChecked',
-										value === productCheckingTypes.RANDOM,
-									);
-								}}
-							/>
-							<ErrorMessage
-								name="checking"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Divider dashed>TAGS</Divider>
-
-						<Col sm={12} span={24}>
-							<Label label="TT-001" spacing />
-							<FormRadioButton id="type" items={productTypeOptions} />
-							<ErrorMessage
-								name="type"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Col sm={12} span={24}>
-							<Label label="TT-003" spacing />
-							<FormRadioButton
-								id="isVatExempted"
-								items={isVatExemptedOptions}
-							/>
-							<ErrorMessage
-								name="isVatExempted"
-								render={(error) => <FieldError error={error} />}
-							/>
-						</Col>
-
-						<Col sm={12} span={24}>
-							<Label id="pointSystemTagId" label="Point System Tag" spacing />
+							<Label id="pointSystemTagId" label="Loyalty Program" spacing />
 							<Select
 								className="w-100"
 								filterOption={filterOption}
@@ -505,6 +482,37 @@ export const ModifyProductForm = ({
 							</Select>
 							<ErrorMessage
 								name="pointSystemTagId"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
+							<Label label="&nbsp;" spacing />
+							<FormRadioButton id="isSoldInBranch" items={inStockOptions} />
+							<ErrorMessage
+								name="isSoldInBranch"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
+							<Label label="&nbsp;" spacing />
+							<FormRadioButton
+								id="checking"
+								items={checkingTypesOptions}
+								onChange={(value) => {
+									setFieldValue(
+										'isDailyChecked',
+										value === productCheckingTypes.DAILY,
+									);
+									setFieldValue(
+										'isRandomlyChecked',
+										value === productCheckingTypes.RANDOM,
+									);
+								}}
+							/>
+							<ErrorMessage
+								name="checking"
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>
@@ -561,8 +569,8 @@ export const ModifyProductForm = ({
 
 						<Col sm={12} span={24}>
 							{renderInputField({
-								name: 'specialPrice',
-								label: 'Special Price',
+								name: 'wholeSalePrice',
+								label: 'Wholesale Price',
 								setFieldValue,
 								values,
 								type: inputTypes.MONEY,
@@ -581,8 +589,8 @@ export const ModifyProductForm = ({
 
 						<Col sm={12} span={24}>
 							{renderInputField({
-								name: 'wholeSalePrice',
-								label: 'Wholesale Price',
+								name: 'specialPrice',
+								label: 'Special Price',
 								setFieldValue,
 								values,
 								type: inputTypes.MONEY,
@@ -593,6 +601,16 @@ export const ModifyProductForm = ({
 							{renderInputField({
 								name: 'creditPrice',
 								label: 'Credit Price',
+								setFieldValue,
+								values,
+								type: inputTypes.MONEY,
+							})}
+						</Col>
+
+						<Col sm={12} span={24}>
+							{renderInputField({
+								name: 'poPrice',
+								label: 'PO Price',
 								setFieldValue,
 								values,
 								type: inputTypes.MONEY,

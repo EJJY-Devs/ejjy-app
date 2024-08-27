@@ -20,6 +20,7 @@ import { TabDailyInvoiceReport } from './components/TabDailyInvoiceReport';
 import { TabDailyProductSalesReport } from './components/TabDailyProductSalesReport';
 import { TabTransactionAdjustmentReport } from './components/TabTransactionAdjustmentReport';
 import { TabTransactions } from './components/TabTransactions';
+import { TabPaymentsReceived } from './components/TabPaymentsReceived';
 import './style.scss';
 
 interface Props {
@@ -33,6 +34,7 @@ const tabs = {
 	TRANSACTION_ADJUSTMENTS_REPORT: 'Transaction Adjustments Report',
 	DISCOUNTED_TRANSACTIONS: 'Discounted Transactions',
 	BIR_REPORT: 'BIR Report',
+	PAYMENTS_RECEIVED: 'Payments Received',
 };
 
 export const ViewBranchMachine = ({ match }: Props) => {
@@ -131,6 +133,13 @@ export const ViewBranchMachine = ({ match }: Props) => {
 						>
 							<Tabs.TabPane key={tabs.TRANSACTIONS} tab={tabs.TRANSACTIONS}>
 								<TabTransactions branchMachineId={branchMachine.id} />
+							</Tabs.TabPane>
+
+							<Tabs.TabPane
+								key={tabs.PAYMENTS_RECEIVED}
+								tab={tabs.PAYMENTS_RECEIVED}
+							>
+								<TabPaymentsReceived branchMachineId={branchMachine.id} />
 							</Tabs.TabPane>
 
 							<Tabs.TabPane

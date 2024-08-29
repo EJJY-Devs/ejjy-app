@@ -49,3 +49,4 @@ export { default as UserLogsService } from './UserLogsService';
 export { default as UserPendingApprovalsService } from './UserPendingApprovalsService';
 export { default as XReadReportsService } from './XReadReportsService';
 export { default as ZReadReportsService } from './ZReadReportsService';
+export { default as PaymentsService } from './PaymentsService';

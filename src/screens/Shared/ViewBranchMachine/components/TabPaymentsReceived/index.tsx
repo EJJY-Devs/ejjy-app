@@ -1,17 +1,10 @@
-import { Button, Col, Row, Select, Table } from 'antd';
+import { Button, Col, Row, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import {
-	RequestErrors,
-	TableHeader,
-	TimeRangeFilter,
-	TransactionStatus,
-} from 'components';
-import { Label } from 'components/elements';
+import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import {
 	ViewTransactionModal,
 	formatDateTime,
 	getFullName,
-	filterOption,
 	useCollectionReceipts,
 	CollectionReceipt,
 	ViewCollectionReceiptModal,
@@ -48,7 +41,7 @@ const invoiceTypes = {
 
 const modeOfPayment = {
 	cash: 'Cash',
-	credit_card: 'Credit Pay',
+	credit_pay: 'Credit Card',
 	check: 'Check',
 	others: 'Others',
 };
@@ -95,6 +88,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 	} = useCollectionReceipts({
 		params: {
 			...params,
+			branchMachineId,
 			timeRange: (params?.timeRange || timeRangeTypes.DAILY) as string,
 		},
 		options: refetchOptions,
@@ -131,7 +125,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 				),
 				payment: formatInPeso(transaction.payment?.amount_tendered),
 				cashier: getFullName(transaction.teller),
-				mode_of_payment: transaction.payment?.mode,
+				mode_of_payment: modeOfPayment[transaction.payment?.mode],
 				remarks: 'N/A',
 			}));
 
@@ -153,14 +147,19 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 				),
 				payment: formatInPeso(receipt.amount),
 				cashier: getFullName(receipt.created_by),
-				mode_of_payment: 'Cash',
+				mode_of_payment: modeOfPayment[receipt.mode],
 				remarks: `OP: ${receipt.order_of_payment.id}`,
 			}));
 
 			// Merge transactions and receipts
 			const mergedData = [...transactionsData, ...receiptsData];
 
-			setDataSource(mergedData);
+			// Sort the merged data by datetime to mix transactions and receipts
+			const sortedData = mergedData.sort((a, b) =>
+				a.datetime.localeCompare(b.datetime, undefined, { numeric: true }),
+			);
+
+			setDataSource(sortedData);
 		}
 	}, [transactions, collectionReceiptsData]);
 
@@ -168,10 +167,19 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 		<>
 			<TableHeader title="Payments Received" wrapperClassName="pt-2 px-0" />
 
-			<RequestErrors errors={convertIntoArray(transactionsError)} />
+			<RequestErrors
+				errors={
+					convertIntoArray(transactionsError) &&
+					convertIntoArray(collectionReceiptsError)
+				}
+			/>
 
 			<Filter
-				isLoading={isFetchingTransactions && !isTransactionsFetchedAfterMount}
+				isLoading={
+					isFetchingTransactions &&
+					!isTransactionsFetchedAfterMount &&
+					isFetchingCollectionReceipts
+				}
 			/>
 
 			{voidedStatuses.includes(_.toString(params?.statuses)) && (

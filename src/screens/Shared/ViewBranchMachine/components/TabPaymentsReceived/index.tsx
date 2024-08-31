@@ -8,15 +8,15 @@ import {
 	useCollectionReceipts,
 	CollectionReceipt,
 	ViewCollectionReceiptModal,
-} from 'ejjy-global';
-import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
-	pageSizeOptions,
-	refetchOptions,
 	timeRangeTypes,
 	transactionStatuses,
-} from 'global';
+	getModeOfPaymentDescription,
+	PaymentType,
+} from 'ejjy-global';
+
+import { pageSizeOptions, refetchOptions } from 'global';
 import { useQueryParams, useSiteSettingsNew, useTransactions } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
@@ -26,34 +26,22 @@ import { Summary } from './components/Summary';
 
 const columns: ColumnsType = [
 	{ title: 'Datetime', dataIndex: 'datetime' },
-	{ title: 'Receipt Type', dataIndex: 'receipt_type' },
+	{ title: 'Receipt Type', dataIndex: 'receiptType' },
 	{ title: 'Reference Number', dataIndex: 'invoice' },
 	{ title: 'Payment', dataIndex: 'payment' },
 	{ title: 'Cashier', dataIndex: 'cashier' },
-	{ title: 'Mode of Payment', dataIndex: 'mode_of_payment' },
+	{ title: 'Mode of Payment', dataIndex: 'modeOfPayment' },
 	{ title: 'Remarks', dataIndex: 'remarks' },
 ];
-
-const invoiceTypes = {
-	sales_invoice: 'Sales Invoice',
-	charge_invoice: 'Charge Invoice',
-};
-
-const modeOfPayment = {
-	cash: 'Cash',
-	credit_pay: 'Credit Card',
-	check: 'Check',
-	others: 'Others',
-};
 
 const voidedStatuses = [
 	transactionStatuses.VOID_CANCELLED,
 	transactionStatuses.VOID_EDITED,
 ];
 
-interface Props {
+type Props = {
 	branchMachineId: number;
-}
+};
 
 export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 	// STATES
@@ -95,17 +83,6 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
 
-	console.log(collectionReceiptsData);
-
-	const receiptsArray = collectionReceiptsData?.list || [];
-
-	const receiptsMap = {};
-	receiptsArray.forEach((receipt) => {
-		if (receipt.order_of_payment) {
-			receiptsMap[receipt.order_of_payment.id] = receipt;
-		}
-	});
-
 	// METHODS
 	useEffect(() => {
 		if (transactions && collectionReceiptsData) {
@@ -113,7 +90,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 			const transactionsData = transactions.map((transaction) => ({
 				key: `transaction-${transaction.id}`,
 				datetime: formatDateTime(transaction.datetime_created),
-				receipt_type: 'Cash Sales Invoice',
+				receiptType: 'Cash Sales Invoice',
 				invoice: (
 					<Button
 						className="pa-0"
@@ -125,15 +102,15 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 				),
 				payment: formatInPeso(transaction.payment?.amount_tendered),
 				cashier: getFullName(transaction.teller),
-				mode_of_payment: modeOfPayment[transaction.payment?.mode],
-				remarks: 'N/A',
+				modeOfPayment: getModeOfPaymentDescription(transaction.payment?.mode),
+				remarks: '',
 			}));
 
 			// Convert collection receipts to table rows
 			const receiptsData = collectionReceiptsData.list.map((receipt) => ({
 				key: `receipt-${receipt.id}`,
 				datetime: formatDateTime(receipt.datetime_created),
-				receipt_type: 'Collection Receipt',
+				receiptType: 'Collection Receipt',
 				invoice: receipt.order_of_payment ? (
 					<Button
 						className="pa-0"
@@ -143,18 +120,16 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 						{receipt.order_of_payment.id}
 					</Button>
 				) : (
-					'N/A'
+					''
 				),
 				payment: formatInPeso(receipt.amount),
 				cashier: getFullName(receipt.created_by),
-				mode_of_payment: modeOfPayment[receipt.mode],
+				modeOfPayment: getModeOfPaymentDescription(receipt.mode as PaymentType),
 				remarks: `OP: ${receipt.order_of_payment.id}`,
 			}));
 
-			// Merge transactions and receipts
 			const mergedData = [...transactionsData, ...receiptsData];
 
-			// Sort the merged data by datetime to mix transactions and receipts
 			const sortedData = mergedData.sort((a, b) =>
 				a.datetime.localeCompare(b.datetime, undefined, { numeric: true }),
 			);
@@ -231,9 +206,9 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 	);
 };
 
-interface FilterProps {
+type FilterProps = {
 	isLoading: boolean;
-}
+};
 
 const Filter = ({ isLoading }: FilterProps) => {
 	return (

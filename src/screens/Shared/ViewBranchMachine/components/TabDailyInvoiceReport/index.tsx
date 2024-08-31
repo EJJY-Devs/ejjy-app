@@ -1,11 +1,6 @@
 import { Button, Col, DatePicker, Row, Space, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import {
-	ModeOfPayment,
-	RequestErrors,
-	TableHeader,
-	ViewBackOrderModal,
-} from 'components';
+import { RequestErrors, TableHeader, ViewBackOrderModal } from 'components';
 import { Label } from 'components/elements';
 import {
 	DiscountDisplay,
@@ -77,6 +72,8 @@ export const TabDailyInvoiceReport = ({ branchMachineId }: Props) => {
 				transaction?.adjustment_remarks?.new_updated_transaction;
 			const discountOption = transaction?.adjustment_remarks?.discount_option;
 
+			const invoiceType = transaction.invoice_type;
+
 			const remarks = (
 				<Space direction="vertical">
 					{backOrder && (
@@ -125,7 +122,7 @@ export const TabDailyInvoiceReport = ({ branchMachineId }: Props) => {
 				) : (
 					EMPTY_CELL
 				),
-				invoiceType: <ModeOfPayment modeOfPayment={transaction.payment.mode} />,
+				invoiceType,
 				totalAmount: formatInPeso(transaction.total_amount),
 				cashier: getFullName(transaction.teller),
 				remarks,

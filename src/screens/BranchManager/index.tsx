@@ -1,5 +1,5 @@
 import { Spin } from 'antd';
-import { AppIcons, Container, TimeMismatchBoundary } from 'components';
+import { Container, TimeMismatchBoundary } from 'components';
 import { IS_APP_LIVE, MAX_PAGE_SIZE, serviceTypes } from 'global';
 import {
 	useBranches,

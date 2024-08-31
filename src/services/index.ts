@@ -28,6 +28,7 @@ export { default as InvoiceService } from './InvoiceService';
 export { default as LogsService } from './LogsService';
 export { default as NetworkService } from './NetworkService';
 export { default as OrderOfPaymentsService } from './OrderOfPaymentsService';
+export { default as PaymentsService } from './PaymentsService';
 export { default as PointSystemTagsService } from './PointSystemTagsService';
 export { default as PointTransactionsService } from './PointTransactionsService';
 export { default as PriceMarkdownsService } from './PriceMarkdownsService';

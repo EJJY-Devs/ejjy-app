@@ -14,10 +14,11 @@ import {
 	transactionStatuses,
 	getModeOfPaymentDescription,
 	PaymentType,
+	useTransactions,
 } from 'ejjy-global';
 
 import { pageSizeOptions, refetchOptions } from 'global';
-import { useQueryParams, useSiteSettingsNew, useTransactions } from 'hooks';
+import { useQueryParams, useSiteSettingsNew } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { TransactionsCancelled } from 'screens/Shared/Branches/components/TabTransactions/components/TransactionsCancelled';
@@ -56,7 +57,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 	const { params, setQueryParams } = useQueryParams();
 	const { data: siteSettings } = useSiteSettingsNew();
 	const {
-		data: { transactions, total },
+		data: transactionsData,
 		error: transactionsError,
 		isFetching: isFetchingTransactions,
 		isFetchedAfterMount: isTransactionsFetchedAfterMount,
@@ -64,9 +65,9 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 		params: {
 			...params,
 			branchMachineId,
-			timeRange: params?.timeRange || timeRangeTypes.DAILY,
+			timeRange: params?.timeRange?.toString() || timeRangeTypes.DAILY,
 		},
-		options: refetchOptions,
+		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
 
 	const {
@@ -85,9 +86,9 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 
 	// METHODS
 	useEffect(() => {
-		if (transactions && collectionReceiptsData) {
+		if (transactionsData && collectionReceiptsData) {
 			// Convert transactions to table rows
-			const transactionsData = transactions.map((transaction) => ({
+			const transactions = transactionsData.list.map((transaction) => ({
 				key: `transaction-${transaction.id}`,
 				datetime: formatDateTime(transaction.datetime_created),
 				receiptType: 'Cash Sales Invoice',
@@ -128,7 +129,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 				remarks: `OP: ${receipt.order_of_payment.id}`,
 			}));
 
-			const mergedData = [...transactionsData, ...receiptsData];
+			const mergedData = [...transactions, ...receiptsData];
 
 			const sortedData = mergedData.sort((a, b) =>
 				a.datetime.localeCompare(b.datetime, undefined, { numeric: true }),
@@ -136,7 +137,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 
 			setDataSource(sortedData);
 		}
-	}, [transactions, collectionReceiptsData]);
+	}, [transactionsData, collectionReceiptsData]);
 
 	return (
 		<>
@@ -172,7 +173,6 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 				loading={isFetchingTransactions && !isTransactionsFetchedAfterMount}
 				pagination={{
 					current: Number(params.page) || DEFAULT_PAGE,
-					total,
 					pageSize: Number(params.pageSize) || DEFAULT_PAGE_SIZE,
 					onChange: (page, newPageSize) => {
 						setQueryParams({

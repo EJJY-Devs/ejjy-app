@@ -1,11 +1,6 @@
 import { Button, Col, DatePicker, Row, Space, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import {
-	ModeOfPayment,
-	RequestErrors,
-	TableHeader,
-	ViewBackOrderModal,
-} from 'components';
+import { RequestErrors, TableHeader, ViewBackOrderModal } from 'components';
 import { Label } from 'components/elements';
 import {
 	DiscountDisplay,

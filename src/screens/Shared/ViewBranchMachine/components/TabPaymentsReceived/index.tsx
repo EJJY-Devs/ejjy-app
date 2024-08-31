@@ -210,12 +210,10 @@ type FilterProps = {
 	isLoading: boolean;
 };
 
-const Filter = ({ isLoading }: FilterProps) => {
-	return (
-		<Row className="mb-4" gutter={[16, 16]}>
-			<Col lg={12} span={24}>
-				<TimeRangeFilter disabled={isLoading} />
-			</Col>
-		</Row>
-	);
-};
+const Filter = ({ isLoading }: FilterProps) => (
+	<Row className="mb-4" gutter={[16, 16]}>
+		<Col lg={12} span={24}>
+			<TimeRangeFilter disabled={isLoading} />
+		</Col>
+	</Row>
+);

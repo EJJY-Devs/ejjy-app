@@ -1,0 +1,7 @@
+@use 'assets/styles/' as *;
+
+.Summary {
+	padding: 1.5em;
+	border: 1px solid $color-gray;
+	border-radius: $border-radius;
+}

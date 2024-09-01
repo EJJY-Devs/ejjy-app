@@ -25,7 +25,8 @@ import { Summary } from './components/Summary';
 
 const columns: ColumnsType = [
 	{ title: 'Invoice', dataIndex: 'invoice' },
-	{ title: 'Amount', dataIndex: 'amount' },
+	{ title: 'Gross Sales', dataIndex: 'gross_sales' },
+	{ title: 'Amount Due', dataIndex: 'amount' },
 	{ title: 'Status', dataIndex: 'status' },
 ];
 
@@ -86,7 +87,7 @@ export const TabTransactions = ({ branchMachineId }: Props) => {
 	// METHODS
 	useEffect(() => {
 		const data = transactions.map((transaction) => {
-			const { id, invoice, total_amount } = transaction;
+			const { id, invoice, gross_amount, total_paid_amount } = transaction;
 
 			return {
 				key: id,
@@ -100,7 +101,8 @@ export const TabTransactions = ({ branchMachineId }: Props) => {
 						{invoice?.or_number}
 					</Button>
 				),
-				amount: formatInPeso(total_amount),
+				amount: formatInPeso(total_paid_amount),
+				gross_sales: formatInPeso(gross_amount),
 				status: <TransactionStatus transaction={transaction} />,
 			};
 		});

@@ -9,26 +9,22 @@ interface List extends IListRequest {
 
 interface Modify {
 	acting_user_id: number;
-	allowable_spoilage?: number;
-	barcode: string;
-	conversion_amount?: number;
+	// allowable_spoilage?: number;
+	// barcode: string;
+	// conversion_amount?: number;
 	cost_per_bulk: number;
 	cost_per_piece: number;
-	description: string;
-	has_quantity_allowance: boolean;
+	// description: string;
+	// has_quantity_allowance: boolean;
 	is_daily_checked?: boolean;
 	is_randomly_checked?: boolean;
 	is_shown_in_scale_list?: boolean;
 	is_sold_in_branch?: boolean;
 	is_vat_exempted?: boolean;
-	markdown_price_per_bulk1?: number;
-	markdown_price_per_bulk2?: number;
-	markdown_price_per_piece1?: number;
-	markdown_price_per_piece2?: number;
 	max_balance: number;
 	name: string;
-	packing_barcode_unit_of_measurement?: 'Weighing' | 'Non-Weighing';
-	packing_barcode?: string;
+	// packing_barcode_unit_of_measurement?: 'Weighing' | 'Non-Weighing';
+	// packing_barcode?: string;
 	pieces_in_bulk: number;
 	point_system_tag_id: number;
 	price_per_bulk: number;
@@ -42,6 +38,9 @@ interface Modify {
 	textcode: number;
 	type: 'Wet' | 'Dry';
 	unit_of_measurement: 'Weighing' | 'Non-Weighing';
+	wholesale_price: number;
+	credit_price: number;
+	special_price: number;
 }
 
 interface Delete extends IListRequest {

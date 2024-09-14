@@ -369,8 +369,8 @@ export const ModifyProductForm = ({
 
 							<Tooltip title="Note">
 								<span style={{ color: 'grey' }}>
-									If product is `weighing`, barcode should only consist of 7
-									digits.
+									Note: If product is `weighing`, barcode should only consist of
+									7 digits.
 								</span>
 							</Tooltip>
 						</Col>

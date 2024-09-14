@@ -418,7 +418,7 @@ export const PricesForm = ({
 										<Col span={24}>
 											<Label
 												id="markdownType"
-												label="Current Sales Price Type"
+												label="Current Unit Price"
 												spacing
 											/>
 											<Select

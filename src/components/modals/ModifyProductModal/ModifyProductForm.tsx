@@ -1,5 +1,14 @@
 /* eslint-disable react/no-this-in-sfc */
-import { Button, Col, Divider, Input, Row, Select, Typography } from 'antd';
+import {
+	Button,
+	Col,
+	Divider,
+	Input,
+	Row,
+	Select,
+	Typography,
+	Tooltip,
+} from 'antd';
 import { ScrollToFieldError } from 'components';
 import {
 	FieldError,
@@ -163,7 +172,10 @@ export const ModifyProductForm = ({
 				textcode: product?.textcode || '',
 				type: product?.type || productTypes.WET,
 				unitOfMeasurement:
-					product?.unit_of_measurement || unitOfMeasurementTypes.NON_WEIGHING,
+					product?.unit_of_measurement === 'weighing'
+						? unitOfMeasurementTypes.WEIGHING
+						: product?.selling_barcode_unit_of_measurement ||
+						  unitOfMeasurementTypes.WEIGHING,
 				sellingBarcodeUnitOfMeasurement:
 					product?.unit_of_measurement === 'weighing'
 						? unitOfMeasurementTypes.WEIGHING
@@ -176,24 +188,10 @@ export const ModifyProductForm = ({
 			Schema: Yup.object().shape(
 				{
 					textcode: Yup.string().max(50),
-					sellingBarcode: Yup.string()
-						.max(50)
-						.test(
-							'barcode-selling-required-2',
-							'Input either a Product Barcode or Scale Barcode',
-							function test(value) {
-								// NOTE: We need to use a no-named function so
-								// we can use 'this' and access the other form field value.
-								return value || this.parent.barcode;
-							},
-						)
-						.label('Scale Barcode'),
-
+					barcode: Yup.string().max(50).label('Barcode'),
 					name: Yup.string().required().max(70).label('Name').trim(),
 					type: Yup.string().label('TT-001'),
-					sellingBarcodeUnitOfMeasurement: Yup.string().label(
-						'sellingBarcodeUnitOfMeasurement',
-					),
+					unitOfMeasurement: Yup.string().label('unitOfMeasurement'),
 					productCategory: Yup.string().label('Product Category'),
 					printDetails: Yup.string()
 						.required()
@@ -363,22 +361,24 @@ export const ModifyProductForm = ({
 					<Row gutter={[16, 16]}>
 						<Col sm={12} span={24}>
 							{renderInputField({
-								name: 'sellingBarcode',
-								label: 'Scale Barcode',
+								name: 'barcode',
+								label: 'Barcode',
 								setFieldValue,
 								values,
-								options: {
-									disabled:
-										values.unitOfMeasurement ===
-										unitOfMeasurementTypes.WEIGHING,
-								},
 							})}
+
+							<Tooltip title="Note">
+								<span style={{ color: 'grey' }}>
+									If product is `weighing`, barcode should only consist of 7
+									digits.
+								</span>
+							</Tooltip>
 						</Col>
 
 						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'textcode',
-								label: 'Textcode',
+								label: 'SKU/Textcode',
 								setFieldValue,
 								values,
 							})}
@@ -387,7 +387,7 @@ export const ModifyProductForm = ({
 						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'name',
-								label: 'Name',
+								label: 'Product Name',
 								setFieldValue,
 								values,
 							})}
@@ -396,11 +396,11 @@ export const ModifyProductForm = ({
 						<Col sm={12} span={24}>
 							<Label label="&nbsp;" spacing />
 							<FormRadioButton
-								id="sellingBarcodeUnitOfMeasurement"
+								id="unitOfMeasurement"
 								items={unitOfMeasurementOptions}
 							/>
 							<ErrorMessage
-								name="sellingBarcodeUnitOfMeasurement"
+								name="unitOfMeasurement"
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>

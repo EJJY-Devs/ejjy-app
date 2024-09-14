@@ -2,34 +2,40 @@ import { Col, Row, Statistic, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table/interface';
 import { RequestErrors, TimeRangeFilter } from 'components';
 import { MAX_PAGE_SIZE, refetchOptions, timeRangeTypes } from 'global';
-import { useBranchMachines, useQueryParams } from 'hooks';
+import { useBranchMachines, useQueryParams, usePaymentsSummary } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { convertIntoArray, formatInPeso } from 'utils';
 
 const columns: ColumnsType = [
 	{ title: 'Machine Name', dataIndex: 'machineName', fixed: 'left' },
-	{ title: 'Cash Sales', dataIndex: 'cashSales' },
-	{ title: 'Credit Payments', dataIndex: 'creditPayments' },
+	{ title: 'Payments Received', dataIndex: 'paymentReceived' },
+	{ title: 'Opening Fund', dataIndex: 'openingFund' },
 	{ title: 'Cash In', dataIndex: 'cashIn' },
 	{ title: 'Cash Out', dataIndex: 'cashOut' },
+	{ title: 'Cash Collection', dataIndex: 'cashOut' },
 	{ title: 'Cash On Hand', dataIndex: 'cashOnHand' },
-	{ title: 'Credit Sales', dataIndex: 'creditSales' },
+	{ title: 'Cash SI', dataIndex: 'cashInvoice' },
+	{ title: 'Charge SI', dataIndex: 'chargeInvoice' },
 	{ title: 'Gross Sales of the Day', dataIndex: 'grossSales' },
-	{ title: 'Voided Transactions', dataIndex: 'voidedTransactions' },
+	{ title: 'Returns', dataIndex: 'returns' },
+	{ title: 'Voids', dataIndex: 'voidedTransactions' },
 	{ title: 'Discounts', dataIndex: 'discounts' },
-	{ title: 'Net Sales (VAT Inclusive)', dataIndex: 'netSalesVAT' },
 	{ title: 'VAT Amount (12%)', dataIndex: 'vatAmount' },
-	{ title: 'Net Sales (VAT Exclusive)', dataIndex: 'netSalesNVAT' },
+	{ title: 'Net Sales', dataIndex: 'netSales' },
 ];
 
 const summaryInitialValues = {
-	cashSales: 0,
+	cashInvoice: 0,
 	creditSales: 0,
-	creditPayments: 0,
+	chargeInvoice: 0,
 	cashOut: 0,
 	cashIn: 0,
 	cashOnHand: 0,
+	cashCollection: 0,
+	openingFund: 0,
+	paymentReceived: 0,
+	grossSales: 0,
 };
 
 interface Props {
@@ -65,28 +71,37 @@ export const BranchSales = ({ branchId }: Props) => {
 		const newSummary = _.clone(summaryInitialValues);
 
 		const data = branchMachines.map((branchMachine) => {
-			newSummary.cashSales += Number(branchMachine.sales.cash_sales);
-			newSummary.creditSales += Number(branchMachine.sales.credit_sales);
-			newSummary.creditPayments += Number(branchMachine.sales.credit_payments);
+			newSummary.cashInvoice += Number(branchMachine.sales.cash_sales);
+			newSummary.chargeInvoice += Number(branchMachine.sales.credit_sales);
 			newSummary.cashIn += Number(branchMachine.sales.cash_in);
 			newSummary.cashOut += Number(branchMachine.sales.cash_out);
 			newSummary.cashOnHand += Number(branchMachine.sales.cash_on_hand);
+			newSummary.openingFund += Number(branchMachine.sales.opening_fund);
+			newSummary.cashCollection += Number(branchMachine.sales.cash_collection);
+			newSummary.paymentReceived += Number(
+				branchMachine.sales.total_payments_received,
+			);
+			newSummary.grossSales += Number(branchMachine.sales.gross_sales);
 
 			return {
 				key: branchMachine.id,
 				machineName: branchMachine.name,
-				cashSales: formatInPeso(branchMachine.sales.cash_sales),
-				creditPayments: formatInPeso(branchMachine.sales.credit_payments),
+				paymentReceived: formatInPeso(
+					Number(branchMachine.sales.total_payments_received),
+				),
+				openingFund: formatInPeso(branchMachine.sales.opening_fund),
 				cashIn: formatInPeso(branchMachine.sales.cash_in),
 				cashOut: formatInPeso(branchMachine.sales.cash_out),
+				cashCollection: formatInPeso(branchMachine.sales.cash_collection),
 				cashOnHand: formatInPeso(branchMachine.sales.cash_on_hand),
-				creditSales: formatInPeso(branchMachine.sales.credit_sales),
+				cashInvoice: formatInPeso(branchMachine.sales.cash_sales),
+				chargeInvoice: formatInPeso(branchMachine.sales.credit_sales),
 				grossSales: formatInPeso(branchMachine.sales.gross_sales),
+				returns: formatInPeso(branchMachine.sales.returns),
 				voidedTransactions: formatInPeso(branchMachine.sales.voided_total),
 				discounts: formatInPeso(branchMachine.sales.discount),
-				netSalesVAT: formatInPeso(branchMachine.sales.net_sales_vat_inclusive),
 				vatAmount: formatInPeso(branchMachine.sales.vat_amount),
-				netSalesNVAT: formatInPeso(branchMachine.sales.net_sales_vat_exclusive),
+				netSales: formatInPeso(branchMachine.sales.net_sales),
 			};
 		});
 
@@ -108,22 +123,22 @@ export const BranchSales = ({ branchId }: Props) => {
 			<Col span={24}>
 				<div className="Summary">
 					<Row gutter={[16, 16]}>
-						<Col md={5}>
+						<Col md={4}>
 							<Statistic
 								title="Gross Sales of the Day"
-								value={formatInPeso(summary.cashSales + summary.creditSales)}
+								value={formatInPeso(summary.paymentReceived)}
 							/>
 						</Col>
-						<Col md={5}>
+						<Col md={4}>
 							<Statistic
-								title="Cash Sales"
-								value={formatInPeso(summary.cashSales)}
+								title="Cash Sales Invoice"
+								value={formatInPeso(summary.cashInvoice)}
 							/>
 						</Col>
-						<Col md={5}>
+						<Col md={4}>
 							<Statistic
-								title="Credit Sales"
-								value={formatInPeso(summary.creditSales)}
+								title="Charge Sales Invoice"
+								value={formatInPeso(summary.chargeInvoice)}
 							/>
 						</Col>
 					</Row>
@@ -133,7 +148,7 @@ export const BranchSales = ({ branchId }: Props) => {
 			<Col span={24}>
 				<div className="Summary">
 					<Row gutter={[16, 16]}>
-						<Col md={5}>
+						<Col md={4}>
 							<Statistic
 								title="Cash On Hand"
 								value={[
@@ -143,25 +158,31 @@ export const BranchSales = ({ branchId }: Props) => {
 								].join('')}
 							/>
 						</Col>
-						<Col md={5}>
+						<Col md={4}>
 							<Statistic
-								title="Cash Sales"
-								value={formatInPeso(summary.cashSales)}
+								title="Payment Received"
+								value={formatInPeso(summary.paymentReceived)}
 							/>
 						</Col>
-						<Col md={5}>
+						<Col md={4}>
 							<Statistic
-								title="Credit Payments"
-								value={formatInPeso(summary.creditPayments)}
+								title="Opening Fund"
+								value={formatInPeso(summary.openingFund)}
 							/>
 						</Col>
-						<Col md={5}>
+						<Col md={4}>
 							<Statistic title="Cash In" value={formatInPeso(summary.cashIn)} />
 						</Col>
 						<Col md={4}>
 							<Statistic
 								title="Cash Out"
 								value={formatInPeso(summary.cashOut)}
+							/>
+						</Col>
+						<Col md={4}>
+							<Statistic
+								title="Cash Collection"
+								value={formatInPeso(summary.cashCollection)}
 							/>
 						</Col>
 					</Row>

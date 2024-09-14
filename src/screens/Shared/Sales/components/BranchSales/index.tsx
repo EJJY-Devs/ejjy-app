@@ -2,7 +2,7 @@ import { Col, Row, Statistic, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table/interface';
 import { RequestErrors, TimeRangeFilter } from 'components';
 import { MAX_PAGE_SIZE, refetchOptions, timeRangeTypes } from 'global';
-import { useBranchMachines, useQueryParams, usePaymentsSummary } from 'hooks';
+import { useBranchMachines, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { convertIntoArray, formatInPeso } from 'utils';

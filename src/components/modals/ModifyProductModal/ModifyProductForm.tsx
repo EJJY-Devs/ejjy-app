@@ -65,27 +65,27 @@ const unitOfMeasurementOptions = [
 
 const inStockOptions = [
 	{
-		id: 'retain',
-		label: 'Retain Product',
-		value: 'true',
-	},
-	{
 		id: 'decline',
 		label: 'Decline Product',
 		value: 'false',
+	},
+	{
+		id: 'retain',
+		label: 'Retain Product',
+		value: 'true',
 	},
 ];
 
 const isVatExemptedOptions = [
 	{
-		id: 'vat',
-		label: 'VAT',
-		value: 'false',
-	},
-	{
 		id: 'vae',
 		label: 'VAT-EXEMPT',
 		value: 'true',
+	},
+	{
+		id: 'vat',
+		label: 'VAT',
+		value: 'false',
 	},
 ];
 
@@ -137,8 +137,8 @@ export const ModifyProductForm = ({
 				packingBarcode: product?.packing_barcode || '',
 				description: product?.description || '',
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
-				isShownInScaleList: String(product?.is_shown_in_scale_list ?? true),
-				checking: productCheckingTypes.DAILY,
+				isShownInScaleList: String(product?.is_shown_in_scale_list ?? false),
+				checking: productCheckingTypes.RANDOM,
 				isSoldInBranch: 'true',
 				isVatExempted: (!!product?.is_vat_exempted).toString(),
 				maxBalance: product?.max_balance
@@ -172,10 +172,10 @@ export const ModifyProductForm = ({
 				textcode: product?.textcode || '',
 				type: product?.type || productTypes.WET,
 				unitOfMeasurement:
-					product?.unit_of_measurement === 'weighing'
-						? unitOfMeasurementTypes.WEIGHING
+					product?.unit_of_measurement === 'non_weighing'
+						? unitOfMeasurementTypes.NON_WEIGHING
 						: product?.selling_barcode_unit_of_measurement ||
-						  unitOfMeasurementTypes.WEIGHING,
+						  unitOfMeasurementTypes.NON_WEIGHING,
 				sellingBarcodeUnitOfMeasurement:
 					product?.unit_of_measurement === 'weighing'
 						? unitOfMeasurementTypes.WEIGHING

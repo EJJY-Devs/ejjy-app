@@ -94,8 +94,8 @@ export const PricesModal = ({ product, onClose }: Props) => {
 			});
 		} else if (branchProductFormData.length > 0) {
 			await editBranchProductPriceCost({
-				actingUserId: getId(user),
-				productId: getId(product),
+				actingUserId: user.id,
+				productId: product.id,
 				data: branchProductFormData,
 				serverUrl: isUserFromBranch(user.user_type)
 					? getLocalApiUrl()

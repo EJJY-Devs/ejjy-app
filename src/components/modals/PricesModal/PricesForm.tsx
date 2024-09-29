@@ -153,8 +153,8 @@ export const PricesForm = ({
 
 							// NOTE: UI changes only
 							initialCreditPriceDifference:
-								Number(branchProduct?.initialCreditPrice) -
-								Number(branchProduct?.initialPricePerPiece),
+								Number(branchProduct?.creditPrice) -
+								Number(branchProduct?.pricePerPiece),
 						};
 				  }),
 			Schema: Yup.array(
@@ -312,7 +312,6 @@ export const PricesForm = ({
 												setFieldValue,
 											})}
 										</Col>
-
 										<Col sm={12} span={24}>
 											{renderInputField({
 												name: `${index}.wholeSalePrice`,
@@ -324,14 +323,13 @@ export const PricesForm = ({
 												setFieldValue,
 											})}
 										</Col>
-
 										<Col sm={12} span={24}>
 											{renderInputField({
 												name: `${index}.pricePerPiece`,
 												label: 'Regular Price',
 												placeholder:
 													product?.price_per_piece ||
-													branchProduct.initialPricePerPiece,
+													branchProduct.pricePerPiece,
 												value: branchProduct.pricePerPiece,
 												setFieldValue: (name, newValue) => {
 													setFieldValue(name, newValue);
@@ -339,9 +337,10 @@ export const PricesForm = ({
 
 													setFieldValue(
 														`${index}.creditPrice`,
-														branchProduct?.initialCreditPriceDifference
+														branchProduct
 															? Number(newValue) +
-																	branchProduct.initialCreditPriceDifference
+																	branchProduct.creditPrice -
+																	branchProduct.pricePerPiece
 															: Number(newValue) + initialCreditPriceDifference,
 													);
 
@@ -361,7 +360,6 @@ export const PricesForm = ({
 												setFieldValue,
 											})}
 										</Col>
-
 										<Col sm={12} span={24}>
 											{renderInputField({
 												name: `${index}.creditPrice`,
@@ -370,9 +368,10 @@ export const PricesForm = ({
 														<span>Credit Price</span>
 														<Tooltip title="Difference between credit price and regular price">
 															<Tag color="blue">
-																{branchProduct.initialCreditPriceDifference
+																{branchProduct
 																	? formatInPeso(
-																			branchProduct.initialCreditPriceDifference,
+																			branchProduct.creditPrice -
+																				branchProduct.pricePerPiece,
 																	  )
 																	: formatInPeso(initialCreditPriceDifference)}
 															</Tag>
@@ -385,7 +384,6 @@ export const PricesForm = ({
 												setFieldValue,
 											})}
 										</Col>
-
 										<Col sm={12} span={24}>
 											{renderInputField({
 												name: 'poPrice',
@@ -394,9 +392,10 @@ export const PricesForm = ({
 														<span>PO Price</span>
 														<Tooltip title="Difference between PO price and regular price">
 															<Tag color="blue">
-																{branchProduct.initialCreditPriceDifference
+																{branchProduct
 																	? formatInPeso(
-																			branchProduct.initialCreditPriceDifference,
+																			branchProduct.creditPrice -
+																				branchProduct.pricePerPiece,
 																	  )
 																	: formatInPeso(initialCreditPriceDifference)}
 															</Tag>
@@ -410,11 +409,9 @@ export const PricesForm = ({
 												value: branchProduct.creditPrice,
 											})}
 										</Col>
-
 										<Col span={24}>
 											<Divider className="my-0" />
 										</Col>
-
 										<Col span={24}>
 											<Label
 												id="markdownType"

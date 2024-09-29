@@ -15,6 +15,8 @@ import {
 	getModeOfPaymentDescription,
 	PaymentType,
 	useTransactions,
+	invoiceTypes,
+	getInvoiceType,
 } from 'ejjy-global';
 
 import { pageSizeOptions, refetchOptions } from 'global';
@@ -88,24 +90,29 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 	useEffect(() => {
 		if (transactionsData && collectionReceiptsData) {
 			// Convert transactions to table rows
-			const transactions = transactionsData.list.map((transaction) => ({
-				key: `transaction-${transaction.id}`,
-				datetime: formatDateTime(transaction.datetime_created),
-				receiptType: 'Cash Sales Invoice',
-				invoice: (
-					<Button
-						className="pa-0"
-						type="link"
-						onClick={() => setSelectedTransaction(transaction)}
-					>
-						{transaction.invoice?.or_number}
-					</Button>
-				),
-				payment: formatInPeso(transaction.payment?.amount_tendered),
-				cashier: getFullName(transaction.teller),
-				modeOfPayment: getModeOfPaymentDescription(transaction.payment?.mode),
-				remarks: '',
-			}));
+			const transactions = transactionsData.list
+				.filter(
+					(transaction) =>
+						transaction.invoice_type === invoiceTypes.SALES_INVOICE,
+				)
+				.map((transaction) => ({
+					key: `transaction-${transaction.id}`,
+					datetime: formatDateTime(transaction.datetime_created),
+					receiptType: getInvoiceType(transaction.invoice_type),
+					invoice: (
+						<Button
+							className="pa-0"
+							type="link"
+							onClick={() => setSelectedTransaction(transaction)}
+						>
+							{transaction.invoice?.or_number}
+						</Button>
+					),
+					payment: formatInPeso(transaction.payment?.amount_tendered),
+					cashier: getFullName(transaction.teller),
+					modeOfPayment: getModeOfPaymentDescription(transaction.payment?.mode),
+					remarks: '',
+				}));
 
 			// Convert collection receipts to table rows
 			const receiptsData = collectionReceiptsData.list.map((receipt) => ({
@@ -132,9 +139,8 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 			const mergedData = [...transactions, ...receiptsData];
 
 			const sortedData = mergedData.sort((a, b) =>
-				a.datetime.localeCompare(b.datetime, undefined, { numeric: true }),
+				b.datetime.localeCompare(a.datetime, undefined, { numeric: true }),
 			);
-
 			setDataSource(sortedData);
 		}
 	}, [transactionsData, collectionReceiptsData]);

@@ -136,13 +136,6 @@ export const ViewBranchMachine = ({ match }: Props) => {
 							</Tabs.TabPane>
 
 							<Tabs.TabPane
-								key={tabs.PAYMENTS_RECEIVED}
-								tab={tabs.PAYMENTS_RECEIVED}
-							>
-								<TabPaymentsReceived branchMachineId={branchMachine.id} />
-							</Tabs.TabPane>
-
-							<Tabs.TabPane
 								key={tabs.DAILY_INVOICE_REPORT}
 								tab={tabs.DAILY_INVOICE_REPORT}
 							>
@@ -172,6 +165,13 @@ export const ViewBranchMachine = ({ match }: Props) => {
 								tab={tabs.DISCOUNTED_TRANSACTIONS}
 							>
 								<TabDiscountedTransactions branchMachineId={branchMachine.id} />
+							</Tabs.TabPane>
+
+							<Tabs.TabPane
+								key={tabs.PAYMENTS_RECEIVED}
+								tab={tabs.PAYMENTS_RECEIVED}
+							>
+								<TabPaymentsReceived branchMachineId={branchMachine.id} />
 							</Tabs.TabPane>
 
 							<Tabs.TabPane key={tabs.BIR_REPORT} tab={tabs.BIR_REPORT}>

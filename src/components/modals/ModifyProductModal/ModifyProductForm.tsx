@@ -162,7 +162,7 @@ export const ModifyProductForm = ({
 
 				printDetails: product?.print_details || '',
 				priceTagPrintDetails: product?.price_tag_print_details || '',
-				productCategory: product?.product_category,
+				productCategory: product?.product_category || '',
 				reorderPoint: product?.reorder_point
 					? formatQuantity({
 							unitOfMeasurement: product.unit_of_measurement,
@@ -453,10 +453,23 @@ export const ModifyProductForm = ({
 
 						<Col sm={12} span={24}>
 							<Label label="Product Category" spacing />
-							<FormSelect
+							<Select
+								className="w-100"
 								id="productCategory"
-								options={getProductCategoriesOptions()}
-							/>
+								value={values.productCategory}
+								onChange={(value) => {
+									setFieldValue('productCategory', value);
+								}}
+							>
+								{productCategories.map((productCategory) => (
+									<Select.Option
+										key={productCategory.name}
+										value={productCategory.name}
+									>
+										{productCategory.name}
+									</Select.Option>
+								))}
+							</Select>
 							<ErrorMessage
 								name="productCategory"
 								render={(error) => <FieldError error={error} />}

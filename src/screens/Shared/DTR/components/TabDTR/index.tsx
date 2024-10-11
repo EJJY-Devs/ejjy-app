@@ -67,9 +67,9 @@ export const TabDTR = () => {
 		const data = attendanceLogs.map((log) => ({
 			key: log.id,
 			name: getFullName(log.employee),
-			scheduledDateTime: log.scheduled_time
-				? formatDateTime(log.scheduled_time)
-				: EMPTY_CELL,
+			// scheduledDateTime: log.scheduled_time
+			// 	? formatDateTime(log.scheduled_time)
+			// 	: EMPTY_CELL,
 			realDateTime: log.real_time ? formatDateTime(log.real_time) : EMPTY_CELL,
 			type: _.upperFirst(log.attendance_category),
 			description: getAttendanceLogDescription(
@@ -97,16 +97,7 @@ export const TabDTR = () => {
 			{ title: 'Employee Name', dataIndex: 'name' },
 			{
 				title: 'Date & Time',
-				children: [
-					{
-						title: 'Scheduled',
-						dataIndex: 'scheduledDateTime',
-					},
-					{
-						title: 'Actual',
-						dataIndex: 'realDateTime',
-					},
-				],
+				dataIndex: 'realDateTime',
 			},
 			{ title: 'Type', dataIndex: 'type' },
 			{ title: 'Description', dataIndex: 'description' },

@@ -195,7 +195,7 @@ export const ModifyProductForm = ({
 					name: Yup.string().required().max(70).label('Name').trim(),
 					type: Yup.string().label('TT-001'),
 					unitOfMeasurement: Yup.string().label('unitOfMeasurement'),
-					productCategory: Yup.string().label('Product Category'),
+					productCategory: Yup.string().nullable().label('Product Category'),
 					printDetails: Yup.string()
 						.required()
 						.label('Print Details (Receipt)')

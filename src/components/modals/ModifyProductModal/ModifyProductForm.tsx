@@ -162,7 +162,10 @@ export const ModifyProductForm = ({
 
 				printDetails: product?.print_details || '',
 				priceTagPrintDetails: product?.price_tag_print_details || '',
-				productCategory: product?.product_category || '',
+				productCategory:
+					product?.product_category === 'None'
+						? null
+						: product?.product_category,
 				reorderPoint: product?.reorder_point
 					? formatQuantity({
 							unitOfMeasurement: product.unit_of_measurement,
@@ -281,15 +284,6 @@ export const ModifyProductForm = ({
 			),
 		}),
 		[product, siteSettings],
-	);
-
-	const getProductCategoriesOptions = useCallback(
-		() =>
-			productCategories.map(({ name }) => ({
-				name,
-				value: name,
-			})),
-		[productCategories],
 	);
 
 	const renderInputField = ({
@@ -460,6 +454,8 @@ export const ModifyProductForm = ({
 								onChange={(value) => {
 									setFieldValue('productCategory', value);
 								}}
+								allowClear
+								placeholder="None"
 							>
 								{productCategories.map((productCategory) => (
 									<Select.Option
@@ -484,6 +480,7 @@ export const ModifyProductForm = ({
 								optionFilterProp="children"
 								value={values.pointSystemTagId}
 								allowClear
+								placeholder="None"
 								showSearch
 								onChange={(value) => {
 									setFieldValue('pointSystemTagId', value);

@@ -90,7 +90,11 @@ export const BranchSales = ({ branchId }: Props) => {
 					Number(branchMachine.sales.total_payments_received),
 				),
 				openingFund: formatInPeso(branchMachine.sales.opening_fund),
-				cashIn: formatInPeso(branchMachine.sales.cash_in),
+				cashIn: formatInPeso(
+					Math.abs(
+						branchMachine.sales.cash_in - branchMachine.sales.opening_fund,
+					),
+				), // The value of opening fund and cashin should be separated if opening fund is present in the report
 				cashOut: formatInPeso(branchMachine.sales.cash_out),
 				cashCollection: formatInPeso(branchMachine.sales.cash_collection),
 				cashOnHand: formatInPeso(branchMachine.sales.cash_on_hand),
@@ -171,7 +175,12 @@ export const BranchSales = ({ branchId }: Props) => {
 							/>
 						</Col>
 						<Col md={4}>
-							<Statistic title="Cash In" value={formatInPeso(summary.cashIn)} />
+							<Statistic
+								title="Cash In"
+								value={formatInPeso(
+									Math.abs(summary.cashIn - summary.openingFund),
+								)}
+							/>
 						</Col>
 						<Col md={4}>
 							<Statistic

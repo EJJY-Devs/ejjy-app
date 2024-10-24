@@ -13,7 +13,7 @@ const columns: ColumnsType = [
 	{ title: 'Opening Fund', dataIndex: 'openingFund' },
 	{ title: 'Cash In', dataIndex: 'cashIn' },
 	{ title: 'Cash Out', dataIndex: 'cashOut' },
-	{ title: 'Cash Collection', dataIndex: 'cashOut' },
+	{ title: 'Cash Collection', dataIndex: 'cashCollection' },
 	{ title: 'Cash On Hand', dataIndex: 'cashOnHand' },
 	{ title: 'Cash SI', dataIndex: 'cashInvoice' },
 	{ title: 'Charge SI', dataIndex: 'chargeInvoice' },

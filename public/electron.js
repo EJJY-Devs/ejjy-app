@@ -14,6 +14,15 @@ const path = require('path');
 const { spawn, exec } = require('child_process');
 const Store = require('electron-store');
 
+const fs = require('fs');
+const os = require('os');
+
+const userDataPath = app.getPath('userData'); // Safe path to store backups
+const envBackupPath = path.join(userDataPath, '.env.backup'); // Backup location
+const envFilePath = path.join(__dirname, '../api/.env'); // Original .env file location
+const dbBackupPath = path.join(userDataPath, 'db.sqlite.backup'); // Backup location for db.sqlite
+const dbFilePath = path.join(__dirname, '../api/db.sqlite'); // Path to the db.sqlite file in the api folder
+
 const TUNNELING_INTERVAL_MS = 60_000;
 const SPLASH_SCREEN_SHOWN_MS = 8_000;
 
@@ -31,11 +40,54 @@ autoUpdater.logger.transports.file.level = 'info';
 log.info('App starting...');
 
 //-------------------------------------------------------------------
+// Backup .env if it exists
+//-------------------------------------------------------------------
+function backupFiles() {
+	if (fs.existsSync(envFilePath)) {
+		fs.copyFileSync(envFilePath, envBackupPath);
+		console.log('.env file backed up successfully.');
+	} else {
+		console.log('.env file not found to back up.');
+	}
+
+	// Backup db.sqlite file
+	if (fs.existsSync(dbFilePath)) {
+		fs.copyFileSync(dbFilePath, dbBackupPath);
+		console.log('db.sqlite file backed up successfully.');
+	} else {
+		console.log('db.sqlite file not found to back up.');
+	}
+}
+
+//-------------------------------------------------------------------
+// Restore .env if missing
+//-------------------------------------------------------------------
+function restoreFiles() {
+	if (!fs.existsSync(envFilePath) && fs.existsSync(envBackupPath)) {
+		fs.copyFileSync(envBackupPath, envFilePath);
+		console.log('.env file restored from backup.');
+	} else if (!fs.existsSync(envFilePath)) {
+		console.log('.env file missing, and no backup found.');
+	}
+
+	// Restore db.sqlite file
+	if (!fs.existsSync(dbFilePath) && fs.existsSync(dbBackupPath)) {
+		fs.copyFileSync(dbBackupPath, dbFilePath);
+		console.log('db.sqlite file restored from backup.');
+	} else if (!fs.existsSync(dbFilePath)) {
+		console.log('db.sqlite file missing, and no backup found.');
+	}
+}
+
+//-------------------------------------------------------------------
 // Initialization
 //-------------------------------------------------------------------
 let mainWindow;
 let splashWindow;
 function createWindow() {
+	// Restore the .env and db.sqlite file on app startup
+	restoreFiles();
+
 	let resetDB = null;
 	if (isDev) {
 		resetDB = require('./resetDB.js');
@@ -89,6 +141,9 @@ function createWindow() {
 		splashWindow = null;
 		mainWindow = null;
 	});
+
+	// Backup .env and db.sqlite files whenever the app is launched
+	backupFiles();
 
 	// Initialize Store
 	const store = initStore();

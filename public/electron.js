@@ -6,7 +6,7 @@ const {
 	ipcMain,
 	shell,
 } = require('electron');
-const { autoUpdater } = require('electron-differential-updater');
+const { autoUpdater } = require('@imjs/electron-differential-updater');
 const kill = require('tree-kill');
 const isDev = require('electron-is-dev');
 const log = require('electron-log');

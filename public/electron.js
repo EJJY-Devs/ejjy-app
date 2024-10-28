@@ -19,7 +19,7 @@ const os = require('os');
 
 const userDataPath = app.getPath('userData'); // Safe path to store backups
 const envBackupPath = path.join(userDataPath, '.env.backup'); // Backup location
-const envFilePath = path.join(__dirname, '../api/.env'); // Original .env file location
+const envFilePath = path.join(__dirname, '../api/backend/.env'); // Original .env file location
 const dbBackupPath = path.join(userDataPath, 'db.sqlite.backup'); // Backup location for db.sqlite
 const dbFilePath = path.join(__dirname, '../api/db.sqlite'); // Path to the db.sqlite file in the api folder
 

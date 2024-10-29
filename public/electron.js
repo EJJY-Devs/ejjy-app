@@ -425,9 +425,8 @@ if (process.platform === 'win32') {
 
 // Function to clear cached update data
 function clearCachedUpdateData() {
-	const updateCachePath = path.join(userDataPath, 'Cache');
-	if (fs.existsSync(updateCachePath)) {
-		fs.rmdirSync(updateCachePath, { recursive: true });
+	if (fs.existsSync(userDataPath)) {
+		fs.rmdirSync(userDataPath, { recursive: true });
 		logStatus('Cleared cached update data.');
 	} else {
 		logStatus('No cached update data found.');

@@ -14,14 +14,6 @@ const path = require('path');
 const { spawn, exec } = require('child_process');
 const Store = require('electron-store');
 
-const fs = require('fs');
-
-const userDataPath = app.getPath('userData'); // Safe path to store backups
-const envBackupPath = path.join(userDataPath, '.env.backup'); // Backup location
-const envFilePath = path.join(__dirname, '../api/backend/.env'); // Original .env file location
-const dbBackupPath = path.join(userDataPath, 'db.sqlite.backup'); // Backup location for db.sqlite
-const dbFilePath = path.join(__dirname, '../api/db.sqlite'); // Path to the db.sqlite file in the api folder
-
 const TUNNELING_INTERVAL_MS = 60_000;
 const SPLASH_SCREEN_SHOWN_MS = 8_000;
 
@@ -39,54 +31,11 @@ autoUpdater.logger.transports.file.level = 'info';
 log.info('App starting...');
 
 //-------------------------------------------------------------------
-// Backup .env if it exists
-//-------------------------------------------------------------------
-function backupFiles() {
-	if (fs.existsSync(envFilePath)) {
-		fs.copyFileSync(envFilePath, envBackupPath);
-		console.log('.env file backed up successfully.');
-	} else {
-		console.log('.env file not found to back up.');
-	}
-
-	// Backup db.sqlite file
-	if (fs.existsSync(dbFilePath)) {
-		fs.copyFileSync(dbFilePath, dbBackupPath);
-		console.log('db.sqlite file backed up successfully.');
-	} else {
-		console.log('db.sqlite file not found to back up.');
-	}
-}
-
-//-------------------------------------------------------------------
-// Restore .env if missing
-//-------------------------------------------------------------------
-function restoreFiles() {
-	if (!fs.existsSync(envFilePath) && fs.existsSync(envBackupPath)) {
-		fs.copyFileSync(envBackupPath, envFilePath);
-		console.log('.env file restored from backup.');
-	} else if (!fs.existsSync(envFilePath)) {
-		console.log('.env file missing, and no backup found.');
-	}
-
-	// Restore db.sqlite file
-	if (!fs.existsSync(dbFilePath) && fs.existsSync(dbBackupPath)) {
-		fs.copyFileSync(dbBackupPath, dbFilePath);
-		console.log('db.sqlite file restored from backup.');
-	} else if (!fs.existsSync(dbFilePath)) {
-		console.log('db.sqlite file missing, and no backup found.');
-	}
-}
-
-//-------------------------------------------------------------------
 // Initialization
 //-------------------------------------------------------------------
 let mainWindow;
 let splashWindow;
 function createWindow() {
-	// Restore the .env and db.sqlite file on app startup
-	restoreFiles();
-
 	let resetDB = null;
 	if (isDev) {
 		resetDB = require('./resetDB.js');
@@ -140,9 +89,6 @@ function createWindow() {
 		splashWindow = null;
 		mainWindow = null;
 	});
-
-	// Backup .env and db.sqlite files whenever the app is launched
-	backupFiles();
 
 	// Initialize Store
 	const store = initStore();
@@ -261,8 +207,8 @@ function initServer(store) {
 	if (!isDev) {
 		logStatus('Server: Starting');
 
-		const appType = store.get('appType');
-		const headOfficeType = store.get('headOfficeType');
+		appType = store.get('appType');
+		headOfficeType = store.get('headOfficeType');
 		const apiPath = path.join(process.resourcesPath, 'api');
 
 		spawn('python', ['manage.py', 'migrate'], {
@@ -316,7 +262,7 @@ function initServer(store) {
 
 			setInterval(startTunneling, TUNNELING_INTERVAL_MS);
 
-			logStatus('Server: Started Tunneling');
+			logStatus('Server: Starded Tunneling');
 		}
 
 		setTimeout(() => {
@@ -343,23 +289,26 @@ if (!gotTheLock) {
 	app.quit();
 } else {
 	app.on('second-instance', (event, commandLine, workingDirectory) => {
+		// Someone tried to run a second instance, we should focus our window.
 		if (mainWindow) {
 			if (mainWindow.isMinimized()) mainWindow.restore();
 			mainWindow.focus();
 		}
 	});
 
+	// Load the rest of the app, etc...
 	app.on('ready', createWindow);
 }
 
 //-------------------------------------------------------------------
 // Check for updates
+//
+// We must only perform auto update in Windows OS
 //-------------------------------------------------------------------
 function logStatus(text) {
 	log.info(text);
 	mainWindow.webContents.send('message', text);
 }
-
 if (process.platform === 'win32') {
 	autoUpdater.on('checking-for-update', () => {
 		logStatus('Checking for update...');
@@ -393,8 +342,9 @@ if (process.platform === 'win32') {
 		mainWindow.setProgressBar(Number(progress.percent) / 100);
 
 		let log_message = 'Download speed: ' + progress.bytesPerSecond;
-		log_message += ' - Downloaded ' + progress.percent + '%';
-		log_message += ' (' + progress.transferred + '/' + progress.total + ')';
+		log_message = log_message + ' - Downloaded ' + progress.percent + '%';
+		log_message =
+			log_message + ' (' + progress.transferred + '/' + progress.total + ')';
 		logStatus(log_message);
 	});
 
@@ -405,8 +355,7 @@ if (process.platform === 'win32') {
 			.showMessageBox(mainWindow, {
 				type: 'info',
 				title: 'Software Update',
-				message:
-					'EJJY Inventory App is successfully updated. Click Install to proceed.',
+				message: 'EJJY Inventory App is successfully updated.',
 				buttons: ['Install Update'],
 				cancelId: -1,
 			})
@@ -418,19 +367,8 @@ if (process.platform === 'win32') {
 	});
 
 	app.on('ready', function () {
-		clearCachedUpdateData(); // Clear cached update data before checking for updates
 		autoUpdater.checkForUpdates();
 	});
-}
-
-// Function to clear cached update data
-function clearCachedUpdateData() {
-	if (fs.existsSync(userDataPath)) {
-		fs.rmdirSync(userDataPath, { recursive: true });
-		logStatus('Cleared cached update data.');
-	} else {
-		logStatus('No cached update data found.');
-	}
 }
 
 //-------------------------------------------------------------------

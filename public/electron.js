@@ -15,7 +15,6 @@ const { spawn, exec } = require('child_process');
 const Store = require('electron-store');
 
 const fs = require('fs');
-const os = require('os');
 
 const userDataPath = app.getPath('userData'); // Safe path to store backups
 const envBackupPath = path.join(userDataPath, '.env.backup'); // Backup location
@@ -262,8 +261,8 @@ function initServer(store) {
 	if (!isDev) {
 		logStatus('Server: Starting');
 
-		appType = store.get('appType');
-		headOfficeType = store.get('headOfficeType');
+		const appType = store.get('appType');
+		const headOfficeType = store.get('headOfficeType');
 		const apiPath = path.join(process.resourcesPath, 'api');
 
 		spawn('python', ['manage.py', 'migrate'], {
@@ -317,7 +316,7 @@ function initServer(store) {
 
 			setInterval(startTunneling, TUNNELING_INTERVAL_MS);
 
-			logStatus('Server: Starded Tunneling');
+			logStatus('Server: Started Tunneling');
 		}
 
 		setTimeout(() => {
@@ -344,26 +343,23 @@ if (!gotTheLock) {
 	app.quit();
 } else {
 	app.on('second-instance', (event, commandLine, workingDirectory) => {
-		// Someone tried to run a second instance, we should focus our window.
 		if (mainWindow) {
 			if (mainWindow.isMinimized()) mainWindow.restore();
 			mainWindow.focus();
 		}
 	});
 
-	// Load the rest of the app, etc...
 	app.on('ready', createWindow);
 }
 
 //-------------------------------------------------------------------
 // Check for updates
-//
-// We must only perform auto update in Windows OS
 //-------------------------------------------------------------------
 function logStatus(text) {
 	log.info(text);
 	mainWindow.webContents.send('message', text);
 }
+
 if (process.platform === 'win32') {
 	autoUpdater.on('checking-for-update', () => {
 		logStatus('Checking for update...');
@@ -397,9 +393,8 @@ if (process.platform === 'win32') {
 		mainWindow.setProgressBar(Number(progress.percent) / 100);
 
 		let log_message = 'Download speed: ' + progress.bytesPerSecond;
-		log_message = log_message + ' - Downloaded ' + progress.percent + '%';
-		log_message =
-			log_message + ' (' + progress.transferred + '/' + progress.total + ')';
+		log_message += ' - Downloaded ' + progress.percent + '%';
+		log_message += ' (' + progress.transferred + '/' + progress.total + ')';
 		logStatus(log_message);
 	});
 
@@ -410,7 +405,8 @@ if (process.platform === 'win32') {
 			.showMessageBox(mainWindow, {
 				type: 'info',
 				title: 'Software Update',
-				message: 'EJJY Inventory App is successfully updated.',
+				message:
+					'EJJY Inventory App is successfully updated. Click Install to proceed.',
 				buttons: ['Install Update'],
 				cancelId: -1,
 			})
@@ -422,8 +418,20 @@ if (process.platform === 'win32') {
 	});
 
 	app.on('ready', function () {
+		clearCachedUpdateData(); // Clear cached update data before checking for updates
 		autoUpdater.checkForUpdates();
 	});
+}
+
+// Function to clear cached update data
+function clearCachedUpdateData() {
+	const updateCachePath = path.join(userDataPath, 'Cache');
+	if (fs.existsSync(updateCachePath)) {
+		fs.rmdirSync(updateCachePath, { recursive: true });
+		logStatus('Cleared cached update data.');
+	} else {
+		logStatus('No cached update data found.');
+	}
 }
 
 //-------------------------------------------------------------------

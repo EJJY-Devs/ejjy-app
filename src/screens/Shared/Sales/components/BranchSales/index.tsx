@@ -8,23 +8,27 @@ import React, { useEffect, useState } from 'react';
 import { convertIntoArray, formatInPeso } from 'utils';
 
 const columns: ColumnsType = [
-	{ title: 'Machine Name', dataIndex: 'machineName', fixed: 'left' },
-	{ title: 'Payments Received', dataIndex: 'paymentReceived' },
-	{ title: 'Opening Fund', dataIndex: 'openingFund' },
-	{ title: 'Cash In', dataIndex: 'cashIn' },
-	{ title: 'Cash Out', dataIndex: 'cashOut' },
-	{ title: 'Cash Collection', dataIndex: 'cashCollection' },
-	{ title: 'Cash On Hand', dataIndex: 'cashOnHand' },
-	{ title: 'Cash SI', dataIndex: 'cashInvoice' },
-	{ title: 'Charge SI', dataIndex: 'chargeInvoice' },
-	{ title: 'Gross Sales of the Day', dataIndex: 'grossSales' },
-	{ title: 'Returns', dataIndex: 'returns' },
-	{ title: 'Voids', dataIndex: 'voidedTransactions' },
-	{ title: 'Discounts', dataIndex: 'discounts' },
-	{ title: 'VAT Amount (12%)', dataIndex: 'vatAmount' },
-	{ title: 'Net Sales', dataIndex: 'netSales' },
+	{
+		title: 'Machine Name',
+		dataIndex: 'machineName',
+		fixed: 'left',
+		width: 180,
+	},
+	{ title: 'Payments Received', dataIndex: 'paymentReceived', width: 150 },
+	{ title: 'Opening Fund', dataIndex: 'openingFund', width: 150 },
+	{ title: 'Cash In', dataIndex: 'cashIn', width: 150 },
+	{ title: 'Cash Out', dataIndex: 'cashOut', width: 150 },
+	{ title: 'Cash Collection', dataIndex: 'cashCollection', width: 150 },
+	{ title: 'Cash On Hand', dataIndex: 'cashOnHand', width: 150 },
+	{ title: 'Cash SI', dataIndex: 'cashInvoice', width: 150 },
+	{ title: 'Charge SI', dataIndex: 'chargeInvoice', width: 150 },
+	{ title: 'Gross Sales of the Day', dataIndex: 'grossSales', width: 150 },
+	{ title: 'Returns', dataIndex: 'returns', width: 150 },
+	{ title: 'Voids', dataIndex: 'voidedTransactions', width: 150 },
+	{ title: 'Discounts', dataIndex: 'discounts', width: 150 },
+	{ title: 'VAT Amount (12%)', dataIndex: 'vatAmount', width: 150 },
+	{ title: 'Net Sales', dataIndex: 'netSales', width: 150 },
 ];
-
 const summaryInitialValues = {
 	cashInvoice: 0,
 	creditSales: 0,

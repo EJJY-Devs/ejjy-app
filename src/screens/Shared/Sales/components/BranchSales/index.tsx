@@ -190,14 +190,16 @@ export const BranchSales = ({ branchId }: Props) => {
 			</Col>
 
 			<Col span={24}>
-				<Table
-					columns={columns}
-					dataSource={dataSource}
-					loading={isFetchingBranchMachines && !isBranchMachinesFetched}
-					pagination={false}
-					scroll={{ x: 1500 }}
-					bordered
-				/>
+				<div style={{ overflowX: 'auto' }}>
+					<Table
+						columns={columns}
+						dataSource={dataSource}
+						loading={isFetchingBranchMachines && !isBranchMachinesFetched}
+						pagination={false}
+						scroll={{ x: 'max-content' }}
+						bordered
+					/>
+				</div>
 			</Col>
 		</Row>
 	);

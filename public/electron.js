@@ -300,6 +300,52 @@ if (!gotTheLock) {
 	app.on('ready', createWindow);
 }
 
+const envPath = path.join(apiPath, 'backend', '.env');
+const dbPath = path.join(apiPath, 'db.sqlite3');
+
+const cachePath = path.join(app.getPath('userData'), 'TemporaryFiles');
+const backupDbPath = path.join(cachePath, 'db.sqlite3'); // Backup path for db.sqlite3
+const backupEnvPath = path.join(cachePath, '.env');
+
+function backupFilesToCache() {
+	// Ensure the cache folder exists
+	if (!fs.existsSync(cachePath)) {
+		fs.mkdirSync(cachePath);
+		logStatus('Create cache folder at', cachePath);
+	}
+
+	// Back up db.sqlite3
+	if (fs.existsSync(dbPath)) {
+		fs.copyFileSync(dbPath, backupDbPath);
+		logStatus('Backup db at', backupDbPath);
+	}
+
+	// Back up .env file
+	if (fs.existsSync(envPath)) {
+		fs.copyFileSync(envPath, backupEnvPath);
+		logStatus('Restore env at', backupEnvPath);
+	}
+
+	logStatus('Backup to cache completed');
+}
+
+// Function to restore files from the cache folder
+function restoreFilesFromCache() {
+	// Restore db.sqlite3
+	if (fs.existsSync(backupDbPath)) {
+		fs.copyFileSync(backupDbPath, dbPath);
+		logStatus('Restored db');
+	}
+
+	// Restore .env file
+	if (fs.existsSync(backupEnvPath)) {
+		fs.copyFileSync(backupEnvPath, envPath);
+		logStatus('Restored env');
+	}
+
+	logStatus('Restore from cache completed');
+}
+
 //-------------------------------------------------------------------
 // Check for updates
 //
@@ -325,6 +371,8 @@ if (process.platform === 'win32') {
 			})
 			.then(({ response }) => {
 				if (response === 0) {
+					// Backup files before starting the update
+					backupFilesToCache();
 					autoUpdater.downloadUpdate();
 				}
 			});
@@ -361,7 +409,8 @@ if (process.platform === 'win32') {
 			})
 			.then(({ response }) => {
 				if (response === 0) {
-					autoUpdater.quitAndInstall();
+					autoUpdater.quitAndInstall(true, false);
+					restoreFilesFromCache();
 				}
 			});
 	});

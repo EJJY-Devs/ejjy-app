@@ -22,6 +22,10 @@ const appTypes = {
 	HEAD_OFFICE: 'head_office',
 };
 
+const apiPath = isDev
+	? path.resolve(__dirname, '../api')
+	: path.join(process.resourcesPath, 'api');
+
 //-------------------------------------------------------------------
 // Auto Updater
 //-------------------------------------------------------------------
@@ -209,7 +213,6 @@ function initServer(store) {
 
 		appType = store.get('appType');
 		headOfficeType = store.get('headOfficeType');
-		const apiPath = path.join(process.resourcesPath, 'api');
 
 		spawn('python', ['manage.py', 'migrate'], {
 			cwd: apiPath,

@@ -310,6 +310,37 @@ const cachePath = path.join(app.getPath('userData'), 'TemporaryFiles');
 const backupDbPath = path.join(cachePath, 'db.sqlite3'); // Backup path for db.sqlite3
 const backupEnvPath = path.join(cachePath, '.env');
 
+const restorationFlagPath = path.join(
+	app.getPath('userData'),
+	'restorationFlag.json',
+);
+
+// Function to save restoration flag
+function saveRestorationFlag(value) {
+	fs.writeFileSync(
+		restorationFlagPath,
+		JSON.stringify({ restorationFlag: value }),
+	);
+}
+
+// Function to load restoration flag
+function loadRestorationFlag() {
+	if (fs.existsSync(restorationFlagPath)) {
+		const data = JSON.parse(fs.readFileSync(restorationFlagPath, 'utf8'));
+		return data.restorationFlag || false;
+	}
+	return false;
+}
+
+// Function to clear the restoration flag
+function clearRestorationFlag() {
+	if (fs.existsSync(restorationFlagPath)) {
+		fs.unlinkSync(restorationFlagPath);
+	}
+}
+
+let restorationFlag = loadRestorationFlag();
+
 function backupFilesToCache() {
 	// Ensure the cache folder exists
 	if (!fs.existsSync(cachePath)) {
@@ -347,6 +378,7 @@ function restoreFilesFromCache() {
 	}
 
 	logStatus('Restore from cache completed');
+	clearRestorationFlag();
 }
 
 //-------------------------------------------------------------------
@@ -412,11 +444,19 @@ if (process.platform === 'win32') {
 			})
 			.then(({ response }) => {
 				if (response === 0) {
-					autoUpdater.quitAndInstall(true, false);
+					autoUpdater.quitAndInstall();
 					restoreFilesFromCache();
+					saveRestorationFlag(true);
 				}
 			});
 	});
+
+	if (restorationFlag) {
+		logStatus('Restoration flag is true, restoring files...');
+		restoreFilesFromCache();
+	} else {
+		logStatus('Restoration flag is false.');
+	}
 
 	app.on('ready', function () {
 		autoUpdater.checkForUpdates();

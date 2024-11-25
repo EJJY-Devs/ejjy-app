@@ -13,6 +13,7 @@ const log = require('electron-log');
 const path = require('path');
 const { spawn, exec } = require('child_process');
 const Store = require('electron-store');
+const fs = require('fs');
 
 const TUNNELING_INTERVAL_MS = 60_000;
 const SPLASH_SCREEN_SHOWN_MS = 8_000;

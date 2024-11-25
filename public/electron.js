@@ -389,7 +389,9 @@ function restoreFilesFromCache() {
 //-------------------------------------------------------------------
 function logStatus(text) {
 	log.info(text);
-	mainWindow.webContents.send('message', text);
+	if (mainWindow) {
+		mainWindow.webContents.send('message', text);
+	}
 }
 if (process.platform === 'win32') {
 	autoUpdater.on('checking-for-update', () => {

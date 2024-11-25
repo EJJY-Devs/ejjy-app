@@ -40,6 +40,14 @@ log.info('App starting...');
 //-------------------------------------------------------------------
 let mainWindow;
 let splashWindow;
+
+function logStatus(text) {
+	log.info(text);
+	if (mainWindow) {
+		mainWindow.webContents.send('message', text);
+	}
+}
+
 function createWindow() {
 	let resetDB = null;
 	if (isDev) {
@@ -387,12 +395,6 @@ function restoreFilesFromCache() {
 //
 // We must only perform auto update in Windows OS
 //-------------------------------------------------------------------
-function logStatus(text) {
-	log.info(text);
-	if (mainWindow) {
-		mainWindow.webContents.send('message', text);
-	}
-}
 if (process.platform === 'win32') {
 	autoUpdater.on('checking-for-update', () => {
 		logStatus('Checking for update...');

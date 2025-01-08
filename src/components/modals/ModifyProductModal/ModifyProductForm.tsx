@@ -177,7 +177,7 @@ export const ModifyProductForm = ({
 				unitOfMeasurement:
 					product?.unit_of_measurement === 'non_weighing'
 						? unitOfMeasurementTypes.NON_WEIGHING
-						: product?.selling_barcode_unit_of_measurement ||
+						: product?.unit_of_measurement ||
 						  unitOfMeasurementTypes.NON_WEIGHING,
 				sellingBarcodeUnitOfMeasurement:
 					product?.unit_of_measurement === 'weighing'

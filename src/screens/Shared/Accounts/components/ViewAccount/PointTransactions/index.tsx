@@ -66,9 +66,7 @@ export const PointTransactions = ({ account }: PointTransactionsProps) => {
 			invoiceNumber: pointTransaction.transaction ? (
 				<Button
 					type="link"
-					onClick={() =>
-						setSelectedTransactionId(pointTransaction.transaction.id)
-					}
+					onClick={() => setSelectedTransactionId(pointTransaction.transaction)}
 				>
 					{pointTransaction.transaction.invoice.or_number}
 				</Button>

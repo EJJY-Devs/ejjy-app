@@ -38,6 +38,7 @@ const columns: ColumnsType = [
 		],
 	},
 	{ title: 'Authorizer', dataIndex: 'authorizer' },
+	{ title: 'Remarks', dataIndex: 'remarks' },
 ];
 interface PointTransactionsProps {
 	account: any;
@@ -90,6 +91,10 @@ export const PointTransactions = ({ account }: PointTransactionsProps) => {
 
 			authorizer: pointTransaction.redeem_authorizer
 				? getFullName(pointTransaction.redeem_authorizer)
+				: EMPTY_CELL,
+
+			remarks: pointTransaction.redeem_remarks
+				? pointTransaction.redeem_remarks
 				: EMPTY_CELL,
 		}));
 		setDataSource(data);

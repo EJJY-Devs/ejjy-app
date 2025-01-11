@@ -57,7 +57,7 @@ export const RedeemPointsModal = ({ account, onSuccess, onClose }: Props) => {
 		});
 
 		await redeemPoints({
-			id: account.id,
+			id: getId(account.id),
 			redeemAuthorizerId: getId(data.id),
 			redeemedPoints: formData.points,
 			redeemRemarks: formData.remarks,

@@ -66,6 +66,7 @@ export const TAG_DEFAULT_PAPER_WIDTH = '30';
 export const TAG_DEFAULT_PAPER_HEIGHT = '20';
 export const TAG_DEFAULT_FONT_FAMILY = 'Arial';
 export const TAG_DEFAULT_FONT_SIZE = '13';
+export const NO_INDEX_SELECTED = -1;
 export const TAG_MM_TO_PX = 3.7795; // 1mm
 export const JSPDF_SETTINGS: jsPDFOptions = {
 	orientation: 'p',

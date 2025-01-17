@@ -46,7 +46,7 @@ export const useReceivingVoucherCreate = () =>
 					encoded_by_id: encodedById,
 					checked_by_id: checkedById,
 				},
-				getOnlineApiUrl(),
+				getLocalApiUrl(),
 			),
 	);
 

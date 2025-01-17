@@ -1,0 +1,22 @@
+@use 'assets/styles' as *;
+
+.InventoryTransfer {
+	&_buttons {
+		display: flex;
+		justify-content: flex-end;
+		margin: 15px;
+
+		.button {
+			margin-left: 8px;
+		}
+	}
+
+	&_tableWrapper {
+		margin: 25px;
+		margin-bottom: 10px;
+	}
+
+	&_box {
+		padding: 10px;
+	}
+}

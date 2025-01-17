@@ -6,6 +6,7 @@ import {
 	DiscountDisplay,
 	ViewTransactionModal,
 	getFullName,
+	getInvoiceType,
 } from 'ejjy-global';
 import {
 	DEFAULT_PAGE,
@@ -122,7 +123,7 @@ export const TabDailyInvoiceReport = ({ branchMachineId }: Props) => {
 				) : (
 					EMPTY_CELL
 				),
-				invoiceType,
+				invoiceType: getInvoiceType(invoiceType),
 				totalAmount: formatInPeso(transaction.total_amount),
 				cashier: getFullName(transaction.teller),
 				remarks,

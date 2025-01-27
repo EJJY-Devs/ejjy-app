@@ -64,7 +64,7 @@ export const useInitializeData = ({ params, options }: Query) =>
 			return service;
 		},
 		{
-			refetchInterval: REFETCH_INTERVAL_MS,
+			refetchInterval: 10_000,
 			refetchIntervalInBackground: true,
 			notifyOnChangeProps: ['isLoading', 'isSuccess'],
 			onSuccess: () => {

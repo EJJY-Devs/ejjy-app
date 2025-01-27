@@ -1,11 +1,15 @@
-import { Button, Table } from 'antd';
+import { Button, Table, message } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { Content } from 'components';
 import { Box } from 'components/elements';
-import { useQueryParams, useReceivingVouchers, useBackOrders } from 'hooks';
+import {
+	useQueryParams,
+	useReceivingVouchers,
+	useBackOrders,
+	useReceivingVoucherCreate,
+} from 'hooks';
 import { formatDateTime, formatInPeso } from 'utils';
 import React, { useState, useEffect, useMemo } from 'react';
-import { CreateInventoryTransfer } from 'components';
 import { useHistory } from 'react-router-dom';
 import { backOrderTypes, EMPTY_CELL } from 'ejjy-global';
 
@@ -50,6 +54,12 @@ export const InventoryTransfer = ({ onClose, onSuccess }) => {
 		data: { receivingVouchers, total: receivingVoucherTotal },
 		isFetching: isFetchingReceivingVouchers,
 	} = useReceivingVouchers({ params });
+
+	const {
+		mutateAsync: createReceivingVoucher,
+		isLoading: isCreatingReceivingVoucher,
+		error: receivingVoucherError,
+	} = useReceivingVoucherCreate();
 
 	// Merge data only once when either `receivingVouchers` or `backOrders` changes
 	useEffect(() => {
@@ -119,28 +129,67 @@ export const InventoryTransfer = ({ onClose, onSuccess }) => {
 		[sortedInfo],
 	);
 
+	//
+
 	return (
 		<>
 			<Content title="Inventory Transfer">
 				<Box className="InventoryTransfer_box">
 					<div className="InventoryTransfer_buttons">
 						<Button
-							className="button"
 							type="primary"
 							onClick={() => {
-								setIsCreateInventoryTransferModalVisible(true);
-								setInventoryTransferType('receiving');
-								handleDtrClick();
+								history.push({
+									pathname: '/branch-manager/inventory-transfer/create',
+									state: {
+										title: 'Receiving Report',
+										onSubmit: async (products, formData) => {
+											await createReceivingVoucher({
+												products,
+												supplierName: formData.supplierName,
+												supplierAddress: formData.supplierAddress,
+												supplierTin: formData.supplierTin,
+												encodedById: formData.encodedById,
+												checkedById: formData.checkedById,
+											});
+
+											console.log(formData, products);
+										},
+									},
+								});
 							}}
 						>
-							Create Receiving Voucher
+							Create Receiving Report
 						</Button>
 						<Button
-							className="button"
 							type="primary"
 							onClick={() => {
-								setIsCreateInventoryTransferModalVisible(true);
-								setInventoryTransferType('delivery');
+								history.push({
+									pathname: '/branch-manager/inventory-transfer/create',
+									state: {
+										title: 'Delivery Receipt',
+										onSubmit: async (products) => {
+											// const response = await createRequisitionSlip({
+											// 	requestingUserUsername: user.username,
+											// 	type: requisitionSlipTypes.MANUAL,
+											// 	products: products.map((product) => ({
+											// 		key: product.key,
+											// 		quantity_piece: product.quantity,
+											// 	})),
+											// });
+
+											// message.success('Requisition slip was created successfully.');
+											// history.push('/branch-manager/requisition-slips');
+
+											// return response;
+
+											setIsCreateInventoryTransferModalVisible(true);
+											setInventoryTransferType('deliveryReceipt');
+
+											console.log(products);
+										},
+									},
+								});
 							}}
 						>
 							Create Delivery Receipt
@@ -171,15 +220,6 @@ export const InventoryTransfer = ({ onClose, onSuccess }) => {
 					/>
 				</Box>
 			</Content>
-
-			{/* {isCreateInventoryTransferModalVisible && (
-				<CreateInventoryTransferModal
-					type={inventoryTransferType}
-					onClose={() => {
-						setIsCreateInventoryTransferModalVisible(false);
-					}}
-				/>
-			)} */}
 		</>
 	);
 };

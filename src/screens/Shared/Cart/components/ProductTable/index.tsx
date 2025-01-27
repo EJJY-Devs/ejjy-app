@@ -1,7 +1,7 @@
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Button, Modal, Tooltip } from 'antd';
 import { CancelButtonIcon } from 'components';
-import { getKeyDownCombination } from 'ejjy-global';
+import { getKeyDownCombination, formatInPeso } from 'ejjy-global';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
@@ -19,8 +19,11 @@ import './style.scss';
 
 const columns = [
 	{ name: '', width: '1px' },
-	{ name: 'Item', width: '50%' },
-	{ name: 'Qty', width: '40%', alignment: 'center' },
+	{ name: 'Barcode', width: '40px' },
+	{ name: 'Description', alignment: 'center' },
+	{ name: 'Qty', alignment: 'center' },
+	{ name: 'Unit Price', alignment: 'center' },
+	{ name: 'Amount', alignment: 'center' },
 ];
 
 export const editTypes = {
@@ -74,11 +77,28 @@ export const ProductTable = ({ isLoading }: Props) => {
 				pageNumber * PRODUCT_LENGTH_PER_PAGE,
 			)
 			.map((product, index) => [
-				<CancelButtonIcon
-					key="btnCancel"
-					tooltip="Remove"
-					onClick={() => showRemoveProductConfirmation(product)}
-				/>,
+				<Tooltip
+					key={`tooltip-delete-${product.id || index}`} // Unique key for the Tooltip
+					placement="top"
+					title="Remove"
+				>
+					<Button
+						icon={<DeleteOutlined />}
+						type="primary"
+						danger
+						ghost
+						onClick={() => showRemoveProductConfirmation(product)}
+					/>
+				</Tooltip>,
+
+				<Tooltip
+					key={`tooltip-barcode-${product.id || index}`} // Unique key for the Tooltip
+					placement="top"
+					title={product.barcode || product.textcode}
+				>
+					{product.barcode || product.textcode}
+				</Tooltip>,
+
 				<Tooltip
 					key="productName"
 					placement="top"
@@ -96,6 +116,24 @@ export const ProductTable = ({ isLoading }: Props) => {
 						quantity: product.quantity,
 					})}
 				</Button>,
+
+				<Tooltip
+					key={`tooltip-unit-price-${product.id || index}`} // Unique key for Unit Price Tooltip
+					placement="top"
+					title={`Unit Price: ${formatInPeso(product.price_per_piece)}`}
+				>
+					{formatInPeso(product.price_per_piece)}
+				</Tooltip>,
+
+				<Tooltip
+					key={`tooltip-total-price-${product.id || index}`} // Unique key for Total Price Tooltip
+					placement="top"
+					title={`Total Price: ${formatInPeso(
+						product.price_per_piece * product.quantity,
+					)}`}
+				>
+					{formatInPeso(product.price_per_piece * product.quantity)}
+				</Tooltip>,
 			]);
 
 		setDataSource(data);

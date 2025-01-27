@@ -153,13 +153,6 @@ const App = () => {
 						exact
 						noRedirects
 					/>
-
-					<Route
-						component={CreateInventoryTransfer}
-						path="/branch-manager/inventory-transfer/create"
-						exact
-					/>
-
 					<CommonRoute
 						forUserType={userTypes.ADMIN}
 						isLoading={isLoading}

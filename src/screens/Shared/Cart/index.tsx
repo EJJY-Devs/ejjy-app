@@ -1,4 +1,10 @@
-import { Content, RequestErrors } from 'components';
+import {
+	Content,
+	RequestErrors,
+	CreateInventoryTransferModal,
+} from 'components';
+import { Button } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
@@ -19,6 +25,11 @@ export const Cart = () => {
 	// STATES
 	const [barcodeScanLoading, setBarcodeScanLoading] = useState(false);
 	const [responseError, setResponseError] = useState([]);
+	const [
+		isCreateInventoryTransferModalVisible,
+		setIsCreateInventoryTransferModalVisible,
+	] = useState(false);
+	const [inventoryTransferType, setInventoryTransferType] = useState(null);
 
 	// REFS
 	const barcodeScannerRef = useRef(null);
@@ -48,12 +59,13 @@ export const Cart = () => {
 		}
 	}, [history.location.state]);
 
-	const handleSubmit = () => {
+	const handleSubmit = (formData) => {
 		setLoading(true);
 		const { products } = useBoundStore.getState();
 
+		// Pass both products and form data to the modal submission
 		history.location.state
-			.onSubmit(products)
+			.onSubmit(products, formData)
 			.catch((response) => {
 				if (response.errors) {
 					setResponseError(response.errors);
@@ -62,6 +74,23 @@ export const Cart = () => {
 			.finally(() => {
 				setLoading(false);
 			});
+
+		if (
+			history.location.state?.title === 'Delivery Receipt' ||
+			history.location.state?.title === 'Receiving Report'
+		) {
+			setIsCreateInventoryTransferModalVisible(true);
+			setInventoryTransferType(history.location.state?.title);
+		}
+	};
+
+	const handleBack = () => {
+		history.goBack(); // Go back to the previous page
+	};
+
+	// Modal onClose function
+	const handleCloseModal = () => {
+		setIsCreateInventoryTransferModalVisible(false);
 	};
 
 	return (
@@ -77,9 +106,28 @@ export const Cart = () => {
 					withSpaceBottom
 				/>
 
+				<Button
+					className="pa-0"
+					color="default"
+					icon={<ArrowLeftOutlined />}
+					type="text"
+					onClick={handleBack}
+				>
+					Go Back
+				</Button>
+
 				<ProductSearch barcodeScannerRef={barcodeScannerRef} />
 				<ProductTable isLoading={barcodeScanLoading || isLoading} />
 				<FooterButtons isDisabled={isLoading} onSubmit={handleSubmit} />
+
+				{isCreateInventoryTransferModalVisible && (
+					<CreateInventoryTransferModal
+						isLoading={isLoading}
+						type={inventoryTransferType}
+						onClose={handleCloseModal} // Pass handleSubmit to the modal
+						onSubmit={handleSubmit} // Pass handleCloseModal to close the modal
+					/>
+				)}
 			</section>
 		</Content>
 	);

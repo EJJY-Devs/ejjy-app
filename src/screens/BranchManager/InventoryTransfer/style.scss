@@ -5,10 +5,8 @@
 		display: flex;
 		justify-content: flex-end;
 		margin: 15px;
-
-		.button {
-			margin-left: 8px;
-		}
+		margin-right: 20px;
+		gap: 15px;
 	}
 
 	&_tableWrapper {

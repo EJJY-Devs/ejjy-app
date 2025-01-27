@@ -19,6 +19,8 @@ import {
 	TAG_DEFAULT_PAPER_HEIGHT,
 	TAG_DEFAULT_PAPER_WIDTH,
 	APP_BRANCH_KEY_KEY,
+	APP_PRODUCTS_IDS,
+	APP_BRANCH_PRODUCT_IDS,
 	headOfficeTypes,
 	APP_GOOGLE_API_URL_KEY,
 } from 'global';
@@ -29,6 +31,11 @@ export const getHeadOfficeType = () =>
 	Number(localStorage.getItem(APP_HEAD_OFFICE_TYPE));
 
 export const getBranchKey = () => localStorage.getItem(APP_BRANCH_KEY_KEY);
+
+export const getProductIds = () => localStorage.getItem(APP_PRODUCTS_IDS);
+
+export const getBranchProductIds = () =>
+	localStorage.getItem(APP_BRANCH_PRODUCT_IDS);
 
 export const getOnlineBranchId = () =>
 	localStorage.getItem(APP_ONLINE_BRANCH_ID_KEY);

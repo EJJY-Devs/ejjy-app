@@ -19,6 +19,7 @@ import { ViewChecking } from 'screens/BranchManager/Checkings/ViewChecking';
 import { Logs } from 'screens/BranchManager/Logs';
 import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
 import { Stocks } from 'screens/BranchManager/Stock';
+import { InventoryTransfer } from 'screens/BranchManager/InventoryTransfer';
 import { CreateStockIn } from 'screens/BranchManager/Stock/components/TabStockIn/CreateStockIn';
 import { CreateStockOut } from 'screens/BranchManager/Stock/components/TabStockOut/CreateStockOut';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
@@ -210,6 +211,13 @@ const BranchManager = () => {
 				link: '/branch-manager/stocks',
 			},
 			{
+				key: 'inventory-transfer',
+				name: 'Inventory Transfer',
+				activeIcon: require('../../assets/images/icon-product-active.svg'),
+				defaultIcon: require('../../assets/images/icon-product.svg'),
+				link: '/branch-manager/inventory-transfer',
+			},
+			{
 				key: 'discount-options',
 				name: 'Discount Options',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
@@ -326,6 +334,16 @@ const BranchManager = () => {
 					/>
 
 					<Route component={Stocks} path="/branch-manager/stocks" exact />
+					<Route
+						component={InventoryTransfer}
+						path="/branch-manager/inventory-transfer"
+						exact
+					/>
+					{/* <Route
+						component={Cart}
+						path="/branch-manager/inventory-transfer/create"
+						exact
+					/> */}
 					<Route
 						component={CreateStockIn}
 						path="/branch-manager/stocks/stock-in/create"

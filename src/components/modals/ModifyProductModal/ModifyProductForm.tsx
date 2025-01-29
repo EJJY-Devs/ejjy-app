@@ -1,5 +1,14 @@
 /* eslint-disable react/no-this-in-sfc */
-import { Button, Col, Divider, Input, Row, Select, Typography } from 'antd';
+import {
+	Button,
+	Col,
+	Divider,
+	Input,
+	Row,
+	Select,
+	Typography,
+	Tooltip,
+} from 'antd';
 import { ScrollToFieldError } from 'components';
 import {
 	FieldError,
@@ -56,27 +65,27 @@ const unitOfMeasurementOptions = [
 
 const inStockOptions = [
 	{
-		id: 'retain',
-		label: 'Retain Product',
-		value: 'true',
-	},
-	{
 		id: 'decline',
 		label: 'Decline Product',
 		value: 'false',
+	},
+	{
+		id: 'retain',
+		label: 'Retain Product',
+		value: 'true',
 	},
 ];
 
 const isVatExemptedOptions = [
 	{
-		id: 'vat',
-		label: 'VAT',
-		value: 'false',
-	},
-	{
 		id: 'vae',
 		label: 'VAT-EXEMPT',
 		value: 'true',
+	},
+	{
+		id: 'vat',
+		label: 'VAT',
+		value: 'false',
 	},
 ];
 
@@ -128,8 +137,8 @@ export const ModifyProductForm = ({
 				packingBarcode: product?.packing_barcode || '',
 				description: product?.description || '',
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
-				isShownInScaleList: String(product?.is_shown_in_scale_list ?? true),
-				checking: productCheckingTypes.DAILY,
+				isShownInScaleList: String(product?.is_shown_in_scale_list ?? false),
+				checking: productCheckingTypes.RANDOM,
 				isSoldInBranch: 'true',
 				isVatExempted: (!!product?.is_vat_exempted).toString(),
 				maxBalance: product?.max_balance
@@ -153,7 +162,10 @@ export const ModifyProductForm = ({
 
 				printDetails: product?.print_details || '',
 				priceTagPrintDetails: product?.price_tag_print_details || '',
-				productCategory: product?.product_category,
+				productCategory:
+					product?.product_category === 'None'
+						? null
+						: product?.product_category,
 				reorderPoint: product?.reorder_point
 					? formatQuantity({
 							unitOfMeasurement: product.unit_of_measurement,
@@ -163,7 +175,10 @@ export const ModifyProductForm = ({
 				textcode: product?.textcode || '',
 				type: product?.type || productTypes.WET,
 				unitOfMeasurement:
-					product?.unit_of_measurement || unitOfMeasurementTypes.NON_WEIGHING,
+					product?.unit_of_measurement === 'non_weighing'
+						? unitOfMeasurementTypes.NON_WEIGHING
+						: product?.unit_of_measurement ||
+						  unitOfMeasurementTypes.NON_WEIGHING,
 				sellingBarcodeUnitOfMeasurement:
 					product?.unit_of_measurement === 'weighing'
 						? unitOfMeasurementTypes.WEIGHING
@@ -176,25 +191,11 @@ export const ModifyProductForm = ({
 			Schema: Yup.object().shape(
 				{
 					textcode: Yup.string().max(50),
-					sellingBarcode: Yup.string()
-						.max(50)
-						.test(
-							'barcode-selling-required-2',
-							'Input either a Product Barcode or Scale Barcode',
-							function test(value) {
-								// NOTE: We need to use a no-named function so
-								// we can use 'this' and access the other form field value.
-								return value || this.parent.barcode;
-							},
-						)
-						.label('Scale Barcode'),
-
+					barcode: Yup.string().max(50).label('Barcode'),
 					name: Yup.string().required().max(70).label('Name').trim(),
 					type: Yup.string().label('TT-001'),
-					sellingBarcodeUnitOfMeasurement: Yup.string().label(
-						'sellingBarcodeUnitOfMeasurement',
-					),
-					productCategory: Yup.string().label('Product Category'),
+					unitOfMeasurement: Yup.string().label('unitOfMeasurement'),
+					productCategory: Yup.string().nullable().label('Product Category'),
 					printDetails: Yup.string()
 						.required()
 						.label('Print Details (Receipt)')
@@ -285,15 +286,6 @@ export const ModifyProductForm = ({
 		[product, siteSettings],
 	);
 
-	const getProductCategoriesOptions = useCallback(
-		() =>
-			productCategories.map(({ name }) => ({
-				name,
-				value: name,
-			})),
-		[productCategories],
-	);
-
 	const renderInputField = ({
 		name,
 		label,
@@ -363,22 +355,24 @@ export const ModifyProductForm = ({
 					<Row gutter={[16, 16]}>
 						<Col sm={12} span={24}>
 							{renderInputField({
-								name: 'sellingBarcode',
-								label: 'Scale Barcode',
+								name: 'barcode',
+								label: 'Barcode',
 								setFieldValue,
 								values,
-								options: {
-									disabled:
-										values.unitOfMeasurement ===
-										unitOfMeasurementTypes.WEIGHING,
-								},
 							})}
+
+							<Tooltip title="Note">
+								<span style={{ color: 'grey' }}>
+									Note: Products tagged as &quot;WEIGHING&quot; must only have 7
+									digit barcode.
+								</span>
+							</Tooltip>
 						</Col>
 
 						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'textcode',
-								label: 'Textcode',
+								label: 'SKU/Textcode',
 								setFieldValue,
 								values,
 							})}
@@ -387,7 +381,7 @@ export const ModifyProductForm = ({
 						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'name',
-								label: 'Name',
+								label: 'Product Name',
 								setFieldValue,
 								values,
 							})}
@@ -396,11 +390,11 @@ export const ModifyProductForm = ({
 						<Col sm={12} span={24}>
 							<Label label="&nbsp;" spacing />
 							<FormRadioButton
-								id="sellingBarcodeUnitOfMeasurement"
+								id="unitOfMeasurement"
 								items={unitOfMeasurementOptions}
 							/>
 							<ErrorMessage
-								name="sellingBarcodeUnitOfMeasurement"
+								name="unitOfMeasurement"
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>
@@ -453,10 +447,25 @@ export const ModifyProductForm = ({
 
 						<Col sm={12} span={24}>
 							<Label label="Product Category" spacing />
-							<FormSelect
+							<Select
+								className="w-100"
 								id="productCategory"
-								options={getProductCategoriesOptions()}
-							/>
+								value={values.productCategory}
+								onChange={(value) => {
+									setFieldValue('productCategory', value);
+								}}
+								allowClear
+								placeholder="None"
+							>
+								{productCategories.map((productCategory) => (
+									<Select.Option
+										key={productCategory.name}
+										value={productCategory.name}
+									>
+										{productCategory.name}
+									</Select.Option>
+								))}
+							</Select>
 							<ErrorMessage
 								name="productCategory"
 								render={(error) => <FieldError error={error} />}
@@ -471,6 +480,7 @@ export const ModifyProductForm = ({
 								optionFilterProp="children"
 								value={values.pointSystemTagId}
 								allowClear
+								placeholder="None"
 								showSearch
 								onChange={(value) => {
 									setFieldValue('pointSystemTagId', value);

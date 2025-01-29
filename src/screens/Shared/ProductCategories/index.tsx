@@ -87,6 +87,7 @@ export const ProductCategories = () => {
 			id: productCategory.id,
 			name: productCategory.name,
 			priorityLevel: productCategory.priority_level,
+			online_id: productCategory.online_id,
 			actions: (
 				<Space>
 					<Tooltip title="Edit">

@@ -108,7 +108,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 							{transaction.invoice?.or_number}
 						</Button>
 					),
-					payment: formatInPeso(transaction.payment?.amount_tendered),
+					payment: formatInPeso(transaction.total_amount),
 					cashier: getFullName(transaction.teller),
 					modeOfPayment: getModeOfPaymentDescription(transaction.payment?.mode),
 					remarks: '',

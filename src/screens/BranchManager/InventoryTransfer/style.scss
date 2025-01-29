@@ -1,0 +1,41 @@
+@use 'assets/styles' as *;
+
+.InventoryTransfer {
+	&_buttons {
+		justify-content: space-between;
+		width: 100%;
+		display: flex;
+		margin: 25px;
+		margin-bottom: 0px;
+	}
+
+	&_create {
+		display: flex;
+		gap: 15px;
+		position: relative;
+		right: 58px; // Add 'px' for pixel units
+		top: 30px; // Add 'px' for pixel units
+	}
+
+	&_tableWrapper {
+		margin: 25px;
+		margin-bottom: 10px;
+	}
+
+	&_box {
+		padding: 10px;
+	}
+
+	&_filter {
+		position: relative;
+		top: 10px; // Add 'px' for pixel units
+		left: 5px;
+	}
+
+	&_timeRangeFilter {
+		margin: 10px;
+		position: relative;
+		left: 20px;
+		top: 10px;
+	}
+}

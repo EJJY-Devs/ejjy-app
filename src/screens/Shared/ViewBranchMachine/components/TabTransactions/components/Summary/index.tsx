@@ -39,9 +39,7 @@ export const Summary = ({ branchMachineId }: Props) => {
 			<Spin spinning={isTransactionsSummaryLoading}>
 				<Space className="w-100" direction="vertical" size={16}>
 					<Row gutter={[16, 16]}>
-						<Col md={8} sm={0} xs={0} />
-						<Col md={8} sm={0} xs={0} />
-						<Col md={8} sm={8} xs={24}>
+						<Col md={8} sm={0} xs={0}>
 							<Statistic
 								title="Gross Sales of the Day"
 								value={formatInPeso(summary?.total_gross_sales)}
@@ -57,12 +55,16 @@ export const Summary = ({ branchMachineId }: Props) => {
 							/>
 						</Col>
 
-						<Col md={8} sm={0} xs={0} />
-
+						<Col md={8} sm={0} xs={0}>
+							<Statistic
+								title="Returns"
+								value={formatInPeso(summary?.returns)}
+							/>
+						</Col>
 						<Col md={8} sm={8} xs={24}>
 							<Statistic
-								title="(Total Deductions)"
-								value={formatInPeso(summary?.total_deductions)}
+								title="Gross Sales of the Day"
+								value={formatInPeso(summary?.total_gross_sales)}
 							/>
 						</Col>
 					</Row>
@@ -76,15 +78,15 @@ export const Summary = ({ branchMachineId }: Props) => {
 
 						<Col md={8} sm={8} xs={24}>
 							<Statistic
-								title="Voided Transactions"
+								title="Voids"
 								value={formatInPeso(summary?.total_voided_sales)}
 							/>
 						</Col>
 
 						<Col md={8} sm={8} xs={24}>
 							<Statistic
-								title="Net Sales (VAT Inclusive)"
-								value={formatInPeso(summary?.total_net_sales_vat_inclusive)}
+								title="Deductions"
+								value={formatInPeso(summary?.total_deductions)}
 							/>
 						</Col>
 					</Row>
@@ -105,7 +107,7 @@ export const Summary = ({ branchMachineId }: Props) => {
 
 						<Col md={8} sm={8} xs={24}>
 							<Statistic
-								title="(VAT Amount)"
+								title="VAT Amount (12%)"
 								value={formatInPeso(summary?.vat_amount)}
 							/>
 						</Col>
@@ -113,20 +115,20 @@ export const Summary = ({ branchMachineId }: Props) => {
 					<Row gutter={[16, 16]}>
 						<Col md={8} sm={8} xs={24}>
 							<Statistic
-								title="Gross Sales of the Day"
-								value={formatInPeso(summary?.total_gross_sales)}
+								title="Zero-Rated Sales"
+								value={formatInPeso(summary?.zero_rated_sales)}
 							/>
 						</Col>
 						<Col md={8} sm={8} xs={24}>
 							<Statistic
-								title="Total Deductions"
+								title="Deductions"
 								value={formatInPeso(summary?.total_deductions)}
 							/>
 						</Col>
 						<Col md={8} sm={8} xs={24}>
 							<Statistic
-								title="Net Sales (VAT Exclusive)"
-								value={formatInPeso(summary?.total_net_sales_vat_exclusive)}
+								title="Net Sales"
+								value={formatInPeso(summary?.net_sales)}
 							/>
 						</Col>
 					</Row>

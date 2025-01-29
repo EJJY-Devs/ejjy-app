@@ -3,17 +3,18 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery } from 'react-query';
 import { ReceivingVouchersService } from 'services';
-import { getLocalApiUrl, getOnlineApiUrl } from 'utils';
+import { getLocalApiUrl } from 'utils';
 
 const useReceivingVouchers = ({ params }: Query) =>
 	useQuery<any>(
-		['useReceivingVouchers', params?.page, params?.pageSize],
+		['useReceivingVouchers', params?.page, params?.pageSize, params?.timeRange],
 		() =>
 			wrapServiceWithCatch(
 				ReceivingVouchersService.list(
 					{
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
+						time_range: params?.timeRange,
 					},
 					getLocalApiUrl(),
 				),
@@ -46,7 +47,7 @@ export const useReceivingVoucherCreate = () =>
 					encoded_by_id: encodedById,
 					checked_by_id: checkedById,
 				},
-				getOnlineApiUrl(),
+				getLocalApiUrl(),
 			),
 	);
 

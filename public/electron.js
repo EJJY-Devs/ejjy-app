@@ -13,6 +13,7 @@ const log = require('electron-log');
 const path = require('path');
 const { spawn, exec } = require('child_process');
 const Store = require('electron-store');
+const fs = require('fs');
 
 const TUNNELING_INTERVAL_MS = 60_000;
 const SPLASH_SCREEN_SHOWN_MS = 8_000;
@@ -21,6 +22,10 @@ const appTypes = {
 	BACK_OFFICE: 'back_office',
 	HEAD_OFFICE: 'head_office',
 };
+
+const apiPath = isDev
+	? path.resolve(__dirname, '../api')
+	: path.join(process.resourcesPath, 'api');
 
 //-------------------------------------------------------------------
 // Auto Updater
@@ -35,6 +40,14 @@ log.info('App starting...');
 //-------------------------------------------------------------------
 let mainWindow;
 let splashWindow;
+
+function logStatus(text) {
+	log.info(text);
+	if (mainWindow) {
+		mainWindow.webContents.send('message', text);
+	}
+}
+
 function createWindow() {
 	let resetDB = null;
 	if (isDev) {
@@ -209,7 +222,6 @@ function initServer(store) {
 
 		appType = store.get('appType');
 		headOfficeType = store.get('headOfficeType');
-		const apiPath = path.join(process.resourcesPath, 'api');
 
 		spawn('python', ['manage.py', 'migrate'], {
 			cwd: apiPath,
@@ -300,15 +312,89 @@ if (!gotTheLock) {
 	app.on('ready', createWindow);
 }
 
+const envPath = path.join(apiPath, 'backend', '.env');
+const dbPath = path.join(apiPath, 'db.sqlite3');
+
+const cachePath = path.join(app.getPath('userData'), 'TemporaryFiles');
+const backupDbPath = path.join(cachePath, 'db.sqlite3'); // Backup path for db.sqlite3
+const backupEnvPath = path.join(cachePath, '.env');
+
+const restorationFlagPath = path.join(
+	app.getPath('userData'),
+	'restorationFlag.json',
+);
+
+// Function to save restoration flag
+function saveRestorationFlag(value) {
+	fs.writeFileSync(
+		restorationFlagPath,
+		JSON.stringify({ restorationFlag: value }),
+	);
+}
+
+// Function to load restoration flag
+function loadRestorationFlag() {
+	if (fs.existsSync(restorationFlagPath)) {
+		const data = JSON.parse(fs.readFileSync(restorationFlagPath, 'utf8'));
+		return data.restorationFlag || false;
+	}
+	return false;
+}
+
+// Function to clear the restoration flag
+function clearRestorationFlag() {
+	if (fs.existsSync(restorationFlagPath)) {
+		fs.unlinkSync(restorationFlagPath);
+	}
+}
+
+let restorationFlag = loadRestorationFlag();
+
+function backupFilesToCache() {
+	// Ensure the cache folder exists
+	if (!fs.existsSync(cachePath)) {
+		fs.mkdirSync(cachePath);
+		logStatus('Create cache folder at', cachePath);
+	}
+
+	// Back up db.sqlite3
+	if (fs.existsSync(dbPath)) {
+		fs.copyFileSync(dbPath, backupDbPath);
+		logStatus('Backup db at', backupDbPath);
+	}
+
+	// Back up .env file
+	if (fs.existsSync(envPath)) {
+		fs.copyFileSync(envPath, backupEnvPath);
+		logStatus('Restore env at', backupEnvPath);
+	}
+
+	logStatus('Backup to cache completed');
+}
+
+// Function to restore files from the cache folder
+function restoreFilesFromCache() {
+	// Restore db.sqlite3
+	if (fs.existsSync(backupDbPath)) {
+		fs.copyFileSync(backupDbPath, dbPath);
+		logStatus('Restored db');
+	}
+
+	// Restore .env file
+	if (fs.existsSync(backupEnvPath)) {
+		fs.copyFileSync(backupEnvPath, envPath);
+		logStatus('Restored env');
+	}
+
+	logStatus('Restore from cache completed');
+	clearRestorationFlag();
+}
+
 //-------------------------------------------------------------------
 // Check for updates
 //
 // We must only perform auto update in Windows OS
 //-------------------------------------------------------------------
-function logStatus(text) {
-	log.info(text);
-	mainWindow.webContents.send('message', text);
-}
 if (process.platform === 'win32') {
 	autoUpdater.on('checking-for-update', () => {
 		logStatus('Checking for update...');
@@ -325,6 +411,8 @@ if (process.platform === 'win32') {
 			})
 			.then(({ response }) => {
 				if (response === 0) {
+					// Backup files before starting the update
+					backupFilesToCache();
 					autoUpdater.downloadUpdate();
 				}
 			});
@@ -362,9 +450,18 @@ if (process.platform === 'win32') {
 			.then(({ response }) => {
 				if (response === 0) {
 					autoUpdater.quitAndInstall();
+					restoreFilesFromCache();
+					saveRestorationFlag(true);
 				}
 			});
 	});
+
+	if (restorationFlag) {
+		logStatus('Restoration flag is true, restoring files...');
+		restoreFilesFromCache();
+	} else {
+		logStatus('Restoration flag is false.');
+	}
 
 	app.on('ready', function () {
 		autoUpdater.checkForUpdates();

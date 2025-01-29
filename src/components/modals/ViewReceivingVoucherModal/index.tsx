@@ -1,10 +1,10 @@
 import { PrinterOutlined } from '@ant-design/icons';
 import { Button, Modal, Space, Table, Typography } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import { PdfButtons, ReceiptFooter, ReceiptHeader } from 'components/Printing';
-import { printReceivingVoucherForm } from 'ejjy-global';
+import { PdfButtons, ReceiptHeader } from 'components/Printing';
+import { printReceivingVoucherForm, getFullName } from 'ejjy-global';
 import dayjs from 'dayjs';
-import { vatTypes, VIEW_PRINTING_MODAL_WIDTH } from 'global';
+import { VIEW_PRINTING_MODAL_WIDTH } from 'global';
 import { usePdf, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { formatDateTime, formatInPeso, formatQuantity } from 'utils';
@@ -12,10 +12,10 @@ import { formatDateTime, formatInPeso, formatQuantity } from 'utils';
 const { Text } = Typography;
 
 const columns: ColumnsType = [
-	{ title: 'Name', dataIndex: 'name' },
+	{ title: 'Description', dataIndex: 'description' },
 	{ title: 'Qty', dataIndex: 'qty', align: 'center' },
 	{ title: 'Cost', dataIndex: 'rate', align: 'center' },
-	{ title: 'Subtotal', dataIndex: 'subtotal', align: 'center' },
+	{ title: 'Amount', dataIndex: 'amount', align: 'center' },
 ];
 
 interface Props {
@@ -44,16 +44,13 @@ export const ViewReceivingVoucherModal = ({
 
 		const formattedProducts = products.map((item) => ({
 			key: item.id,
-			name: `${item.product.name} - ${
-				item.product.is_vat_exempted ? vatTypes.VAT_EMPTY : vatTypes.VATABLE
-			}`,
-
+			description: item.product.name,
 			qty: formatQuantity({
 				unitOfMeasurement: item.product.unit_of_measurement,
 				quantity: item.quantity,
 			}),
 			rate: formatInPeso(item.cost_per_piece),
-			subtotal: formatInPeso(item.quantity * item.cost_per_piece),
+			amount: formatInPeso(item.quantity * item.cost_per_piece),
 		}));
 
 		setDataSource(formattedProducts);
@@ -102,24 +99,22 @@ export const ViewReceivingVoucherModal = ({
 				bordered
 			/>
 			<Space className="w-100 mt-2 justify-space-between">
-				<Text>TOTAL AMOUNT PAID</Text>
+				<Text strong>TOTAL AMOUNT:</Text>
 				<Text strong>{formatInPeso(receivingVoucher.amount_paid)}</Text>
 			</Space>
 
 			<Space className="mt-4 w-100" direction="vertical">
+				<Space className="w-100 justify-space-between">
+					<Text>Encoder: {getFullName(receivingVoucher.encoded_by)}</Text>
+					<Text>Inspector: {getFullName(receivingVoucher.checked_by)}</Text>
+				</Space>
+				<Space className="mt-2 w-100">
+					<Text>Vendor: {receivingVoucher.supplier_name}</Text>
+				</Space>
+
 				<Text>GDT: {formatDateTime(receivingVoucher.datetime_created)}</Text>
 				<Text>PDT: {formatDateTime(dayjs(), false)}</Text>
-
-				<Space className="w-100 justify-space-between">
-					<Text>C: {receivingVoucher.checked_by.employee_id}</Text>
-					<Text>E: {receivingVoucher.encoded_by.employee_id}</Text>
-				</Space>
-				<Space className="w-100">
-					<Text>Supplier: {receivingVoucher.supplier_name}</Text>
-				</Space>
 			</Space>
-
-			<ReceiptFooter />
 
 			<div
 				// eslint-disable-next-line react/no-danger

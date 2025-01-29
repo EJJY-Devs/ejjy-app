@@ -1,43 +1,30 @@
-import {
-	Descriptions,
-	Divider,
-	Modal,
-	Space,
-	Spin,
-	Table,
-	Typography,
-} from 'antd';
+import { Modal, Space, Table, Typography, Button } from 'antd';
+import { PrinterOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
-import { RequestErrors } from 'components';
-import { PdfButtons } from 'components/Printing';
+import { PdfButtons, ReceiptHeader } from 'components/Printing';
 import dayjs from 'dayjs';
-import { getFullName, printStockOutForm } from 'ejjy-global';
-import { EMPTY_CELL, backOrderTypes, vatTypes } from 'global';
+import { getFullName, printStockOutForm, formatInPeso } from 'ejjy-global';
+import { EMPTY_CELL, backOrderTypes, VIEW_PRINTING_MODAL_WIDTH } from 'global';
 import { useBackOrderRetrieve, usePdf, useSiteSettings } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { useUserStore } from 'stores';
-import {
-	convertIntoArray,
-	formatDateTime,
-	formatQuantity,
-	getBackOrderStatus,
-} from 'utils';
+import { formatDateTime, formatQuantity, getBackOrderStatus } from 'utils';
 
 const { Text } = Typography;
 
 const columnsDamage: ColumnsType = [
-	{ title: 'Name', dataIndex: 'name' },
-	{ title: 'Qty Returned', dataIndex: 'quantityReturned' },
-	{ title: 'Qty Received', dataIndex: 'quantityReceived' },
-	{ title: 'Status', dataIndex: 'status' },
+	{ title: 'Description', dataIndex: 'description' },
+	{ title: 'Qty Returned', dataIndex: 'quantityReturned', align: 'center' },
+	{ title: 'Qty Received', dataIndex: 'quantityReceived', align: 'center' },
+	{ title: 'Status', dataIndex: 'status', align: 'center' },
 ];
 
 const columnsForReturn: ColumnsType = [
-	{ title: 'Name', dataIndex: 'name' },
-	{ title: 'Type', dataIndex: 'type', align: 'center', width: 50 },
-	{ title: 'Quantity', dataIndex: 'quantity' },
-	{ title: 'Remarks', dataIndex: 'remarks' },
+	{ title: 'Description', dataIndex: 'description' },
+	{ title: 'Quantity', dataIndex: 'quantity', align: 'center' },
+	{ title: 'Price', dataIndex: 'price', align: 'center' },
+	{ title: 'Amount', dataIndex: 'amount', align: 'center' },
 ];
 
 interface Props {
@@ -53,17 +40,8 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 	const [columns, setColumns] = useState([]);
 
 	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
-	const {
-		data: siteSettings,
-		isFetching: isFetchingSiteSettings,
-		error: siteSettingsError,
-	} = useSiteSettings();
-	const {
-		data: backOrderRetrieved,
-		isFetching: isFetchingBackOrder,
-		error: backOrderError,
-	} = useBackOrderRetrieve({
+	const { data: siteSettings } = useSiteSettings();
+	const { data: backOrderRetrieved } = useBackOrderRetrieve({
 		id: backOrder,
 		options: {
 			enabled: _.isNumber(backOrder),
@@ -93,7 +71,7 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 
 		const formattedProducts = products.map((item) => ({
 			key: item.id,
-			name: item.product.name,
+			description: item.product.name,
 			quantityReturned: formatQuantity({
 				unitOfMeasurement: item.product.unit_of_measurement,
 				quantity: item.quantity_returned,
@@ -105,120 +83,79 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 				  })
 				: EMPTY_CELL,
 			status: getBackOrderStatus(item.status),
-
-			type: item.product.is_vat_exempted
-				? vatTypes.VAT_EMPTY
-				: vatTypes.VATABLE,
 			quantity: formatQuantity({
 				unitOfMeasurement: item.product.unit_of_measurement,
 				quantity: item.quantity_returned,
 			}),
-			remarks: item.remarks,
+			price: formatInPeso(item.current_price_per_piece),
+			amount: formatInPeso(
+				item.current_price_per_piece * item.quantity_returned,
+			),
 		}));
-
 		setDataSource(formattedProducts);
 	}, [backOrderData]);
 
+	const handlePrint = () => {
+		printStockOutForm(backOrder, siteSettings);
+	};
+
 	return (
 		<Modal
-			className="Modal__large Modal__hasFooter"
-			footer={
+			className="Modal__hasFooter"
+			footer={[
+				<Button
+					key="print"
+					disabled={isLoadingPdf}
+					icon={<PrinterOutlined />}
+					type="primary"
+					onClick={handlePrint}
+				>
+					Print
+				</Button>,
 				<PdfButtons
 					key="pdf"
 					downloadPdf={downloadPdf}
 					isDisabled={isLoadingPdf}
 					isLoading={isLoadingPdf}
 					previewPdf={previewPdf}
-				/>
-			}
-			title={title}
+				/>,
+			]}
+			title="[View] Delivery Receipt"
+			width={VIEW_PRINTING_MODAL_WIDTH}
 			centered
 			closable
-			visible
+			open
 			onCancel={onClose}
 		>
-			<Spin spinning={isFetchingBackOrder || isFetchingSiteSettings}>
-				<RequestErrors
-					errors={[
-						...convertIntoArray(siteSettingsError, 'Settings'),
-						...convertIntoArray(backOrderError),
-					]}
-					withSpaceBottom
-				/>
+			<ReceiptHeader title="DELIVERY RECEIPT" />
 
-				{backOrderData?.type === backOrderTypes.DAMAGED && (
-					<Descriptions
-						className="w-100"
-						column={2}
-						labelStyle={{
-							width: 200,
-						}}
-						size="small"
-						bordered
-					>
-						<Descriptions.Item label="ID" span={2}>
-							{backOrderData.id}
-						</Descriptions.Item>
+			<Table
+				className="mt-6"
+				columns={columns}
+				dataSource={dataSource}
+				pagination={false}
+				size="small"
+				bordered
+			/>
 
-						<Descriptions.Item label="Datetime Returned">
-							{backOrderData.datetime_sent
-								? formatDateTime(backOrderData.datetime_sent)
-								: EMPTY_CELL}
-						</Descriptions.Item>
-						<Descriptions.Item label="Datetime Received">
-							{backOrderData.datetime_received
-								? formatDateTime(backOrderData.datetime_received)
-								: EMPTY_CELL}
-						</Descriptions.Item>
+			<Space className="w-100 mt-2 justify-space-between ">
+				<Text strong>TOTAL AMOUNT: </Text>
+				<Text strong>{formatInPeso(backOrderData?.amount)}</Text>
+			</Space>
 
-						<Descriptions.Item label="Returned By (Branch)">
-							{backOrderData?.sender?.branch?.name || EMPTY_CELL}
-						</Descriptions.Item>
-						<Descriptions.Item label="Status">
-							{getBackOrderStatus(backOrderData.status)}
-						</Descriptions.Item>
-					</Descriptions>
-				)}
-
-				{backOrderData?.type === backOrderTypes.FOR_RETURN && (
-					<Descriptions
-						className="w-100"
-						column={2}
-						labelStyle={{
-							width: 200,
-						}}
-						size="small"
-						bordered
-					>
-						<Descriptions.Item label="ID">{backOrderData.id}</Descriptions.Item>
-						<Descriptions.Item label="Date & Time Created">
-							{formatDateTime(backOrderData.datetime_created)}
-						</Descriptions.Item>
-						<Descriptions.Item label="Encoded By">
-							{getFullName(backOrderData.encoded_by)}
-						</Descriptions.Item>
-						<Descriptions.Item label="Overall Remarks" span={2}>
-							{backOrderData.overall_remarks}
-						</Descriptions.Item>
-					</Descriptions>
-				)}
-
-				<Divider dashed />
-
-				<Table
-					columns={columns}
-					dataSource={dataSource}
-					pagination={false}
-					scroll={{ x: 800 }}
-					bordered
-				/>
-
-				<Space className="mt-4 w-100" direction="vertical">
-					<Text>GDT: {formatDateTime(backOrderData?.datetime_created)}</Text>
-					<Text>PDT: {formatDateTime(dayjs(), false)}</Text>
-					<Text>C: {user.employee_id}</Text>
+			<Space className="mt-4 w-100 mr-6" direction="vertical">
+				<Space className="w-100 justify-space-between">
+					<Text>Customer: {backOrderData?.customer_name}</Text>
+					<Text>Encoder: {getFullName(backOrderData?.encoded_by)}</Text>
 				</Space>
-			</Spin>
+
+				<Space className="w-100">
+					<Text>Remarks: {backOrderData?.overall_remarks}</Text>
+				</Space>
+
+				<Text>GDT: {formatDateTime(backOrderData?.datetime_created)}</Text>
+				<Text>PDT: {formatDateTime(dayjs(), false)}</Text>
+			</Space>
 
 			<div
 				// eslint-disable-next-line react/no-danger

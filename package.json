@@ -1,6 +1,6 @@
 {
 	"name": "ejjy-inventory-app",
-	"version": "0.1.561",
+	"version": "0.1.595",
 	"private": true,
 	"homepage": "./",
 	"main": "./public/electron.js",
@@ -33,6 +33,7 @@
 	"dependencies": {
 		"@ant-design/colors": "7.0.0",
 		"@ant-design/icons": "4.2.2",
+		"@imjs/electron-differential-updater": "^5.1.7",
 		"antd": "4.24.8",
 		"antd-css-utilities": "1.0.3",
 		"array-move": "4.0.0",
@@ -53,6 +54,7 @@
 		"jspdf": "2.3.1",
 		"lodash": "4.17.21",
 		"moment": "^2.30.1",
+		"ngrok": "^5.0.0-beta.2",
 		"npm": "8.13.2",
 		"qrcode": "1.5.1",
 		"query-string": "7.0.1",

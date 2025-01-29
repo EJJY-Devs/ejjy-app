@@ -20,7 +20,7 @@ interface Edit {
 	cost_per_bulk: string;
 	cost_per_piece: string;
 	credit_price_per_bulk: number;
-	credit_price_per_piece: number;
+	credit_price: number;
 	current_balance: string;
 	is_daily_checked: boolean;
 	is_randomly_checked: boolean;
@@ -33,6 +33,8 @@ interface Edit {
 	price_per_bulk: string;
 	price_per_piece: string;
 	reorder_point: number;
+	wholesale_price: number;
+	special_price: number;
 }
 
 type EditPriceCostData = {

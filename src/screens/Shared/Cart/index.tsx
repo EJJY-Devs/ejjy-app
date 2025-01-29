@@ -1,91 +1,121 @@
-import {
-	Content,
-	RequestErrors,
-	CreateInventoryTransferModal,
-} from 'components';
-import { Button } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
-import React, { useEffect, useRef, useState } from 'react';
-import { useHistory } from 'react-router';
+import { RequestErrors, CreateInventoryTransferModal } from 'components';
+import { Modal, message } from 'antd';
+import React, { useRef, useState } from 'react';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
 import { convertIntoArray } from 'utils';
 import shallow from 'zustand/shallow';
+import { backOrderTypes } from 'ejjy-global';
+import { useReceivingVoucherCreate, useBackOrderCreate } from 'hooks';
 import { BarcodeScanner } from './components/BarcodeScanner';
 import { FooterButtons } from './components/FooterButtons';
 import { ProductSearch } from './components/ProductSearch';
 import { ProductTable } from './components/ProductTable';
+
 import './style.scss';
 
-interface LocationState {
-	title: string;
-	onSubmit: any;
+interface ModalProps {
+	onClose: () => void;
+	type: string;
 }
 
-export const Cart = () => {
+export const Cart = ({ onClose, type }: ModalProps) => {
 	// STATES
 	const [barcodeScanLoading, setBarcodeScanLoading] = useState(false);
-	const [responseError, setResponseError] = useState([]);
+	const [responseError] = useState([]);
 	const [
 		isCreateInventoryTransferModalVisible,
 		setIsCreateInventoryTransferModalVisible,
 	] = useState(false);
-	const [inventoryTransferType, setInventoryTransferType] = useState(null);
 
 	// REFS
 	const barcodeScannerRef = useRef(null);
 
 	// CUSTOM HOOKS
-	const history = useHistory<LocationState>();
-	const { isLoading, setLoading } = useBoundStore(
+	const { isLoading, setLoading, resetProducts } = useBoundStore(
 		(state: any) => ({
 			isLoading: state.isLoading,
 			setLoading: state.setLoading,
+			resetProducts: state.resetProducts,
 		}),
 		shallow,
 	);
 
-	// METHODS
-	useEffect(() => {
-		document.body.style.backgroundColor = 'white';
+	const { mutateAsync: createReceivingVoucher } = useReceivingVoucherCreate();
+	const { mutateAsync: createBackOrder } = useBackOrderCreate();
 
-		return () => {
-			document.body.style.backgroundColor = null;
-		};
-	}, []);
+	const { products } = useBoundStore.getState();
 
-	useEffect(() => {
-		if (!history.location.state) {
-			history.replace('/');
-		}
-	}, [history.location.state]);
-
-	const handleSubmit = (formData) => {
-		setLoading(true);
-		const { products } = useBoundStore.getState();
-
-		// Pass both products and form data to the modal submission
-		history.location.state
-			.onSubmit(products, formData)
-			.catch((response) => {
-				if (response.errors) {
-					setResponseError(response.errors);
-				}
-			})
-			.finally(() => {
-				setLoading(false);
+	const handleCreateReceivingVoucher = async (formData) => {
+		if (products.length > 0) {
+			const mappedProducts = products.map(
+				({ id, quantity, cost_per_piece }) => ({
+					product_id: id,
+					quantity,
+					cost_per_piece,
+				}),
+			);
+			await createReceivingVoucher({
+				...formData,
+				products: mappedProducts,
 			});
-
-		if (
-			history.location.state?.title === 'Delivery Receipt' ||
-			history.location.state?.title === 'Receiving Report'
-		) {
-			setIsCreateInventoryTransferModalVisible(true);
-			setInventoryTransferType(history.location.state?.title);
+			message.success('Receiving Report was created successfully');
 		}
 	};
 
+	const handleCreateDeliveryReceipt = async (formData) => {
+		if (products.length > 0) {
+			const mappedProducts = products.map(
+				({ id, quantity, price_per_piece }) => ({
+					product_id: id,
+					quantity_returned: quantity,
+					price_per_piece,
+				}),
+			);
+			await createBackOrder({
+				...formData,
+				products: mappedProducts,
+				type: backOrderTypes.FOR_RETURN,
+			});
+			message.success('Delivery Receipt was created successfully');
+		}
+	};
+
+	const handleModalSubmit = (formData) => {
+		setLoading(true);
+
+		if (type === 'Delivery Receipt') {
+			handleCreateDeliveryReceipt(formData);
+		} else if (type === 'Receiving Report') {
+			handleCreateReceivingVoucher(formData);
+		}
+
+		resetProducts();
+		onClose();
+
+		const { setRefetchData } = useBoundStore.getState();
+		setRefetchData(); // Toggle the refetch flag
+	};
+
 	const handleBack = () => {
-		history.goBack(); // Go back to the previous page
+		if (products.length > 0) {
+			Modal.confirm({
+				title: 'Warning',
+				content:
+					'Closing this will reset the products in your cart. Are you sure you want to continue?',
+				okText: 'Confirm',
+				cancelText: 'Cancel',
+				onOk: () => {
+					resetProducts(); // Reset the products
+					onClose(); // Close the modal
+				},
+			});
+		} else {
+			onClose(); // Close the modal if no products
+		}
+	};
+
+	const handleSubmit = () => {
+		setIsCreateInventoryTransferModalVisible(true);
 	};
 
 	// Modal onClose function
@@ -94,27 +124,27 @@ export const Cart = () => {
 	};
 
 	return (
-		<Content title={`Create ${history.location.state?.title}`}>
+		<Modal
+			className="CartModal"
+			footer={null}
+			maskClosable={false}
+			title="Cart"
+			width={1400}
+			centered
+			closable
+			open
+			onCancel={handleBack}
+		>
 			<BarcodeScanner
 				ref={barcodeScannerRef}
 				setLoading={setBarcodeScanLoading}
 			/>
 
-			<section className="Cart mt-6">
+			<section className="Cart">
 				<RequestErrors
 					errors={convertIntoArray(responseError)}
 					withSpaceBottom
 				/>
-
-				<Button
-					className="pa-0"
-					color="default"
-					icon={<ArrowLeftOutlined />}
-					type="text"
-					onClick={handleBack}
-				>
-					Go Back
-				</Button>
 
 				<ProductSearch barcodeScannerRef={barcodeScannerRef} />
 				<ProductTable isLoading={barcodeScanLoading || isLoading} />
@@ -123,12 +153,12 @@ export const Cart = () => {
 				{isCreateInventoryTransferModalVisible && (
 					<CreateInventoryTransferModal
 						isLoading={isLoading}
-						type={inventoryTransferType}
-						onClose={handleCloseModal} // Pass handleSubmit to the modal
-						onSubmit={handleSubmit} // Pass handleCloseModal to close the modal
+						type={type}
+						onClose={handleCloseModal}
+						onSubmit={handleModalSubmit}
 					/>
 				)}
 			</section>
-		</Content>
+		</Modal>
 	);
 };

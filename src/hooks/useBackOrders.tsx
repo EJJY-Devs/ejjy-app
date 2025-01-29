@@ -84,7 +84,14 @@ export const useBackOrders = () => {
 
 const useBackOrdersNew = ({ params }: Query) =>
 	useQuery<any>(
-		['useBackOrders', params?.page, params?.pageSize, params?.type],
+		[
+			'useBackOrders',
+			params?.page,
+			params?.pageSize,
+			params?.type,
+			params?.pageSize,
+			params?.timeRange,
+		],
 		() =>
 			wrapServiceWithCatch(
 				BackOrdersService.list(
@@ -92,6 +99,7 @@ const useBackOrdersNew = ({ params }: Query) =>
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						type: params?.type,
+						time_range: params?.timeRange,
 					},
 					getLocalApiUrl(),
 				),
@@ -118,7 +126,16 @@ export const useBackOrderRetrieve = ({ id, options }: Query) =>
 
 export const useBackOrderCreate = () =>
 	useMutation<any, any, any>(
-		({ encodedById, overallRemarks, products, senderId, type }: any) =>
+		({
+			encodedById,
+			overallRemarks,
+			products,
+			senderId,
+			type,
+			customerName,
+			customerAddress,
+			customerTin,
+		}: any) =>
 			BackOrdersService.create(
 				{
 					is_online: IS_APP_LIVE,
@@ -127,6 +144,9 @@ export const useBackOrderCreate = () =>
 					sender_id: senderId,
 					encoded_by_id: encodedById,
 					type,
+					customer_name: customerName,
+					customer_address: customerAddress,
+					customer_tin: customerTin,
 				},
 				getLocalApiUrl(),
 			),

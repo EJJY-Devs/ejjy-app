@@ -7,6 +7,10 @@ type Product = {
 	quantity: number;
 };
 
+interface List extends IListRequest {
+	time_range?: string;
+}
+
 interface Modify {
 	products: Product[];
 	supplier_name: string;
@@ -17,7 +21,7 @@ interface Modify {
 }
 
 const service = {
-	list: async (params: IListRequest, baseURL: string) =>
+	list: async (params: List, baseURL: string) =>
 		axios.get('/receiving-vouchers/', { baseURL, params }),
 
 	create: async (body: Modify, baseURL: string) =>

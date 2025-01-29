@@ -339,11 +339,11 @@ const BranchManager = () => {
 						path="/branch-manager/inventory-transfer"
 						exact
 					/>
-					<Route
+					{/* <Route
 						component={Cart}
 						path="/branch-manager/inventory-transfer/create"
 						exact
-					/>
+					/> */}
 					<Route
 						component={CreateStockIn}
 						path="/branch-manager/stocks/stock-in/create"

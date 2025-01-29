@@ -5,6 +5,7 @@ interface List extends IListRequest {
 	sender_branch_id?: number;
 	receiver_id?: number;
 	type?: string;
+	time_range?: string;
 }
 
 interface Create {
@@ -14,6 +15,9 @@ interface Create {
 	products: Product[];
 	sender_id: number;
 	type: string;
+	customer_name: string;
+	customer_address: string;
+	customer_tin: string;
 }
 
 interface Edit {

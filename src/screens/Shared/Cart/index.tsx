@@ -147,7 +147,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 				/>
 
 				<ProductSearch barcodeScannerRef={barcodeScannerRef} />
-				<ProductTable isLoading={barcodeScanLoading || isLoading} />
+				<ProductTable isLoading={barcodeScanLoading || isLoading} type={type} />
 				<FooterButtons isDisabled={isLoading} onSubmit={handleSubmit} />
 
 				{isCreateInventoryTransferModalVisible && (

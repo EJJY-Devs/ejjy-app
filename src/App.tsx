@@ -13,7 +13,12 @@ import {
 	serviceTypes,
 	userTypes,
 } from 'global';
-import { useBranches, useInitializeData, useNetwork } from 'hooks';
+import {
+	useBranches,
+	useInitializeData,
+	useInitializeIds,
+	useNetwork,
+} from 'hooks';
 import React, { useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { Redirect, Switch, useHistory, Route } from 'react-router-dom';
@@ -26,10 +31,12 @@ import OfficeManager from 'screens/OfficeManager';
 import {
 	getAppType,
 	getBranchKey,
+	getBranchProductIds,
 	getLocalApiUrl,
 	getLocalBranchId,
 	getOnlineApiUrl,
 	getOnlineBranchId,
+	getProductIds,
 	isStandAlone,
 } from 'utils';
 import npmPackage from '../package.json';
@@ -69,7 +76,7 @@ const App = () => {
 		},
 	});
 
-	const { isLoading: isInitializingData } = useInitializeData({
+	useInitializeData({
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
 			branchId:
@@ -78,6 +85,31 @@ const App = () => {
 				getAppType() === appTypes.HEAD_OFFICE
 					? branches.map(({ id }) => id)
 					: undefined,
+			...(getProductIds() && {
+				productIds: getProductIds().split(',').slice(0, 100).join(','), // Limit to 100 and join back into a string
+			}),
+			...(getBranchProductIds() && {
+				branchProductIds: getBranchProductIds()
+					.split(',')
+					.slice(0, 100)
+					.join(','), // Limit to 100 and join back into a string
+			}),
+		},
+		options: {
+			enabled:
+				isNetworkSuccess &&
+				isFetchingBranchesSuccess &&
+				!!getOnlineApiUrl() &&
+				!isStandAlone(),
+		},
+	});
+
+	// THIS IS FOR BULK-INITIALIZING LARGE SCALE DATA
+	useInitializeIds({
+		params: {
+			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE ? getOnlineBranchId() : undefined,
 		},
 		options: {
 			enabled:
@@ -112,17 +144,14 @@ const App = () => {
 		let message = '';
 		if (isConnectingNetwork) {
 			message = 'Connecting to server...';
-		} else if (isInitializingData) {
-			message = 'Please wait while we set things up for you!';
 		} else if (isFetchingBranches) {
 			message = 'Updating app data...';
 		}
 
 		return message;
-	}, [isConnectingNetwork, isInitializingData, isFetchingBranches]);
+	}, [isConnectingNetwork, isFetchingBranches]);
 
-	const isLoading =
-		isConnectingNetwork || isInitializingData || isFetchingBranches;
+	const isLoading = isConnectingNetwork || isFetchingBranches;
 
 	return (
 		<>

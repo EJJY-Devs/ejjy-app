@@ -29,7 +29,7 @@ import { Summary } from './components/Summary';
 
 const columns: ColumnsType = [
 	{ title: 'Datetime', dataIndex: 'datetime' },
-	{ title: 'Receipt Type', dataIndex: 'receiptType' },
+	{ title: 'Invoice Type', dataIndex: 'invoiceType' },
 	{ title: 'Reference Number', dataIndex: 'invoice' },
 	{ title: 'Payment', dataIndex: 'payment' },
 	{ title: 'Cashier', dataIndex: 'cashier' },
@@ -98,7 +98,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 				.map((transaction) => ({
 					key: `transaction-${transaction.id}`,
 					datetime: formatDateTime(transaction.datetime_created),
-					receiptType: getInvoiceType(transaction.invoice_type),
+					invoiceType: getInvoiceType(transaction.invoice_type),
 					invoice: (
 						<Button
 							className="pa-0"
@@ -118,7 +118,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 			const receiptsData = collectionReceiptsData.list.map((receipt) => ({
 				key: `receipt-${receipt.id}`,
 				datetime: formatDateTime(receipt.datetime_created),
-				receiptType: 'Collection Receipt',
+				invoiceType: 'Collection Receipt',
 				invoice: receipt.order_of_payment ? (
 					<Button
 						className="pa-0"

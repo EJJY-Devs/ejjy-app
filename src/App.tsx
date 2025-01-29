@@ -4,7 +4,6 @@ import {
 	CommonRoute,
 	NoAuthRoute,
 	PageInformation,
-	CreateInventoryTransfer,
 } from 'components';
 import {
 	APP_BRANCH_KEY_KEY,
@@ -21,7 +20,7 @@ import {
 } from 'hooks';
 import React, { useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { Redirect, Switch, useHistory, Route } from 'react-router-dom';
+import { Redirect, Switch, useHistory } from 'react-router-dom';
 import Admin from 'screens/Admin';
 import BranchManager from 'screens/BranchManager';
 import BranchPersonnel from 'screens/BranchPersonnel';

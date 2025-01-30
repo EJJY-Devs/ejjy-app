@@ -46,8 +46,6 @@ export const useInitializeData = ({ params, options }: Query) =>
 						await DataService.initialize(
 							{
 								branch_id: branchId,
-								product_ids: params.productIds,
-								branch_product_ids: params.branchProductIds,
 							},
 							baseURL,
 						);
@@ -55,6 +53,16 @@ export const useInitializeData = ({ params, options }: Query) =>
 				} catch (e) {
 					console.error('Initialize Data', e);
 				}
+			}
+
+			if (params?.isHeadOffice) {
+				await DataService.initialize(
+					{
+						product_ids: params.productIds,
+						branch_product_ids: params.branchProductIds,
+					},
+					baseURL,
+				);
 			}
 
 			return service;
@@ -110,12 +118,7 @@ export const useInitializeData = ({ params, options }: Query) =>
 
 export const useInitializeIds = ({ params, options }: Query) =>
 	useQuery<any>(
-		[
-			'useInitializeIds',
-			params?.branchId,
-			params?.branchIds,
-			params?.isHeadOffice,
-		],
+		['useInitializeIds', params?.branchId, params?.isHeadOffice],
 		async () => {
 			const baseURL = getLocalApiUrl();
 
@@ -125,26 +128,16 @@ export const useInitializeIds = ({ params, options }: Query) =>
 				response = await DataService.initializeIds(
 					{
 						branch_id: params?.branchId,
+					},
+					baseURL,
+				);
+			} else if (params?.isHeadOffice) {
+				response = await DataService.initializeIds(
+					{
 						is_head_office: params?.isHeadOffice,
 					},
 					baseURL,
 				);
-			} else if (params?.branchIds) {
-				try {
-					// eslint-disable-next-line no-restricted-syntax
-					for (const branchId of params.branchIds) {
-						// eslint-disable-next-line no-await-in-loop
-						response = await DataService.initializeIds(
-							{
-								branch_id: branchId,
-								is_head_office: params?.isHeadOffice,
-							},
-							baseURL,
-						);
-					}
-				} catch (e) {
-					console.error('Initialize Data', e);
-				}
 			}
 
 			return response;

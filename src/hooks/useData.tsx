@@ -57,10 +57,6 @@ export const useInitializeData = ({ params, options }: Query) =>
 				}
 			}
 
-			if (params?.isHeadOffice) {
-				await DataService.initialize({ is_head_office: true }, baseURL);
-			}
-
 			return service;
 		},
 		{
@@ -123,13 +119,33 @@ export const useInitializeIds = ({ params, options }: Query) =>
 		async () => {
 			const baseURL = getLocalApiUrl();
 
-			const response = await DataService.initializeIds(
-				{
-					branch_id: params?.branchId,
-					is_head_office: params?.isHeadOffice,
-				},
-				baseURL,
-			);
+			let response;
+
+			if (params?.branchId) {
+				response = await DataService.initializeIds(
+					{
+						branch_id: params?.branchId,
+						is_head_office: params?.isHeadOffice,
+					},
+					baseURL,
+				);
+			} else if (params?.branchIds) {
+				try {
+					// eslint-disable-next-line no-restricted-syntax
+					for (const branchId of params.branchIds) {
+						// eslint-disable-next-line no-await-in-loop
+						response = await DataService.initializeIds(
+							{
+								branch_id: branchId,
+								is_head_office: params?.isHeadOffice,
+							},
+							baseURL,
+						);
+					}
+				} catch (e) {
+					console.error('Initialize Data', e);
+				}
+			}
 
 			return response;
 		},

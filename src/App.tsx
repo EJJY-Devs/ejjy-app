@@ -109,6 +109,10 @@ const App = () => {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
 			branchId:
 				getAppType() === appTypes.BACK_OFFICE ? getOnlineBranchId() : undefined,
+			branchIds:
+				getAppType() === appTypes.HEAD_OFFICE
+					? branches.map(({ id }) => id)
+					: undefined,
 		},
 		options: {
 			enabled:

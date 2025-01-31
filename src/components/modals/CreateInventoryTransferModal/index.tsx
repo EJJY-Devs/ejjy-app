@@ -1,6 +1,5 @@
 import { Button, Col, Input, Modal, Row, Select } from 'antd';
 import { ErrorMessage, Form, Formik } from 'formik';
-import _ from 'lodash';
 import * as Yup from 'yup';
 import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import React from 'react';

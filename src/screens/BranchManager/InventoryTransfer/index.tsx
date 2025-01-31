@@ -7,7 +7,7 @@ import {
 } from 'components';
 import { Box, Label } from 'components/elements';
 import { useQueryParams, useReceivingVouchers, useBackOrders } from 'hooks';
-import { formatDateTime, formatInPeso } from 'utils';
+import { formatInPeso } from 'utils';
 import React, { useState, useEffect } from 'react';
 import { Cart } from 'screens/Shared/Cart';
 import { backOrderTypes, EMPTY_CELL } from 'ejjy-global';

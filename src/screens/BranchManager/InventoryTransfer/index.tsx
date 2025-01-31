@@ -58,7 +58,7 @@ export const InventoryTransfer = () => {
 			// Convert Back Orders to table rows
 			const backOrdersData = backOrders.map((item) => ({
 				key: `backorder-${item.id}`,
-				datetime: formatDateTime(item.datetime_created), // Keep raw datetime for sorting
+				datetime: item.datetime_created, // Keep raw datetime for sorting
 				type: 'Delivery Receipt',
 				id: (
 					<Button
@@ -77,7 +77,7 @@ export const InventoryTransfer = () => {
 			// Convert Receiving Vouchers to table rows
 			const receivingVouchersData = receivingVouchers.map((item) => ({
 				key: `receiving-${item.id}`,
-				datetime: formatDateTime(item.datetime_created), // Keep raw datetime for sorting
+				datetime: item.datetime_created, // Keep raw datetime for sorting
 				type: 'Receiving Report',
 				id: (
 					<Button
@@ -166,7 +166,7 @@ export const InventoryTransfer = () => {
 									setSelectedType(e.target.value);
 									setQueryParams({
 										page: DEFAULT_PAGE,
-										pageSize: e.target.value === 'All' ? params.pageSize : 10,
+										pageSize: e.target.value === 'All' ? 5 : 10,
 									});
 								}}
 							/>
@@ -206,9 +206,7 @@ export const InventoryTransfer = () => {
 							pageSizeOptions,
 							onChange: (page, newPageSize) => {
 								const adjustedPageSize =
-									selectedType === 'All'
-										? Math.ceil(newPageSize / 2)
-										: newPageSize;
+									selectedType === 'All' ? 5 : newPageSize;
 								setQueryParams({ page, pageSize: adjustedPageSize });
 							},
 							disabled: !dataSource,

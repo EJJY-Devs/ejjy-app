@@ -67,6 +67,7 @@ export const FooterButtons = ({ isDisabled, onSubmit }) => {
 
 			<CartButton
 				disabled={products.length === 0 || isDisabled}
+				shortcutKey="F1"
 				size="lg"
 				text="Submit"
 				variant="primary"

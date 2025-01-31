@@ -82,6 +82,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 
 	const handleModalSubmit = (formData) => {
 		setLoading(true);
+		console.log(type);
 
 		if (type === 'Delivery Receipt') {
 			handleCreateDeliveryReceipt(formData);
@@ -118,10 +119,10 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		setIsCreateInventoryTransferModalVisible(true);
 	};
 
-	// Modal onClose function
-	const handleCloseModal = () => {
-		setIsCreateInventoryTransferModalVisible(false);
-	};
+	// // Modal onClose function
+	// const handleCloseModal = () => {
+	// 	setIsCreateInventoryTransferModalVisible(false);
+	// };
 
 	return (
 		<Modal
@@ -154,7 +155,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 					<CreateInventoryTransferModal
 						isLoading={isLoading}
 						type={type}
-						onClose={handleCloseModal}
+						onClose={onClose}
 						onSubmit={handleModalSubmit}
 					/>
 				)}

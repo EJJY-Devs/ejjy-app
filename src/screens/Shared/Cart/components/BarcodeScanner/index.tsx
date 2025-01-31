@@ -38,7 +38,6 @@ const Component = (props, ref) => {
 	} = useBranchProducts({
 		params: {
 			identifier: scannedBarcode,
-			useGoogleApiUrl: true,
 		},
 		options: {
 			enabled: scannedBarcode !== null,
@@ -47,16 +46,18 @@ const Component = (props, ref) => {
 
 				if (branchProducts) {
 					const foundProduct = products.find(
-						(product) => product.key === scannedProduct.product.key,
+						(product) => product.barcode === scannedProduct.barcode,
 					);
 
 					if (foundProduct) {
-						scannedProduct['quantity'] += 1;
-						editProduct({ key: foundProduct.key, product: scannedProduct });
+						foundProduct['quantity'] += 1;
+						editProduct({ key: foundProduct.key, product: foundProduct });
 					} else {
 						scannedProduct['quantity'] = 1;
 						addProduct(scannedProduct);
 					}
+
+					setScannedBarcode(null);
 				} else {
 					message.error({
 						key: MESSAGE_KEY,

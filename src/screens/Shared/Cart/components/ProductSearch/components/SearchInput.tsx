@@ -107,7 +107,7 @@ const Component = ({ barcodeScannerRef }: Props, ref) => {
 			<ControlledInput
 				ref={inputRef}
 				className="ProductSearch_input"
-				placeholder="Search by name, barcode, textcode or description"
+				placeholder="Search by barcode and name"
 				value={inputText}
 				onChange={(value) => {
 					setInputText(value);

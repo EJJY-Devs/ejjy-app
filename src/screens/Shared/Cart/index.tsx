@@ -128,7 +128,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 			className="CartModal"
 			footer={null}
 			maskClosable={false}
-			title="Cart"
+			title={`Create ${type}`}
 			width={1400}
 			centered
 			closable

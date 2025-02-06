@@ -27,6 +27,7 @@ export const useInitializeData = ({ params, options }: Query) =>
 			params?.isHeadOffice,
 			params?.productIds,
 			params?.branchProductIds,
+			params?.branchProductBalanceUpdateLogsIds,
 		],
 		async () => {
 			const baseURL = getLocalApiUrl();
@@ -39,6 +40,8 @@ export const useInitializeData = ({ params, options }: Query) =>
 							branch_id: params.branchId,
 							product_ids: params.productIds,
 							branch_product_ids: params.branchProductIds,
+							branch_product_balance_update_logs_ids:
+								params.branchProductBalanceUpdateLogsIds,
 						},
 						baseURL,
 					),
@@ -65,6 +68,8 @@ export const useInitializeData = ({ params, options }: Query) =>
 					{
 						product_ids: params.productIds,
 						branch_product_ids: params.branchProductIds,
+						branch_product_balance_update_logs_ids:
+							params.branchProductBalanceUpdateLogsIds,
 					},
 					baseURL,
 				);

@@ -7,7 +7,6 @@
 	},
 	"search.exclude": {
 		"**/public": true,
-		"**/api": true,
 		"**/archive": true,
 		"**/.git": true,
 		"**/node_modules": true

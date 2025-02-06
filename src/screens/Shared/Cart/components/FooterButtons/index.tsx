@@ -6,7 +6,7 @@ import {
 import { Spin } from 'antd';
 import cn from 'classnames';
 import { ceil } from 'lodash';
-import React, { ReactNode, useCallback } from 'react';
+import React, { ReactNode, useCallback, useEffect } from 'react';
 import CartButton from 'screens/Shared/Cart/components/CartButton';
 import shallow from 'zustand/shallow';
 import { PRODUCT_LENGTH_PER_PAGE } from '../../data';
@@ -14,6 +14,22 @@ import { useBoundStore } from '../../stores/useBoundStore';
 import './style.scss';
 
 export const FooterButtons = ({ isDisabled, onSubmit }) => {
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'F1') {
+				event.preventDefault();
+				if (!isDisabled) {
+					onSubmit();
+				}
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+		};
+	}, [isDisabled, onSubmit]);
+
 	// CUSTOM HOOKS
 	const { products, pageNumber, nextPage, prevPage } = useBoundStore(
 		(state: any) => ({

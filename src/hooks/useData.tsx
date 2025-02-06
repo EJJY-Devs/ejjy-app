@@ -2,13 +2,18 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useQuery } from 'react-query';
 import { DataService } from 'services';
-import { APP_PRODUCTS_IDS, APP_BRANCH_PRODUCT_IDS } from 'global';
+import {
+	APP_PRODUCTS_IDS,
+	APP_BRANCH_PRODUCT_IDS,
+	APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
+} from 'global';
 
 import {
 	getLocalApiUrl,
 	isStandAlone,
 	getProductIds,
 	getBranchProductIds,
+	getBranchProductBalanceUpdateLogsIds,
 } from 'utils';
 
 const REFETCH_INTERVAL_MS = 30_000;
@@ -111,6 +116,13 @@ export const useInitializeData = ({ params, options }: Query) =>
 					initializedBranchProductIdsString,
 					params?.branchProductIds,
 				);
+
+				const initializedBranchProductBalanceUpdateLogsIdsString = getBranchProductBalanceUpdateLogsIds(); // Fetch branch product update logs IDs from local storage
+				updateRemainingIds(
+					APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
+					initializedBranchProductBalanceUpdateLogsIdsString,
+					params?.branchProductBalanceUpdateLogsIds,
+				);
 			},
 			...options,
 		},
@@ -174,6 +186,14 @@ export const useInitializeIds = ({ params, options }: Query) =>
 				// Handle branch_product_ids
 				if (data?.data?.branch_product_ids) {
 					updateStoredIds(APP_BRANCH_PRODUCT_IDS, data.data.branch_product_ids);
+				}
+
+				// Handle branch_product_balance_update_logs_ids
+				if (data?.data?.branch_product_balance_update_logs_ids) {
+					updateStoredIds(
+						APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
+						data.data.branch_product_balance_update_logs_ids,
+					);
 				}
 			},
 			...options,

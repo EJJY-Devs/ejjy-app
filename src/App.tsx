@@ -31,6 +31,7 @@ import {
 	getAppType,
 	getBranchKey,
 	getBranchProductIds,
+	getBranchProductBalanceUpdateLogsIds,
 	getLocalApiUrl,
 	getLocalBranchId,
 	getOnlineApiUrl,
@@ -89,6 +90,12 @@ const App = () => {
 			}),
 			...(getBranchProductIds() && {
 				branchProductIds: getBranchProductIds()
+					.split(',')
+					.slice(0, 100)
+					.join(','), // Limit to 100 and join back into a string
+			}),
+			...(getBranchProductBalanceUpdateLogsIds() && {
+				branchProductBalanceUpdateLogsIds: getBranchProductBalanceUpdateLogsIds()
 					.split(',')
 					.slice(0, 100)
 					.join(','), // Limit to 100 and join back into a string

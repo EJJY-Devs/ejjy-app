@@ -5,6 +5,7 @@ interface Initialize {
 	is_head_office?: boolean;
 	product_ids?: string;
 	branch_product_ids?: string;
+	branch_product_balance_update_logs_ids?: string;
 }
 
 interface Upload {

@@ -31,10 +31,16 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	const barcodeScannerRef = useRef(null);
 
 	// CUSTOM HOOKS
-	const { isLoading, setLoading, resetProducts } = useBoundStore(
+	const {
+		isLoading,
+		setLoading,
+		resetProducts,
+		setSearchedText,
+	} = useBoundStore(
 		(state: any) => ({
 			isLoading: state.isLoading,
 			setLoading: state.setLoading,
+			setSearchedText: state.setSearchedText,
 			resetProducts: state.resetProducts,
 		}),
 		shallow,
@@ -113,6 +119,8 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		} else {
 			onClose(); // Close the modal if no products
 		}
+
+		setSearchedText('');
 	};
 
 	const handleSubmit = () => {
@@ -128,7 +136,6 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		<Modal
 			className="CartModal"
 			footer={null}
-			maskClosable={false}
 			title={`Create ${type}`}
 			width={1400}
 			centered

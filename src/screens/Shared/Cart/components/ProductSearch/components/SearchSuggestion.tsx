@@ -56,7 +56,7 @@ export const SearchSuggestion = ({
 					ref={scrollbarRef}
 					autoHeightMax={PRODUCT_LIST_HEIGHT}
 					autoHeightMin="100%"
-					style={{ height: '100%', paddingBottom: 10 }}
+					style={{ height: '100%' }}
 					autoHeight
 				>
 					{searchedProducts.map((product, index) => (

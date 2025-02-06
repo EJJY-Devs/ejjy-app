@@ -3,6 +3,8 @@ import { ErrorMessage, Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import React from 'react';
+import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
+import shallow from 'zustand/shallow';
 import { MAX_PAGE_SIZE } from 'global';
 import { getId, getLocalApiUrl, isStandAlone } from 'utils';
 import { FieldError, Label } from '../../elements';
@@ -72,6 +74,13 @@ export const CreateInventoryTransferModal = ({
 			  }
 			: formDetails.defaultValues;
 
+	const { resetProducts } = useBoundStore(
+		(state: any) => ({
+			resetProducts: state.resetProducts,
+		}),
+		shallow,
+	);
+
 	return (
 		<Modal
 			footer={null}
@@ -79,7 +88,10 @@ export const CreateInventoryTransferModal = ({
 			closable
 			destroyOnClose
 			open
-			onCancel={onClose}
+			onCancel={() => {
+				onClose();
+				resetProducts();
+			}}
 		>
 			<Formik
 				initialValues={initialValues}

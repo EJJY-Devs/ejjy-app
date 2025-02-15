@@ -27,7 +27,7 @@ const formDetails = {
 	schema: Yup.object().shape({
 		supplierName: Yup.string().required().label('Supplier Name').trim(),
 		supplierAddress: Yup.string().required().label('Supplier Address').trim(),
-		supplierTin: Yup.string().required().label('Supplier TIN').trim(),
+		supplierTin: Yup.string().label('Supplier TIN').trim(),
 		encodedById: Yup.number().nullable().required().label('Encoded By Id'),
 		checkedById: Yup.number().nullable().required().label('Checked By Id'),
 	}),
@@ -53,13 +53,13 @@ export const CreateInventoryTransferModal = ({
 		type === 'Delivery Receipt'
 			? Yup.object().shape({
 					encodedById: Yup.number().nullable().required().label('Encoder'),
-					overallRemarks: Yup.string().required().label('Remarks').trim(),
+					overallRemarks: Yup.string().label('Remarks').trim(),
 					customerName: Yup.string().required().label('Customer Name').trim(),
 					customerAddress: Yup.string()
 						.required()
 						.label('Customer Address')
 						.trim(),
-					customerTin: Yup.string().required().label('Customer TIN').trim(),
+					customerTin: Yup.string().label('Customer TIN').trim(),
 			  })
 			: formDetails.schema;
 
@@ -237,7 +237,7 @@ export const CreateInventoryTransferModal = ({
 										/>
 									</Col>
 									<Col span={24}>
-										<Label id="encodedById" label="Encoded By" spacing />
+										<Label id="encodedById" label="Encoder" spacing />
 										<Select
 											className="w-100"
 											disabled={isFetchingUsers}
@@ -264,7 +264,7 @@ export const CreateInventoryTransferModal = ({
 										/>
 									</Col>
 									<Col span={24}>
-										<Label id="checkedById" label="Checked By" spacing />
+										<Label id="checkedById" label="Checker" spacing />
 										<Select
 											className="w-100"
 											disabled={isFetchingUsers}

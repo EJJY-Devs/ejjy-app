@@ -1,5 +1,6 @@
 import { Divider, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
+import { TableHeader } from 'components';
 import { Box, Label } from 'components/elements';
 import { getProductCode } from 'ejjy-global';
 import { requisitionSlipDetailsType } from 'global';
@@ -34,17 +35,19 @@ export const RequestedProducts = ({ requisitionSlip }: Props) => {
 
 	return (
 		<Box>
+			<TableHeader title="Requisition Slip" />
 			<RequisitionSlipDetails
 				requisitionSlip={requisitionSlip}
 				type={requisitionSlipDetailsType.SINGLE_VIEW}
 			/>
 
-			<div className="px-6 pb-3">
+			<div className="px-6 pb-3 pa-6">
 				<Divider dashed />
 				<Label label="Requested Products" />
 			</div>
 
 			<Table
+				className="pa-6 pt-0"
 				columns={columns}
 				dataSource={dataSource}
 				pagination={false}

@@ -1,0 +1,183 @@
+@use 'assets/styles' as *;
+
+.ProductSearch {
+	position: relative;
+
+	&_input {
+		height: 100%;
+		width: 100%;
+		border-radius: 10px;
+		padding: 20px 30px;
+		font-size: 10px;
+		background-color: $color-main-background;
+		box-shadow: inset 0px 4px 4px rgba(0, 0, 0, 0.25);
+	}
+
+	&_btnClear {
+		font-size: 35px;
+		position: absolute;
+		top: 25px;
+		right: 30px;
+		color: $color-red !important;
+		cursor: pointer;
+	}
+
+	&_suggestion {
+		max-height: 450px;
+		background-color: white;
+		border: 1px solid $color-gray;
+		box-shadow: 0px 4px 10px 4px rgba(0, 0, 0, 0.02);
+		border-radius: 10px;
+		position: absolute;
+		width: 100%;
+		z-index: 999;
+
+		&_wrapper {
+			padding: 1.25em;
+			@include flex(stretch, center);
+			column-gap: 1.5em;
+			outline: 1;
+			cursor: pointer;
+
+			&:not(:last-child) {
+				border-bottom: 1px solid $color-gray;
+			}
+
+			&:first-child {
+				border-top-left-radius: 10px;
+				border-top-right-radius: 10px;
+			}
+
+			&:last-child {
+				border-bottom-left-radius: 10px;
+				border-bottom-right-radius: 10px;
+			}
+
+			&___active {
+				background-color: $color-primary;
+
+				.badge {
+					border: 1px solid $color-gray !important;
+					background-color: white;
+				}
+
+				.ProductSearch_suggestion_product_name,
+				.ProductSearch_suggestion_product_code,
+				.ProductSearch_suggestion_product_price {
+					color: white;
+				}
+			}
+
+			.badge {
+				font-size: 1rem;
+			}
+
+			p {
+				margin-bottom: 0;
+			}
+		}
+
+		&_product {
+			height: 54px;
+			&_name {
+				@include font(2rem, 700);
+				color: $color-dark;
+			}
+
+			&_code {
+				margin-top: 8px;
+				@include font(1rem, 400);
+				color: $color-dark-gray;
+			}
+
+			&_price {
+				margin-left: auto;
+				@include font(1.5rem, 700);
+				color: $color-dark;
+			}
+		}
+	}
+}
+
+.ProductSearchV2 {
+	display: flex;
+
+	&_wrapper {
+		position: relative;
+		flex: 1;
+	}
+
+	&_btnTextcode {
+		margin-left: 0.75em;
+		padding-top: 1.15em;
+		padding-bottom: 1.15em;
+	}
+
+	.ProductSearch_input {
+		height: 100%;
+	}
+}
+
+.SearchTextcodeModal {
+	&_textcodeNumbers {
+		width: 100%;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		grid-template-rows: repeat(5, auto);
+		column-gap: 10px;
+		row-gap: 10px;
+
+		&_input {
+			@include font(2.5rem, bold);
+			color: $color-dark;
+			text-align: center;
+			grid-column: 1 / span 3;
+		}
+
+		&_num {
+			font-size: 2rem;
+			height: 80px;
+
+			&0 {
+				grid-column: 1 / span 2;
+			}
+		}
+	}
+
+	&_btnGroup {
+		margin: 30px 0 0 0;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		column-gap: 20px;
+	}
+}
+
+.Center {
+	width: 800px; /* Decrease the width for smaller content */
+	position: relative;
+	margin: 20px auto; /* Centers the box horizontally */
+	// background-color: #fff;
+	// border: 1px solid #ddd;
+	// border-radius: 8px;
+	// box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	height: 10px !important ;
+}
+
+.CreateInventoryTransfer {
+	width: 600px; /* Adjust width to fit inside the Center */
+	padding: 16px; /* Slightly reduce padding */
+	gap: 12px; /* Adjust spacing between elements */
+	background-color: #fff;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	font-size: 14px; /* Reduce font size */
+}
+
+.CreateInventoryTransfer > div {
+	width: 100%;
+}

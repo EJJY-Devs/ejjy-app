@@ -1,8 +1,13 @@
 import { PrinterOutlined } from '@ant-design/icons';
-import { Button, Col, Descriptions, Modal, Row } from 'antd';
+import { Button, Descriptions, Modal, Table } from 'antd';
 import { PdfButtons, ReceiptHeader } from 'components/Printing';
 import dayjs from 'dayjs';
-import { getFullName, getRequestor, printRequisitionSlip } from 'ejjy-global';
+import { ColumnsType } from 'antd/lib/table';
+import {
+	getFullName,
+	printRequisitionSlip,
+	formatRequisitionSlipId,
+} from 'ejjy-global';
 import { usePdf, useSiteSettings } from 'hooks';
 import React from 'react';
 import { useUserStore } from 'stores';
@@ -30,6 +35,31 @@ export const ViewRequisitionSlipModal = ({
 	const handlePrint = () => {
 		printRequisitionSlip(requisitionSlip, siteSettings, user);
 	};
+
+	// Define table columns
+	const columns: ColumnsType = [
+		{
+			title: 'Product Name',
+			dataIndex: 'product_name',
+			key: 'product_name',
+		},
+		{
+			title: 'Quantity',
+			dataIndex: 'quantity',
+			key: 'quantity',
+			align: 'center',
+		},
+	];
+
+	// Map products to table data
+	const dataSource = requisitionSlip.products.map(({ quantity, product }) => ({
+		key: product.id,
+		product_name: product.name,
+		quantity: formatQuantity({
+			unitOfMeasurement: product.unit_of_measurement,
+			quantity,
+		}),
+	}));
 
 	return (
 		<Modal
@@ -77,27 +107,25 @@ export const ViewRequisitionSlipModal = ({
 					{formatDateTime(requisitionSlip.datetime_created)}
 				</Descriptions.Item>
 				<Descriptions.Item label="Requestor">
-					{getRequestor(requisitionSlip)}
+					{getFullName(requisitionSlip.prepared_by)}
 				</Descriptions.Item>
-				<Descriptions.Item label="F-RS1">
-					{requisitionSlip.id}
+				<Descriptions.Item label="Requesting Branch">
+					{requisitionSlip.branch?.name}
+				</Descriptions.Item>
+				<Descriptions.Item label="ID">
+					{formatRequisitionSlipId(requisitionSlip.id)}
 				</Descriptions.Item>
 			</Descriptions>
 
-			<div className="mt-6">
-				{requisitionSlip.products.map(({ quantity_piece, product }) => (
-					<Row key={product.name} gutter={[0, 0]}>
-						<Col span={24}>{product.name}</Col>
-						<Col className="pl-4" span={12}>
-							{formatQuantity({
-								unitOfMeasurement: product.unit_of_measurement,
-								quantity: quantity_piece,
-							})}
-						</Col>
-						<Col span={12}>-</Col>
-					</Row>
-				))}
-			</div>
+			{/* Products Table */}
+			<Table
+				className="mt-6"
+				columns={columns}
+				dataSource={dataSource}
+				pagination={false}
+				size="small"
+				bordered
+			/>
 
 			<Descriptions
 				className="mt-6 w-100"

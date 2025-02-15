@@ -16,8 +16,9 @@ type Product = {
 };
 
 interface Create {
-	requesting_user_username: number;
-	type: 'manual' | 'automatic';
+	prepared_by?: number;
+	approved_by?: number;
+	branch_id?: number;
 	products: Product[];
 }
 

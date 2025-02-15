@@ -107,8 +107,8 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 	);
 
 	return (
-		<Box>
-			<TableHeader pending={getPendingCount()} title="F-OS1" />
+		<Box className="pa-6">
+			<TableHeader pending={getPendingCount()} title="Linked Transactions" />
 
 			<OrderSlipsTable
 				orderSlips={orderSlips}

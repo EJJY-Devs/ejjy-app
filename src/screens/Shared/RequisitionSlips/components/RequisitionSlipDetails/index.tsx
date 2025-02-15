@@ -1,13 +1,8 @@
 import { PrinterOutlined } from '@ant-design/icons';
 import { Button, Descriptions } from 'antd';
 import { ViewRequisitionSlipModal } from 'components';
-import { Select } from 'components/elements';
-import { getRequestor } from 'ejjy-global';
-import {
-	request,
-	requisitionSlipActionsOptions,
-	requisitionSlipDetailsType,
-} from 'global';
+import { EMPTY_CELL, getFullName } from 'ejjy-global';
+import { requisitionSlipDetailsType } from 'global';
 import { useRequisitionSlips } from 'hooks/useRequisitionSlips';
 import { upperFirst } from 'lodash';
 import React, { useState } from 'react';
@@ -31,9 +26,9 @@ export const RequisitionSlipDetails = ({ requisitionSlip, type }: Props) => {
 	} = useRequisitionSlips();
 
 	// METHODS
-	const handleStatusChange = (status) => {
-		editRequisitionSlip(requisitionSlip.id, status);
-	};
+	// const handleStatusChange = (status) => {
+	// 	editRequisitionSlip(requisitionSlip.id, status);
+	// };
 
 	return (
 		<>
@@ -49,16 +44,16 @@ export const RequisitionSlipDetails = ({ requisitionSlip, type }: Props) => {
 				</Descriptions.Item>
 
 				<Descriptions.Item label="Requestor">
-					{getRequestor(requisitionSlip)}
+					{getFullName(requisitionSlip.prepared_by) || EMPTY_CELL}
 				</Descriptions.Item>
 
 				{type === requisitionSlipDetailsType.SINGLE_VIEW && (
 					<>
-						<Descriptions.Item label="Request Type">
-							{upperFirst(requisitionSlip.type)}
+						<Descriptions.Item label="Status">
+							{requisitionSlip.status || EMPTY_CELL}
 						</Descriptions.Item>
 
-						{!isUserFromBranch(user.user_type) && (
+						{/* {!isUserFromBranch(user.user_type) && (
 							<Descriptions.Item label="Status">
 								<Select
 									classNames="status-select"
@@ -69,13 +64,21 @@ export const RequisitionSlipDetails = ({ requisitionSlip, type }: Props) => {
 									onChange={handleStatusChange}
 								/>
 							</Descriptions.Item>
-						)}
+						)} */}
+
+						<Descriptions.Item label="Requesting Branch">
+							{requisitionSlip.branch?.name || EMPTY_CELL}
+						</Descriptions.Item>
+
+						<Descriptions.Item label="Remarks">
+							{upperFirst(requisitionSlip.type) || EMPTY_CELL}
+						</Descriptions.Item>
 					</>
 				)}
 
 				{type === requisitionSlipDetailsType.CREATE_EDIT && (
 					<Descriptions.Item label="F-RS1">
-						{requisitionSlip.id}
+						{requisitionSlip.id || EMPTY_CELL}
 					</Descriptions.Item>
 				)}
 

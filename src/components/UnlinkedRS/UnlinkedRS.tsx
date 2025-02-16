@@ -7,6 +7,6 @@ interface Props {
 	classNames?: string;
 }
 
-export const PendingCount = ({ value, classNames }: Props) => (
-	<p className={cn('Pending', classNames)}>{`Pending: ${value}`}</p>
+export const UnlinkedRS = ({ value, classNames }: Props) => (
+	<p className={cn('UnlinkedRS', classNames)}>{`Unlinked RS: ${value}`}</p>
 );

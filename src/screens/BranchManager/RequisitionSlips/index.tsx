@@ -2,11 +2,7 @@
 import { Button, Col, Row, Select, Space, Table } from 'antd';
 import { Content, RequestErrors } from 'components';
 import { Box, Label } from 'components/elements';
-import {
-	filterOption,
-	getRequestor,
-	formatRequisitionSlipId,
-} from 'ejjy-global';
+import { filterOption, formatRequisitionSlipId } from 'ejjy-global';
 import { Cart } from 'screens/Shared/Cart';
 import {
 	ALL_OPTION_KEY,
@@ -64,7 +60,6 @@ export const RequisitionSlips = () => {
 				),
 				branch: branch?.name || EMPTY_CELL,
 				datetimeCreated: dateTime,
-				requestor: getRequestor(requisitionSlip),
 				status: EMPTY_CELL,
 				remarks: EMPTY_CELL,
 			};

@@ -12,7 +12,7 @@ export * from './NotificationItem';
 export * from './PageInformation';
 export * from './Partials/Container/Container';
 export * from './Partials/Content/Content';
-export * from './PendingCount/PendingCount';
+export * from './UnlinkedRS/UnlinkedRS';
 export * from './PendingTransactionsSection/PendingTransactionsSection';
 export * from './PreparationSlipDetails';
 export * from './QuantitySelect';

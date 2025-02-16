@@ -4,7 +4,7 @@ import React, { useCallback } from 'react';
 import { AddIcon } from '../..';
 import { Button, SearchInput, Select } from '../../elements';
 import { Option } from '../../elements/Select/Select';
-import { PendingCount } from '../../PendingCount/PendingCount';
+import { UnlinkedRS } from '../../UnlinkedRS/UnlinkedRS';
 import './style.scss';
 
 const SEARCH_DEBOUNCE_TIME = 250; // 250ms
@@ -73,7 +73,7 @@ export const TableHeaderOrderSlip = ({
 					/>
 				)}
 
-				<PendingCount value={pending} />
+				<UnlinkedRS value={pending} />
 
 				{onOutOfStock && (
 					<Button

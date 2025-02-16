@@ -1,97 +1,56 @@
 import { Divider, Table } from 'antd';
-import { QuantitySelect } from 'components';
+import { TableHeader } from 'components';
+import { ColumnsType } from 'antd/lib/table';
+import { getProductCode } from 'ejjy-global';
 import { Box, Label } from 'components/elements';
-import { quantityTypes, requisitionSlipDetailsType } from 'global';
-import React, { useCallback, useEffect, useState } from 'react';
+import { requisitionSlipDetailsType } from 'global';
+import React, { useEffect, useState } from 'react';
 import { RequisitionSlipDetails } from 'screens/Shared/RequisitionSlips/components/RequisitionSlipDetails';
-import { convertToBulk, formatQuantity } from 'utils';
 import '../style.scss';
 
 interface Props {
 	requisitionSlip: any;
 }
 
+const columns: ColumnsType = [
+	{ title: 'Code', dataIndex: 'code' },
+	{ title: 'Name', dataIndex: 'name' },
+];
+
 export const RequestedProducts = ({ requisitionSlip }: Props) => {
-	const [data, setData] = useState([]);
+	const [dataSource, setDataSource] = useState([]);
 
 	useEffect(() => {
-		if (requisitionSlip) {
-			setData(
-				requisitionSlip?.products?.map((requestedProduct) => {
-					const { product, quantity_piece } = requestedProduct;
-					const {
-						barcode,
-						textcode,
-						name,
-						pieces_in_bulk,
-						unit_of_measurement,
-					} = product;
+		const formattedProducts = requisitionSlip?.products?.map(
+			(requestedProduct) => {
+				const { product } = requestedProduct;
 
-					return {
-						quantityPiece: formatQuantity({
-							unitOfMeasurement: unit_of_measurement,
-							quantity: quantity_piece,
-						}),
-						quantityBulk: convertToBulk(quantity_piece, pieces_in_bulk),
-						barcode: barcode || textcode,
-						name,
-						quantity: formatQuantity({
-							unitOfMeasurement: unit_of_measurement,
-							quantity: quantity_piece,
-						}),
-					};
-				}),
-			);
-		}
-	}, [requisitionSlip]);
-
-	const handleQuantityTypeChange = useCallback(
-		(quantityType) => {
-			const formattedRequestedProducts = data.map((requestProduct) => ({
-				...requestProduct,
-				quantity:
-					quantityType === quantityTypes.PIECE
-						? requestProduct.quantityPiece
-						: requestProduct.quantityBulk,
-			}));
-			setData(formattedRequestedProducts);
-		},
-		[data],
-	);
-
-	const getColumns = useCallback(
-		() => [
-			{ title: 'Barcode', dataIndex: 'barcode', key: 'barcode' },
-			{ title: 'Name', dataIndex: 'name', key: 'name' },
-			{
-				title: (
-					<QuantitySelect
-						quantityText="Quantity Requested"
-						onQuantityTypeChange={handleQuantityTypeChange}
-					/>
-				),
-				dataIndex: 'quantity',
-				key: 'quantity',
+				return {
+					code: getProductCode(product),
+					name: product.name,
+				};
 			},
-		],
-		[handleQuantityTypeChange],
-	);
+		);
+		setDataSource(formattedProducts);
+	}, [requisitionSlip]);
 
 	return (
 		<Box>
+			<TableHeader title="Requisition Slip" />
 			<RequisitionSlipDetails
 				requisitionSlip={requisitionSlip}
 				type={requisitionSlipDetailsType.SINGLE_VIEW}
 			/>
 
-			<div className="ViewRequisitionSlip_requestedProducts">
+			<div className="px-6 pb-3 pa-6">
 				<Divider dashed />
 				<Label label="Requested Products" />
 			</div>
 
 			<Table
-				columns={getColumns()}
-				dataSource={data}
+				className="pa-6 pt-0"
+				columns={columns}
+				dataSource={dataSource}
 				pagination={false}
 				scroll={{ y: 250 }}
 				bordered

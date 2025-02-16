@@ -3,7 +3,7 @@ import { debounce } from 'lodash';
 import React, { useCallback } from 'react';
 import { SearchInput, Select } from '../../elements';
 import { Option } from '../../elements/Select/Select';
-import { PendingCount } from '../../PendingCount/PendingCount';
+import { UnlinkedRS } from '../../UnlinkedRS/UnlinkedRS';
 import './style.scss';
 
 const SEARCH_DEBOUNCE_TIME = 250; // 250ms
@@ -74,7 +74,7 @@ export const TableHeaderRequisitionSlip = ({
 					)}
 				</div>
 
-				<PendingCount value={pending} />
+				<UnlinkedRS value={0} />
 			</div>
 		</div>
 	);

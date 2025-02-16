@@ -5,7 +5,7 @@ import { debounce } from 'lodash';
 import React, { ReactNode, useCallback } from 'react';
 import { SearchInput, Select } from '../../elements';
 import { Option } from '../../elements/Select/Select';
-import { PendingCount } from '../../PendingCount/PendingCount';
+import { UnlinkedRS } from '../../UnlinkedRS/UnlinkedRS';
 import './style.scss';
 
 const SEARCH_DEBOUNCE_TIME_MS = 250;
@@ -85,7 +85,7 @@ export const TableHeader = ({
 				</div>
 
 				<div className="pending-button">
-					{pending >= 0 && <PendingCount value={pending} />}
+					{pending >= 0 && <UnlinkedRS value={pending} />}
 
 					{buttons}
 

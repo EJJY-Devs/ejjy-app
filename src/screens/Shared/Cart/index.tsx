@@ -207,7 +207,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 					<CreateInventoryTransferModal
 						isLoading={isLoading}
 						type={type}
-						onClose={onClose}
+						onClose={() => setIsCreateInventoryTransferModalVisible(false)}
 						onSubmit={handleModalSubmit}
 					/>
 				)}
@@ -215,7 +215,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 				{isCreateRequisitionSlipVisible && (
 					<CreateRequisitionSlipModal
 						isLoading={isLoading}
-						onClose={onClose}
+						onClose={() => setIsCreateRequisitionSlipVisible(false)}
 						onSubmit={handleModalSubmit}
 					/>
 				)}

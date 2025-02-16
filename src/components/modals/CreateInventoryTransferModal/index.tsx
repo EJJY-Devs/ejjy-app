@@ -53,7 +53,7 @@ export const CreateInventoryTransferModal = ({
 		type === 'Delivery Receipt'
 			? Yup.object().shape({
 					encodedById: Yup.number().nullable().required().label('Encoder'),
-					overallRemarks: Yup.string().label('Remarks').trim(),
+					overallRemarks: Yup.string().nullable().label('Remarks').trim(),
 					customerName: Yup.string().required().label('Customer Name').trim(),
 					customerAddress: Yup.string()
 						.required()
@@ -90,7 +90,6 @@ export const CreateInventoryTransferModal = ({
 			open
 			onCancel={() => {
 				onClose();
-				resetProducts();
 			}}
 		>
 			<Formik

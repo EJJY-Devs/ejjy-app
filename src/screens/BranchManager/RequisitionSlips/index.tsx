@@ -18,11 +18,11 @@ import {
 import { useQueryParams, useRequisitionSlips } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { convertIntoArray, formatDateTime, getLocalBranchId } from 'utils';
+import { convertIntoArray, formatDateTime } from 'utils';
 
 const columns = [
 	{ title: 'ID', dataIndex: 'id' },
-	{ title: 'DateTime', dataIndex: 'datetimeCreated' },
+	{ title: 'Date & Time', dataIndex: 'datetimeCreated' },
 	{ title: 'Branch', dataIndex: 'branch' },
 	{ title: 'Status', dataIndex: 'status' },
 	{ title: 'Remarks', dataIndex: 'remarks' },
@@ -42,7 +42,6 @@ export const RequisitionSlips = () => {
 	} = useRequisitionSlips({
 		params: {
 			...params,
-			branchId: getLocalBranchId(),
 			status: params.status === ALL_OPTION_KEY ? null : params.status,
 		},
 	});
@@ -50,10 +49,7 @@ export const RequisitionSlips = () => {
 	// METHODS
 	useEffect(() => {
 		const formattedProducts = requisitionSlips.map((requisitionSlip) => {
-			const { id, action: prAction, branch } = requisitionSlip;
-
-			const { datetime_created } = prAction;
-			const dateTime = formatDateTime(datetime_created);
+			const { id, branch, datetime_created } = requisitionSlip;
 
 			return {
 				key: id,
@@ -63,7 +59,7 @@ export const RequisitionSlips = () => {
 					</Link>
 				),
 				branch: branch?.name || EMPTY_CELL,
-				datetimeCreated: dateTime,
+				datetimeCreated: formatDateTime(datetime_created),
 				requestor: getRequestor(requisitionSlip),
 				status: EMPTY_CELL,
 				remarks: EMPTY_CELL,
@@ -76,7 +72,7 @@ export const RequisitionSlips = () => {
 	return (
 		<>
 			<Content title="Requisition Slips">
-				<Box>
+				<Box className="px-6">
 					<div className="pa-6 d-flex justify-end">
 						<Space>
 							<Button
@@ -138,8 +134,8 @@ const Filter = () => {
 	const { params, setQueryParams } = useQueryParams();
 
 	return (
-		<Row className="mb-4 px-6" gutter={[16, 16]}>
-			<Col lg={12} span={24}>
+		<Row className="mb-4" gutter={[16, 16]}>
+			<Col lg={5} span={24}>
 				<Label label="Status" spacing />
 				<Select
 					className="w-100"

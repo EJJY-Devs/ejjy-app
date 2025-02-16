@@ -56,7 +56,6 @@ export const CreateRequisitionSlipModal = ({
 			open
 			onCancel={() => {
 				onClose();
-				resetProducts();
 			}}
 		>
 			<Formik

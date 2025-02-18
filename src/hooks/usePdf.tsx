@@ -23,7 +23,7 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 		pdf.setProperties({ title: pdfTitle });
 
 		const dataHtml = print?.(data?.printData);
-		setHtmlPdf(dataHtml);
+		setHtmlPdf(`<div style="width: 380px;">${dataHtml}</div>`);
 
 		if (image) {
 			const img = new Image();
@@ -52,7 +52,7 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 		pdf.setProperties({ title: pdfTitle });
 
 		const dataHtml = print?.(data?.printData);
-		setHtmlPdf(dataHtml);
+		setHtmlPdf(`<div style="width: 380px;">${dataHtml}</div>`);
 
 		if (image) {
 			const img = new Image();

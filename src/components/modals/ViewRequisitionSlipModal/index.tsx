@@ -8,7 +8,7 @@ import {
 	printRequisitionSlip,
 	formatRequisitionSlipId,
 } from 'ejjy-global';
-import { usePdf, useSiteSettings } from 'hooks';
+import { useSiteSettings, usePdf } from 'hooks';
 import React from 'react';
 import { useUserStore } from 'stores';
 import { formatDateTime, formatQuantity } from 'utils';

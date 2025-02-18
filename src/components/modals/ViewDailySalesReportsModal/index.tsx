@@ -36,9 +36,6 @@ interface Props {
 	onClose: () => void;
 }
 
-// TODO: We only used machine server URL because this was not added to the syncing yet.
-const MACHINE_SERVER_URL = 'http://localhost:8005/v1';
-
 export const ViewDailySalesReportsModal = ({
 	branchMachine,
 	onClose,
@@ -69,7 +66,7 @@ export const ViewDailySalesReportsModal = ({
 			branchMachineName: branchMachine.name,
 			timeRange: params[TIME_RANGE_PARAM_KEY] as string,
 		},
-		serviceOptions: { baseURL: MACHINE_SERVER_URL },
+		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
 
 	// METHODS

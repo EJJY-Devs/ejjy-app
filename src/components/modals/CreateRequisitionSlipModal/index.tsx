@@ -1,10 +1,9 @@
-import { Button, Col, Input, Modal, Row, Select } from 'antd';
+import { Button, Col, Modal, Row, Select } from 'antd';
 import { ErrorMessage, Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import React from 'react';
-import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
-import shallow from 'zustand/shallow';
+
 import { MAX_PAGE_SIZE } from 'global';
 import { getId, getLocalApiUrl, isStandAlone } from 'utils';
 import { FieldError, Label } from '../../elements';
@@ -21,8 +20,8 @@ const formDetails = {
 		approvedBy: null,
 	},
 	schema: Yup.object().shape({
-		preparedBy: Yup.number().nullable().required().label('Prepared By'),
-		approvedBy: Yup.number().nullable().required().label('Approved By'),
+		preparedBy: Yup.number().nullable().required().label('Encoder'),
+		approvedBy: Yup.number().nullable().required().label('Requestor'),
 	}),
 };
 
@@ -39,13 +38,6 @@ export const CreateRequisitionSlipModal = ({
 			type: isStandAlone() ? ServiceType.ONLINE : ServiceType.OFFLINE,
 		},
 	});
-
-	const { resetProducts } = useBoundStore(
-		(state: any) => ({
-			resetProducts: state.resetProducts,
-		}),
-		shallow,
-	);
 
 	return (
 		<Modal
@@ -70,7 +62,7 @@ export const CreateRequisitionSlipModal = ({
 					<Form>
 						<Row gutter={[16, 16]}>
 							<Col span={24}>
-								<Label id="preparedBy" label="Prepared By" spacing />
+								<Label id="preparedBy" label="Encoder" spacing />
 								<Select
 									className="w-100"
 									disabled={isFetchingUsers}
@@ -98,7 +90,7 @@ export const CreateRequisitionSlipModal = ({
 							</Col>
 
 							<Col span={24}>
-								<Label id="approvedBy" label="Approved By" spacing />
+								<Label id="approvedBy" label="Requestor" spacing />
 								<Select
 									className="w-100"
 									disabled={isFetchingUsers}

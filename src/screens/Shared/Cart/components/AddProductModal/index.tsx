@@ -27,7 +27,7 @@ export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 			quantity: formData.quantity,
 		});
 
-		message.success(`${product.name} was added successfully.`);
+		message.success(`${product.product.name} was added successfully.`);
 		onClose();
 		onSuccess();
 	};

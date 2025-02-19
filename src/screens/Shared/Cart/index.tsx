@@ -67,8 +67,8 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		if (products.length > 0) {
 			try {
 				const mappedProducts = products.map(
-					({ id, quantity, cost_per_piece }) => ({
-						product_id: id,
+					({ product, quantity, cost_per_piece }) => ({
+						product_id: product.id,
 						quantity,
 						cost_per_piece,
 					}),
@@ -88,8 +88,8 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		if (products.length > 0) {
 			try {
 				const mappedProducts = products.map(
-					({ id, quantity, price_per_piece }) => ({
-						product_id: id,
+					({ product, quantity, price_per_piece }) => ({
+						product_id: product.id,
 						quantity_returned: quantity,
 						price_per_piece,
 					}),
@@ -107,13 +107,13 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	};
 
 	const handleCreateRequisitionSlip = async (formData) => {
-		console.log(branchId);
 		if (products.length > 0) {
 			try {
-				const mappedProducts = products.map(({ key, quantity }) => ({
-					key,
+				const mappedProducts = products.map(({ product, quantity }) => ({
+					key: product.key,
 					quantity,
 				}));
+
 				await createRequisitionSlip({
 					...formData,
 					products: mappedProducts,

@@ -3,11 +3,7 @@ import { Button, Descriptions, Modal, Table } from 'antd';
 import { PdfButtons, ReceiptHeader } from 'components/Printing';
 import dayjs from 'dayjs';
 import { ColumnsType } from 'antd/lib/table';
-import {
-	getFullName,
-	printRequisitionSlip,
-	formatRequisitionSlipId,
-} from 'ejjy-global';
+import { getFullName, printRequisitionSlip } from 'ejjy-global';
 import { useSiteSettings, usePdf } from 'hooks';
 import React from 'react';
 import { useUserStore } from 'stores';
@@ -113,7 +109,7 @@ export const ViewRequisitionSlipModal = ({
 					{requisitionSlip.branch?.name}
 				</Descriptions.Item>
 				<Descriptions.Item label="ID">
-					{formatRequisitionSlipId(requisitionSlip.id)}
+					{requisitionSlip?.reference_number}
 				</Descriptions.Item>
 			</Descriptions>
 

@@ -141,10 +141,11 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 			console.error('Submission failed:', error);
 			return; // Stop execution if there's an error
 		} finally {
-			resetProducts();
-			onClose();
 			setLoading(false);
 		}
+
+		resetProducts();
+		onClose();
 
 		const { setRefetchData } = useBoundStore.getState();
 		setRefetchData(); // Toggle the refetch flag

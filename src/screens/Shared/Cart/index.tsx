@@ -126,19 +126,25 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		}
 	};
 
-	const handleModalSubmit = (formData) => {
+	const handleModalSubmit = async (formData) => {
 		setLoading(true);
 
-		if (type === 'Delivery Receipt') {
-			handleCreateDeliveryReceipt(formData);
-		} else if (type === 'Receiving Report') {
-			handleCreateReceivingVoucher(formData);
-		} else if (type === 'Requisition Slip') {
-			handleCreateRequisitionSlip(formData);
+		try {
+			if (type === 'Delivery Receipt') {
+				await handleCreateDeliveryReceipt(formData);
+			} else if (type === 'Receiving Report') {
+				await handleCreateReceivingVoucher(formData);
+			} else if (type === 'Requisition Slip') {
+				await handleCreateRequisitionSlip(formData);
+			}
+		} catch (error) {
+			console.error('Submission failed:', error);
+			return; // Stop execution if there's an error
+		} finally {
+			resetProducts();
+			onClose();
+			setLoading(false);
 		}
-
-		resetProducts();
-		onClose();
 
 		const { setRefetchData } = useBoundStore.getState();
 		setRefetchData(); // Toggle the refetch flag

@@ -65,64 +65,67 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 
 	const handleCreateReceivingVoucher = async (formData) => {
 		if (products.length > 0) {
-			try {
-				const mappedProducts = products.map(
-					({ product, quantity, cost_per_piece }) => ({
-						product_id: product.id,
-						quantity,
-						cost_per_piece,
-					}),
-				);
-				await createReceivingVoucher({
-					...formData,
-					products: mappedProducts,
-				});
-				message.success('Receiving Report was created successfully');
-			} catch (error) {
-				message.error('Failed to create Receiving Report');
+			const mappedProducts = products.map(
+				({ product, quantity, cost_per_piece }) => ({
+					product_id: product.id,
+					quantity,
+					cost_per_piece,
+				}),
+			);
+			const response = await createReceivingVoucher({
+				...formData,
+				products: mappedProducts,
+			});
+
+			if (!response) {
+				throw Error;
 			}
+
+			message.success('Receiving Report was created successfully');
 		}
 	};
 
 	const handleCreateDeliveryReceipt = async (formData) => {
 		if (products.length > 0) {
-			try {
-				const mappedProducts = products.map(
-					({ product, quantity, price_per_piece }) => ({
-						product_id: product.id,
-						quantity_returned: quantity,
-						price_per_piece,
-					}),
-				);
-				await createBackOrder({
-					...formData,
-					products: mappedProducts,
-					type: backOrderTypes.FOR_RETURN,
-				});
-				message.success('Delivery Receipt was created successfully');
-			} catch (error) {
-				message.error('Failed to create Delivery Receipt');
+			const mappedProducts = products.map(
+				({ product, quantity, price_per_piece }) => ({
+					product_id: product.id,
+					quantity_returned: quantity,
+					price_per_piece,
+				}),
+			);
+			const response = await createBackOrder({
+				...formData,
+				products: mappedProducts,
+				type: backOrderTypes.FOR_RETURN,
+			});
+
+			if (!response) {
+				throw Error;
 			}
+
+			message.success('Delivery Receipt was created successfully');
 		}
 	};
 
 	const handleCreateRequisitionSlip = async (formData) => {
 		if (products.length > 0) {
-			try {
-				const mappedProducts = products.map(({ product, quantity }) => ({
-					key: product.key,
-					quantity,
-				}));
+			const mappedProducts = products.map(({ product, quantity }) => ({
+				key: product.key,
+				quantity,
+			}));
 
-				await createRequisitionSlip({
-					...formData,
-					products: mappedProducts,
-					branchId,
-				});
-				message.success('Requisition Slip was created successfully');
-			} catch (error) {
-				message.error('Failed to create Requisition Slip');
+			const response = await createRequisitionSlip({
+				...formData,
+				products: mappedProducts,
+				branchId,
+			});
+
+			if (!response) {
+				throw Error;
 			}
+
+			message.success('Requisition Slip was created successfully');
 		}
 	};
 
@@ -138,7 +141,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 				await handleCreateRequisitionSlip(formData);
 			}
 		} catch (error) {
-			console.error('Submission failed:', error);
+			message.error(`Failed to create ${type}`);
 			return; // Stop execution if there's an error
 		} finally {
 			setLoading(false);

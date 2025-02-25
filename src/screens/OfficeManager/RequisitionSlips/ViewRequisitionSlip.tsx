@@ -3,7 +3,6 @@ import { Content } from 'components';
 import { useRequisitionSlipById } from 'hooks/useRequisitionSlips';
 import React from 'react';
 import { useUserStore } from 'stores';
-import { formatRequisitionSlipId } from 'ejjy-global';
 import { OrderSlips } from './components/OrderSlips/OrderSlips';
 import { RequestedProducts } from './components/RequestedProducts';
 import './style.scss';
@@ -27,7 +26,7 @@ export const ViewRequisitionSlip = ({ match }: Props) => {
 	return (
 		<Content
 			className="ViewRequisitionSlip"
-			rightTitle={`#${formatRequisitionSlipId(requisitionSlip?.id)}`}
+			rightTitle={`#${requisitionSlip?.reference_number}`}
 			title="View Purchase Request"
 		>
 			<Spin spinning={isLoading} tip="Fetching requisition slip...">

@@ -1,12 +1,7 @@
 import { Col, Row, Select, Table } from 'antd';
 import { Content, RequestErrors, TableHeaderRequisitionSlip } from 'components';
 import { Box, Label } from 'components/elements';
-import {
-	filterOption,
-	useBranches,
-	ServiceType,
-	formatRequisitionSlipId,
-} from 'ejjy-global';
+import { filterOption, useBranches, ServiceType } from 'ejjy-global';
 import {
 	ALL_OPTION_KEY,
 	DEFAULT_PAGE,
@@ -55,13 +50,18 @@ export const RequisitionSlips = () => {
 	// METHODS
 	useEffect(() => {
 		const formattedProducts = requisitionSlips.map((requisitionSlip) => {
-			const { id, branch, datetime_created } = requisitionSlip;
+			const {
+				id,
+				branch,
+				datetime_created,
+				reference_number,
+			} = requisitionSlip;
 
 			return {
 				key: id,
 				id: (
 					<Link to={`/office-manager/requisition-slips/${id}`}>
-						{formatRequisitionSlipId(id)}
+						{reference_number}
 					</Link>
 				),
 				branch: branch?.name || EMPTY_CELL,

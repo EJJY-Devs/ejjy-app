@@ -2,7 +2,7 @@
 import { Button, Col, Row, Select, Space, Table } from 'antd';
 import { Content, RequestErrors } from 'components';
 import { Box, Label } from 'components/elements';
-import { filterOption, formatRequisitionSlipId } from 'ejjy-global';
+import { filterOption } from 'ejjy-global';
 import { Cart } from 'screens/Shared/Cart';
 import {
 	ALL_OPTION_KEY,
@@ -45,13 +45,18 @@ export const RequisitionSlips = () => {
 	// METHODS
 	useEffect(() => {
 		const formattedProducts = requisitionSlips.map((requisitionSlip) => {
-			const { id, branch, datetime_created } = requisitionSlip;
+			const {
+				id,
+				branch,
+				datetime_created,
+				reference_number,
+			} = requisitionSlip;
 
 			return {
 				key: id,
 				id: (
 					<Link to={`/branch-manager/requisition-slips/${id}`}>
-						{formatRequisitionSlipId(id)}
+						{reference_number}
 					</Link>
 				),
 				branch: branch?.name || EMPTY_CELL,

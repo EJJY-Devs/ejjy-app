@@ -5,7 +5,7 @@ import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import React from 'react';
 
 import { MAX_PAGE_SIZE } from 'global';
-import { getId, getLocalApiUrl, isStandAlone } from 'utils';
+import { getLocalApiUrl, isStandAlone } from 'utils';
 import { FieldError, Label } from '../../elements';
 
 type ModalProps = {
@@ -75,7 +75,7 @@ export const CreateRequisitionSlipModal = ({
 									}}
 								>
 									{usersData?.list.map((user) => {
-										const id = getId(user);
+										const id = user?.id;
 										return id ? (
 											<Select.Option key={id} value={id}>
 												{getFullName(user)}
@@ -103,7 +103,7 @@ export const CreateRequisitionSlipModal = ({
 									}}
 								>
 									{usersData?.list.map((user) => {
-										const id = getId(user);
+										const id = user?.id;
 										return id ? (
 											<Select.Option key={id} value={id}>
 												{getFullName(user)}

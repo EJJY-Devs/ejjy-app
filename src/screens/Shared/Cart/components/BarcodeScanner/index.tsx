@@ -42,19 +42,23 @@ const Component = (props, ref) => {
 		options: {
 			enabled: scannedBarcode !== null,
 			onSuccess: (data: any) => {
-				const scannedProduct = data.branchProducts?.[0]?.product;
+				const scannedProduct = data[0]?.product;
 
 				if (branchProducts) {
 					const foundProduct = products.find(
-						(product) => product.barcode === scannedProduct.barcode,
+						(product) => product.barcode === scannedProduct?.barcode,
 					);
 
 					if (foundProduct) {
-						foundProduct['quantity'] += 1;
-						editProduct({ key: foundProduct.key, product: foundProduct });
+						editProduct({
+							key: foundProduct.key,
+							product: {
+								...foundProduct,
+								quantity: foundProduct.quantity + 1, // ✅ Correct way to update
+							},
+						});
 					} else {
-						scannedProduct['quantity'] = 1;
-						addProduct(scannedProduct);
+						addProduct({ ...scannedProduct, quantity: 1 });
 					}
 
 					setScannedBarcode(null);

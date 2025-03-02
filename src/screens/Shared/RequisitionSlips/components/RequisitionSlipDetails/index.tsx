@@ -44,7 +44,7 @@ export const RequisitionSlipDetails = ({ requisitionSlip, type }: Props) => {
 				</Descriptions.Item>
 
 				<Descriptions.Item label="Requestor">
-					{getFullName(requisitionSlip.prepared_by) || EMPTY_CELL}
+					{getFullName(requisitionSlip.approved_by) || EMPTY_CELL}
 				</Descriptions.Item>
 
 				{type === requisitionSlipDetailsType.SINGLE_VIEW && (

@@ -103,7 +103,7 @@ export const ViewRequisitionSlipModal = ({
 					{formatDateTime(requisitionSlip.datetime_created)}
 				</Descriptions.Item>
 				<Descriptions.Item label="Requestor">
-					{getFullName(requisitionSlip.prepared_by)}
+					{getFullName(requisitionSlip.approved_by)}
 				</Descriptions.Item>
 				<Descriptions.Item label="Requesting Branch">
 					{requisitionSlip.branch?.name}

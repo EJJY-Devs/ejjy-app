@@ -38,7 +38,7 @@ export const CreateStockOutModal = ({
 		params: { pageSize: MAX_PAGE_SIZE },
 		serviceOptions: {
 			baseURL: getLocalApiUrl(),
-			type: isStandAlone() ? ServiceType.ONLINE : ServiceType.OFFLINE,
+			type: ServiceType.ONLINE,
 		},
 	});
 

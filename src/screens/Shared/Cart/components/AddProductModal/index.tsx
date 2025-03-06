@@ -26,7 +26,9 @@ export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 
 	// METHODS
 	const handleSubmit = (formData) => {
-		const existingProduct = products.find((p) => p.key === product.key);
+		const existingProduct = products.find(
+			(p) => p?.product?.key === product?.product?.key,
+		);
 
 		if (existingProduct) {
 			editProduct({

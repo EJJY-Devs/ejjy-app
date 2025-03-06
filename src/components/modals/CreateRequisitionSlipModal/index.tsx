@@ -5,7 +5,7 @@ import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import React from 'react';
 
 import { MAX_PAGE_SIZE } from 'global';
-import { getLocalApiUrl, isStandAlone } from 'utils';
+import { getLocalApiUrl } from 'utils';
 import { FieldError, Label } from '../../elements';
 
 type ModalProps = {

@@ -2,7 +2,6 @@ import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	request,
-	serviceTypes,
 	timeRangeTypes,
 } from 'global';
 import { getBaseUrl, wrapServiceWithCatch } from 'hooks/helper';
@@ -12,7 +11,6 @@ import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { BranchProductsService } from 'services';
 import {
 	getLocalApiUrl,
-	isStandAlone,
 	modifiedCallback,
 	modifiedExtraCallback,
 	onCallback,

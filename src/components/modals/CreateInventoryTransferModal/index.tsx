@@ -3,10 +3,8 @@ import { ErrorMessage, Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import React from 'react';
-import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
-import shallow from 'zustand/shallow';
 import { MAX_PAGE_SIZE } from 'global';
-import { getId, getLocalApiUrl, isStandAlone } from 'utils';
+import { getId, getLocalApiUrl } from 'utils';
 import { FieldError, Label } from '../../elements';
 
 type ModalProps = {
@@ -73,13 +71,6 @@ export const CreateInventoryTransferModal = ({
 					customerTin: '',
 			  }
 			: formDetails.defaultValues;
-
-	const { resetProducts } = useBoundStore(
-		(state: any) => ({
-			resetProducts: state.resetProducts,
-		}),
-		shallow,
-	);
 
 	return (
 		<Modal

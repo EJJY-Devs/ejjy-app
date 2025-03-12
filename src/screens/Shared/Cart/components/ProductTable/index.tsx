@@ -84,16 +84,13 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 			} = branchProduct;
 
 			const {
-				barcode = null,
-				textcode = null,
-				print_details = null,
-				cost_per_piece = 0,
-				price_per_piece = 0,
-				key = null,
+				barcode,
+				textcode,
+				print_details,
+				cost_per_piece,
+				price_per_piece,
+				key,
 			} = product;
-
-			console.log('branchProduct:', branchProduct);
-			console.log('product:', product);
 
 			let unitPrice = price_per_piece; // Default
 			let totalPrice = unitPrice * quantity; // Default
@@ -117,7 +114,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 						type="primary"
 						danger
 						ghost
-						onClick={() => showRemoveProductConfirmation(product)}
+						onClick={() => showRemoveProductConfirmation(branchProduct)}
 					/>
 				</Tooltip>,
 
@@ -148,7 +145,11 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 				<Tooltip
 					key={`tooltip-unit-price-${key}`}
 					placement="top"
-					title={`Unit Price: ${formatInPeso(unitPrice)}`}
+					title={
+						type === 'Requisition Slip'
+							? `Balance: ${balance}`
+							: `Unit Price: ${formatInPeso(unitPrice)}`
+					}
 				>
 					{type === 'Requisition Slip' ? balance : formatInPeso(unitPrice)}
 				</Tooltip>,
@@ -156,7 +157,11 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 				<Tooltip
 					key={`tooltip-total-price-${key}`}
 					placement="top"
-					title={`Total Price: ${formatInPeso(totalPrice)}`}
+					title={
+						type === 'Requisition Slip'
+							? `Status: ${status}`
+							: `Total Amount: ${formatInPeso(totalPrice)}`
+					}
 				>
 					{type === 'Requisition Slip' ? status : formatInPeso(totalPrice)}
 				</Tooltip>,
@@ -176,25 +181,34 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		}
 	}, [products, activeIndex]);
 
-	const showRemoveProductConfirmation = (product) => {
+	const showRemoveProductConfirmation = (branchProduct) => {
 		Modal.confirm({
 			className: 'EJJYModal Modal__hasFooter',
 			title: 'Delete Confirmation',
 			icon: <ExclamationCircleOutlined />,
-			content: `Are you sure you want to delete ${product.name}?`,
+			content: `Are you sure you want to delete ${branchProduct?.product?.name}?`,
 			okText: 'Delete',
 			cancelText: 'Cancel',
 			onOk: () => {
-				const newProducts = products.filter(({ key }) => key !== product.key);
-
-				deleteProduct(product.key);
-
-				const currentPageProducts = newProducts.slice(
-					(pageNumber - 1) * PRODUCT_LENGTH_PER_PAGE,
-					pageNumber * PRODUCT_LENGTH_PER_PAGE,
+				const newProducts = (products?.product ?? []).filter(
+					({ key }) => key !== branchProduct?.product?.key,
 				);
 
-				if (currentPageProducts.length === 0) {
+				deleteProduct(branchProduct?.product?.key);
+
+				const totalPages = Math.ceil(
+					newProducts.length / PRODUCT_LENGTH_PER_PAGE,
+				);
+				const newPageNumber = Math.min(pageNumber, totalPages) || 1;
+
+				// Get the updated current page products
+				const currentPageProducts = newProducts.slice(
+					(newPageNumber - 1) * PRODUCT_LENGTH_PER_PAGE,
+					newPageNumber * PRODUCT_LENGTH_PER_PAGE,
+				);
+
+				// If the current page is empty and there's a previous page, go back
+				if (currentPageProducts.length === 0 && newPageNumber < pageNumber) {
 					prevPage();
 				}
 			},

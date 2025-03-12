@@ -32,7 +32,7 @@ export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 
 		if (existingProduct) {
 			editProduct({
-				key: product.key,
+				key: product.product.key,
 				product: {
 					...existingProduct,
 					quantity: existingProduct.quantity + formData.quantity, // Increase quantity

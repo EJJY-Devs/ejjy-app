@@ -23,7 +23,7 @@ export const EditProductModal = ({ product, onClose }: Props) => {
 	// METHODS
 	const handleSubmit = (formData) => {
 		editProduct({
-			key: product.key,
+			key: product.product.key,
 			product: {
 				...product,
 				quantity: formData.quantity,

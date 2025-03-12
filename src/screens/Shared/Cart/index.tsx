@@ -182,11 +182,6 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		}
 	};
 
-	// // Modal onClose function
-	// const handleCloseModal = () => {
-	// 	setIsCreateInventoryTransferModalVisible(false);
-	// };
-
 	return (
 		<Modal
 			className="CartModal"

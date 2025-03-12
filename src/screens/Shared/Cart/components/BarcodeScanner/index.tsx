@@ -32,7 +32,6 @@ const Component = (props, ref) => {
 
 	// CUSTOM HOOKS
 	const {
-		data: { branchProducts },
 		isFetching: isFetchingBranchProducts,
 		error: branchProductsError,
 	} = useBranchProducts({
@@ -42,19 +41,19 @@ const Component = (props, ref) => {
 		options: {
 			enabled: scannedBarcode !== null,
 			onSuccess: (data: any) => {
-				const scannedProduct = data[0]?.product;
+				const scannedProduct = data.branchProducts[0];
 
-				if (branchProducts) {
-					const foundProduct = products.find(
-						(product) => product.barcode === scannedProduct?.barcode,
-					);
+				if (products && scannedProduct) {
+					const foundProduct = products.find((product) => {
+						return product.product.barcode === scannedProduct.product.barcode;
+					});
 
 					if (foundProduct) {
 						editProduct({
-							key: foundProduct.key,
+							key: foundProduct.product.key,
 							product: {
 								...foundProduct,
-								quantity: foundProduct.quantity + 1, // ✅ Correct way to update
+								quantity: foundProduct.quantity + 1,
 							},
 						});
 					} else {

@@ -84,13 +84,16 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 			} = branchProduct;
 
 			const {
-				barcode,
-				textcode,
-				print_details,
-				cost_per_piece,
-				price_per_piece,
-				key,
+				barcode = null,
+				textcode = null,
+				print_details = null,
+				cost_per_piece = 0,
+				price_per_piece = 0,
+				key = null,
 			} = product;
+
+			console.log('branchProduct:', branchProduct);
+			console.log('product:', product);
 
 			let unitPrice = price_per_piece; // Default
 			let totalPrice = unitPrice * quantity; // Default

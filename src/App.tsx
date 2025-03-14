@@ -18,7 +18,7 @@ import {
 	useInitializeIds,
 	useNetwork,
 } from 'hooks';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Redirect, Switch, useHistory } from 'react-router-dom';
 import Admin from 'screens/Admin';
@@ -76,6 +76,48 @@ const App = () => {
 		},
 	});
 
+	// This is to get the ids in the local storage without the need to refresh the app
+	const [storageData, setStorageData] = useState(() => ({
+		productIds: getProductIds() || null,
+		branchProductIds: getBranchProductIds() || null,
+		branchProductBalanceUpdateLogsIds:
+			getBranchProductBalanceUpdateLogsIds() || null,
+	}));
+
+	useEffect(() => {
+		const updateStorageData = () => {
+			setStorageData({
+				productIds: getProductIds() || null,
+				branchProductIds: getBranchProductIds() || null,
+				branchProductBalanceUpdateLogsIds:
+					getBranchProductBalanceUpdateLogsIds() || null,
+			});
+		};
+
+		// Listen for storage changes (across tabs)
+		window.addEventListener('storage', updateStorageData);
+
+		// Override localStorage.setItem to detect updates in the same tab
+		const originalSetItem = localStorage.setItem;
+		localStorage.setItem = function setItemOverride(...args) {
+			originalSetItem.apply(this, args);
+			updateStorageData();
+		};
+
+		// Override localStorage.removeItem to detect deletions in the same tab
+		const originalRemoveItem = localStorage.removeItem;
+		localStorage.removeItem = function removeItemOverride(key) {
+			originalRemoveItem.call(this, key);
+			updateStorageData();
+		};
+
+		return () => {
+			window.removeEventListener('storage', updateStorageData);
+			localStorage.setItem = originalSetItem;
+			localStorage.removeItem = originalRemoveItem;
+		};
+	}, []);
+
 	useInitializeData({
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
@@ -85,20 +127,20 @@ const App = () => {
 				getAppType() === appTypes.HEAD_OFFICE
 					? branches.map(({ id }) => id)
 					: undefined,
-			...(getProductIds() && {
-				productIds: getProductIds().split(',').slice(0, 100).join(','), // Limit to 100 and join back into a string
+			...(storageData.productIds && {
+				productIds: storageData.productIds.split(',').slice(0, 100).join(','), // Limit to 100
 			}),
-			...(getBranchProductIds() && {
-				branchProductIds: getBranchProductIds()
+			...(storageData.branchProductIds && {
+				branchProductIds: storageData.branchProductIds
 					.split(',')
 					.slice(0, 100)
-					.join(','), // Limit to 100 and join back into a string
+					.join(','), // Limit to 100
 			}),
-			...(getBranchProductBalanceUpdateLogsIds() && {
-				branchProductBalanceUpdateLogsIds: getBranchProductBalanceUpdateLogsIds()
+			...(storageData.branchProductBalanceUpdateLogsIds && {
+				branchProductBalanceUpdateLogsIds: storageData.branchProductBalanceUpdateLogsIds
 					.split(',')
 					.slice(0, 100)
-					.join(','), // Limit to 100 and join back into a string
+					.join(','), // Limit to 100
 			}),
 		},
 		options: {
@@ -111,18 +153,34 @@ const App = () => {
 	});
 
 	// THIS IS FOR BULK-INITIALIZING LARGE SCALE DATA
+	const [branchId, setBranchId] = useState(null);
+
+	// Effect to wait for branchId to be available
+	useEffect(() => {
+		if (getAppType() === appTypes.BACK_OFFICE && isFetchingBranchesSuccess) {
+			const id = Number(getOnlineBranchId()); // Ensure it's a number
+			const branchExists = branches?.some((branch) => Number(branch.id) === id); // Compare numbers
+
+			if (id && branchExists) {
+				setBranchId(id); // ✅ Only set branchId if it exists in the branches list
+			} else {
+				setBranchId(null); // ❌ Prevent invalid branchId
+			}
+		}
+	}, [isFetchingBranchesSuccess, branches]);
+
 	useInitializeIds({
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
-			branchId:
-				getAppType() === appTypes.BACK_OFFICE ? getOnlineBranchId() : undefined,
+			...(getAppType() === appTypes.BACK_OFFICE && branchId && { branchId }), // ✅ Only add branchId if it's needed and available
 		},
 		options: {
 			enabled:
 				isNetworkSuccess &&
 				isFetchingBranchesSuccess &&
 				!!getOnlineApiUrl() &&
-				!isStandAlone(),
+				!isStandAlone() &&
+				(getAppType() === appTypes.HEAD_OFFICE || branchId !== null), // ✅ Only enable if conditions are met
 		},
 	});
 

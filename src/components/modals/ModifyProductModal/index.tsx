@@ -4,7 +4,7 @@ import { MAX_PAGE_SIZE } from 'global';
 import { usePointSystemTags, useProductCreate, useProductEdit } from 'hooks';
 import React from 'react';
 import { useUserStore } from 'stores';
-import { convertIntoArray, getId } from 'utils';
+import { convertIntoArray } from 'utils';
 import { ModifyProductForm } from './ModifyProductForm';
 
 interface Props {
@@ -37,14 +37,14 @@ export const ModifyProductModal = ({ product, onClose }: Props) => {
 		if (product) {
 			await editProduct({
 				...formData,
-				id: getId(product),
-				actingUserId: getId(user),
+				id: product.id,
+				actingUserId: user.id,
 			});
 			message.success('Product was edited successfully');
 		} else {
 			await createProduct({
 				...formData,
-				actingUserId: getId(user),
+				actingUserId: user.id,
 			});
 			message.success('Product was created successfully');
 		}

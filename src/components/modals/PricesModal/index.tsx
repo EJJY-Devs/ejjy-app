@@ -35,18 +35,18 @@ interface Props {
 export const PricesModal = ({ product, onClose }: Props) => {
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
+	const appType = getAppType();
+
 	const {
 		data: { branchProducts },
 		isFetching: isFetchingBranchProducts,
 		error: branchProductError,
 	} = useBranchProducts({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: undefined,
-			productIds: isUserFromBranch(user.user_type)
-				? product.product.id
-				: product.id,
+			branchId:
+				appType === appTypes.BACK_OFFICE ? getLocalBranchId() : undefined,
+			productIds:
+				appType === appTypes.BACK_OFFICE ? product.product.id : product.id,
 			serviceType: serviceTypes.OFFLINE,
 		},
 		options: { enabled: product !== null },
@@ -94,8 +94,6 @@ export const PricesModal = ({ product, onClose }: Props) => {
 				actingUserId: getId(user),
 			});
 		} else if (branchProductFormData.length > 0) {
-			const appType = getAppType();
-
 			await editBranchProductPriceCost({
 				actingUserId: appType === appTypes.BACK_OFFICE ? user.id : getId(user),
 				productId:

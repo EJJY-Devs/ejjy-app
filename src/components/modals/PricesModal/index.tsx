@@ -1,6 +1,6 @@
 import { message, Modal, Spin, Tabs } from 'antd';
 import { RequestErrors } from 'components';
-import { MAX_PAGE_SIZE, serviceTypes } from 'global';
+import { MAX_PAGE_SIZE, serviceTypes, appTypes } from 'global';
 import {
 	useBranches,
 	useBranchProductEditPriceCost,
@@ -12,6 +12,7 @@ import React from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
+	getAppType,
 	getGoogleApiUrl,
 	getId,
 	getLocalApiUrl,
@@ -93,15 +94,17 @@ export const PricesModal = ({ product, onClose }: Props) => {
 				actingUserId: getId(user),
 			});
 		} else if (branchProductFormData.length > 0) {
+			const appType = getAppType();
+
 			await editBranchProductPriceCost({
-				actingUserId: isUserFromBranch(user.user_type) ? user.id : getId(user),
-				productId: isUserFromBranch(user.user_type)
-					? product.id
-					: getId(product),
+				actingUserId: appType === appTypes.BACK_OFFICE ? user.id : getId(user),
+				productId:
+					appType === appTypes.BACK_OFFICE ? product.id : getId(product),
 				data: branchProductFormData,
-				serverUrl: isUserFromBranch(user.user_type)
-					? getLocalApiUrl()
-					: getGoogleApiUrl(),
+				serverUrl:
+					appType === appTypes.BACK_OFFICE
+						? getLocalApiUrl()
+						: getGoogleApiUrl(),
 			});
 		}
 

@@ -75,8 +75,12 @@ export const BranchSales = ({ branchId }: Props) => {
 		const newSummary = _.clone(summaryInitialValues);
 
 		const data = branchMachines.map((branchMachine) => {
-			newSummary.cashInvoice += Number(branchMachine.sales.cash_sales);
-			newSummary.chargeInvoice += Number(branchMachine.sales.credit_sales);
+			newSummary.cashInvoice += Number(
+				branchMachine.sales.total_cash_sales_payments,
+			);
+			newSummary.chargeInvoice += Number(
+				branchMachine.sales.total_charge_sales_payments,
+			);
 			newSummary.cashIn += Number(branchMachine.sales.cash_in);
 			newSummary.cashOut += Number(branchMachine.sales.cash_out);
 			newSummary.cashOnHand += Number(branchMachine.sales.cash_on_hand);
@@ -86,6 +90,8 @@ export const BranchSales = ({ branchId }: Props) => {
 				branchMachine.sales.total_payments_received,
 			);
 			newSummary.grossSales += Number(branchMachine.sales.gross_sales);
+
+			console.log(branchMachine.sales);
 
 			return {
 				key: branchMachine.id,
@@ -98,8 +104,12 @@ export const BranchSales = ({ branchId }: Props) => {
 				cashOut: formatInPeso(branchMachine.sales.cash_out),
 				cashCollection: formatInPeso(branchMachine.sales.cash_collection),
 				cashOnHand: formatInPeso(branchMachine.sales.cash_on_hand),
-				cashInvoice: formatInPeso(branchMachine.sales.cash_sales),
-				chargeInvoice: formatInPeso(branchMachine.sales.credit_sales),
+				cashInvoice: formatInPeso(
+					branchMachine.sales.total_cash_sales_payments,
+				),
+				chargeInvoice: formatInPeso(
+					branchMachine.sales.total_charge_sales_payments,
+				),
 				grossSales: formatInPeso(branchMachine.sales.gross_sales),
 				returns: formatInPeso(branchMachine.sales.returns),
 				voidedTransactions: formatInPeso(branchMachine.sales.voided_total),

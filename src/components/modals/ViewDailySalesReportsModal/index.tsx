@@ -6,7 +6,6 @@ import {
 	AuthorizationModal,
 	BranchMachine,
 	DailySales,
-	DATE_FORMAT,
 	formatDate,
 	useDailySales,
 	User,
@@ -16,7 +15,6 @@ import {
 import { Props as AuthorizationModalProps } from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
 import { useQueryParams, useSiteSettingsNew } from 'hooks';
-import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { convertIntoArray, getLocalApiUrl } from 'utils';
 

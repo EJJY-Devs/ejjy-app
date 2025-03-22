@@ -5,7 +5,6 @@ import {
 	useBranches,
 	useBranchPing,
 	useBranchProducts,
-	useGenerateReports,
 	useProductCheckCreateDaily,
 	useProductCheckCreateRandom,
 	useSalesTracker,
@@ -96,8 +95,6 @@ const BranchManager = () => {
 		params: { pageSize: MAX_PAGE_SIZE },
 		options: refetchOptions,
 	});
-
-	useGenerateReports();
 
 	useUploadData({
 		params: { isBackOffice: true },

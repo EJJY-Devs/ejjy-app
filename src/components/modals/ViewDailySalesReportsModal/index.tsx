@@ -64,21 +64,30 @@ export const ViewDailySalesReportsModal = ({
 			...params,
 			isWithDailySalesData: true,
 			branchMachineName: branchMachine.name,
-			timeRange: params[TIME_RANGE_PARAM_KEY] as string,
+			timeRange: (params[TIME_RANGE_PARAM_KEY] as string) || 'daily',
 		},
 		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
 
 	// METHODS
 	useEffect(() => {
-		const firstDate = moment().clone().startOf('month').format(DATE_FORMAT);
-		const lastDate = moment().clone().endOf('month').format(DATE_FORMAT);
+		// Set default time range to today if not set
+		if (!params[TIME_RANGE_PARAM_KEY]) {
+			setQueryParams(
+				{ [TIME_RANGE_PARAM_KEY]: 'daily' },
+				{ shouldResetPage: true },
+			);
+		}
+	}, [params, setQueryParams]);
 
+	// Reset time range to daily when modal is closed
+	const handleClose = () => {
 		setQueryParams(
-			{ [TIME_RANGE_PARAM_KEY]: [firstDate, lastDate].join(',') },
+			{ [TIME_RANGE_PARAM_KEY]: 'daily' },
 			{ shouldResetPage: true },
 		);
-	}, []);
+		onClose();
+	};
 
 	useEffect(() => {
 		if (dailySalesData?.list) {
@@ -116,13 +125,13 @@ export const ViewDailySalesReportsModal = ({
 	return (
 		<Modal
 			className="Modal__hasFooter"
-			footer={<Button onClick={onClose}>Close</Button>}
+			footer={<Button onClick={handleClose}>Close</Button>}
 			title="Daily Sales"
 			width={500}
 			centered
 			closable
 			open
-			onCancel={onClose}
+			onCancel={handleClose}
 		>
 			<Filter isLoading={isFetchingDailySales} />
 
@@ -168,11 +177,7 @@ export const ViewDailySalesReportsModal = ({
 	);
 };
 
-interface FilterProps {
-	isLoading: boolean;
-}
-
-const Filter = ({ isLoading }: FilterProps) => (
+const Filter = ({ isLoading }: { isLoading: boolean }) => (
 	<Row className="mb-4" gutter={[16, 16]}>
 		<Col span={24}>
 			<TimeRangeFilter disabled={isLoading} queryName={TIME_RANGE_PARAM_KEY} />

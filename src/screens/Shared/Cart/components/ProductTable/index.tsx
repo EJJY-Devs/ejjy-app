@@ -1,19 +1,15 @@
 import { ExclamationCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Button, Modal, Tooltip } from 'antd';
-import { getKeyDownCombination, formatInPeso } from 'ejjy-global';
-import { useHistory } from 'react-router';
-import _ from 'lodash';
+import { formatInPeso } from 'ejjy-global';
 import React, { useEffect, useState } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
 import { Table } from 'screens/Shared/Cart/components/ProductTable/components/Table';
 import {
 	NO_INDEX_SELECTED,
 	PRODUCT_LENGTH_PER_PAGE,
-	deleteItemShortcutKeys,
-	editQuantityShortcutKeys,
 } from 'screens/Shared/Cart/data';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
-import { formatQuantity } from 'utils';
+import { formatQuantity, getBranchProductStatus } from 'utils';
 import shallow from 'zustand/shallow';
 import './style.scss';
 
@@ -52,96 +48,125 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		shallow,
 	);
 
+	// METHODS
 	const columns = [
 		{ name: '', width: '1px' },
 		{ name: 'Barcode', width: '40px' },
 		{ name: 'Description', alignment: 'center' },
 		{ name: 'Qty', alignment: 'center' },
-		{
-			name: type === 'Receiving Report' ? 'Unit Cost' : 'Unit Price',
-			alignment: 'center',
-		},
-		{
-			name: type === 'Receiving Report' ? 'Total Cost' : 'Amount',
-			alignment: 'center',
-		},
+		{ name: 'Unit Price', alignment: 'center' },
+		{ name: 'Amount', alignment: 'center' },
 	];
 
-	// METHODS
+	// Adjust column names based on `type`
+	if (type === 'Receiving Report') {
+		columns[4].name = 'Unit Cost';
+		columns[5].name = 'Total Cost';
+	} else if (type === 'Requisition Slip') {
+		columns[4].name = 'Balance';
+		columns[5].name = 'Status';
+	}
+
 	useEffect(() => {
-		const data = products
-			.slice(
-				(pageNumber - 1) * PRODUCT_LENGTH_PER_PAGE,
-				pageNumber * PRODUCT_LENGTH_PER_PAGE,
-			)
-			.map((product, index) => {
-				// Determine the unit price and total price based on the title
-				const unitPrice =
-					type === 'Receiving Report'
-						? product.cost_per_piece
-						: product.price_per_piece;
+		const paginatedProducts = products.slice(
+			(pageNumber - 1) * PRODUCT_LENGTH_PER_PAGE,
+			pageNumber * PRODUCT_LENGTH_PER_PAGE,
+		);
 
-				const totalPrice = unitPrice * product.quantity;
+		const data = paginatedProducts.map((branchProduct, index) => {
+			const {
+				product,
+				max_balance,
+				current_balance,
+				product_status,
+				quantity,
+				unit_of_measurement,
+			} = branchProduct;
 
-				return [
-					<Tooltip
-						key={`tooltip-delete-${product.id || index}`}
-						placement="top"
-						title="Remove"
-					>
-						<Button
-							icon={<DeleteOutlined />}
-							type="primary"
-							danger
-							ghost
-							onClick={() => showRemoveProductConfirmation(product)}
-						/>
-					</Tooltip>,
+			const {
+				barcode,
+				textcode,
+				print_details,
+				cost_per_piece,
+				price_per_piece,
+				key,
+			} = product;
 
-					<Tooltip
-						key={`tooltip-barcode-${product.id || index}`}
-						placement="top"
-						title={product.barcode || product.textcode}
-					>
-						{product.barcode || product.textcode}
-					</Tooltip>,
+			let unitPrice = price_per_piece; // Default
+			let totalPrice = unitPrice * quantity; // Default
 
-					<Tooltip
-						key="productName"
-						placement="top"
-						title={product.print_details}
-					>
-						{product.name}
-					</Tooltip>,
+			let balance;
+			let status;
 
+			// Adjust values for "Receiving Report" and "Requisition Slip"
+			if (type === 'Receiving Report') {
+				unitPrice = cost_per_piece;
+				totalPrice = unitPrice * quantity;
+			} else if (type === 'Requisition Slip') {
+				balance = `${current_balance} / ${max_balance}`;
+				status = getBranchProductStatus(product_status);
+			}
+
+			return [
+				<Tooltip key={`tooltip-delete-${key}`} placement="top" title="Remove">
 					<Button
-						key="btnEditQuantity"
-						type="text"
-						onClick={() => handleEdit(index)}
-					>
-						{formatQuantity({
-							unitOfMeasurement: product.unit_of_measurement,
-							quantity: product.quantity,
-						})}
-					</Button>,
+						icon={<DeleteOutlined />}
+						type="primary"
+						danger
+						ghost
+						onClick={() => showRemoveProductConfirmation(branchProduct)}
+					/>
+				</Tooltip>,
 
-					<Tooltip
-						key={`tooltip-unit-price-${product.id || index}`}
-						placement="top"
-						title={`Unit Price: ${formatInPeso(unitPrice)}`}
-					>
-						{formatInPeso(unitPrice)}
-					</Tooltip>,
+				<Tooltip
+					key={`tooltip-barcode-${key}`}
+					placement="top"
+					title={barcode || textcode}
+				>
+					{barcode || textcode}
+				</Tooltip>,
 
-					<Tooltip
-						key={`tooltip-total-price-${product.id || index}`}
-						placement="top"
-						title={`Total Price: ${formatInPeso(totalPrice)}`}
-					>
-						{formatInPeso(totalPrice)}
-					</Tooltip>,
-				];
-			});
+				<Tooltip
+					key={`tooltip-name-${key}`}
+					placement="top"
+					title={print_details}
+				>
+					{print_details}
+				</Tooltip>,
+
+				<Button
+					key={`btn-edit-quantity-${key}`}
+					type="text"
+					onClick={() => handleEdit(index)}
+				>
+					{formatQuantity({ unitOfMeasurement: unit_of_measurement, quantity })}
+				</Button>,
+
+				<Tooltip
+					key={`tooltip-unit-price-${key}`}
+					placement="top"
+					title={
+						type === 'Requisition Slip'
+							? `Balance: ${balance}`
+							: `Unit Price: ${formatInPeso(unitPrice)}`
+					}
+				>
+					{type === 'Requisition Slip' ? balance : formatInPeso(unitPrice)}
+				</Tooltip>,
+
+				<Tooltip
+					key={`tooltip-total-price-${key}`}
+					placement="top"
+					title={
+						type === 'Requisition Slip'
+							? `Status: ${status}`
+							: `Total Amount: ${formatInPeso(totalPrice)}`
+					}
+				>
+					{type === 'Requisition Slip' ? status : formatInPeso(totalPrice)}
+				</Tooltip>,
+			];
+		});
 
 		setDataSource(data);
 	}, [pageNumber, products]);
@@ -156,25 +181,34 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		}
 	}, [products, activeIndex]);
 
-	const showRemoveProductConfirmation = (product) => {
+	const showRemoveProductConfirmation = (branchProduct) => {
 		Modal.confirm({
 			className: 'EJJYModal Modal__hasFooter',
 			title: 'Delete Confirmation',
 			icon: <ExclamationCircleOutlined />,
-			content: `Are you sure you want to delete ${product.name}?`,
+			content: `Are you sure you want to delete ${branchProduct?.product?.name}?`,
 			okText: 'Delete',
 			cancelText: 'Cancel',
 			onOk: () => {
-				const newProducts = products.filter(({ key }) => key !== product.key);
-
-				deleteProduct(product.key);
-
-				const currentPageProducts = newProducts.slice(
-					(pageNumber - 1) * PRODUCT_LENGTH_PER_PAGE,
-					pageNumber * PRODUCT_LENGTH_PER_PAGE,
+				const newProducts = (products?.product ?? []).filter(
+					({ key }) => key !== branchProduct?.product?.key,
 				);
 
-				if (currentPageProducts.length === 0) {
+				deleteProduct(branchProduct?.product?.key);
+
+				const totalPages = Math.ceil(
+					newProducts.length / PRODUCT_LENGTH_PER_PAGE,
+				);
+				const newPageNumber = Math.min(pageNumber, totalPages) || 1;
+
+				// Get the updated current page products
+				const currentPageProducts = newProducts.slice(
+					(newPageNumber - 1) * PRODUCT_LENGTH_PER_PAGE,
+					newPageNumber * PRODUCT_LENGTH_PER_PAGE,
+				);
+
+				// If the current page is empty and there's a previous page, go back
+				if (currentPageProducts.length === 0 && newPageNumber < pageNumber) {
 					prevPage();
 				}
 			},

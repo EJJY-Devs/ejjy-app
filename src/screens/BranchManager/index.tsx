@@ -5,7 +5,6 @@ import {
 	useBranches,
 	useBranchPing,
 	useBranchProducts,
-	useGenerateReports,
 	useProductCheckCreateDaily,
 	useProductCheckCreateRandom,
 	useSalesTracker,
@@ -96,8 +95,6 @@ const BranchManager = () => {
 		params: { pageSize: MAX_PAGE_SIZE },
 		options: refetchOptions,
 	});
-
-	useGenerateReports();
 
 	useUploadData({
 		params: { isBackOffice: true },
@@ -247,7 +244,7 @@ const BranchManager = () => {
 			},
 			{
 				key: 'requisition-slips',
-				name: 'Requisition Slips',
+				name: 'Branch Requisitions',
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
 				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
 				link: '/branch-manager/requisition-slips',

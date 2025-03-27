@@ -1,6 +1,6 @@
 import { message, Modal, Spin, Tabs } from 'antd';
 import { RequestErrors } from 'components';
-import { MAX_PAGE_SIZE, serviceTypes } from 'global';
+import { MAX_PAGE_SIZE, serviceTypes, appTypes } from 'global';
 import {
 	useBranches,
 	useBranchProductEditPriceCost,
@@ -12,6 +12,7 @@ import React from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
+	getAppType,
 	getGoogleApiUrl,
 	getId,
 	getLocalApiUrl,
@@ -34,18 +35,18 @@ interface Props {
 export const PricesModal = ({ product, onClose }: Props) => {
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
+	const appType = getAppType();
+
 	const {
 		data: { branchProducts },
 		isFetching: isFetchingBranchProducts,
 		error: branchProductError,
 	} = useBranchProducts({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: undefined,
-			productIds: isUserFromBranch(user.user_type)
-				? product.product.id
-				: product.id,
+			branchId:
+				appType === appTypes.BACK_OFFICE ? getLocalBranchId() : undefined,
+			productIds:
+				appType === appTypes.BACK_OFFICE ? product.product.id : product.id,
 			serviceType: serviceTypes.OFFLINE,
 		},
 		options: { enabled: product !== null },
@@ -94,14 +95,14 @@ export const PricesModal = ({ product, onClose }: Props) => {
 			});
 		} else if (branchProductFormData.length > 0) {
 			await editBranchProductPriceCost({
-				actingUserId: isUserFromBranch(user.user_type) ? user.id : getId(user),
-				productId: isUserFromBranch(user.user_type)
-					? product.id
-					: getId(product),
+				actingUserId: appType === appTypes.BACK_OFFICE ? user.id : getId(user),
+				productId:
+					appType === appTypes.BACK_OFFICE ? product.id : getId(product),
 				data: branchProductFormData,
-				serverUrl: isUserFromBranch(user.user_type)
-					? getLocalApiUrl()
-					: getGoogleApiUrl(),
+				serverUrl:
+					appType === appTypes.BACK_OFFICE
+						? getLocalApiUrl()
+						: getGoogleApiUrl(),
 			});
 		}
 

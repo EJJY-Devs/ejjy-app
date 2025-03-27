@@ -3,10 +3,8 @@ import { ErrorMessage, Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import React from 'react';
-import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
-import shallow from 'zustand/shallow';
 import { MAX_PAGE_SIZE } from 'global';
-import { getId, getLocalApiUrl, isStandAlone } from 'utils';
+import { getId, getLocalApiUrl } from 'utils';
 import { FieldError, Label } from '../../elements';
 
 type ModalProps = {
@@ -27,7 +25,7 @@ const formDetails = {
 	schema: Yup.object().shape({
 		supplierName: Yup.string().required().label('Supplier Name').trim(),
 		supplierAddress: Yup.string().required().label('Supplier Address').trim(),
-		supplierTin: Yup.string().required().label('Supplier TIN').trim(),
+		supplierTin: Yup.string().label('Supplier TIN').trim(),
 		encodedById: Yup.number().nullable().required().label('Encoded By Id'),
 		checkedById: Yup.number().nullable().required().label('Checked By Id'),
 	}),
@@ -44,7 +42,7 @@ export const CreateInventoryTransferModal = ({
 		params: { pageSize: MAX_PAGE_SIZE },
 		serviceOptions: {
 			baseURL: getLocalApiUrl(),
-			type: isStandAlone() ? ServiceType.ONLINE : ServiceType.OFFLINE,
+			type: ServiceType.ONLINE,
 		},
 	});
 
@@ -53,13 +51,13 @@ export const CreateInventoryTransferModal = ({
 		type === 'Delivery Receipt'
 			? Yup.object().shape({
 					encodedById: Yup.number().nullable().required().label('Encoder'),
-					overallRemarks: Yup.string().required().label('Remarks').trim(),
+					overallRemarks: Yup.string().nullable().label('Remarks').trim(),
 					customerName: Yup.string().required().label('Customer Name').trim(),
 					customerAddress: Yup.string()
 						.required()
 						.label('Customer Address')
 						.trim(),
-					customerTin: Yup.string().required().label('Customer TIN').trim(),
+					customerTin: Yup.string().label('Customer TIN').trim(),
 			  })
 			: formDetails.schema;
 
@@ -74,13 +72,6 @@ export const CreateInventoryTransferModal = ({
 			  }
 			: formDetails.defaultValues;
 
-	const { resetProducts } = useBoundStore(
-		(state: any) => ({
-			resetProducts: state.resetProducts,
-		}),
-		shallow,
-	);
-
 	return (
 		<Modal
 			footer={null}
@@ -90,7 +81,6 @@ export const CreateInventoryTransferModal = ({
 			open
 			onCancel={() => {
 				onClose();
-				resetProducts();
 			}}
 		>
 			<Formik
@@ -237,7 +227,7 @@ export const CreateInventoryTransferModal = ({
 										/>
 									</Col>
 									<Col span={24}>
-										<Label id="encodedById" label="Encoded By" spacing />
+										<Label id="encodedById" label="Encoder" spacing />
 										<Select
 											className="w-100"
 											disabled={isFetchingUsers}
@@ -264,7 +254,7 @@ export const CreateInventoryTransferModal = ({
 										/>
 									</Col>
 									<Col span={24}>
-										<Label id="checkedById" label="Checked By" spacing />
+										<Label id="checkedById" label="Checker" spacing />
 										<Select
 											className="w-100"
 											disabled={isFetchingUsers}

@@ -3,7 +3,7 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useQuery } from 'react-query';
 import { BranchMachinesService } from 'services';
-import { getLocalApiUrl, isStandAlone } from 'utils';
+import { getLocalApiUrl } from 'utils';
 
 const useBranchMachines = ({ params, options }: Query = {}) =>
 	useQuery<any>(
@@ -15,12 +15,8 @@ const useBranchMachines = ({ params, options }: Query = {}) =>
 			params?.salesTimeRange,
 		],
 		() => {
-			const service = isStandAlone()
-				? BranchMachinesService.list
-				: BranchMachinesService.listOffline;
-
 			return wrapServiceWithCatch(
-				service(
+				BranchMachinesService.list(
 					{
 						branch_id: params?.branchId,
 						page: params?.page || DEFAULT_PAGE,

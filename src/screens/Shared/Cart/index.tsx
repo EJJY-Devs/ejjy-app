@@ -2,10 +2,15 @@ import { RequestErrors, CreateInventoryTransferModal } from 'components';
 import { Modal, message } from 'antd';
 import React, { useRef, useState } from 'react';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
-import { convertIntoArray } from 'utils';
+import { convertIntoArray, getLocalBranchId } from 'utils';
 import shallow from 'zustand/shallow';
 import { backOrderTypes } from 'ejjy-global';
-import { useReceivingVoucherCreate, useBackOrderCreate } from 'hooks';
+import {
+	useReceivingVoucherCreate,
+	useBackOrderCreate,
+	useRequisitionSlipCreate,
+} from 'hooks';
+import { CreateRequisitionSlipModal } from 'components/modals/CreateRequisitionSlipModal';
 import { BarcodeScanner } from './components/BarcodeScanner';
 import { FooterButtons } from './components/FooterButtons';
 import { ProductSearch } from './components/ProductSearch';
@@ -26,9 +31,15 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		isCreateInventoryTransferModalVisible,
 		setIsCreateInventoryTransferModalVisible,
 	] = useState(false);
+	const [
+		isCreateRequisitionSlipVisible,
+		setIsCreateRequisitionSlipVisible,
+	] = useState(false);
 
 	// REFS
 	const barcodeScannerRef = useRef(null);
+
+	const branchId = getLocalBranchId();
 
 	// CUSTOM HOOKS
 	const {
@@ -48,22 +59,28 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 
 	const { mutateAsync: createReceivingVoucher } = useReceivingVoucherCreate();
 	const { mutateAsync: createBackOrder } = useBackOrderCreate();
+	const { mutateAsync: createRequisitionSlip } = useRequisitionSlipCreate();
 
 	const { products } = useBoundStore.getState();
 
 	const handleCreateReceivingVoucher = async (formData) => {
 		if (products.length > 0) {
 			const mappedProducts = products.map(
-				({ id, quantity, cost_per_piece }) => ({
-					product_id: id,
+				({ product, quantity, cost_per_piece }) => ({
+					product_id: product.id,
 					quantity,
 					cost_per_piece,
 				}),
 			);
-			await createReceivingVoucher({
+			const response = await createReceivingVoucher({
 				...formData,
 				products: mappedProducts,
 			});
+
+			if (!response) {
+				throw Error;
+			}
+
 			message.success('Receiving Report was created successfully');
 		}
 	};
@@ -71,29 +88,63 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	const handleCreateDeliveryReceipt = async (formData) => {
 		if (products.length > 0) {
 			const mappedProducts = products.map(
-				({ id, quantity, price_per_piece }) => ({
-					product_id: id,
+				({ product, quantity, price_per_piece }) => ({
+					product_id: product.id,
 					quantity_returned: quantity,
 					price_per_piece,
 				}),
 			);
-			await createBackOrder({
+			const response = await createBackOrder({
 				...formData,
 				products: mappedProducts,
 				type: backOrderTypes.FOR_RETURN,
 			});
+
+			if (!response) {
+				throw Error;
+			}
+
 			message.success('Delivery Receipt was created successfully');
 		}
 	};
 
-	const handleModalSubmit = (formData) => {
-		setLoading(true);
-		console.log(type);
+	const handleCreateRequisitionSlip = async (formData) => {
+		if (products.length > 0) {
+			const mappedProducts = products.map(({ product, quantity }) => ({
+				key: product.key,
+				quantity,
+			}));
 
-		if (type === 'Delivery Receipt') {
-			handleCreateDeliveryReceipt(formData);
-		} else if (type === 'Receiving Report') {
-			handleCreateReceivingVoucher(formData);
+			const response = await createRequisitionSlip({
+				...formData,
+				products: mappedProducts,
+				branchId,
+			});
+
+			if (!response) {
+				throw Error;
+			}
+
+			message.success('Requisition Slip was created successfully');
+		}
+	};
+
+	const handleModalSubmit = async (formData) => {
+		setLoading(true);
+
+		try {
+			if (type === 'Delivery Receipt') {
+				await handleCreateDeliveryReceipt(formData);
+			} else if (type === 'Receiving Report') {
+				await handleCreateReceivingVoucher(formData);
+			} else if (type === 'Requisition Slip') {
+				await handleCreateRequisitionSlip(formData);
+			}
+		} catch (error) {
+			message.error(`Failed to create ${type}`);
+			return; // Stop execution if there's an error
+		} finally {
+			setLoading(false);
 		}
 
 		resetProducts();
@@ -124,13 +175,12 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	};
 
 	const handleSubmit = () => {
-		setIsCreateInventoryTransferModalVisible(true);
+		if (type === 'Requisition Slip') {
+			setIsCreateRequisitionSlipVisible(true);
+		} else {
+			setIsCreateInventoryTransferModalVisible(true);
+		}
 	};
-
-	// // Modal onClose function
-	// const handleCloseModal = () => {
-	// 	setIsCreateInventoryTransferModalVisible(false);
-	// };
 
 	return (
 		<Modal
@@ -162,7 +212,15 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 					<CreateInventoryTransferModal
 						isLoading={isLoading}
 						type={type}
-						onClose={onClose}
+						onClose={() => setIsCreateInventoryTransferModalVisible(false)}
+						onSubmit={handleModalSubmit}
+					/>
+				)}
+
+				{isCreateRequisitionSlipVisible && (
+					<CreateRequisitionSlipModal
+						isLoading={isLoading}
+						onClose={() => setIsCreateRequisitionSlipVisible(false)}
 						onSubmit={handleModalSubmit}
 					/>
 				)}

@@ -18,16 +18,34 @@ interface Props {
 
 export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 	// CUSTOM HOOKS
-	const addProduct = useBoundStore((state: any) => state.addProduct);
+	const { products, addProduct, editProduct } = useBoundStore((state: any) => ({
+		products: state.products,
+		addProduct: state.addProduct,
+		editProduct: state.editProduct,
+	}));
 
 	// METHODS
 	const handleSubmit = (formData) => {
-		addProduct({
-			...product,
-			quantity: formData.quantity,
-		});
+		const existingProduct = products.find(
+			(p) => p?.product?.key === product?.product?.key,
+		);
 
-		message.success(`${product.name} was added successfully.`);
+		if (existingProduct) {
+			editProduct({
+				key: product.product.key,
+				product: {
+					...existingProduct,
+					quantity: existingProduct.quantity + formData.quantity, // Increase quantity
+				},
+			});
+		} else {
+			addProduct({
+				...product,
+				quantity: formData.quantity,
+			});
+		}
+
+		message.success(`${product.product.name} was added successfully.`);
 		onClose();
 		onSuccess();
 	};

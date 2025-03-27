@@ -4,7 +4,7 @@ import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import { ErrorMessage, Form, Formik } from 'formik';
 import { MAX_PAGE_SIZE } from 'global';
 import React from 'react';
-import { convertIntoArray, getId, getLocalApiUrl, isStandAlone } from 'utils';
+import { convertIntoArray, getId, getLocalApiUrl } from 'utils';
 import * as Yup from 'yup';
 import { FieldError, Label } from '../../elements';
 
@@ -41,7 +41,7 @@ export const CreateStockInModal = ({ isLoading, onSubmit, onClose }: Props) => {
 		params: { pageSize: MAX_PAGE_SIZE },
 		serviceOptions: {
 			baseURL: getLocalApiUrl(),
-			type: isStandAlone() ? ServiceType.ONLINE : ServiceType.OFFLINE,
+			type: ServiceType.ONLINE,
 		},
 	});
 

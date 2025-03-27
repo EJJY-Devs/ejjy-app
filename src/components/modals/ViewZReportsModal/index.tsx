@@ -41,9 +41,6 @@ interface Props {
 	onClose: () => void;
 }
 
-// TODO: We only used machine server URL because this was not added to the syncing yet.
-const MACHINE_SERVER_URL = 'http://localhost:8005/v1';
-
 export const ViewZReportsModal = ({ branchMachine, onClose }: Props) => {
 	// STATES
 	const [selectedZReadReport, setSelectedZReadReport] = useState<ZReadReport>();
@@ -67,7 +64,7 @@ export const ViewZReportsModal = ({ branchMachine, onClose }: Props) => {
 			branchMachineName: branchMachine.name,
 			timeRange: params[TIME_RANGE_PARAM_KEY] as string,
 		},
-		serviceOptions: { baseURL: MACHINE_SERVER_URL },
+		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
 
 	// METHODS

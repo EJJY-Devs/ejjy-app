@@ -6,7 +6,9 @@ export const createProductsSlice: any = (set) => ({
 		set((state) => ({ products: [product, ...state.products] })),
 	editProduct: ({ key, product }) => {
 		set((state) => {
-			const index = state.products.findIndex((p) => p.key === key);
+			const index = state.products.findIndex((p) => {
+				return p.product.key === key;
+			});
 
 			if (index >= 0) {
 				const newProducts = _.cloneDeep(state.products);
@@ -20,7 +22,9 @@ export const createProductsSlice: any = (set) => ({
 	},
 	deleteProduct: (key) => {
 		set((state) => {
-			const newProducts = state.products.filter((p) => p.key !== key);
+			const newProducts = (state.products?.product ?? []).filter(
+				(p) => p.key !== key,
+			);
 
 			return { products: newProducts };
 		});

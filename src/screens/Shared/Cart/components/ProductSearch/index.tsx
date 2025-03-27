@@ -57,9 +57,11 @@ export const ProductSearch = ({ barcodeScannerRef }: Props) => {
 		options: {
 			enabled: searchedText?.length > 0,
 			onSuccess: (data: any) => {
-				const newSearchableProducts = data.branchProducts
-					.filter(({ product }) => !productKeysInTable.includes(product.key))
-					.map(({ product }) => product);
+				console.log('data', data);
+				console.log(productKeysInTable);
+				const newSearchableProducts = data.branchProducts.filter(
+					({ product }) => !productKeysInTable.includes(product.key),
+				);
 
 				setActiveIndex(0);
 				setSearchableProducts(newSearchableProducts);
@@ -75,7 +77,9 @@ export const ProductSearch = ({ barcodeScannerRef }: Props) => {
 
 	// METHODS
 	useEffect(() => {
-		setProductKeysInTable(products.map((item) => item.key));
+		const keys = products.map((item) => item.product?.key).filter(Boolean);
+
+		setProductKeysInTable(keys);
 	}, [products]);
 
 	const handleSelectProduct = () => {

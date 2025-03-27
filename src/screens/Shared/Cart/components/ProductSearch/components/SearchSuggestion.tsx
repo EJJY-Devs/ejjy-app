@@ -59,29 +59,32 @@ export const SearchSuggestion = ({
 					style={{ height: '100%' }}
 					autoHeight
 				>
-					{searchedProducts.map((product, index) => (
-						<div
-							key={index}
-							ref={(el) => {
-								itemRefs.current[index] = el;
-							}}
-							className={cn('ProductSearch_suggestion_wrapper', {
-								ProductSearch_suggestion_wrapper___active:
-									activeIndex === index,
-							})}
-							onClick={onSelect}
-							onMouseEnter={() => setActiveIndex(index)}
-						>
-							<div className="ProductSearch_suggestion_product">
-								<p className="ProductSearch_suggestion_product_name">
-									{product.name}
-								</p>
-								<p className="ProductSearch_suggestion_product_code">
-									{getProductCode(product)}
-								</p>
+					{searchedProducts.map((productData, index) => {
+						const { product } = productData;
+						return (
+							<div
+								key={index}
+								ref={(el) => {
+									itemRefs.current[index] = el;
+								}}
+								className={cn('ProductSearch_suggestion_wrapper', {
+									ProductSearch_suggestion_wrapper___active:
+										activeIndex === index,
+								})}
+								onClick={onSelect}
+								onMouseEnter={() => setActiveIndex(index)}
+							>
+								<div className="ProductSearch_suggestion_product">
+									<p className="ProductSearch_suggestion_product_name">
+										{product.name}
+									</p>
+									<p className="ProductSearch_suggestion_product_code">
+										{getProductCode(product)}
+									</p>
+								</div>
 							</div>
-						</div>
-					))}
+						);
+					})}
 				</Scrollbars>
 			</Spin>
 		</div>

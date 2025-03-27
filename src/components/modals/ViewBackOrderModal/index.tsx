@@ -48,7 +48,8 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 		},
 	});
 	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
-		print: () => printStockOutForm(backOrder, siteSettings),
+		title: `DeliveryReceipt_${backOrder.id}.pdf`,
+		print: () => printStockOutForm(backOrder, siteSettings, true),
 	});
 
 	// METHODS

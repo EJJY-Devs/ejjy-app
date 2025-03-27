@@ -1,9 +1,7 @@
 import { Spin } from 'antd';
-import { Breadcrumb, Content } from 'components';
-import { request } from 'global';
-import { useRequisitionSlips } from 'hooks/useRequisitionSlips';
-import React, { useCallback, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { Content } from 'components';
+import { useRequisitionSlipById } from 'hooks/useRequisitionSlips';
+import React from 'react';
 import { useUserStore } from 'stores';
 import { OrderSlips } from './components/OrderSlips/OrderSlips';
 import { RequestedProducts } from './components/RequestedProducts';
@@ -17,54 +15,24 @@ export const ViewRequisitionSlip = ({ match }: Props) => {
 	const requisitionSlipId = match?.params?.id;
 
 	// CUSTOM HOOKS
-	const history = useHistory();
 	const user = useUserStore((state) => state.user);
-	const {
-		requisitionSlip,
-		getRequisitionSlipsById,
-		removeRequisitionSlipByBranch,
-		status: requisitionSlipsStatus,
-	} = useRequisitionSlips();
 
-	// Effect: Fetch requisition slip
-	useEffect(() => {
-		removeRequisitionSlipByBranch();
-		getRequisitionSlipsById(
-			{
-				id: requisitionSlipId,
-				requestingUserType: user.user_type,
-			},
-			({ status }) => {
-				if (status === request.ERROR) {
-					history.replace('/404');
-				}
-			},
-		);
-	}, []);
-
-	const getBreadcrumbItems = useCallback(
-		() => [
-			{ name: 'Requisition Slips', link: '/branch-manager/requisition-slips' },
-			{ name: `#${requisitionSlip?.id}` },
-		],
-		[requisitionSlip],
-	);
+	// Fetch requisition slip by ID
+	const { data: requisitionSlip, isLoading } = useRequisitionSlipById({
+		id: requisitionSlipId,
+		requestingUserType: user.user_type,
+	});
 
 	return (
 		<Content
-			breadcrumb={<Breadcrumb items={getBreadcrumbItems()} />}
 			className="ViewRequisitionSlip"
-			rightTitle={`#${requisitionSlip?.id}`}
-			title="[VIEW] F-RS01"
+			rightTitle={`#${requisitionSlip?.reference_number}`}
+			title="View Purchase Request"
 		>
-			<Spin
-				spinning={requisitionSlipsStatus === request.REQUESTING}
-				tip="Fetching requisition slip..."
-			>
+			<Spin spinning={isLoading} tip="Fetching requisition slip...">
 				{requisitionSlip && (
 					<>
 						<RequestedProducts requisitionSlip={requisitionSlip} />
-
 						<OrderSlips requisitionSlipId={requisitionSlipId} />
 					</>
 				)}

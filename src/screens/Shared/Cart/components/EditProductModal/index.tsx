@@ -23,14 +23,14 @@ export const EditProductModal = ({ product, onClose }: Props) => {
 	// METHODS
 	const handleSubmit = (formData) => {
 		editProduct({
-			key: product.key,
+			key: product.product.key,
 			product: {
 				...product,
 				quantity: formData.quantity,
 			},
 		});
 
-		message.success(`${product.name} was edited successfully.`);
+		message.success(`${product.product.name} was edited successfully.`);
 		onClose();
 	};
 
@@ -38,7 +38,7 @@ export const EditProductModal = ({ product, onClose }: Props) => {
 		<Modal
 			className="EditProductModal Modal__hasFooter"
 			footer={null}
-			title={`[Edit] ${product.name}`}
+			title={`[Edit] ${product.product.name}`}
 			centered
 			closable
 			visible

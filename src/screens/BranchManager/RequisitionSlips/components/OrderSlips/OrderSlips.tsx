@@ -107,10 +107,10 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 	);
 
 	return (
-		<Box>
-			<TableHeader pending={getPendingCount()} title="F-OS1" />
+		<Box className="px-6">
+			<TableHeader title="Linked Transactions" />
 
-			<OrderSlipsTable
+			{/* <OrderSlipsTable
 				orderSlips={orderSlips}
 				orderSlipStatus={orderSlipRequestStatus}
 				onReceiveDeliveryReceipt={handleReceiveDeliveryReceipt}
@@ -130,7 +130,7 @@ export const OrderSlips = ({ requisitionSlipId }: Props) => {
 				visible={receiveDeliveryReceiptVisible}
 				onClose={() => setReceiveDeliveryReceiptVisible(false)}
 				onSuccess={handleReceiveDeliveryReceiptSuccess}
-			/>
+			/> */}
 		</Box>
 	);
 };

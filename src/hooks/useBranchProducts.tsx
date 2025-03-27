@@ -2,7 +2,6 @@ import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	request,
-	serviceTypes,
 	timeRangeTypes,
 } from 'global';
 import { getBaseUrl, wrapServiceWithCatch } from 'hooks/helper';
@@ -12,7 +11,6 @@ import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { BranchProductsService } from 'services';
 import {
 	getLocalApiUrl,
-	isStandAlone,
 	modifiedCallback,
 	modifiedExtraCallback,
 	onCallback,
@@ -220,18 +218,8 @@ const useBranchProductsNew = ({ params, options }: Query) =>
 			params?.search,
 		],
 		() => {
-			let service = isStandAlone()
-				? BranchProductsService.list
-				: BranchProductsService.listOffline;
-
-			if (serviceTypes.OFFLINE === params?.serviceType) {
-				service = BranchProductsService.listOffline;
-			}
-
 			return wrapServiceWithCatch(
-				// TODO: We are temporarily directly using the List Offline to make sure all data are updated.
-				// We need to identify when to use list offline so refactor this one.
-				service(
+				BranchProductsService.list(
 					{
 						branch_id: params?.branchId,
 						has_bo_balance: params?.hasBoBalance,

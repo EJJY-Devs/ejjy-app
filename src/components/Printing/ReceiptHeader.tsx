@@ -39,7 +39,8 @@ export const ReceiptHeader = ({ branchMachine, title }: Props) => {
 			<Text style={{ whiteSpace: 'pre-line' }}>{location}</Text>
 			<Text>{[contactNumber, name].filter(Boolean).join(' | ')}</Text>
 			<Text>{proprietor}</Text>
-			<Text>{[taxType, tin].filter(Boolean).join(' | ')}</Text>
+			<Text>{taxType === 'VAT' ? 'VAT REG TIN' : taxType}</Text>
+			<Text>{tin}</Text>
 			<Text>{machineID}</Text>
 			<Text>{posTerminal}</Text>
 

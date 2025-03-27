@@ -1,33 +1,32 @@
 import { Col, Row, Select, Table } from 'antd';
 import { Content, RequestErrors, TableHeaderRequisitionSlip } from 'components';
 import { Box, Label } from 'components/elements';
-import { filterOption, getRequestor } from 'ejjy-global';
+import { filterOption, useBranches, ServiceType } from 'ejjy-global';
 import {
 	ALL_OPTION_KEY,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
 	requisitionSlipActionsOptionsWithAll,
-	userTypes,
+	MAX_PAGE_SIZE,
 } from 'global';
 import { useQueryParams, useRequisitionSlips } from 'hooks';
-import { upperFirst } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
 	convertIntoArray,
 	formatDateTime,
-	getRequisitionSlipStatus,
+	getLocalApiUrl,
+	isStandAlone,
 } from 'utils';
 import './style.scss';
 
 const columns = [
 	{ title: 'ID', dataIndex: 'id' },
-	{ title: 'Date Requested', dataIndex: 'datetimeCreated' },
-	{ title: 'Requestor', dataIndex: 'requestor' },
-	{ title: 'Request Type', dataIndex: 'type' },
-	{ title: 'Actions', dataIndex: 'action' },
-	{ title: 'Progress', dataIndex: 'progress' },
+	{ title: 'Date & Time', dataIndex: 'datetimeCreated' },
+	{ title: 'Branch', dataIndex: 'branch' },
+	{ title: 'Status', dataIndex: 'status' },
+	{ title: 'Remarks', dataIndex: 'remarks' },
 ];
 
 export const RequisitionSlips = () => {
@@ -43,37 +42,32 @@ export const RequisitionSlips = () => {
 	} = useRequisitionSlips({
 		params: {
 			...params,
-			// TODO: Temporarily remove branch id from the payload until we figure out to pass the online id
-			// branchId: params.branchId === ALL_OPTION_KEY ? null : params.branchId,
+			branchId: params.branchId === ALL_OPTION_KEY ? null : params.branchId,
 			status: params.status === ALL_OPTION_KEY ? null : params.status,
 		},
 	});
-	// TODO: Temporarily remove pending count until we figure out to pass the online id of user
-	// const {
-	// 	data: pendingCount,
-	// 	isFetching: isFetchingPendingCount,
-	// 	error: retrieveError,
-	// } = useRequisitionSlipsRetrievePendingCount({
-	// 	params: { userId: user.id },
-	// });
 
 	// METHODS
 	useEffect(() => {
 		const formattedProducts = requisitionSlips.map((requisitionSlip) => {
-			const { id, type, progress, action: prAction } = requisitionSlip;
-			const { datetime_created, action } = prAction;
-			const dateTime = formatDateTime(datetime_created);
+			const {
+				id,
+				branch,
+				datetime_created,
+				reference_number,
+			} = requisitionSlip;
 
 			return {
 				key: id,
-				id: <Link to={`/office-manager/requisition-slips/${id}`}>{id}</Link>,
-				datetimeCreated: dateTime,
-				requestor: getRequestor(requisitionSlip),
-				type: upperFirst(type),
-				action: getRequisitionSlipStatus(action, userTypes.OFFICE_MANAGER),
-				progress: progress
-					? `${progress.current} / ${progress.total}`
-					: EMPTY_CELL,
+				id: (
+					<Link to={`/office-manager/requisition-slips/${id}`}>
+						{reference_number}
+					</Link>
+				),
+				branch: branch?.name || EMPTY_CELL,
+				datetimeCreated: formatDateTime(datetime_created),
+				status: EMPTY_CELL,
+				remarks: EMPTY_CELL,
 			};
 		});
 
@@ -81,20 +75,13 @@ export const RequisitionSlips = () => {
 	}, [requisitionSlips]);
 
 	return (
-		<Content
-			className="RequisitionSlips"
-			description="Requests from branches"
-			title="F-RS1"
-		>
-			<Box>
+		<Content className="RequisitionSlips" title="Requisition Slips">
+			<Box className="px-6">
 				<TableHeaderRequisitionSlip />
 
 				<RequestErrors
 					className="px-6"
-					errors={[
-						// ...convertIntoArray(retrieveError, 'Pending Count'),
-						...convertIntoArray(listError),
-					]}
+					errors={[...convertIntoArray(listError)]}
 					withSpaceBottom
 				/>
 
@@ -118,7 +105,6 @@ export const RequisitionSlips = () => {
 						position: ['bottomCenter'],
 						pageSizeOptions: ['5', '10', '15'],
 					}}
-					// loading={isFetchingPendingCount || isFetchingRequisitionSlips}
 					bordered
 				/>
 			</Box>
@@ -127,58 +113,65 @@ export const RequisitionSlips = () => {
 };
 
 const Filter = () => {
-	const { params, setQueryParams } = useQueryParams();
-	// TODO: Temporarily remove branch id from the payload until we figure out to pass the online id
-	// const {
-	// 	data: { branches },
-	// } = useBranches();
+	const { data: branchesData } = useBranches({
+		params: { pageSize: MAX_PAGE_SIZE },
+		serviceOptions: {
+			baseURL: getLocalApiUrl(),
+			type: isStandAlone() ? ServiceType.ONLINE : ServiceType.OFFLINE,
+		},
+	});
 
+	const { params, setQueryParams } = useQueryParams();
 	return (
-		<Row className="px-6 mb-4" gutter={[16, 16]}>
-			{/* <Col lg={12} span={24}>
-				<Label label="Branch" spacing />
-				<Select
-					className="w-100"
-					defaultValue={
-						params.branchId ? Number(params.branchId) : ALL_OPTION_KEY
-					}
-					// NOTE: Need to convert to Number so default value will work
-					filterOption={filterOption}
-					optionFilterProp="children"
-					allowClear
-					showSearch
-					onChange={(value) => {
-						setQueryParams({ branchId: value }, { shouldResetPage: true });
-					}}
-				>
-					<Select.Option value="all">All</Select.Option>
-					{branches.map(({ id, name }) => (
-						<Select.Option key={id} value={id}>
-							{name}
-						</Select.Option>
-					))}
-				</Select>
-			</Col> */}
-			<Col lg={12} span={24}>
-				<Label label="Status" spacing />
-				<Select
-					className="w-100"
-					defaultValue={params.status || ALL_OPTION_KEY}
-					filterOption={filterOption}
-					optionFilterProp="children"
-					allowClear
-					showSearch
-					onChange={(value) => {
-						setQueryParams({ status: value }, { shouldResetPage: true });
-					}}
-				>
-					{requisitionSlipActionsOptionsWithAll.map(({ name, value }) => (
-						<Select.Option key={value} value={value}>
-							{name}
-						</Select.Option>
-					))}
-				</Select>
-			</Col>
-		</Row>
+		<>
+			<Row className="mb-4" gutter={[16, 16]}>
+				<Col lg={5} span={24}>
+					<Label label="Branch" spacing />
+					<Select
+						className="w-100"
+						defaultValue={
+							params.branchId ? Number(params.branchId) : ALL_OPTION_KEY
+						}
+						filterOption={filterOption}
+						optionFilterProp="children"
+						allowClear
+						showSearch
+						onChange={(value) => {
+							setQueryParams({ branchId: value }, { shouldResetPage: true });
+						}}
+					>
+						<Select.Option value="all">All</Select.Option>
+						{branchesData?.list?.map(({ id, name }) => (
+							<Select.Option key={id} value={id}>
+								{name}
+							</Select.Option>
+						))}
+					</Select>
+				</Col>
+			</Row>
+
+			<Row className="pb-4" gutter={[16, 16]}>
+				<Col lg={5} span={24}>
+					<Label label="Status" spacing />
+					<Select
+						className="w-100"
+						defaultValue={params.status || ALL_OPTION_KEY}
+						filterOption={filterOption}
+						optionFilterProp="children"
+						allowClear
+						showSearch
+						onChange={(value) => {
+							setQueryParams({ status: value }, { shouldResetPage: true });
+						}}
+					>
+						{requisitionSlipActionsOptionsWithAll.map(({ name, value }) => (
+							<Select.Option key={value} value={value}>
+								{name}
+							</Select.Option>
+						))}
+					</Select>
+				</Col>
+			</Row>
+		</>
 	);
 };

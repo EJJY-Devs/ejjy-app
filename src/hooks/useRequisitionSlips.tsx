@@ -5,11 +5,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useSelector } from 'react-redux';
 import { RequisitionSlipsService } from 'services';
-import {
-	getGoogleApiUrl,
-	modifiedCallback,
-	modifiedExtraCallback,
-} from 'utils';
+import { getLocalApiUrl, modifiedCallback, modifiedExtraCallback } from 'utils';
 import { actions, selectors, types } from '../ducks/requisition-slips';
 import { request } from '../global/types';
 import { useActionDispatch } from './useActionDispatch';
@@ -151,6 +147,30 @@ export const useRequisitionSlips = () => {
 	};
 };
 
+export const useRequisitionSlipById = ({
+	id,
+	requestingUserType,
+}: {
+	id: number;
+	requestingUserType: string;
+}) =>
+	useQuery<any>(
+		['useRequisitionSlipById', id, requestingUserType],
+		() =>
+			wrapServiceWithCatch(
+				RequisitionSlipsService.getById(
+					id,
+					requestingUserType,
+					getLocalApiUrl(),
+				),
+			),
+		{
+			enabled: !!id, // Prevents the query from running if id is undefined or null
+			initialData: { data: null },
+			select: (query) => query.data,
+		},
+	);
+
 const useRequisitionSlipsNew = ({ params }: Query) =>
 	useQuery<any>(
 		[
@@ -169,7 +189,7 @@ const useRequisitionSlipsNew = ({ params }: Query) =>
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						status: params?.status,
 					},
-					getGoogleApiUrl(),
+					getLocalApiUrl(),
 				),
 			),
 		{
@@ -190,7 +210,7 @@ export const useRequisitionSlipsRetrievePendingCount = ({ params }: Query) =>
 					{
 						user_id: params.userId,
 					},
-					getGoogleApiUrl(),
+					getLocalApiUrl(),
 				),
 			),
 		{
@@ -203,14 +223,15 @@ export const useRequisitionSlipCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ requestingUserUsername, type, products }: any) =>
+		({ preparedBy, approvedBy, products, branchId }: any) =>
 			RequisitionSlipsService.create(
 				{
-					requesting_user_username: requestingUserUsername,
-					type,
+					prepared_by: preparedBy,
+					approved_by: approvedBy,
 					products,
+					branch_id: branchId,
 				},
-				getGoogleApiUrl(),
+				getLocalApiUrl(),
 			),
 		{
 			onSuccess: () => {

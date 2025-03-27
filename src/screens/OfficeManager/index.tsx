@@ -1,5 +1,5 @@
 import { Container } from 'components';
-import { useGenerateReports, useUploadData } from 'hooks';
+import { useUploadData } from 'hooks';
 import React, { useCallback } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 import {
@@ -55,8 +55,6 @@ const OfficeManager = () => {
 		}),
 		shallow,
 	);
-
-	useGenerateReports();
 
 	const getSidebarItems = useCallback(
 		() => [
@@ -167,7 +165,7 @@ const OfficeManager = () => {
 			},
 			{
 				key: 'requisition-slips',
-				name: 'Requisition Slips',
+				name: 'Branch Requisitions',
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
 				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
 				link: '/office-manager/requisition-slips',

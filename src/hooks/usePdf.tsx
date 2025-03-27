@@ -23,7 +23,8 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 		pdf.setProperties({ title: pdfTitle });
 
 		const dataHtml = print?.(data?.printData);
-		setHtmlPdf(dataHtml);
+
+		const wrappedHtml = `<div style="width: 380px; padding: 24px;">${dataHtml}</div>`;
 
 		if (image) {
 			const img = new Image();
@@ -32,7 +33,7 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 		}
 
 		setTimeout(() => {
-			pdf.html(dataHtml, {
+			pdf.html(wrappedHtml, {
 				margin: 10,
 				callback: (instance) => {
 					window.open(instance.output('bloburl').toString());
@@ -52,7 +53,8 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 		pdf.setProperties({ title: pdfTitle });
 
 		const dataHtml = print?.(data?.printData);
-		setHtmlPdf(dataHtml);
+
+		const wrappedHtml = `<div style="width: 380px; padding: 24px;">${dataHtml}</div>`;
 
 		if (image) {
 			const img = new Image();
@@ -61,7 +63,7 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 		}
 
 		setTimeout(() => {
-			pdf.html(dataHtml, {
+			pdf.html(wrappedHtml, {
 				margin: 10,
 				callback: (instance) => {
 					instance.save(pdfTitle);

@@ -1,5 +1,5 @@
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
-import { getBaseUrl, wrapServiceWithCatch } from 'hooks/helper';
+import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { ProductGroupsService } from 'services';
@@ -66,7 +66,7 @@ export const useProductGroupCreate = () => {
 
 	return useMutation<any, any, any>(
 		async ({ name, items }: any) => {
-			const baseURL = getBaseUrl();
+			const baseURL = getLocalApiUrl();
 
 			const response = await ProductGroupsService.create({ name }, baseURL);
 
@@ -98,7 +98,7 @@ export const useProductGroupEdit = () => {
 					name,
 					items,
 				},
-				getBaseUrl(),
+				getLocalApiUrl(),
 			),
 		{
 			onSuccess: () => {
@@ -112,7 +112,7 @@ export const useProductGroupDelete = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		(id: number) => ProductGroupsService.delete(id, getBaseUrl()),
+		(id: number) => ProductGroupsService.delete(id, getLocalApiUrl()),
 		{
 			onSuccess: () => {
 				queryClient.invalidateQueries('useProductGroups');

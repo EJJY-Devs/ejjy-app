@@ -62,8 +62,12 @@ export const useInitializeData = ({ params, options }: Query) =>
 					console.error('Initialize Data', e);
 				}
 			}
-
-			if (params?.isHeadOffice) {
+			if (
+				params?.isHeadOffice &&
+				((params.productIds?.length ?? 0) > 0 ||
+					(params.branchProductIds?.length ?? 0) > 0 ||
+					(params.branchProductBalanceUpdateLogsIds?.length ?? 0) > 0)
+			) {
 				await DataService.initialize(
 					{
 						product_ids: params.productIds,
@@ -78,7 +82,7 @@ export const useInitializeData = ({ params, options }: Query) =>
 			return service;
 		},
 		{
-			refetchInterval: 10_000,
+			refetchInterval: params?.isHeadOffice ? 60_000 : 10_000,
 			refetchIntervalInBackground: true,
 			notifyOnChangeProps: ['isLoading', 'isSuccess'],
 			onSuccess: () => {

@@ -22,5 +22,8 @@
 	},
 	"extraMetadata": {
 		"name": "ejjy-inventory-headoffice-app"
+	},
+	"build": {
+		"icon": "build/HO.ico"
 	}
 }

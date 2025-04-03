@@ -1,6 +1,6 @@
 {
 	"appId": "com.ejjy.inventory.app",
-	"productName": "EJJY Inventory",
+	"productName": "EJJY Back Office",
 	"extraResources": [
 		"api/**",
 		"gcs-service-key.json",
@@ -15,5 +15,8 @@
 			"repo": "ejjy-app",
 			"releaseType": "release"
 		}
-	]
+	],
+	"build": {
+		"icon": "build/BO.ico"
+	}
 }

@@ -1,6 +1,6 @@
 {
 	"appId": "com.ejjy.inventory.app",
-	"productName": "EJJY Back Office",
+	"productName": "Back Office",
 	"extraResources": [
 		"api/**",
 		"gcs-service-key.json",
@@ -17,6 +17,6 @@
 		}
 	],
 	"build": {
-		"icon": "build/BO.ico"
+		"icon": "icons/BO.ico"
 	}
 }

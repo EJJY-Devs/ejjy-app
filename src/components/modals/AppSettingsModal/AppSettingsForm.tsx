@@ -12,7 +12,7 @@ import {
 	Slider,
 	Space,
 } from 'antd';
-import { filterOption } from 'ejjy-global';
+import { filterOption, printingTypes } from 'ejjy-global';
 import { ErrorMessage, Form, Formik, useFormikContext } from 'formik';
 import { appTypes, headOfficeTypes, serviceTypes } from 'global';
 import { useBranches } from 'hooks';
@@ -34,6 +34,7 @@ interface Props {
 	tagPrinterFontSize: string;
 	tagPrinterPaperHeight: string;
 	tagPrinterPaperWidth: string;
+	printingType: string;
 	onClose: any;
 	onSubmit: any;
 }
@@ -54,6 +55,7 @@ export const AppSettingsForm = ({
 	printerFontFamily,
 	printerFontSize,
 	printerName,
+	printingType,
 	tagPrinterFontFamily,
 	tagPrinterFontSize,
 	tagPrinterPaperHeight,
@@ -85,6 +87,7 @@ export const AppSettingsForm = ({
 				printerFontFamily,
 				printerFontSize,
 				printerName: printerName || '',
+				printingType: printingType || printingTypes.HTML,
 				tagPrinterPaperWidth,
 				tagPrinterPaperHeight,
 				tagPrinterFontFamily,
@@ -100,6 +103,7 @@ export const AppSettingsForm = ({
 				localApiUrl: Yup.string().required().label('Local API URL').trim(),
 				onlineApiUrl: Yup.string().required().label('Online API URL').trim(),
 				printerName: Yup.string().label('Printer Name'),
+				printingType: Yup.string().label('Printing Type'),
 				printerFontFamily: Yup.string()
 					.required()
 					.label('Printer Font Family')
@@ -287,6 +291,29 @@ export const AppSettingsForm = ({
 						<Col span={24}>
 							<Divider>Printers</Divider>
 
+							<Label id="printingType" label="Printing Type" spacing />
+							<Radio.Group
+								buttonStyle="solid"
+								options={[
+									{ label: 'HTML', value: printingTypes.HTML },
+									{
+										label: 'Native',
+										value: printingTypes.NATIVE,
+									},
+								]}
+								optionType="button"
+								value={values.printingType}
+								onChange={(e) => {
+									setFieldValue('printingType', e.target.value);
+								}}
+							/>
+							<ErrorMessage
+								name="printingType"
+								render={(error) => <FieldError error={error} />}
+							/>
+
+							<Divider />
+
 							<Collapse>
 								<Collapse.Panel
 									key={collapseKeys.RECEIPT_PRINTER}
@@ -325,7 +352,12 @@ const ReceiptPrinter = () => {
 	const [isPrintersFetched, setIsPrintersFetched] = useState(false);
 
 	// HOOKS
-	const { values, status, setFieldValue, setStatus } = useFormikContext();
+	const {
+		values,
+		status,
+		setFieldValue,
+		setStatus,
+	} = useFormikContext<Props>();
 
 	// METHODS
 	useEffect(() => {
@@ -390,20 +422,24 @@ const ReceiptPrinter = () => {
 				)}
 			</Col>
 
-			<Col span={24}>
-				<Label label="Printer Font Family" spacing />
-				<Input
-					name="printerFontFamily"
-					value={values['printerFontFamily']}
-					onChange={(e) => {
-						setFieldValue('printerFontFamily', e.target.value);
-					}}
-				/>
-				<ErrorMessage
-					name="printerFontFamily"
-					render={(error) => <FieldError error={error} />}
-				/>
-			</Col>
+			{values.printingType === printingTypes.HTML && (
+				<>
+					<Col span={24}>
+						<Label label="Printer Font Family" spacing />
+						<Input
+							name="printerFontFamily"
+							value={values['printerFontFamily']}
+							onChange={(e) => {
+								setFieldValue('printerFontFamily', e.target.value);
+							}}
+						/>
+						<ErrorMessage
+							name="printerFontFamily"
+							render={(error) => <FieldError error={error} />}
+						/>
+					</Col>
+				</>
+			)}
 
 			<Col span={24}>
 				<Label label="Printer Font Size" spacing />
@@ -440,7 +476,7 @@ const ReceiptPrinter = () => {
 };
 
 const TagPrinter = () => {
-	const { values, setFieldValue } = useFormikContext();
+	const { values, setFieldValue } = useFormikContext<Props>();
 
 	return (
 		<Row gutter={[16, 16]}>
@@ -476,20 +512,24 @@ const TagPrinter = () => {
 				/>
 			</Col>
 
-			<Col span={24}>
-				<Label label="Tag Printer Font Family" spacing />
-				<Input
-					name="tagPrinterFontFamily"
-					value={values['tagPrinterFontFamily']}
-					onChange={(e) => {
-						setFieldValue('tagPrinterFontFamily', e.target.value);
-					}}
-				/>
-				<ErrorMessage
-					name="tagPrinterFontFamily"
-					render={(error) => <FieldError error={error} />}
-				/>
-			</Col>
+			{values.printingType === printingTypes.HTML && (
+				<>
+					<Col span={24}>
+						<Label label="Tag Printer Font Family" spacing />
+						<Input
+							name="tagPrinterFontFamily"
+							value={values['tagPrinterFontFamily']}
+							onChange={(e) => {
+								setFieldValue('tagPrinterFontFamily', e.target.value);
+							}}
+						/>
+						<ErrorMessage
+							name="tagPrinterFontFamily"
+							render={(error) => <FieldError error={error} />}
+						/>
+					</Col>
+				</>
+			)}
 
 			<Col span={24}>
 				<Label label="Tag Printer Font Size" spacing />

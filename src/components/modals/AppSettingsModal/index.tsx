@@ -31,6 +31,7 @@ import {
 	getOnlineApiUrl,
 	getOnlineBranchId,
 } from 'utils';
+import { APP_PRINTING_TYPE, getAppReceiptPrintingType } from 'ejjy-global';
 import { AppSettingsForm } from './AppSettingsForm';
 
 interface Props {
@@ -64,6 +65,7 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 			formData.printerFontSize,
 		);
 		localStorage.setItem(APP_RECEIPT_PRINTER_NAME, formData.printerName);
+		localStorage.setItem(APP_PRINTING_TYPE, formData.printingType);
 
 		localStorage.setItem(
 			APP_TAG_PRINTER_FONT_FAMILY,
@@ -106,6 +108,7 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 				printerFontFamily={getAppReceiptPrinterFontFamily()}
 				printerFontSize={getAppReceiptPrinterFontSize()}
 				printerName={getAppReceiptPrinterName()}
+				printingType={getAppReceiptPrintingType()}
 				tagPrinterFontFamily={getAppTagPrinterFontFamily()}
 				tagPrinterFontSize={getAppTagPrinterFontSize()}
 				tagPrinterPaperHeight={getAppTagPrinterPaperHeight()}

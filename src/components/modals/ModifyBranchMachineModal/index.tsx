@@ -1,10 +1,20 @@
-import { Button, Col, Input, message, Modal, Row, Select } from 'antd';
+import {
+	Button,
+	Col,
+	Input,
+	message,
+	Modal,
+	Row,
+	Select,
+	DatePicker,
+} from 'antd';
 import {
 	BranchMachine,
 	filterOption,
 	useBranchMachineCreate,
 	useBranchMachineEdit,
 } from 'ejjy-global';
+import moment from 'moment';
 import { ErrorMessage, Form, Formik } from 'formik';
 import { branchMachineTypes } from 'global';
 import React, { useCallback } from 'react';
@@ -130,6 +140,9 @@ export const ModifyBranchMachineForm = ({
 				storageSerialNumber: branchMachine?.storage_serial_number || '',
 				serverUrl: branchMachine?.server_url || '',
 				type: branchMachine?.type || branchMachineTypes.CASHIERING,
+				ptuDateIssued: branchMachine?.ptu_date_issued
+					? moment(branchMachine?.ptu_date_issued)
+					: null,
 			},
 			Schema: Yup.object().shape({
 				branchId: Yup.string().required().label('Branch ID'),
@@ -151,6 +164,11 @@ export const ModifyBranchMachineForm = ({
 					.trim(),
 				serverUrl: Yup.string().required().max(75).label('Server URL').trim(),
 				type: Yup.string().required().label('Type'),
+				ptuDateIssued: Yup.string()
+					.required()
+					.max(75)
+					.label('PTU Date Issued')
+					.trim(),
 			}),
 		}),
 		[branchMachine],
@@ -162,7 +180,12 @@ export const ModifyBranchMachineForm = ({
 			validationSchema={getFormDetails().Schema}
 			enableReinitialize
 			onSubmit={(formData) => {
-				onSubmit(formData);
+				onSubmit({
+					...formData,
+					ptuDateIssued: formData.ptuDateIssued
+						? formData.ptuDateIssued.format('YYYY-MM-DD')
+						: undefined,
+				});
 			}}
 		>
 			{({ values, setFieldValue }) => (
@@ -243,7 +266,7 @@ export const ModifyBranchMachineForm = ({
 						</Col>
 
 						<Col span={24}>
-							<Label label="Permit To Use" spacing />
+							<Label label="PTU Number" spacing />
 							<Input
 								name="permitToUse"
 								value={values['permitToUse']}
@@ -253,6 +276,25 @@ export const ModifyBranchMachineForm = ({
 							/>
 							<ErrorMessage
 								name="permitToUse"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col span={24}>
+							<Label id="ptuDateIssued" label="PTU Date Issued" spacing />
+							<DatePicker
+								allowClear={false}
+								className="w-100"
+								format="MMMM DD, YYYY"
+								value={
+									values.ptuDateIssued
+										? moment(values.ptuDateIssued).startOf('day')
+										: null
+								}
+								onChange={(value) => setFieldValue('ptuDateIssued', value)}
+							/>
+							<ErrorMessage
+								name="ptuDateIssued"
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>

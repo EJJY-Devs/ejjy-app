@@ -4,6 +4,12 @@ import { IListRequest } from './interfaces';
 interface Modify {
 	name: string;
 	server_url: string;
+	store_name: string;
+	store_address: string;
+	proprietor: string;
+	contact_number: string;
+	vat_type: string;
+	tin: string;
 }
 
 interface Ping {

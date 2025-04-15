@@ -33,6 +33,7 @@ const columns: ColumnsType = [
 	{ title: 'PTU', dataIndex: 'ptu' },
 	{ title: 'Machine ID', dataIndex: 'machineID' },
 	{ title: 'Type', dataIndex: 'type' },
+	{ title: 'PTU Date Issued', dataIndex: 'ptuDateIssued' },
 	{ title: 'Actions', dataIndex: 'actions' },
 ];
 
@@ -90,6 +91,7 @@ export const TabBranchMachines = ({ branch, disabled }: Props) => {
 				machineID: branchMachine.machine_identification_number,
 				ptu: branchMachine.permit_to_use,
 				type: getBranchMachineTypeName(branchMachine.type),
+				ptuDateIssued: branchMachine.ptu_date_issued,
 				actions: (
 					<Space>
 						<Tooltip title="Edit">

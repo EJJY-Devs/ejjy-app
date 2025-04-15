@@ -24,12 +24,17 @@ export const ViewRequisitionSlipModal = ({
 	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
 		title: `RequisitionSlip_${requisitionSlip.id}.pdf`,
 		print: () =>
-			printRequisitionSlip(requisitionSlip, siteSettings, user, true),
+			printRequisitionSlip({
+				requisitionSlip,
+				siteSettings,
+				user,
+				isPdf: true,
+			}),
 	});
 
 	// METHODS
 	const handlePrint = () => {
-		printRequisitionSlip(requisitionSlip, siteSettings, user);
+		printRequisitionSlip({ requisitionSlip, siteSettings, user });
 	};
 
 	// Define table columns

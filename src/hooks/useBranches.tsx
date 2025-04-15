@@ -67,14 +67,30 @@ export const useBranchRetrieve = ({ id, params, options }: Query) =>
 	);
 
 export const useBranchCreate = () =>
-	useMutation<any, any, any>(({ name, serverUrl }: any) =>
-		BranchesService.create(
-			{
-				name,
-				server_url: serverUrl,
-			},
-			getGoogleApiUrl(),
-		),
+	useMutation<any, any, any>(
+		({
+			name,
+			serverUrl,
+			storeName,
+			storeAddress,
+			proprietor,
+			contactNumber,
+			vatType,
+			tin,
+		}: any) =>
+			BranchesService.create(
+				{
+					name,
+					server_url: serverUrl,
+					store_name: storeName,
+					store_address: storeAddress,
+					proprietor,
+					contact_number: contactNumber,
+					vat_type: vatType,
+					tin,
+				},
+				getGoogleApiUrl(),
+			),
 	);
 
 export const useBranchPing = () =>
@@ -83,15 +99,32 @@ export const useBranchPing = () =>
 	);
 
 export const useBranchEdit = () =>
-	useMutation<any, any, any>(({ id, name, serverUrl }: any) =>
-		BranchesService.edit(
+	useMutation<any, any, any>(
+		({
 			id,
-			{
-				name,
-				server_url: serverUrl,
-			},
-			getGoogleApiUrl(),
-		),
+			name,
+			serverUrl,
+			storeName,
+			storeAddress,
+			proprietor,
+			contactNumber,
+			vatType,
+			tin,
+		}: any) =>
+			BranchesService.edit(
+				id,
+				{
+					name,
+					server_url: serverUrl,
+					store_name: storeName,
+					store_address: storeAddress,
+					proprietor,
+					contact_number: contactNumber,
+					vat_type: vatType,
+					tin,
+				},
+				getGoogleApiUrl(),
+			),
 	);
 
 export const useBranchDelete = () =>

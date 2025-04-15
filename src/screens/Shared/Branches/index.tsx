@@ -22,6 +22,12 @@ const LIST_QUERY_KEY = 'BranchesScreen';
 const columns: ColumnsType = [
 	{ title: 'Name', dataIndex: 'name' },
 	{ title: 'Server URL', dataIndex: 'url' },
+	{ title: 'Store Name', dataIndex: 'storeName' },
+	{ title: 'Store Address', dataIndex: 'storeAddress' },
+	{ title: 'Proprietor', dataIndex: 'proprietor' },
+	{ title: 'Contact Number', dataIndex: 'contactNumber' },
+	{ title: 'Vat Type', dataIndex: 'vatType' },
+	{ title: 'Tin', dataIndex: 'tin' },
 	{ title: 'Actions', dataIndex: 'actions' },
 ];
 
@@ -56,6 +62,12 @@ export const Branches = () => {
 			key: branch.id,
 			name: <Link to={`branches/${branch.id}`}>{branch.name}</Link>,
 			url: branch.server_url,
+			storeName: branch.store_name,
+			storeAddress: branch.store_address,
+			proprietor: branch.proprietor,
+			contactNumber: branch.contact_number,
+			vatType: branch.vat_type,
+			tin: branch.tin,
 			actions: (
 				<Space>
 					<Tooltip title="Edit">

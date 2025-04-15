@@ -22,8 +22,8 @@ export const createProductsSlice: any = (set) => ({
 	},
 	deleteProduct: (key) => {
 		set((state) => {
-			const newProducts = (state.products?.product ?? []).filter(
-				(p) => p.key !== key,
+			const newProducts = (state.products ?? []).filter(
+				(p) => p.product.key !== key,
 			);
 
 			return { products: newProducts };

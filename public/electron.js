@@ -74,7 +74,6 @@ function createWindow() {
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: false,
-			devTools: false,
 		},
 	});
 
@@ -228,6 +227,7 @@ function initServer(store) {
 			cwd: apiPath,
 			detached: true,
 			stdio: 'ignore',
+			windowsHide: true,
 		});
 
 		let apiPort = '0.0.0.0:8000';
@@ -242,6 +242,7 @@ function initServer(store) {
 			cwd: apiPath,
 			detached: true,
 			stdio: 'ignore',
+			windowsHide: true,
 		});
 		logSpawn('API', spawnApi);
 
@@ -283,6 +284,7 @@ function initServer(store) {
 				cwd: apiPath,
 				detached: true,
 				stdio: 'ignore',
+				windowsHide: true,
 			});
 		}, SPLASH_SCREEN_SHOWN_MS + 500);
 

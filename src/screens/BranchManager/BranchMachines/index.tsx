@@ -75,6 +75,7 @@ export const BranchMachines = () => {
 				machineID: branchMachine.machine_identification_number,
 				ptu: branchMachine.permit_to_use,
 				type: getBranchMachineTypeName(branchMachine.type),
+				ptuDateIssued: branchMachine.ptu_date_issued,
 				actions: (
 					<TableActions
 						onEdit={() => handleEdit(branchMachine)}
@@ -100,6 +101,7 @@ export const BranchMachines = () => {
 			{ title: 'PTU', dataIndex: 'ptu' },
 			{ title: 'Machine ID', dataIndex: 'machineID' },
 			{ title: 'Type', dataIndex: 'type' },
+			{ title: 'PTU Date Issued', dataIndex: 'ptuDateIssued' },
 		];
 
 		if (isCUDShown(user.user_type)) {

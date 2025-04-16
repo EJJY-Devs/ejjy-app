@@ -16,7 +16,5 @@
 			"releaseType": "release"
 		}
 	],
-	"build": {
-		"icon": "icons/BO.ico"
-	}
+	"icon": "icons/BO.ico"
 }

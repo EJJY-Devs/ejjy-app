@@ -1,6 +1,6 @@
 {
 	"appId": "com.ejjy.inventory.headoffice.app",
-	"productName": "EJJY Head Office",
+	"productName": "Head Office",
 	"extraResources": [
 		"api/**",
 		"gcs-service-key.json",
@@ -23,7 +23,5 @@
 	"extraMetadata": {
 		"name": "ejjy-inventory-headoffice-app"
 	},
-	"build": {
-		"icon": "build/HO.ico"
-	}
+	"icon": "icons/HO.ico"
 }

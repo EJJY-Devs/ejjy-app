@@ -548,7 +548,7 @@ export const SiteSettings = () => {
 										/>
 									</Col>
 
-									<Divider>Receipt Header</Divider>
+									{/* <Divider>Receipt Header</Divider>
 
 									<Col md={12} span={24}>
 										{renderInputField({
@@ -615,7 +615,7 @@ export const SiteSettings = () => {
 											setFieldValue,
 											values,
 										})}
-									</Col>
+									</Col> */}
 
 									<Divider>Receipt Footer</Divider>
 
@@ -673,14 +673,14 @@ export const SiteSettings = () => {
 										})}
 									</Col>
 
-									<Col lg={12} span={24}>
+									{/* <Col lg={12} span={24}>
 										{renderInputField({
 											name: 'ptuNumber',
 											label: 'PTU Number',
 											setFieldValue,
 											values,
 										})}
-									</Col>
+									</Col> */}
 									{/* <Col sm={8} xs={24}>
 										{renderDatePicker({
 											name: 'ptuDate',
@@ -690,14 +690,14 @@ export const SiteSettings = () => {
 										})}
 									</Col> */}
 
-									<Col lg={12} span={24}>
+									{/* <Col lg={12} span={24}>
 										{renderDatePicker({
 											name: 'ptuValidUntilDate',
 											label: 'PTU Valid Until Date',
 											values,
 											setFieldValue,
 										})}
-									</Col>
+									</Col> */}
 
 									<Col sm={12} span={24}>
 										{renderInputField({

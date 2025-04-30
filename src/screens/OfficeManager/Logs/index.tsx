@@ -1,7 +1,7 @@
-import { Tabs } from 'antd';
+import { Tabs, Badge, Space } from 'antd';
 import { Content } from 'components';
 import { Box } from 'components/elements';
-import { useQueryParams } from 'hooks';
+import { useQueryParams, useTransactions } from 'hooks';
 import _ from 'lodash';
 import React from 'react';
 import { TabBranchAssignments } from 'screens/Shared/Assignments/components/TabBranchAssignments';
@@ -12,6 +12,9 @@ import { TabBranchProductLogs } from 'screens/Shared/Logs/components/TabBranchPr
 import { TabCashBreakdowns } from 'screens/Shared/Logs/components/TabCashBreakdowns';
 import { TabUserLogs } from 'screens/Shared/Logs/components/TabUserLogs';
 import { TabCancelledTransactions } from 'screens/Shared/Logs/components/TabCancelledTransactions';
+import { refetchOptions, timeRangeTypes } from 'global';
+import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
+import { transactionStatuses } from 'ejjy-global';
 import { TabBranchConnectivityLogs } from './components/TabBranchConnectivityLogs';
 import { TabProductLogs } from './components/TabProductLogs';
 
@@ -34,6 +37,22 @@ export const Logs = () => {
 		params: { tab = tabs.PRODUCTS },
 		setQueryParams,
 	} = useQueryParams();
+
+	const setCancelledTransactionsCount = useLogsStore(
+		(state: any) => state.setCancelledTransactionsCount,
+	);
+
+	const {
+		data: { total: totalTransactions },
+	} = useTransactions({
+		params: {
+			statuses: transactionStatuses.CANCELLED,
+			timeRange: timeRangeTypes.DAILY,
+		},
+		options: refetchOptions,
+	});
+
+	setCancelledTransactionsCount(totalTransactions);
 
 	// METHODS
 	const handleTabClick = (selectedTab) => {
@@ -103,7 +122,14 @@ export const Logs = () => {
 
 					<Tabs.TabPane
 						key={tabs.CANCELLED_TRANSACTIONS}
-						tab={tabs.CANCELLED_TRANSACTIONS}
+						tab={
+							<Space align="center">
+								<span>{tabs.CANCELLED_TRANSACTIONS}</span>
+								{totalTransactions > 0 && (
+									<Badge count={totalTransactions} overflowCount={999} />
+								)}
+							</Space>
+						}
 					>
 						<TabCancelledTransactions />
 					</Tabs.TabPane>

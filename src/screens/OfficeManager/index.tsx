@@ -7,6 +7,7 @@ import {
 	useNotificationDtr,
 } from 'screens/OfficeManager/Notifications/hooks';
 import { useNotificationStore } from 'screens/OfficeManager/Notifications/stores/useNotificationStore';
+import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { Accounts } from 'screens/Shared/Accounts';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
 import { Assignments } from 'screens/Shared/Assignments';
@@ -52,6 +53,13 @@ const OfficeManager = () => {
 		(state: any) => ({
 			connectivityCount: state.connectivityCount,
 			dtrCount: state.dtrCount,
+		}),
+		shallow,
+	);
+
+	const { cancelledTransactionsCount } = useLogsStore(
+		(state: any) => ({
+			cancelledTransactionsCount: state.cancelledTransactionsCount,
 		}),
 		shallow,
 	);
@@ -197,6 +205,7 @@ const OfficeManager = () => {
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
 				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
 				link: '/office-manager/logs',
+				count: cancelledTransactionsCount,
 			},
 			{
 				key: 'notifications',

@@ -10,6 +10,7 @@ const useTransactions = ({ params, options }: Query) =>
 		[
 			'useTransactionsLegacy',
 			params?.branchMachineId,
+			params?.branchId,
 			params?.isAdjusted,
 			params?.modeOfPayment,
 			params?.orNumber,
@@ -24,6 +25,7 @@ const useTransactions = ({ params, options }: Query) =>
 				TransactionsService.list(
 					{
 						branch_machine_id: params?.branchMachineId,
+						branch_id: params?.branchId,
 						is_adjusted: params?.isAdjusted,
 						mode_of_payment: params?.modeOfPayment,
 						or_number: params?.orNumber,

@@ -39,12 +39,12 @@ interface Props {
 	branchId?: number;
 }
 
-export const TabCancelledTransactions = (branchId: Props) => {
+export const TabCancelledTransactions = ({ branchId = null }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
-
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
+
 	const {
 		data: { transactions, total },
 		error: transactionsError,
@@ -162,7 +162,6 @@ const Filter = ({ isLoading }: FilterProps) => {
 							filterOption={filterOption}
 							loading={isFetchingBranches}
 							optionFilterProp="children"
-							value={params.branchId ? Number(params.branchId) : null}
 							allowClear
 							showSearch
 							onChange={(value) => {

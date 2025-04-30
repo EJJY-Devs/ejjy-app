@@ -3,6 +3,7 @@ import { IListRequest } from './interfaces';
 
 interface List extends IListRequest {
 	branch_machine_id?: number;
+	branch_id?: number;
 	is_adjusted?: boolean;
 	mode_of_payment?: string;
 	payor_creditor_account_id?: number;

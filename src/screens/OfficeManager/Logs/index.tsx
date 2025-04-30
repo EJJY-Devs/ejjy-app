@@ -11,6 +11,7 @@ import { TabSessions } from 'screens/Shared/Branches/components/TabSessions';
 import { TabBranchProductLogs } from 'screens/Shared/Logs/components/TabBranchProductLogs';
 import { TabCashBreakdowns } from 'screens/Shared/Logs/components/TabCashBreakdowns';
 import { TabUserLogs } from 'screens/Shared/Logs/components/TabUserLogs';
+import { TabCancelledTransactions } from 'screens/Shared/Logs/components/TabCancelledTransactions';
 import { TabBranchConnectivityLogs } from './components/TabBranchConnectivityLogs';
 import { TabProductLogs } from './components/TabProductLogs';
 
@@ -24,6 +25,7 @@ export const tabs = {
 	CASH_BREAKDOWNS: 'Cash Breakdowns',
 	CASHIERING_SESSIONS: 'Cashiering Sessions',
 	USERS: 'Users',
+	CANCELLED_TRANSACTIONS: 'Cancelled Transactions',
 };
 
 export const Logs = () => {
@@ -97,6 +99,13 @@ export const Logs = () => {
 
 					<Tabs.TabPane key={tabs.USERS} tab={tabs.USERS}>
 						<TabUserLogs />
+					</Tabs.TabPane>
+
+					<Tabs.TabPane
+						key={tabs.CANCELLED_TRANSACTIONS}
+						tab={tabs.CANCELLED_TRANSACTIONS}
+					>
+						<TabCancelledTransactions />
 					</Tabs.TabPane>
 				</Tabs>
 			</Box>

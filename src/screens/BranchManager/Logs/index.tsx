@@ -9,6 +9,7 @@ import { TabDays } from 'screens/Shared/Branches/components/TabDays';
 import { TabSessions } from 'screens/Shared/Branches/components/TabSessions';
 import { TabBranchMachineConnectivityLogs } from 'screens/Shared/Logs/components/TabBranchMachineConnectivityLogs';
 import { TabBranchProductLogs } from 'screens/Shared/Logs/components/TabBranchProductLogs';
+import { TabCancelledTransactions } from 'screens/Shared/Logs/components/TabCancelledTransactions';
 import { TabCashBreakdowns } from 'screens/Shared/Logs/components/TabCashBreakdowns';
 import { TabUserLogs } from 'screens/Shared/Logs/components/TabUserLogs';
 import { getLocalBranchId, isStandAlone } from 'utils';
@@ -22,6 +23,7 @@ export const tabs = {
 	CASH_BREAKDOWNS: 'Cash Breakdowns',
 	CASHIERING_SESSIONS: 'Cashiering Sessions',
 	USERS: 'Users',
+	CANCELLED_TRANSACTIONS: 'Cancelled Transactions',
 };
 
 export const Logs = () => {
@@ -86,6 +88,13 @@ export const Logs = () => {
 
 					<Tabs.TabPane key={tabs.USERS} tab={tabs.USERS}>
 						<TabUserLogs />
+					</Tabs.TabPane>
+
+					<Tabs.TabPane
+						key={tabs.CANCELLED_TRANSACTIONS}
+						tab={tabs.CANCELLED_TRANSACTIONS}
+					>
+						<TabCancelledTransactions branchId={Number(getLocalBranchId())} />
 					</Tabs.TabPane>
 				</Tabs>
 			</Box>

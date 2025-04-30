@@ -27,7 +27,7 @@ export const ViewRequisitionSlip = ({ match }: Props) => {
 		<Content
 			className="ViewRequisitionSlip"
 			rightTitle={`#${requisitionSlip?.reference_number}`}
-			title="View Purchase Request"
+			title="View Requisition Slip"
 		>
 			<Spin spinning={isLoading} tip="Fetching requisition slip...">
 				{requisitionSlip && (

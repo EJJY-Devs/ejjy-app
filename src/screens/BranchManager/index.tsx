@@ -1,15 +1,15 @@
 import { Spin } from 'antd';
 import { Container, TimeMismatchBoundary } from 'components';
-import { IS_APP_LIVE, MAX_PAGE_SIZE, serviceTypes } from 'global';
+import { IS_APP_LIVE, MAX_PAGE_SIZE, refetchOptions } from 'global';
 import {
 	useBranches,
 	useBranchPing,
 	useBranchProducts,
 	useProductCheckCreateDaily,
 	useProductCheckCreateRandom,
-	useSalesTracker,
-	useSiteSettings,
+	useDtrNotificationCount,
 	useUploadData,
+	useSalesTrackerCount,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
@@ -35,7 +35,7 @@ import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment'
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
 import shallow from 'zustand/shallow';
 import useInterval from 'use-interval';
-import { getBranchKey, getLocalBranchId, isStandAlone } from 'utils';
+import { getBranchKey, getLocalBranchId } from 'utils';
 import { Reports } from 'screens/Shared/Reports';
 import { Accounts } from '../Shared/Accounts';
 import { BackOrders } from './BackOrders';
@@ -52,26 +52,20 @@ import { Users } from './Users';
 
 const PING_BRANCH_INTERVAL_MS = 10_000;
 
-const refetchOptions: any = {
-	refetchInterval: 60000,
-	refetchIntervalInBackground: true,
-	notifyOnChangeProps: ['data'],
-};
-
 const BranchManager = () => {
 	// VARIABLES
 	const branchKey = getBranchKey();
 
 	// STATES
 	const [notificationsCount, setNotificationsCount] = useState(0);
+	const [logsCount, setLogsCount] = useState(0);
 
 	// CUSTOM HOOKS
 	const { isFetching: isFetchingBranches } = useBranches({
 		options: { enabled: IS_APP_LIVE },
 	});
-	const { data: siteSettings } = useSiteSettings();
 	const {
-		data: { total: branchProductsTotal },
+		data: { total: branchProductsNegativeBalanceCount },
 	} = useBranchProducts({
 		params: {
 			branchId: getLocalBranchId(),
@@ -80,16 +74,6 @@ const BranchManager = () => {
 		},
 		options: refetchOptions,
 	});
-	useBranchProducts({
-		params: {
-			branchId: getLocalBranchId(),
-			serviceType: serviceTypes.OFFLINE,
-		},
-		options: {
-			...refetchOptions,
-			enabled: !isStandAlone(),
-		},
-	});
 
 	const { cancelledTransactionsCount } = useLogsStore(
 		(state: any) => ({
@@ -97,13 +81,6 @@ const BranchManager = () => {
 		}),
 		shallow,
 	);
-
-	const {
-		data: { salesTrackers },
-	} = useSalesTracker({
-		params: { pageSize: MAX_PAGE_SIZE },
-		options: refetchOptions,
-	});
 
 	useUploadData({
 		params: { isBackOffice: true },
@@ -120,6 +97,9 @@ const BranchManager = () => {
 	const { mutate: createCheckDaily } = useProductCheckCreateDaily();
 	const { mutate: createCheckRandom } = useProductCheckCreateRandom();
 
+	// DTR count
+	const dtrCount = useDtrNotificationCount();
+
 	// METHODS
 	useEffect(() => {
 		createCheckDaily(null);
@@ -127,36 +107,25 @@ const BranchManager = () => {
 	}, []);
 
 	useEffect(() => {
-		if (siteSettings) {
-			const resetCounterNotificationThresholdAmount =
-				siteSettings?.reset_counter_notification_threshold_amount;
-			const resetCounterNotificationThresholdInvoiceNumber =
-				siteSettings?.reset_counter_notification_threshold_invoice_number;
+		const newLogsCount = cancelledTransactionsCount > 0 ? 1 : 0;
 
-			// Reset count
-			const resetCount = salesTrackers.filter(
-				({ total_sales }) =>
-					Number(total_sales) >= resetCounterNotificationThresholdAmount,
-			).length;
-
-			// Transaction count
-			const transactionCount = salesTrackers.filter(
-				({ transaction_count }) =>
-					Number(transaction_count) >=
-					resetCounterNotificationThresholdInvoiceNumber,
-			).length;
-
-			// Branch products with lacking balance count
-			const branchProductCount = branchProductsTotal;
-
-			// Set new notification count
-			const newNotificationsCount =
-				branchProductCount + resetCount + transactionCount;
-			if (newNotificationsCount !== notificationsCount) {
-				setNotificationsCount(newNotificationsCount);
-			}
+		if (newLogsCount !== logsCount) {
+			setLogsCount(newLogsCount);
 		}
-	}, [branchProductsTotal, salesTrackers, siteSettings]);
+	}, [cancelledTransactionsCount]);
+
+	const salesTrackerCount = useSalesTrackerCount();
+
+	useEffect(() => {
+		const newNotificationsCount =
+			(branchProductsNegativeBalanceCount > 0 ? 1 : 0) +
+			(salesTrackerCount > 0 ? 1 : 0) +
+			(dtrCount > 0 ? 1 : 0);
+
+		if (newNotificationsCount !== notificationsCount) {
+			setNotificationsCount(newNotificationsCount);
+		}
+	}, [salesTrackerCount, branchProductsNegativeBalanceCount, dtrCount]);
 
 	const getSidebarItems = useCallback(
 		() => [
@@ -299,7 +268,7 @@ const BranchManager = () => {
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
 				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
 				link: '/branch-manager/logs',
-				count: cancelledTransactionsCount,
+				count: logsCount,
 			},
 			{
 				key: 'notifications',
@@ -310,7 +279,7 @@ const BranchManager = () => {
 				count: notificationsCount,
 			},
 		],
-		[notificationsCount, cancelledTransactionsCount],
+		[notificationsCount, logsCount],
 	);
 
 	if (isFetchingBranches) {

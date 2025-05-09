@@ -76,3 +76,5 @@ export * from './useUserPendingApprovals';
 export { default as useUserPendingApprovals } from './useUserPendingApprovals';
 export * from './usePayments';
 export { default as usePaymentsSummary } from './usePayments';
+export * from './useDtrNotificationCount';
+export { default as useDtrNotificationCount } from './useDtrNotificationCount';

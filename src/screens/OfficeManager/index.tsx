@@ -1,7 +1,8 @@
 import { Container } from 'components';
-import { useUploadData } from 'hooks';
-import React, { useCallback } from 'react';
+import { useUploadData, useSalesTrackerCount, useBranchProducts } from 'hooks';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
+import { refetchOptions } from 'global';
 import {
 	useNotificationConnectivity,
 	useNotificationDtr,
@@ -49,6 +50,10 @@ const OfficeManager = () => {
 		params: { isBackOffice: false },
 	});
 
+	// STATE
+	const [logsCount, setLogsCount] = useState(0);
+	const [notificationsCount, setNotificationsCount] = useState(0);
+
 	const { connectivityCount, dtrCount } = useNotificationStore(
 		(state: any) => ({
 			connectivityCount: state.connectivityCount,
@@ -63,6 +68,41 @@ const OfficeManager = () => {
 		}),
 		shallow,
 	);
+
+	const {
+		data: { total: branchProductsNegativeBalanceCount },
+	} = useBranchProducts({
+		params: {
+			hasNegativeBalance: true,
+		},
+		options: refetchOptions,
+	});
+
+	const salesTrackerCount = useSalesTrackerCount();
+
+	useEffect(() => {
+		const newLogsCount = cancelledTransactionsCount > 0 ? 1 : 0;
+
+		if (newLogsCount !== logsCount) {
+			setLogsCount(newLogsCount);
+		}
+	}, [cancelledTransactionsCount]);
+
+	useEffect(() => {
+		const newNotificationsCount =
+			(salesTrackerCount > 0 ? 1 : 0) +
+			(dtrCount > 0 ? 1 : 0) +
+			(connectivityCount > 0 ? 1 : 0) +
+			(branchProductsNegativeBalanceCount > 0 ? 1 : 0);
+		if (newNotificationsCount !== notificationsCount) {
+			setNotificationsCount(newNotificationsCount);
+		}
+	}, [
+		salesTrackerCount,
+		dtrCount,
+		connectivityCount,
+		branchProductsNegativeBalanceCount,
+	]);
 
 	const getSidebarItems = useCallback(
 		() => [
@@ -205,7 +245,7 @@ const OfficeManager = () => {
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
 				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
 				link: '/office-manager/logs',
-				count: cancelledTransactionsCount,
+				count: logsCount,
 			},
 			{
 				key: 'notifications',
@@ -213,10 +253,10 @@ const OfficeManager = () => {
 				activeIcon: require('../../assets/images/icon-notifications-active.svg'),
 				defaultIcon: require('../../assets/images/icon-notifications.svg'),
 				link: '/office-manager/notifications',
-				count: connectivityCount + dtrCount,
+				count: notificationsCount,
 			},
 		],
-		[connectivityCount, dtrCount, cancelledTransactionsCount],
+		[notificationsCount, logsCount],
 	);
 
 	return (

@@ -1,14 +1,12 @@
 import { Badge, Space, Tabs } from 'antd';
 import { Content } from 'components';
 import { Box } from 'components/elements';
-import { attendanceCategories } from 'ejjy-global';
-import { MAX_PAGE_SIZE, serviceTypes } from 'global';
+import { MAX_PAGE_SIZE } from 'global';
 import {
-	useAttendanceLogs,
 	useBranchProducts,
-	useProblematicAttendanceLogs,
 	useQueryParams,
 	useSalesTrackerCount,
+	useDtrNotificationCount,
 } from 'hooks';
 import _ from 'lodash';
 import React from 'react';
@@ -102,30 +100,4 @@ export const Notifications = () => {
 			</Box>
 		</Content>
 	);
-};
-
-const useDtrNotificationCount = () => {
-	const params = {
-		attendanceCategory: attendanceCategories.ATTENDANCE,
-		pageSize: MAX_PAGE_SIZE,
-	};
-
-	const { isSuccess: isAttendanceLogsSuccess } = useAttendanceLogs({
-		params: {
-			...params,
-			serviceType: serviceTypes.OFFLINE,
-		},
-		options: { notifyOnChangeProps: ['isSuccess'] },
-	});
-	const {
-		data: { total: problematicAttendanceLogsCount },
-	} = useProblematicAttendanceLogs({
-		params,
-		options: {
-			enabled: isAttendanceLogsSuccess,
-			notifyOnChangeProps: ['data'],
-		},
-	});
-
-	return problematicAttendanceLogsCount;
 };

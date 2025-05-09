@@ -1,11 +1,11 @@
-import { Col, Divider, InputNumber, message, Modal, Row, Space } from 'antd';
+import { Col, Divider, message, Modal, Row, Space } from 'antd';
 import { FieldError, Label } from 'components/elements';
 import { ErrorMessage, Form, Formik } from 'formik';
 import { unitOfMeasurementTypes } from 'global';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useRef } from 'react';
 import * as Yup from 'yup';
-import { WEIGHING_DECIMAL_DIGITS } from '../../data';
+import InputNumberQuantity from 'components/elements/InputNumberQuantity';
 import { useBoundStore } from '../../stores/useBoundStore';
 import CartButton from '../CartButton';
 import './style.scss';
@@ -15,7 +15,6 @@ interface Props {
 	onSuccess: any;
 	onClose: any;
 }
-
 export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 	// CUSTOM HOOKS
 	const { products, addProduct, editProduct } = useBoundStore((state: any) => ({
@@ -84,6 +83,7 @@ export const AddProductForm = ({ product, onClose, onSubmit }) => {
 		() => ({
 			DefaultValues: {
 				quantity: '',
+				type: unitOfMeasurementTypes.NON_WEIGHING,
 			},
 			Schema: Yup.object().shape({
 				quantity: Yup.number()
@@ -124,18 +124,16 @@ export const AddProductForm = ({ product, onClose, onSubmit }) => {
 					<Row gutter={[16, 16]}>
 						<Col span={24}>
 							<Label label="Quantity" spacing />
-							<InputNumber
+							<InputNumberQuantity
 								ref={inputRef}
 								className="w-100 AddProductForm_inputQuantity"
 								controls={false}
-								precision={
-									product.product.unit_of_measurement ===
-									unitOfMeasurementTypes.WEIGHING
-										? WEIGHING_DECIMAL_DIGITS
-										: 0
-								}
+								isWeighing={[
+									values.type,
+									product.product.unit_of_measurement,
+								].includes(unitOfMeasurementTypes.WEIGHING)}
 								value={values['quantity']}
-								onChange={(value) => {
+								onChange={(value: string) => {
 									setFieldValue('quantity', value);
 								}}
 							/>

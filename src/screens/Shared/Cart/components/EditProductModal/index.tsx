@@ -72,12 +72,19 @@ export const EditProductForm = ({ product, onClose, onSubmit }) => {
 			Schema: Yup.object().shape({
 				quantity: Yup.number()
 					.required()
-					.moreThan(0)
+					.when([], {
+						is: () =>
+							product.product.unit_of_measurement ===
+							unitOfMeasurementTypes.WEIGHING,
+						then: (schema) => schema, // No .moreThan(0) for WEIGHING
+						otherwise: (schema) => schema.moreThan(0),
+					})
 					.test(
 						'is-whole-number',
 						'Non-weighing items require whole number quantity.',
 						(value) =>
-							product.unit_of_measurement === unitOfMeasurementTypes.WEIGHING
+							product.product.unit_of_measurement ===
+							unitOfMeasurementTypes.WEIGHING
 								? true
 								: _.isInteger(Number(value)),
 					)
@@ -106,7 +113,7 @@ export const EditProductForm = ({ product, onClose, onSubmit }) => {
 								className="w-100 EditProductForm_inputQuantity"
 								controls={false}
 								precision={
-									product.unit_of_measurement ===
+									product.product.unit_of_measurement ===
 									unitOfMeasurementTypes.WEIGHING
 										? WEIGHING_DECIMAL_DIGITS
 										: 0

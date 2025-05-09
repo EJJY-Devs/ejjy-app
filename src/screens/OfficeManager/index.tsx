@@ -216,7 +216,7 @@ const OfficeManager = () => {
 				count: connectivityCount + dtrCount,
 			},
 		],
-		[connectivityCount, dtrCount],
+		[connectivityCount, dtrCount, cancelledTransactionsCount],
 	);
 
 	return (

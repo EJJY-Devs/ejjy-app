@@ -80,8 +80,9 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 				current_balance,
 				product_status,
 				quantity,
-				unit_of_measurement,
 			} = branchProduct;
+
+			console.log(branchProduct);
 
 			const {
 				barcode,
@@ -139,7 +140,10 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 					type="text"
 					onClick={() => handleEdit(index)}
 				>
-					{formatQuantity({ unitOfMeasurement: unit_of_measurement, quantity })}
+					{formatQuantity({
+						unitOfMeasurement: product.unit_of_measurement,
+						quantity,
+					})}
 				</Button>,
 
 				<Tooltip

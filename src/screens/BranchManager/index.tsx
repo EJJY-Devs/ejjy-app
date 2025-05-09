@@ -16,6 +16,7 @@ import { Redirect, Route, Switch } from 'react-router-dom';
 import { Checkings } from 'screens/BranchManager/Checkings';
 import { ViewChecking } from 'screens/BranchManager/Checkings/ViewChecking';
 import { Logs } from 'screens/BranchManager/Logs';
+import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
 import { Stocks } from 'screens/BranchManager/Stock';
 import { InventoryTransfer } from 'screens/BranchManager/InventoryTransfer';
@@ -32,6 +33,7 @@ import { Sales } from 'screens/Shared/Sales';
 import { SiteSettings } from 'screens/Shared/SiteSettings';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
+import shallow from 'zustand/shallow';
 import useInterval from 'use-interval';
 import { getBranchKey, getLocalBranchId, isStandAlone } from 'utils';
 import { Reports } from 'screens/Shared/Reports';
@@ -88,6 +90,13 @@ const BranchManager = () => {
 			enabled: !isStandAlone(),
 		},
 	});
+
+	const { cancelledTransactionsCount } = useLogsStore(
+		(state: any) => ({
+			cancelledTransactionsCount: state.cancelledTransactionsCount,
+		}),
+		shallow,
+	);
 
 	const {
 		data: { salesTrackers },
@@ -290,6 +299,7 @@ const BranchManager = () => {
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
 				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
 				link: '/branch-manager/logs',
+				count: cancelledTransactionsCount,
 			},
 			{
 				key: 'notifications',
@@ -300,7 +310,7 @@ const BranchManager = () => {
 				count: notificationsCount,
 			},
 		],
-		[notificationsCount],
+		[notificationsCount, cancelledTransactionsCount],
 	);
 
 	if (isFetchingBranches) {

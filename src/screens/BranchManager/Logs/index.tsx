@@ -1,7 +1,7 @@
-import { Tabs } from 'antd';
+import { Tabs, Space, Badge } from 'antd';
 import { Content } from 'components';
 import { Box } from 'components/elements';
-import { useQueryParams } from 'hooks';
+import { useQueryParams, useTransactions } from 'hooks';
 import _ from 'lodash';
 import React from 'react';
 import { TabBranchAssignments } from 'screens/Shared/Assignments/components/TabBranchAssignments';
@@ -9,9 +9,12 @@ import { TabDays } from 'screens/Shared/Branches/components/TabDays';
 import { TabSessions } from 'screens/Shared/Branches/components/TabSessions';
 import { TabBranchMachineConnectivityLogs } from 'screens/Shared/Logs/components/TabBranchMachineConnectivityLogs';
 import { TabBranchProductLogs } from 'screens/Shared/Logs/components/TabBranchProductLogs';
+import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { TabCancelledTransactions } from 'screens/Shared/Logs/components/TabCancelledTransactions';
 import { TabCashBreakdowns } from 'screens/Shared/Logs/components/TabCashBreakdowns';
 import { TabUserLogs } from 'screens/Shared/Logs/components/TabUserLogs';
+import { transactionStatuses } from 'ejjy-global';
+import { timeRangeTypes, refetchOptions } from 'global';
 import { getLocalBranchId, isStandAlone } from 'utils';
 
 export const tabs = {
@@ -28,6 +31,23 @@ export const tabs = {
 
 export const Logs = () => {
 	// CUSTOM HOOKS
+
+	const setCancelledTransactionsCount = useLogsStore(
+		(state: any) => state.setCancelledTransactionsCount,
+	);
+
+	const {
+		data: { total: totalTransactions },
+	} = useTransactions({
+		params: {
+			statuses: transactionStatuses.CANCELLED,
+			timeRange: timeRangeTypes.DAILY,
+		},
+		options: refetchOptions,
+	});
+
+	setCancelledTransactionsCount(totalTransactions);
+
 	const {
 		params: { tab = tabs.BRANCH_PRODUCTS },
 		setQueryParams,
@@ -92,7 +112,14 @@ export const Logs = () => {
 
 					<Tabs.TabPane
 						key={tabs.CANCELLED_TRANSACTIONS}
-						tab={tabs.CANCELLED_TRANSACTIONS}
+						tab={
+							<Space align="center">
+								<span>{tabs.CANCELLED_TRANSACTIONS}</span>
+								{totalTransactions > 0 && (
+									<Badge count={totalTransactions} overflowCount={999} />
+								)}
+							</Space>
+						}
 					>
 						<TabCancelledTransactions branchId={Number(getLocalBranchId())} />
 					</Tabs.TabPane>

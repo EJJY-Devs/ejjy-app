@@ -82,8 +82,6 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 				quantity,
 			} = branchProduct;
 
-			console.log(branchProduct);
-
 			const {
 				barcode,
 				textcode,

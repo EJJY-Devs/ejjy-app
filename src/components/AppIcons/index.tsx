@@ -42,7 +42,6 @@ const Component = () => {
 			setTimeout(() => {
 				qz.printers.setPrinterCallbacks((event) => {
 					const { statusText } = event;
-					console.log('app icon', event);
 
 					if (statusText === printerStatuses.NOT_AVAILABLE) {
 						setUserInterface({ isPrinterConnected: false });

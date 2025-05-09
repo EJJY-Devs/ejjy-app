@@ -24,7 +24,6 @@ export const EditAttendanceLogModal = ({
 		isLoading: isEditingAttendanceLog,
 		error: editAttendanceLogError,
 	} = useAttendanceLogEdit();
-	console.log('attendanceLog', attendanceLog);
 	// METHODS
 	const handleSubmit = async (formData) => {
 		await editAttendanceLog({

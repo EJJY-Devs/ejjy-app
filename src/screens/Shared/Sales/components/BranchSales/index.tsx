@@ -91,8 +91,6 @@ export const BranchSales = ({ branchId }: Props) => {
 			);
 			newSummary.grossSales += Number(branchMachine.sales.gross_sales);
 
-			console.log(branchMachine.sales);
-
 			return {
 				key: branchMachine.id,
 				machineName: branchMachine.name,

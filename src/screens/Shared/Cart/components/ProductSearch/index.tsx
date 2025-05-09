@@ -57,8 +57,6 @@ export const ProductSearch = ({ barcodeScannerRef }: Props) => {
 		options: {
 			enabled: searchedText?.length > 0,
 			onSuccess: (data: any) => {
-				console.log('data', data);
-				console.log(productKeysInTable);
 				const newSearchableProducts = data.branchProducts.filter(
 					({ product }) => !productKeysInTable.includes(product.key),
 				);

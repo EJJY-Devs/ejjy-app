@@ -65,7 +65,7 @@ export const TabCancelledTransactions = ({ branchId = null }: Props) => {
 		const data = transactions.map((transaction) => ({
 			key: transaction.id,
 			datetimeCreated: formatDateTimeExtended(transaction.datetime_created),
-			transactionNumber: transaction.id,
+			transactionNumber: transaction.unique_transaction_id,
 			branchMachine: transaction?.branch_machine?.name || EMPTY_CELL,
 			branch: transaction?.branch_machine?.branch.name || EMPTY_CELL,
 			cashier: getFullName(transaction.teller),

@@ -379,6 +379,7 @@ export const useBranchProductEdit = () => {
 			reorderPoint,
 			wholeSalePrice,
 			specialPrice,
+			actingUserId,
 		}: any) =>
 			BranchProductsService.edit(
 				id,
@@ -403,6 +404,7 @@ export const useBranchProductEdit = () => {
 					reorder_point: reorderPoint,
 					wholesale_price: wholeSalePrice,
 					special_price: specialPrice,
+					acting_user_id: actingUserId,
 				},
 				getLocalApiUrl(),
 			),

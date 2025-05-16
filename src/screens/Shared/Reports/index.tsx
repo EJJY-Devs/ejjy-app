@@ -31,7 +31,13 @@ import {
 } from 'hooks';
 import _ from 'lodash';
 import { IProductCategory } from 'models';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+	useCallback,
+	useEffect,
+	useState,
+	useMemo,
+	useRef,
+} from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
@@ -42,65 +48,6 @@ import {
 	isUserFromBranch,
 	isUserFromOffice,
 } from 'utils';
-
-const columns: ColumnsType = [
-	{
-		title: 'Name',
-		dataIndex: 'name',
-		width: 150,
-		fixed: 'left',
-	},
-	{
-		title: 'Code',
-		dataIndex: 'code',
-	},
-	{
-		title: 'Balance',
-		children: [
-			{
-				title: 'Current Balance',
-				dataIndex: 'balance',
-				align: 'center',
-			},
-			{
-				title: 'BO Balance',
-				dataIndex: 'boBalance',
-				align: 'center',
-			},
-		],
-	},
-	{
-		title: 'Quantity Sold',
-		dataIndex: 'quantitySold',
-		align: 'center',
-		sorter: true,
-	},
-	{
-		title: 'Daily Average Sold',
-		dataIndex: 'dailyAverageSold',
-		align: 'center',
-		sorter: true,
-	},
-	{
-		title: 'Average Quantity Sold Percentage',
-		dataIndex: 'dailyAverageSoldPercentage',
-		align: 'center',
-		sorter: true,
-	},
-	{
-		title: 'Average Daily Consumption',
-		dataIndex: 'averageDailyConsumption',
-		align: 'center',
-	},
-	{
-		title: 'Status',
-		dataIndex: 'status',
-	},
-	{
-		title: 'Actions',
-		dataIndex: 'actions',
-	},
-];
 
 const sorts = {
 	CURRENT_BALANCE_ASC: 'current_balance',
@@ -181,37 +128,66 @@ export const Reports = () => {
 		options: refetchOptions,
 	});
 
-	// METHODS
-	useEffect(() => {
-		switch (params?.ordering) {
-			case sorts.CURRENT_BALANCE_ASC:
-				columns[2].sortOrder = 'ascend';
-				break;
-			case sorts.CURRENT_BALANCE_DES:
-				columns[2].sortOrder = 'descend';
-				break;
-			case sorts.QUANTITY_SOLD_ASC:
-				columns[4].sortOrder = 'ascend';
-				break;
-			case sorts.QUANTITY_SOLD_DES:
-				columns[4].sortOrder = 'descend';
-				break;
-			case sorts.DAILY_AVERAGE_SOLD_ASC:
-				columns[5].sortOrder = 'ascend';
-				break;
-			case sorts.DAILY_AVERAGE_SOLD_DES:
-				columns[5].sortOrder = 'descend';
-				break;
-			case sorts.DAILY_AVERAGE_SOLD_PERCENTAGE_ASC:
-				columns[6].sortOrder = 'ascend';
-				break;
-			case sorts.DAILY_AVERAGE_SOLD_PERCENTAGE_DES:
-				columns[6].sortOrder = 'descend';
-				break;
-			default:
-			// Do nothing
-		}
-	}, []);
+	const columns: ColumnsType = useMemo(() => {
+		const getSortOrderFromParam = (field: string) => {
+			switch (params?.ordering) {
+				case sorts.QUANTITY_SOLD_ASC:
+					return field === 'quantity_sold' ? 'ascend' : null;
+				case sorts.QUANTITY_SOLD_DES:
+					return field === 'quantity_sold' ? 'descend' : null;
+				case sorts.DAILY_AVERAGE_SOLD_ASC:
+					return field === 'daily_average_sold' ? 'ascend' : null;
+				case sorts.DAILY_AVERAGE_SOLD_DES:
+					return field === 'daily_average_sold' ? 'descend' : null;
+				case sorts.DAILY_AVERAGE_SOLD_PERCENTAGE_ASC:
+					return field === 'daily_average_sold_percentage' ? 'ascend' : null;
+				case sorts.DAILY_AVERAGE_SOLD_PERCENTAGE_DES:
+					return field === 'daily_average_sold_percentage' ? 'descend' : null;
+				default:
+					return null;
+			}
+		};
+
+		return [
+			{ title: 'Name', dataIndex: 'name', width: 150, fixed: 'left' },
+			{ title: 'Code', dataIndex: 'code' },
+			{
+				title: 'Balance',
+				children: [
+					{ title: 'Current Balance', dataIndex: 'balance', align: 'center' },
+					{ title: 'BO Balance', dataIndex: 'boBalance', align: 'center' },
+				],
+			},
+			{
+				title: 'Quantity Sold',
+				dataIndex: 'quantitySold',
+				align: 'center',
+				sorter: true,
+				sortOrder: getSortOrderFromParam('quantity_sold'),
+			},
+			{
+				title: 'Daily Average Sold',
+				dataIndex: 'dailyAverageSold',
+				align: 'center',
+				sorter: true,
+				sortOrder: getSortOrderFromParam('daily_average_sold'),
+			},
+			{
+				title: 'Average Quantity Sold Percentage',
+				dataIndex: 'dailyAverageSoldPercentage',
+				align: 'center',
+				sorter: true,
+				sortOrder: getSortOrderFromParam('daily_average_sold_percentage'),
+			},
+			{
+				title: 'Average Daily Consumption',
+				dataIndex: 'averageDailyConsumption',
+				align: 'center',
+			},
+			{ title: 'Status', dataIndex: 'status' },
+			{ title: 'Actions', dataIndex: 'actions' },
+		];
+	}, [params?.ordering]);
 
 	useEffect(() => {
 		const data = branchProducts.map((branchProduct) => {
@@ -328,16 +304,18 @@ export const Reports = () => {
 							sorter: SorterResult<any>,
 							extra,
 						) => {
-							if (extra.action === 'sort' && sorter.column) {
-								columns[2].sortOrder = null;
-								columns[4].sortOrder = null;
-								columns[5].sortOrder = null;
-								columns[6].sortOrder = null;
-								// eslint-disable-next-line no-param-reassign
-								sorter.column.sortOrder = sorter.order;
+							if (extra.action === 'sort' && sorter.field) {
+								// sorter.field refers to dataIndex (e.g., 'quantitySold')
+								const fieldMapping = {
+									quantitySold: 'quantity_sold',
+									dailyAverageSold: 'daily_average_sold',
+									dailyAverageSoldPercentage: 'daily_average_sold_percentage',
+								};
+
+								const field = fieldMapping[sorter.field as string];
 
 								setQueryParams(
-									{ ordering: getSortOrder(sorter.field, sorter.order) },
+									{ ordering: getSortOrder(field, sorter.order) },
 									{ shouldResetPage: true },
 								);
 							}
@@ -416,6 +394,20 @@ const Filter = ({ productCategories }: FilterProps) => {
 
 		setSelectedProducts(options);
 	}, [paramProducts]);
+
+	const hasSetDefaultBranch = useRef(false);
+
+	useEffect(() => {
+		if (
+			!hasSetDefaultBranch.current &&
+			!params.branchId &&
+			branches.length > 0 &&
+			isUserFromOffice(user.user_type)
+		) {
+			setQueryParams({ branchId: branches[0].id }, { shouldResetPage: true });
+			hasSetDefaultBranch.current = true;
+		}
+	}, [params.branchId, branches, user.user_type]);
 
 	const handleSearchDebounced = useCallback(
 		_.debounce((keyword) => {

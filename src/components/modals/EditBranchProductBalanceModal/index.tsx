@@ -5,6 +5,7 @@ import { getKeyDownCombination } from 'ejjy-global';
 import { ErrorMessage, Form, Formik } from 'formik';
 import { SHOW_HIDE_SHORTCUT, unitOfMeasurementTypes } from 'global';
 import { useBranchProductEdit } from 'hooks';
+import { useUserStore } from 'stores';
 import { isInteger } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { confirmPassword, convertIntoArray } from 'utils';
@@ -29,6 +30,8 @@ export const EditBranchProductBalanceModal = ({
 		error: editBranchProductError,
 	} = useBranchProductEdit();
 
+	const user = useUserStore((state) => state.user);
+
 	// METHODS
 	useEffect(() => {
 		document.addEventListener('keydown', handleKeyDown);
@@ -46,6 +49,7 @@ export const EditBranchProductBalanceModal = ({
 			isDailyChecked: branchProduct.is_daily_checked,
 			isRandomlyChecked: branchProduct.is_randomly_checked,
 			isSoldInBranch: branchProduct.is_sold_in_branch,
+			actingUserId: user.id,
 		});
 		message.success('Branch product was edited successfully');
 		handleClose();

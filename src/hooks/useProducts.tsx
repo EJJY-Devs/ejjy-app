@@ -186,6 +186,7 @@ export const useProductEdit = () => {
 			wholeSalePrice,
 			creditPrice,
 			specialPrice,
+			isMultipleInstance,
 		}: any) =>
 			ProductsService.edit(
 				id,
@@ -202,6 +203,7 @@ export const useProductEdit = () => {
 					is_randomly_checked: isRandomlyChecked,
 					is_shown_in_scale_list: isShownInScaleList,
 					is_sold_in_branch: isSoldInBranch,
+					is_multiple_instance: isMultipleInstance,
 					is_vat_exempted: isVatExempted,
 					markdown_price_per_bulk1: markdownPricePerBulk1,
 					markdown_price_per_bulk2: markdownPricePerBulk2,

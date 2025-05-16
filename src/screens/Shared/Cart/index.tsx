@@ -204,7 +204,10 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 					withSpaceBottom
 				/>
 
-				<ProductSearch barcodeScannerRef={barcodeScannerRef} />
+				<ProductSearch
+					barcodeScannerRef={barcodeScannerRef}
+					isCreateInventoryTransfer={type !== 'Requisition Slip'}
+				/>
 				<ProductTable isLoading={barcodeScanLoading || isLoading} type={type} />
 				<FooterButtons isDisabled={isLoading} onSubmit={handleSubmit} />
 

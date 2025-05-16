@@ -18,9 +18,13 @@ const WARNING_MESSAGE_KEY = 'WARNING_MESSAGE_KEY';
 
 interface Props {
 	barcodeScannerRef: any;
+	isCreateInventoryTransfer: any;
 }
 
-export const ProductSearch = ({ barcodeScannerRef }: Props) => {
+export const ProductSearch = ({
+	barcodeScannerRef,
+	isCreateInventoryTransfer,
+}: Props) => {
 	// STATES
 	const [productKeysInTable, setProductKeysInTable] = useState([]);
 	const [selectedProduct, setSelectedProduct] = useState(null);
@@ -46,6 +50,7 @@ export const ProductSearch = ({ barcodeScannerRef }: Props) => {
 		}),
 		shallow,
 	);
+
 	const {
 		isFetching: isFetchingBranchProducts,
 		error: branchProductsError,
@@ -58,7 +63,13 @@ export const ProductSearch = ({ barcodeScannerRef }: Props) => {
 			enabled: searchedText?.length > 0,
 			onSuccess: (data: any) => {
 				const newSearchableProducts = data.branchProducts.filter(
-					({ product }) => !productKeysInTable.includes(product.key),
+					({ product }) => {
+						const alreadyInCart = productKeysInTable.includes(product.key);
+						const allowsMultiple =
+							product.is_multiple_instance && isCreateInventoryTransfer;
+
+						return allowsMultiple || !alreadyInCart;
+					},
 				);
 
 				setActiveIndex(0);

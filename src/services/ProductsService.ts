@@ -41,6 +41,7 @@ interface Modify {
 	wholesale_price: number;
 	credit_price: number;
 	special_price: number;
+	is_multiple_instance: boolean;
 }
 
 interface Delete extends IListRequest {

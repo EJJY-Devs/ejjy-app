@@ -68,7 +68,9 @@ export const ProductSearch = ({
 						const allowsMultiple =
 							product.is_multiple_instance && isCreateInventoryTransfer;
 
-						return allowsMultiple || !alreadyInCart;
+						const isNotDeleted = product.deleted === null;
+
+						return isNotDeleted && (allowsMultiple || !alreadyInCart);
 					},
 				);
 

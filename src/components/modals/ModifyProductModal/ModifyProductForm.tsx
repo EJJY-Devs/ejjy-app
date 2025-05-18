@@ -14,7 +14,6 @@ import {
 	FieldError,
 	FormInput,
 	FormRadioButton,
-	FormSelect,
 	FormattedInputNumber,
 	Label,
 } from 'components/elements';
@@ -22,7 +21,6 @@ import { filterOption } from 'ejjy-global';
 import { ErrorMessage, Form, Formik } from 'formik';
 import {
 	MAX_PAGE_SIZE,
-	booleanOptions,
 	checkingTypesOptions,
 	inputTypes,
 	productCheckingTypes,
@@ -36,19 +34,6 @@ import { formatQuantity, getId } from 'utils';
 import * as Yup from 'yup';
 
 const { Text } = Typography;
-
-const productTypeOptions = [
-	{
-		id: productTypes.WET,
-		label: 'Wet',
-		value: productTypes.WET,
-	},
-	{
-		id: productTypes.DRY,
-		label: 'Dry',
-		value: productTypes.DRY,
-	},
-];
 
 const unitOfMeasurementOptions = [
 	{
@@ -102,6 +87,19 @@ const isInScaleOptions = [
 	},
 ];
 
+const isMultipleInstanceOptions = [
+	{
+		id: 'multipleInstance',
+		label: 'Multiple Instance',
+		value: 'true',
+	},
+	{
+		id: 'singleInstance',
+		label: 'Single Instance',
+		value: 'false',
+	},
+];
+
 interface Props {
 	isLoading: boolean;
 	onClose: any;
@@ -138,6 +136,7 @@ export const ModifyProductForm = ({
 				description: product?.description || '',
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
 				isShownInScaleList: String(product?.is_shown_in_scale_list ?? false),
+				isMultipleInstance: String(product?.is_multiple_instance ?? false),
 				checking: productCheckingTypes.RANDOM,
 				isSoldInBranch: 'true',
 				isVatExempted: (!!product?.is_vat_exempted).toString(),
@@ -478,9 +477,9 @@ export const ModifyProductForm = ({
 								className="w-100"
 								filterOption={filterOption}
 								optionFilterProp="children"
+								placeholder="None"
 								value={values.pointSystemTagId}
 								allowClear
-								placeholder="None"
 								showSearch
 								onChange={(value) => {
 									setFieldValue('pointSystemTagId', value);
@@ -528,6 +527,18 @@ export const ModifyProductForm = ({
 							/>
 							<ErrorMessage
 								name="checking"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
+							<Label label="&nbsp;" spacing />
+							<FormRadioButton
+								id="isMultipleInstance"
+								items={isMultipleInstanceOptions}
+							/>
+							<ErrorMessage
+								name="isMultipleInstance"
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>

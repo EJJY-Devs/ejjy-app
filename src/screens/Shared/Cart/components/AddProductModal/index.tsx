@@ -29,15 +29,20 @@ export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 			(p) => p?.product?.key === product?.product?.key,
 		);
 
-		if (existingProduct) {
+		// Check if product allows multiple instances
+		const allowsMultiple = product?.product?.is_multiple_instance;
+
+		if (existingProduct && !allowsMultiple) {
+			// If not allowed multiple, just increase quantity
 			editProduct({
 				key: product.product.key,
 				product: {
 					...existingProduct,
-					quantity: existingProduct.quantity + formData.quantity, // Increase quantity
+					quantity: existingProduct.quantity + formData.quantity,
 				},
 			});
 		} else {
+			// Either new product or multiple instances allowed
 			addProduct({
 				...product,
 				quantity: formData.quantity,

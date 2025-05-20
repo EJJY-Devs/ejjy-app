@@ -75,6 +75,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 			const response = await createReceivingVoucher({
 				...formData,
 				products: mappedProducts,
+				branchId,
 			});
 
 			if (!response) {
@@ -98,6 +99,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 				...formData,
 				products: mappedProducts,
 				type: backOrderTypes.FOR_RETURN,
+				branchId,
 			});
 
 			if (!response) {

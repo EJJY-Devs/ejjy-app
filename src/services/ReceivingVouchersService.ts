@@ -18,6 +18,7 @@ interface Modify {
 	supplier_tin: string;
 	encoded_by_id?: string;
 	checked_by_id: string;
+	branch_id: number;
 }
 
 const service = {

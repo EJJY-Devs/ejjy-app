@@ -22,7 +22,7 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 		const pdf = new jsPDF({ ...JSPDF_SETTINGS, ...jsPdfSettings });
 		pdf.setProperties({ title: pdfTitle });
 
-		const dataHtml = print?.(data?.printData);
+		const dataHtml = print?.();
 
 		const wrappedHtml = `<div style="width: 380px; padding: 24px;">${dataHtml}</div>`;
 

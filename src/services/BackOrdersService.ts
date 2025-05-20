@@ -18,6 +18,7 @@ interface Create {
 	customer_name: string;
 	customer_address: string;
 	customer_tin: string;
+	branch_id: number;
 }
 
 interface Edit {

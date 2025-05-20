@@ -3,28 +3,17 @@ import { PrinterOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
 import { PdfButtons, ReceiptHeader } from 'components/Printing';
 import dayjs from 'dayjs';
-import { getFullName, printStockOutForm, formatInPeso } from 'ejjy-global';
-import { EMPTY_CELL, backOrderTypes, VIEW_PRINTING_MODAL_WIDTH } from 'global';
+import { getFullName, printDeliveryReceipt } from 'ejjy-global';
+import { EMPTY_CELL, VIEW_PRINTING_MODAL_WIDTH } from 'global';
 import { useBackOrderRetrieve, usePdf, useSiteSettings } from 'hooks';
-import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
-import { formatDateTime, formatQuantity, getBackOrderStatus } from 'utils';
+import { formatDateTime, formatQuantity } from 'utils';
 
 const { Text } = Typography;
 
-const columnsDamage: ColumnsType = [
-	{ title: 'Description', dataIndex: 'description' },
-	{ title: 'Qty Returned', dataIndex: 'quantityReturned', align: 'center' },
-	{ title: 'Qty Received', dataIndex: 'quantityReceived', align: 'center' },
-	{ title: 'Status', dataIndex: 'status', align: 'center' },
-];
-
-const columnsForReturn: ColumnsType = [
-	{ title: 'Description', dataIndex: 'description' },
+const columnsForDeliveryReceipt: ColumnsType = [
+	{ title: 'Product Name', dataIndex: 'description' },
 	{ title: 'Quantity', dataIndex: 'quantity', align: 'center' },
-	{ title: 'Price', dataIndex: 'price', align: 'center' },
-	{ title: 'Amount', dataIndex: 'amount', align: 'center' },
 ];
 
 interface Props {
@@ -36,35 +25,34 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [backOrderData, setBackOrderData] = useState(null);
-	const [title, setTitle] = useState('');
-	const [columns, setColumns] = useState([]);
 
 	// CUSTOM HOOKS
 	const { data: siteSettings } = useSiteSettings();
 	const { data: backOrderRetrieved } = useBackOrderRetrieve({
 		id: backOrder,
 		options: {
-			enabled: _.isNumber(backOrder),
+			enabled: typeof backOrder === 'number',
 		},
 	});
+
+	const generateHtmlContent = () =>
+		printDeliveryReceipt({
+			deliveryReceipt: backOrder,
+			siteSettings,
+			user: null,
+			isPdf: true,
+		});
+
 	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
-		title: `DeliveryReceipt_${backOrder.id}.pdf`,
-		print: () => printStockOutForm(backOrder, siteSettings, true),
+		title: `DeliveryReceipt_${backOrder?.id}.pdf`,
+		print: generateHtmlContent,
 	});
 
 	// METHODS
 	useEffect(() => {
-		const data = _.isNumber(backOrder) ? backOrderRetrieved : backOrder;
+		const data = typeof backOrder === 'number' ? backOrderRetrieved : backOrder;
 
 		setBackOrderData(data);
-		setColumns(
-			data?.type === backOrderTypes.DAMAGED ? columnsDamage : columnsForReturn,
-		);
-		setTitle(
-			`[View] ${
-				data?.type === backOrderTypes.DAMAGED ? 'Back Order' : 'Stock Out'
-			}`,
-		);
 	}, [backOrderRetrieved, backOrder]);
 
 	useEffect(() => {
@@ -73,31 +61,20 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 		const formattedProducts = products.map((item) => ({
 			key: item.id,
 			description: item.product.name,
-			quantityReturned: formatQuantity({
-				unitOfMeasurement: item.product.unit_of_measurement,
-				quantity: item.quantity_returned,
-			}),
-			quantityReceived: item?.quantity_received
-				? formatQuantity({
-						unitOfMeasurement: item.product.unit_of_measurement,
-						quantity: item.quantity_received,
-				  })
-				: EMPTY_CELL,
-			status: getBackOrderStatus(item.status),
 			quantity: formatQuantity({
 				unitOfMeasurement: item.product.unit_of_measurement,
 				quantity: item.quantity_returned,
 			}),
-			price: formatInPeso(item.current_price_per_piece),
-			amount: formatInPeso(
-				item.current_price_per_piece * item.quantity_returned,
-			),
 		}));
+
 		setDataSource(formattedProducts);
 	}, [backOrderData]);
 
 	const handlePrint = () => {
-		printStockOutForm(backOrder, siteSettings);
+		printDeliveryReceipt({
+			deliveryReceipt: backOrder,
+			siteSettings,
+		});
 	};
 
 	return (
@@ -128,30 +105,27 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 			open
 			onCancel={onClose}
 		>
-			<ReceiptHeader title="DELIVERY RECEIPT" />
+			<ReceiptHeader branchHeader={backOrder.branch} title="DELIVERY RECEIPT" />
 
 			<Table
 				className="mt-6"
-				columns={columns}
+				columns={columnsForDeliveryReceipt}
 				dataSource={dataSource}
 				pagination={false}
 				size="small"
 				bordered
 			/>
 
-			<Space className="w-100 mt-2 justify-space-between ">
-				<Text strong>TOTAL AMOUNT: </Text>
-				<Text strong>{formatInPeso(backOrderData?.amount)}</Text>
-			</Space>
-
 			<Space className="mt-4 w-100 mr-6" direction="vertical">
 				<Space className="w-100 justify-space-between">
-					<Text>Customer: {backOrderData?.customer_name}</Text>
-					<Text>Encoder: {getFullName(backOrderData?.encoded_by)}</Text>
+					<Text>Customer: {backOrderData?.customer_name || EMPTY_CELL}</Text>
+					<Text>
+						Encoder: {getFullName(backOrderData?.encoded_by) || EMPTY_CELL}
+					</Text>
 				</Space>
 
 				<Space className="w-100">
-					<Text>Remarks: {backOrderData?.overall_remarks}</Text>
+					<Text>Remarks: {backOrderData?.overall_remarks || EMPTY_CELL}</Text>
 				</Space>
 
 				<Text>GDT: {formatDateTime(backOrderData?.datetime_created)}</Text>

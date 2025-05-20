@@ -2,20 +2,18 @@ import { PrinterOutlined } from '@ant-design/icons';
 import { Button, Modal, Space, Table, Typography } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { PdfButtons, ReceiptHeader } from 'components/Printing';
-import { printReceivingVoucherForm, getFullName } from 'ejjy-global';
+import { printReceivingReport, getFullName } from 'ejjy-global';
 import dayjs from 'dayjs';
 import { VIEW_PRINTING_MODAL_WIDTH } from 'global';
 import { usePdf, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { formatDateTime, formatInPeso, formatQuantity } from 'utils';
+import { formatDateTime, formatQuantity } from 'utils';
 
 const { Text } = Typography;
 
 const columns: ColumnsType = [
-	{ title: 'Description', dataIndex: 'description' },
-	{ title: 'Qty', dataIndex: 'qty', align: 'center' },
-	{ title: 'Cost', dataIndex: 'rate', align: 'center' },
-	{ title: 'Amount', dataIndex: 'amount', align: 'center' },
+	{ title: 'Product Name', dataIndex: 'description' },
+	{ title: 'Quantity', dataIndex: 'qty', align: 'center' },
 ];
 
 interface Props {
@@ -30,12 +28,19 @@ export const ViewReceivingVoucherModal = ({
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 
+	const generateHtmlContent = () =>
+		printReceivingReport({
+			receivingReport: receivingVoucher,
+			siteSettings,
+			user: undefined,
+			isPdf: true,
+		});
+
 	// CUSTOM HOOKS
 	const { data: siteSettings } = useSiteSettings();
 	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
 		title: `ReceivingVoucher_${receivingVoucher.id}.pdf`,
-		print: () =>
-			printReceivingVoucherForm(receivingVoucher, siteSettings, true),
+		print: generateHtmlContent,
 	});
 
 	// METHODS
@@ -49,15 +54,13 @@ export const ViewReceivingVoucherModal = ({
 				unitOfMeasurement: item.product.unit_of_measurement,
 				quantity: item.quantity,
 			}),
-			rate: formatInPeso(item.cost_per_piece),
-			amount: formatInPeso(item.quantity * item.cost_per_piece),
 		}));
 
 		setDataSource(formattedProducts);
 	}, [receivingVoucher]);
 
 	const handlePrint = () => {
-		printReceivingVoucherForm(receivingVoucher, siteSettings);
+		printReceivingReport({ receivingReport: receivingVoucher, siteSettings });
 	};
 
 	return (
@@ -85,10 +88,13 @@ export const ViewReceivingVoucherModal = ({
 			width={VIEW_PRINTING_MODAL_WIDTH}
 			centered
 			closable
-			visible
+			open
 			onCancel={onClose}
 		>
-			<ReceiptHeader title="RECEIVING VOUCHER" />
+			<ReceiptHeader
+				branchHeader={receivingVoucher.branch}
+				title="RECEIVING REPORT"
+			/>
 
 			<Table
 				className="mt-6"
@@ -98,10 +104,6 @@ export const ViewReceivingVoucherModal = ({
 				size="small"
 				bordered
 			/>
-			<Space className="w-100 mt-2 justify-space-between">
-				<Text strong>TOTAL AMOUNT:</Text>
-				<Text strong>{formatInPeso(receivingVoucher.amount_paid)}</Text>
-			</Space>
 
 			<Space className="mt-4 w-100" direction="vertical">
 				<Space className="w-100 justify-space-between">

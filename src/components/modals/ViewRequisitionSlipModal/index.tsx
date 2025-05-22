@@ -21,15 +21,18 @@ export const ViewRequisitionSlipModal = ({
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
 	const { data: siteSettings } = useSiteSettings();
+
+	const generateHtmlContent = () =>
+		printRequisitionSlip({
+			requisitionSlip,
+			siteSettings,
+			user,
+			isPdf: true,
+		});
+
 	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
 		title: `RequisitionSlip_${requisitionSlip.id}.pdf`,
-		print: () =>
-			printRequisitionSlip({
-				requisitionSlip,
-				siteSettings,
-				user,
-				isPdf: true,
-			}),
+		print: generateHtmlContent,
 	});
 
 	// METHODS
@@ -87,10 +90,13 @@ export const ViewRequisitionSlipModal = ({
 			width={425}
 			centered
 			closable
-			visible
+			open
 			onCancel={onClose}
 		>
-			<ReceiptHeader title="REQUISITION SLIP" />
+			<ReceiptHeader
+				branchHeader={requisitionSlip.branch}
+				title="REQUISITION SLIP"
+			/>
 
 			<Descriptions
 				className="mt-6 w-100"

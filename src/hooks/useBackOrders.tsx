@@ -130,6 +130,7 @@ export const useBackOrderCreate = () =>
 			customerName,
 			customerAddress,
 			customerTin,
+			branchId,
 		}: any) =>
 			BackOrdersService.create(
 				{
@@ -142,6 +143,7 @@ export const useBackOrderCreate = () =>
 					customer_name: customerName,
 					customer_address: customerAddress,
 					customer_tin: customerTin,
+					branch_id: branchId,
 				},
 				getLocalApiUrl(),
 			),

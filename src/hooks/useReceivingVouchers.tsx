@@ -37,6 +37,7 @@ export const useReceivingVoucherCreate = () =>
 			supplierTin,
 			encodedById,
 			checkedById,
+			branchId,
 		}: any) =>
 			ReceivingVouchersService.create(
 				{
@@ -46,6 +47,7 @@ export const useReceivingVoucherCreate = () =>
 					supplier_tin: supplierTin,
 					encoded_by_id: encodedById,
 					checked_by_id: checkedById,
+					branch_id: branchId,
 				},
 				getLocalApiUrl(),
 			),

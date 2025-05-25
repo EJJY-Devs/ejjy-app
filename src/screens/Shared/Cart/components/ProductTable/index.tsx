@@ -1,8 +1,13 @@
-import { ExclamationCircleOutlined, DeleteOutlined } from '@ant-design/icons';
+import {
+	ExclamationCircleOutlined,
+	DeleteOutlined,
+	PlusOutlined,
+} from '@ant-design/icons';
 import { Button, Modal, Tooltip } from 'antd';
 import { formatInPeso } from 'ejjy-global';
 import React, { useEffect, useState } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
+import { AddProductModal } from 'screens/Shared/Cart/components/AddProductModal';
 import { Table } from 'screens/Shared/Cart/components/ProductTable/components/Table';
 import {
 	NO_INDEX_SELECTED,
@@ -24,12 +29,12 @@ interface Props {
 }
 
 export const ProductTable = ({ isLoading, type }: Props) => {
-	// STATES
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [editProductModalVisible, setEditProductModalVisible] = useState(false);
+	const [addProductModalVisible, setAddProductModalVisible] = useState(false);
+	const [selectedProduct, setSelectedProduct] = useState(null);
 	const [dataSource, setDataSource] = useState([]);
 
-	// CUSTOM HOOKS
 	const {
 		products,
 		pageNumber,
@@ -48,23 +53,29 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		shallow,
 	);
 
-	// METHODS
-	const columns = [
+	const baseColumns = [
 		{ name: '', width: '1px' },
 		{ name: 'Barcode', width: '40px' },
 		{ name: 'Description', alignment: 'center' },
 		{ name: 'Qty', alignment: 'center' },
-		{ name: 'Unit Price', alignment: 'center' },
-		{ name: 'Amount', alignment: 'center' },
 	];
 
-	// Adjust column names based on `type`
-	if (type === 'Receiving Report') {
-		columns[4].name = 'Unit Cost';
-		columns[5].name = 'Total Cost';
-	} else if (type === 'Requisition Slip') {
-		columns[4].name = 'Balance';
-		columns[5].name = 'Status';
+	const columns = [...baseColumns];
+
+	if (type === 'Requisition Slip') {
+		columns.push(
+			{ name: 'Balance', alignment: 'center' },
+			{ name: 'Status', alignment: 'center' },
+		);
+	} else if (type !== 'Receiving Report' && type !== 'Delivery Receipt') {
+		columns.push(
+			{ name: 'Unit Price', alignment: 'center' },
+			{ name: 'Amount', alignment: 'center' },
+		);
+	}
+
+	if (type === 'Delivery Receipt' || type === 'Receiving Report') {
+		columns.push({ name: 'Action', alignment: 'center' });
 	}
 
 	useEffect(() => {
@@ -86,27 +97,12 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 				barcode,
 				textcode,
 				print_details,
-				cost_per_piece,
 				price_per_piece,
 				key,
+				is_multiple_instance,
 			} = product;
 
-			let unitPrice = price_per_piece; // Default
-			let totalPrice = unitPrice * quantity; // Default
-
-			let balance;
-			let status;
-
-			// Adjust values for "Receiving Report" and "Requisition Slip"
-			if (type === 'Receiving Report') {
-				unitPrice = cost_per_piece;
-				totalPrice = unitPrice * quantity;
-			} else if (type === 'Requisition Slip') {
-				balance = `${current_balance} / ${max_balance}`;
-				status = getBranchProductStatus(product_status);
-			}
-
-			return [
+			const row = [
 				<Tooltip key={`tooltip-delete-${key}`} placement="top" title="Remove">
 					<Button
 						icon={<DeleteOutlined />}
@@ -143,35 +139,73 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 						quantity,
 					})}
 				</Button>,
-
-				<Tooltip
-					key={`tooltip-unit-price-${key}`}
-					placement="top"
-					title={
-						type === 'Requisition Slip'
-							? `Balance: ${balance}`
-							: `Unit Price: ${formatInPeso(unitPrice)}`
-					}
-				>
-					{type === 'Requisition Slip' ? balance : formatInPeso(unitPrice)}
-				</Tooltip>,
-
-				<Tooltip
-					key={`tooltip-total-price-${key}`}
-					placement="top"
-					title={
-						type === 'Requisition Slip'
-							? `Status: ${status}`
-							: `Total Amount: ${formatInPeso(totalPrice)}`
-					}
-				>
-					{type === 'Requisition Slip' ? status : formatInPeso(totalPrice)}
-				</Tooltip>,
 			];
+
+			if (type === 'Requisition Slip') {
+				const balance = `${current_balance} / ${max_balance}`;
+				const status = getBranchProductStatus(product_status);
+
+				row.push(
+					<Tooltip
+						key={`tooltip-balance-${key}`}
+						placement="top"
+						title={`Balance: ${balance}`}
+					>
+						{balance}
+					</Tooltip>,
+					<Tooltip
+						key={`tooltip-status-${key}`}
+						placement="top"
+						title={`Status: ${status}`}
+					>
+						{status}
+					</Tooltip>,
+				);
+			} else if (type !== 'Receiving Report' && type !== 'Delivery Receipt') {
+				const unitPrice = price_per_piece;
+				const totalPrice = unitPrice * quantity;
+
+				row.push(
+					<Tooltip
+						key={`tooltip-unit-price-${key}`}
+						placement="top"
+						title={`Unit Price: ${formatInPeso(unitPrice)}`}
+					>
+						{formatInPeso(unitPrice)}
+					</Tooltip>,
+					<Tooltip
+						key={`tooltip-total-price-${key}`}
+						placement="top"
+						title={`Total Amount: ${formatInPeso(totalPrice)}`}
+					>
+						{formatInPeso(totalPrice)}
+					</Tooltip>,
+				);
+			}
+
+			if (type === 'Delivery Receipt' || type === 'Receiving Report') {
+				const actionContent = is_multiple_instance ? (
+					<Tooltip key={`tooltip-plus-${key}`} title="Duplicate Product">
+						<Button
+							icon={<PlusOutlined />}
+							type="primary"
+							ghost
+							onClick={() => {
+								setSelectedProduct(branchProduct);
+								setAddProductModalVisible(true);
+							}}
+						/>
+					</Tooltip>
+				) : null;
+
+				row.push(actionContent);
+			}
+
+			return row;
 		});
 
 		setDataSource(data);
-	}, [pageNumber, products]);
+	}, [pageNumber, products, type]);
 
 	useEffect(() => {
 		if (products.length === 0) {
@@ -196,20 +230,21 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 					({ key }) => key !== branchProduct?.product?.key,
 				);
 
-				deleteProduct(branchProduct?.product?.key);
+				deleteProduct({
+					key: branchProduct.product.key,
+					product: branchProduct.product,
+				});
 
 				const totalPages = Math.ceil(
 					newProducts.length / PRODUCT_LENGTH_PER_PAGE,
 				);
 				const newPageNumber = Math.min(pageNumber, totalPages) || 1;
 
-				// Get the updated current page products
 				const currentPageProducts = newProducts.slice(
 					(newPageNumber - 1) * PRODUCT_LENGTH_PER_PAGE,
 					newPageNumber * PRODUCT_LENGTH_PER_PAGE,
 				);
 
-				// If the current page is empty and there's a previous page, go back
 				if (currentPageProducts.length === 0 && newPageNumber < pageNumber) {
 					prevPage();
 				}
@@ -236,6 +271,20 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 				<EditProductModal
 					product={products[activeIndex]}
 					onClose={() => setEditProductModalVisible(false)}
+				/>
+			)}
+
+			{addProductModalVisible && selectedProduct && (
+				<AddProductModal
+					product={selectedProduct}
+					onClose={() => {
+						setAddProductModalVisible(false);
+						setSelectedProduct(null);
+					}}
+					onSuccess={() => {
+						setAddProductModalVisible(false);
+						setSelectedProduct(null);
+					}}
 				/>
 			)}
 		</div>

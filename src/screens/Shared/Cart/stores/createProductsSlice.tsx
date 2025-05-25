@@ -20,13 +20,20 @@ export const createProductsSlice: any = (set) => ({
 			return { products: state.products };
 		});
 	},
-	deleteProduct: (key) => {
+	deleteProduct: ({ key, product }) => {
 		set((state) => {
-			const newProducts = (state.products ?? []).filter(
-				(p) => p.product.key !== key,
-			);
+			const index = state.products.findIndex((p) => {
+				return p.product.key === key && _.isEqual(p.product, product);
+			});
 
-			return { products: newProducts };
+			if (index >= 0) {
+				const newProducts = _.cloneDeep(state.products);
+				newProducts.splice(index, 1);
+
+				return { products: newProducts };
+			}
+
+			return { products: state.products };
 		});
 	},
 	resetProducts: () => set(() => ({ products: [] })),

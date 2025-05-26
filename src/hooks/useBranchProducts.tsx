@@ -8,7 +8,7 @@ import { getBaseUrl, wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { BranchProductsService } from 'services';
+import { BranchProductsService, BranchProductBalancesService } from 'services';
 import {
 	getLocalApiUrl,
 	modifiedCallback,
@@ -405,6 +405,27 @@ export const useBranchProductEdit = () => {
 					wholesale_price: wholeSalePrice,
 					special_price: specialPrice,
 					acting_user_id: actingUserId,
+				},
+				getLocalApiUrl(),
+			),
+		{
+			onSuccess: () => {
+				queryClient.invalidateQueries('useBranchProducts');
+				queryClient.invalidateQueries('useBranchProductRetrieve');
+			},
+		},
+	);
+};
+
+export const useBranchProductBalanceEdit = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation<any, any, any>(
+		({ id, value }: any) =>
+			BranchProductBalancesService.edit(
+				id,
+				{
+					value,
 				},
 				getLocalApiUrl(),
 			),

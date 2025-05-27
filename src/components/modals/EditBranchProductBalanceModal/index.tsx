@@ -4,7 +4,7 @@ import { Button, FieldError, FormInputLabel } from 'components/elements';
 import { getKeyDownCombination } from 'ejjy-global';
 import { ErrorMessage, Form, Formik } from 'formik';
 import { SHOW_HIDE_SHORTCUT, unitOfMeasurementTypes } from 'global';
-import { useBranchProductEdit } from 'hooks';
+import { useBranchProductBalanceEdit, useBranchProductEdit } from 'hooks';
 import { useUserStore } from 'stores';
 import { isInteger } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -25,12 +25,21 @@ export const EditBranchProductBalanceModal = ({
 
 	// CUSTOM HOOKS
 	const {
+		mutateAsync: editBranchProductBalance,
+		isLoading: isEditingBalance,
+		error: editBalanceError,
+	} = useBranchProductBalanceEdit();
+
+	const {
 		mutateAsync: editBranchProduct,
-		isLoading: isEditingBranchProduct,
-		error: editBranchProductError,
+		isLoading: isEditingProduct,
+		error: editProductError,
 	} = useBranchProductEdit();
 
 	const user = useUserStore((state) => state.user);
+
+	const isLoading = isEditingBalance || isEditingProduct;
+	const errors = editBalanceError?.errors || editProductError?.errors;
 
 	// METHODS
 	useEffect(() => {
@@ -39,20 +48,33 @@ export const EditBranchProductBalanceModal = ({
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown);
 		};
-	});
+	}, [isCurrentBalanceVisible]);
 
 	const handleSubmit = async (formData) => {
-		await editBranchProduct({
-			...formData,
-			id: branchProduct.id,
-			// TODO: If we will not pass these values, it will cause an error 500
-			isDailyChecked: branchProduct.is_daily_checked,
-			isRandomlyChecked: branchProduct.is_randomly_checked,
-			isSoldInBranch: branchProduct.is_sold_in_branch,
-			actingUserId: user.id,
-		});
-		message.success('Branch product was edited successfully');
-		handleClose();
+		try {
+			if (isCurrentBalanceVisible && formData.currentBalance !== undefined) {
+				// Update current_balance only
+				await editBranchProductBalance({
+					id: branchProduct.id,
+					value: formData.currentBalance,
+				});
+				message.success('Branch product balance was edited successfully');
+			} else {
+				// Update other fields
+				await editBranchProduct({
+					id: branchProduct.id,
+					maxBalance: formData.maxBalance,
+					isDailyChecked: branchProduct.is_daily_checked,
+					isRandomlyChecked: branchProduct.is_randomly_checked,
+					isSoldInBranch: branchProduct.is_sold_in_branch,
+					actingUserId: user.id,
+				});
+				message.success('Branch product was edited successfully');
+			}
+			handleClose();
+		} catch (error) {
+			// Handle errors if needed here
+		}
 	};
 
 	const handleKeyDown = (event) => {
@@ -91,15 +113,12 @@ export const EditBranchProductBalanceModal = ({
 			visible
 			onCancel={handleClose}
 		>
-			<RequestErrors
-				errors={convertIntoArray(editBranchProductError?.errors)}
-				withSpaceBottom
-			/>
+			<RequestErrors errors={convertIntoArray(errors)} withSpaceBottom />
 
 			<EditBranchProductBalanceForm
 				branchProduct={branchProduct}
 				isCurrentBalanceVisible={isCurrentBalanceVisible}
-				isLoading={isEditingBranchProduct}
+				isLoading={isLoading}
 				onClose={handleClose}
 				onSubmit={handleSubmit}
 			/>
@@ -170,7 +189,6 @@ export const EditBranchProductBalanceForm = ({
 			onSubmit={(formData) => {
 				onSubmit({
 					...formData,
-					// NOTE: Hidden fields must be visible in order to be saved.
 					currentBalance: isCurrentBalanceVisible
 						? formData.currentBalance
 						: undefined,
@@ -198,7 +216,7 @@ export const EditBranchProductBalanceForm = ({
 										branchProduct?.product?.unit_of_measurement ===
 										unitOfMeasurementTypes.NON_WEIGHING
 									}
-									label="Current Balance"
+									label="Add Current Balance"
 									type="number"
 								/>
 								<ErrorMessage

@@ -12,6 +12,7 @@ export { default as BackOrdersService } from './BackOrdersService';
 export { default as BalanceAdjustmentLogService } from './BalanceAdjustmentLogService';
 export { default as BirReportsService } from './BirReportsService';
 export { default as BranchAssignmentsService } from './BranchAssignmentsService';
+export { default as BranchProductBalancesService } from './BranchProductBalancesService';
 export { default as BranchDayAuthorizationsService } from './BranchDayAuthorizationsService';
 export { default as BranchDaysService } from './BranchDaysService';
 export { default as BranchesService } from './BranchesService';

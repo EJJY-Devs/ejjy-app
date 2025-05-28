@@ -1,25 +1,19 @@
 /* eslint-disable no-underscore-dangle */
 import { Button, Col, Row, Select, Space, Table } from 'antd';
-import { Content, RequestErrors } from 'components';
+import { Content, RequestErrors, TimeRangeFilter } from 'components';
 import { Box, Label } from 'components/elements';
-import { filterOption } from 'ejjy-global';
 import { Cart } from 'screens/Shared/Cart';
-import {
-	ALL_OPTION_KEY,
-	DEFAULT_PAGE,
-	DEFAULT_PAGE_SIZE,
-	EMPTY_CELL,
-	requisitionSlipActionsOptionsWithAll,
-} from 'global';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, EMPTY_CELL } from 'global';
 import { useQueryParams, useRequisitionSlips } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { convertIntoArray, formatDateTime } from 'utils';
+import { capitalize } from 'lodash';
 
 const columns = [
 	{ title: 'ID', dataIndex: 'id' },
 	{ title: 'Date & Time', dataIndex: 'datetimeCreated' },
-	{ title: 'Branch', dataIndex: 'branch' },
+	{ title: 'Type', dataIndex: 'type' },
 	{ title: 'Status', dataIndex: 'status' },
 	{ title: 'Remarks', dataIndex: 'remarks' },
 ];
@@ -38,7 +32,6 @@ export const RequisitionSlips = () => {
 	} = useRequisitionSlips({
 		params: {
 			...params,
-			status: params.status === ALL_OPTION_KEY ? null : params.status,
 		},
 	});
 
@@ -47,9 +40,9 @@ export const RequisitionSlips = () => {
 		const formattedProducts = requisitionSlips.map((requisitionSlip) => {
 			const {
 				id,
-				branch,
 				datetime_created,
 				reference_number,
+				slip_type,
 			} = requisitionSlip;
 
 			return {
@@ -59,7 +52,7 @@ export const RequisitionSlips = () => {
 						{reference_number}
 					</Link>
 				),
-				branch: branch?.name || EMPTY_CELL,
+				type: capitalize(slip_type) || EMPTY_CELL,
 				datetimeCreated: formatDateTime(datetime_created),
 				status: EMPTY_CELL,
 				remarks: EMPTY_CELL,
@@ -95,7 +88,7 @@ export const RequisitionSlips = () => {
 						withSpaceBottom
 					/>
 
-					<Filter />
+					<Filter isLoading={isFetchingRequisitionSlips} />
 					<Table
 						columns={columns}
 						dataSource={dataSource}
@@ -130,30 +123,33 @@ export const RequisitionSlips = () => {
 	);
 };
 
-const Filter = () => {
+const Filter = ({ isLoading }) => {
 	const { params, setQueryParams } = useQueryParams();
 
 	return (
-		<Row className="mb-4" gutter={[16, 16]}>
-			<Col lg={5} span={24}>
-				<Label label="Status" spacing />
-				<Select
-					className="w-100"
-					defaultValue={params.status || ALL_OPTION_KEY}
-					filterOption={filterOption}
-					optionFilterProp="children"
-					allowClear
-					showSearch
-					onChange={(value) => {
-						setQueryParams({ status: value }, { shouldResetPage: true });
-					}}
-				>
-					{requisitionSlipActionsOptionsWithAll.map(({ name, value }) => (
-						<Select.Option key={value} value={value}>
-							{name}
-						</Select.Option>
-					))}
-				</Select>
+		<Row className="mb-4" gutter={[24, 24]}>
+			<Col span={24}>
+				<div className="mb-3">
+					<TimeRangeFilter disabled={isLoading} />
+				</div>
+				<Row gutter={16}>
+					<Col style={{ minWidth: 500 }}>
+						<Label label="Type" spacing />
+						<Select
+							className="w-100"
+							defaultValue={params.slipType || undefined}
+							disabled={isLoading}
+							allowClear
+							showSearch
+							onChange={(value) => {
+								setQueryParams({ slipType: value }, { shouldResetPage: true });
+							}}
+						>
+							<Select.Option value="customer">Customer</Select.Option>
+							<Select.Option value="vendor">Vendor</Select.Option>
+						</Select>
+					</Col>
+				</Row>
 			</Col>
 		</Row>
 	);

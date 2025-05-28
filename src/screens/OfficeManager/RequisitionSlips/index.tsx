@@ -1,30 +1,29 @@
 import { Col, Row, Select, Table } from 'antd';
-import { Content, RequestErrors, TableHeaderRequisitionSlip } from 'components';
-import { Box, Label } from 'components/elements';
-import { filterOption, useBranches, ServiceType } from 'ejjy-global';
 import {
-	ALL_OPTION_KEY,
+	Content,
+	RequestErrors,
+	TableHeaderRequisitionSlip,
+	TimeRangeFilter,
+} from 'components';
+import { Box, Label } from 'components/elements';
+import { filterOption } from 'ejjy-global';
+import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
-	requisitionSlipActionsOptionsWithAll,
 	MAX_PAGE_SIZE,
 } from 'global';
-import { useQueryParams, useRequisitionSlips } from 'hooks';
+import { useQueryParams, useRequisitionSlips, useBranches } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-	convertIntoArray,
-	formatDateTime,
-	getLocalApiUrl,
-	isStandAlone,
-} from 'utils';
+import { convertIntoArray, formatDateTime } from 'utils';
 import './style.scss';
 
 const columns = [
 	{ title: 'ID', dataIndex: 'id' },
 	{ title: 'Date & Time', dataIndex: 'datetimeCreated' },
-	{ title: 'Branch', dataIndex: 'branch' },
+	{ title: 'Customer', dataIndex: 'branch' },
+	{ title: 'Vendor', dataIndex: 'vendor' },
 	{ title: 'Status', dataIndex: 'status' },
 	{ title: 'Remarks', dataIndex: 'remarks' },
 ];
@@ -42,9 +41,15 @@ export const RequisitionSlips = () => {
 	} = useRequisitionSlips({
 		params: {
 			...params,
-			branchId: params.branchId === ALL_OPTION_KEY ? null : params.branchId,
-			status: params.status === ALL_OPTION_KEY ? null : params.status,
 		},
+	});
+
+	const {
+		data: { branches },
+		isFetching: isFetchingBranches,
+		error: branchErrors,
+	} = useBranches({
+		params: { pageSize: MAX_PAGE_SIZE },
 	});
 
 	// METHODS
@@ -55,6 +60,7 @@ export const RequisitionSlips = () => {
 				branch,
 				datetime_created,
 				reference_number,
+				vendor,
 			} = requisitionSlip;
 
 			return {
@@ -65,6 +71,7 @@ export const RequisitionSlips = () => {
 					</Link>
 				),
 				branch: branch?.name || EMPTY_CELL,
+				vendor: vendor?.name || EMPTY_CELL,
 				datetimeCreated: formatDateTime(datetime_created),
 				status: EMPTY_CELL,
 				remarks: EMPTY_CELL,
@@ -81,11 +88,17 @@ export const RequisitionSlips = () => {
 
 				<RequestErrors
 					className="px-6"
-					errors={[...convertIntoArray(listError)]}
+					errors={[
+						...convertIntoArray(listError),
+						...convertIntoArray(branchErrors),
+					]}
 					withSpaceBottom
 				/>
 
-				<Filter />
+				<Filter
+					branches={branches}
+					isLoading={isFetchingRequisitionSlips || isFetchingBranches}
+				/>
 
 				<Table
 					columns={columns}
@@ -112,66 +125,62 @@ export const RequisitionSlips = () => {
 	);
 };
 
-const Filter = () => {
-	const { data: branchesData } = useBranches({
-		params: { pageSize: MAX_PAGE_SIZE },
-		serviceOptions: {
-			baseURL: getLocalApiUrl(),
-			type: isStandAlone() ? ServiceType.ONLINE : ServiceType.OFFLINE,
-		},
-	});
-
+const Filter = ({ isLoading, branches }) => {
 	const { params, setQueryParams } = useQueryParams();
 	return (
-		<>
-			<Row className="mb-4" gutter={[16, 16]}>
-				<Col lg={5} span={24}>
-					<Label label="Branch" spacing />
-					<Select
-						className="w-100"
-						defaultValue={
-							params.branchId ? Number(params.branchId) : ALL_OPTION_KEY
-						}
-						filterOption={filterOption}
-						optionFilterProp="children"
-						allowClear
-						showSearch
-						onChange={(value) => {
-							setQueryParams({ branchId: value }, { shouldResetPage: true });
-						}}
-					>
-						<Select.Option value="all">All</Select.Option>
-						{branchesData?.list?.map(({ id, name }) => (
-							<Select.Option key={id} value={id}>
-								{name}
-							</Select.Option>
-						))}
-					</Select>
-				</Col>
-			</Row>
+		<Row className="mb-4" gutter={[24, 24]}>
+			<Col span={24}>
+				<div className="mb-3">
+					<TimeRangeFilter disabled={isLoading} />
+				</div>
+				<Row gutter={16}>
+					<Col style={{ minWidth: 500 }}>
+						<Label label="Branch" spacing />
+						<Select
+							className="w-100"
+							defaultValue={
+								params.branchId ? Number(params.branchId) : undefined
+							}
+							disabled={isLoading}
+							filterOption={filterOption}
+							optionFilterProp="children"
+							allowClear
+							showSearch
+							onChange={(value) => {
+								setQueryParams({ branchId: value }, { shouldResetPage: true });
+							}}
+						>
+							{branches?.map(({ id, name }) => (
+								<Select.Option key={id} value={id}>
+									{name}
+								</Select.Option>
+							))}
+						</Select>
+					</Col>
 
-			<Row className="pb-4" gutter={[16, 16]}>
-				<Col lg={5} span={24}>
-					<Label label="Status" spacing />
-					<Select
-						className="w-100"
-						defaultValue={params.status || ALL_OPTION_KEY}
-						filterOption={filterOption}
-						optionFilterProp="children"
-						allowClear
-						showSearch
-						onChange={(value) => {
-							setQueryParams({ status: value }, { shouldResetPage: true });
-						}}
-					>
-						{requisitionSlipActionsOptionsWithAll.map(({ name, value }) => (
-							<Select.Option key={value} value={value}>
-								{name}
-							</Select.Option>
-						))}
-					</Select>
-				</Col>
-			</Row>
-		</>
+					<Row gutter={16}>
+						<Col style={{ minWidth: 500 }}>
+							<Label label="Type" spacing />
+							<Select
+								className="w-100"
+								defaultValue={params.slipType || undefined}
+								disabled={isLoading}
+								allowClear
+								showSearch
+								onChange={(value) => {
+									setQueryParams(
+										{ slipType: value },
+										{ shouldResetPage: true },
+									);
+								}}
+							>
+								<Select.Option value="customer">Customer</Select.Option>
+								<Select.Option value="vendor">Vendor</Select.Option>
+							</Select>
+						</Col>
+					</Row>
+				</Row>
+			</Col>
+		</Row>
 	);
 };

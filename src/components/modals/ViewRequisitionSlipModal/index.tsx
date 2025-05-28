@@ -116,11 +116,14 @@ export const ViewRequisitionSlipModal = ({
 				<Descriptions.Item label="Requestor">
 					{getFullName(requisitionSlip.approved_by)}
 				</Descriptions.Item>
-				<Descriptions.Item label="Requesting Branch">
+				<Descriptions.Item label="Customer">
 					{requisitionSlip.branch?.name}
 				</Descriptions.Item>
 				<Descriptions.Item label="ID">
 					{requisitionSlip?.reference_number}
+				</Descriptions.Item>
+				<Descriptions.Item label="Vendor">
+					{requisitionSlip?.vendor?.name}
 				</Descriptions.Item>
 			</Descriptions>
 

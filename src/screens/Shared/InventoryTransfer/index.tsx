@@ -191,7 +191,7 @@ export const InventoryTransfer = () => {
 								}}
 							/>
 						</div>
-						{isHeadOffice && (
+						{!isHeadOffice && (
 							<div className="InventoryTransfer_create">
 								<Button
 									type="primary"

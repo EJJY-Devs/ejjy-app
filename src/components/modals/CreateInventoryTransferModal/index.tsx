@@ -23,9 +23,9 @@ const formDetails = {
 		checkedById: null,
 	},
 	schema: Yup.object().shape({
-		supplierName: Yup.string().required().label('Supplier Name').trim(),
-		supplierAddress: Yup.string().required().label('Supplier Address').trim(),
-		supplierTin: Yup.string().label('Supplier TIN').trim(),
+		supplierName: Yup.string().required().label('Vendor Name').trim(),
+		supplierAddress: Yup.string().label('Vendor Address').trim(),
+		supplierTin: Yup.string().label('Vendor TIN').trim(),
 		encodedById: Yup.number().nullable().required().label('Encoded By Id'),
 		checkedById: Yup.number().nullable().required().label('Checked By Id'),
 	}),
@@ -185,7 +185,7 @@ export const CreateInventoryTransferModal = ({
 							) : (
 								<>
 									<Col span={24}>
-										<Label label="Supplier Name" spacing />
+										<Label label="Vendor Name" spacing />
 										<Input
 											name="supplierName"
 											value={values['supplierName']}
@@ -199,7 +199,7 @@ export const CreateInventoryTransferModal = ({
 										/>
 									</Col>
 									<Col span={24}>
-										<Label label="Supplier Address" spacing />
+										<Label label="Vendor Address" spacing />
 										<Input
 											name="supplierAddress"
 											value={values['supplierAddress']}
@@ -213,7 +213,7 @@ export const CreateInventoryTransferModal = ({
 										/>
 									</Col>
 									<Col span={24}>
-										<Label label="Supplier TIN" spacing />
+										<Label label="Vendor TIN" spacing />
 										<Input
 											name="supplierTin"
 											value={values['supplierTin']}

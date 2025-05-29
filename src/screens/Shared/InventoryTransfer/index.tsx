@@ -36,6 +36,8 @@ export const InventoryTransfer = () => {
 	const { refetchData, setRefetchData } = useBoundStore();
 	const { params, setQueryParams } = useQueryParams();
 
+	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
+
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
@@ -161,6 +163,7 @@ export const InventoryTransfer = () => {
 				<Box className="InventoryTransfer_box">
 					<Filter
 						branches={branches}
+						isHeadOffice={isHeadOffice}
 						isLoading={
 							isFetchingReceivingVouchers ||
 							isFetchingBackOrders ||
@@ -188,26 +191,28 @@ export const InventoryTransfer = () => {
 								}}
 							/>
 						</div>
-						<div className="InventoryTransfer_create">
-							<Button
-								type="primary"
-								onClick={() => {
-									setIsCartModalVisible(true);
-									setCreateSelectedType('Delivery Receipt');
-								}}
-							>
-								Create Delivery Receipt
-							</Button>
-							<Button
-								type="primary"
-								onClick={() => {
-									setIsCartModalVisible(true);
-									setCreateSelectedType('Receiving Report');
-								}}
-							>
-								Create Receiving Report
-							</Button>
-						</div>
+						{isHeadOffice && (
+							<div className="InventoryTransfer_create">
+								<Button
+									type="primary"
+									onClick={() => {
+										setIsCartModalVisible(true);
+										setCreateSelectedType('Delivery Receipt');
+									}}
+								>
+									Create Delivery Receipt
+								</Button>
+								<Button
+									type="primary"
+									onClick={() => {
+										setIsCartModalVisible(true);
+										setCreateSelectedType('Receiving Report');
+									}}
+								>
+									Create Receiving Report
+								</Button>
+							</div>
+						)}
 					</div>
 
 					<Table
@@ -258,10 +263,8 @@ export const InventoryTransfer = () => {
 	);
 };
 
-const Filter = ({ isLoading, branches }) => {
+const Filter = ({ isLoading, branches, isHeadOffice }) => {
 	const { params, setQueryParams } = useQueryParams();
-
-	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 
 	return (
 		<Row>

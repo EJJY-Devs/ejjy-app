@@ -15,12 +15,7 @@ import {
 import { formatInPeso, getAppType } from 'utils';
 import React, { useState, useEffect } from 'react';
 import { Cart } from 'screens/Shared/Cart';
-import {
-	backOrderTypes,
-	EMPTY_CELL,
-	filterOption,
-	MAX_PAGE_SIZE,
-} from 'ejjy-global';
+import { EMPTY_CELL, filterOption, MAX_PAGE_SIZE } from 'ejjy-global';
 import { pageSizeOptions, DEFAULT_PAGE, appTypes } from 'global';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
 
@@ -55,8 +50,6 @@ export const InventoryTransfer = () => {
 	} = useBackOrders({
 		params: {
 			...params,
-			type: backOrderTypes.FOR_RETURN,
-			timeRange: params?.timeRange,
 		},
 	});
 
@@ -65,7 +58,9 @@ export const InventoryTransfer = () => {
 		isFetching: isFetchingReceivingVouchers,
 		refetch: refetchReceivingVouchers,
 	} = useReceivingVouchers({
-		params: { ...params, timeRange: params?.timeRange },
+		params: {
+			...params,
+		},
 	});
 
 	useEffect(() => {

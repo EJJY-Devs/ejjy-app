@@ -45,7 +45,7 @@ export const ViewReceivingVoucherModal = ({
 
 	// METHODS
 	useEffect(() => {
-		const products = receivingVoucher?.products || [];
+		const products = receivingVoucher?.receiving_voucher_products || [];
 
 		const formattedProducts = products.map((item) => ({
 			key: item.id,

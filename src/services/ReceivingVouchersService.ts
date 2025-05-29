@@ -9,6 +9,7 @@ type Product = {
 
 interface List extends IListRequest {
 	time_range?: string;
+	branch_id?: number;
 }
 
 interface Modify {

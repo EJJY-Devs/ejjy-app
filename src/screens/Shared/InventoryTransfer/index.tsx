@@ -83,7 +83,7 @@ export const InventoryTransfer = () => {
 						{item.id}
 					</Button>
 				),
-				supplierName: item.branch.name || EMPTY_CELL, // The branch is the supplier/vendor
+				supplierName: item.branch?.name || EMPTY_CELL, // The branch is the supplier/vendor
 				customer: item.customer_name || EMPTY_CELL,
 				amountPaid: formatInPeso(item.amount),
 			}));
@@ -103,7 +103,7 @@ export const InventoryTransfer = () => {
 					</Button>
 				),
 				supplierName: item.supplier_name || EMPTY_CELL,
-				customer: item.branch.name || EMPTY_CELL, // The branch is the customer
+				customer: item.branch?.name || EMPTY_CELL, // The branch is the customer
 				amountPaid: formatInPeso(item.amount_paid),
 			}));
 

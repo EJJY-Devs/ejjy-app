@@ -25,9 +25,8 @@ const formDetails = {
 	schema: Yup.object().shape({
 		supplierName: Yup.string().required().label('Vendor Name').trim(),
 		supplierAddress: Yup.string().label('Vendor Address').trim(),
-		supplierTin: Yup.string().label('Vendor TIN').trim(),
 		encodedById: Yup.number().nullable().required().label('Encoded By Id'),
-		checkedById: Yup.number().nullable().required().label('Checked By Id'),
+		checkedById: Yup.number().nullable().label('Checked By Id'),
 	}),
 };
 
@@ -53,10 +52,7 @@ export const CreateInventoryTransferModal = ({
 					encodedById: Yup.number().nullable().required().label('Encoder'),
 					overallRemarks: Yup.string().nullable().label('Remarks').trim(),
 					customerName: Yup.string().required().label('Customer Name').trim(),
-					customerAddress: Yup.string()
-						.required()
-						.label('Customer Address')
-						.trim(),
+					customerAddress: Yup.string().label('Customer Address').trim(),
 					customerTin: Yup.string().label('Customer TIN').trim(),
 			  })
 			: formDetails.schema;
@@ -65,7 +61,6 @@ export const CreateInventoryTransferModal = ({
 		type === 'Delivery Receipt'
 			? {
 					encodedById: null,
-					overallRemarks: '',
 					customerName: '',
 					customerAddress: '',
 					customerTin: '',
@@ -153,34 +148,6 @@ export const CreateInventoryTransferModal = ({
 											render={(error) => <FieldError error={error} />}
 										/>
 									</Col>
-									<Col span={24}>
-										<Label label="Customer TIN" spacing />
-										<Input
-											name="customerTin"
-											value={values['customerTin']}
-											onChange={(e) => {
-												setFieldValue('customerTin', e.target.value);
-											}}
-										/>
-										<ErrorMessage
-											name="customerTin"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
-									<Col span={24}>
-										<Label label="Remarks" spacing />
-										<Input.TextArea
-											name="overallRemarks"
-											value={values['overallRemarks']}
-											onChange={(e) =>
-												setFieldValue('overallRemarks', e.target.value)
-											}
-										/>
-										<ErrorMessage
-											name="overallRemarks"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
 								</>
 							) : (
 								<>
@@ -213,20 +180,6 @@ export const CreateInventoryTransferModal = ({
 										/>
 									</Col>
 									<Col span={24}>
-										<Label label="Vendor TIN" spacing />
-										<Input
-											name="supplierTin"
-											value={values['supplierTin']}
-											onChange={(e) => {
-												setFieldValue('supplierTin', e.target.value);
-											}}
-										/>
-										<ErrorMessage
-											name="supplierTin"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
-									<Col span={24}>
 										<Label id="encodedById" label="Encoder" spacing />
 										<Select
 											className="w-100"
@@ -250,33 +203,6 @@ export const CreateInventoryTransferModal = ({
 										</Select>
 										<ErrorMessage
 											name="encodedById"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
-									<Col span={24}>
-										<Label id="checkedById" label="Checker" spacing />
-										<Select
-											className="w-100"
-											disabled={isFetchingUsers}
-											filterOption={filterOption}
-											optionFilterProp="children"
-											value={values['checkedById']}
-											showSearch
-											onChange={(value) => {
-												setFieldValue('checkedById', value);
-											}}
-										>
-											{usersData?.list.map((user) => {
-												const id = getId(user);
-												return id ? (
-													<Select.Option key={id} value={id}>
-														{getFullName(user)}
-													</Select.Option>
-												) : null;
-											})}
-										</Select>
-										<ErrorMessage
-											name="checkedById"
 											render={(error) => <FieldError error={error} />}
 										/>
 									</Col>

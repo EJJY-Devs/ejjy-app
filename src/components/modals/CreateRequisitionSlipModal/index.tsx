@@ -28,7 +28,6 @@ const formDetails = {
 	},
 	schema: Yup.object().shape({
 		preparedBy: Yup.number().nullable().required().label('Encoder'),
-		approvedBy: Yup.number().nullable().required().label('Requestor'),
 		vendorId: Yup.number().nullable().required().label('Vendor'),
 	}),
 };
@@ -105,7 +104,7 @@ export const CreateRequisitionSlipModal = ({
 								/>
 							</Col>
 
-							<Col span={24}>
+							{/* <Col span={24}>
 								<Label id="approvedBy" label="Requestor" spacing />
 								<Select
 									className="w-100"
@@ -131,7 +130,7 @@ export const CreateRequisitionSlipModal = ({
 									name="approvedBy"
 									render={(error) => <FieldError error={error} />}
 								/>
-							</Col>
+							</Col> */}
 							<Col span={24}>
 								<Label id="vendorId" label="Vendor" spacing />
 								<Select

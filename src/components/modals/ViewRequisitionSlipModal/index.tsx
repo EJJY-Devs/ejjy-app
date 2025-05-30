@@ -1,6 +1,6 @@
 import { PrinterOutlined } from '@ant-design/icons';
-import { Button, Descriptions, Modal, Table } from 'antd';
-import { PdfButtons, ReceiptHeader } from 'components/Printing';
+import { Button, Descriptions, Modal, Table, Space, Typography } from 'antd';
+import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import dayjs from 'dayjs';
 import { ColumnsType } from 'antd/lib/table';
 import { getFullName, printRequisitionSlip } from 'ejjy-global';
@@ -21,6 +21,8 @@ export const ViewRequisitionSlipModal = ({
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
 	const { data: siteSettings } = useSiteSettings();
+
+	const { Text } = Typography;
 
 	const generateHtmlContent = () =>
 		printRequisitionSlip({
@@ -93,10 +95,23 @@ export const ViewRequisitionSlipModal = ({
 			open
 			onCancel={onClose}
 		>
-			<ReceiptHeader
+			<ReceiptHeaderV2
 				branchHeader={requisitionSlip.branch}
 				title="REQUISITION SLIP"
 			/>
+
+			<Space
+				align="center"
+				className="w-100 text-center"
+				direction="vertical"
+				size={0}
+			>
+				<br />
+				<Text style={{ whiteSpace: 'pre-line' }}>Datetime Requested:</Text>
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					{formatDateTime(requisitionSlip?.datetime_created)}
+				</Text>
+			</Space>
 
 			<Descriptions
 				className="mt-6 w-100"
@@ -110,20 +125,17 @@ export const ViewRequisitionSlipModal = ({
 				}}
 				size="small"
 			>
-				<Descriptions.Item label="Date & Time Requested">
-					{formatDateTime(requisitionSlip.datetime_created)}
+				<Descriptions.Item label="Reference #:">
+					{requisitionSlip?.reference_number}
 				</Descriptions.Item>
-				<Descriptions.Item label="Requestor">
-					{getFullName(requisitionSlip.approved_by)}
+				<Descriptions.Item label="Vendor:">
+					{requisitionSlip?.vendor?.name}
 				</Descriptions.Item>
 				<Descriptions.Item label="Customer">
 					{requisitionSlip.branch?.name}
 				</Descriptions.Item>
-				<Descriptions.Item label="ID">
-					{requisitionSlip?.reference_number}
-				</Descriptions.Item>
-				<Descriptions.Item label="Vendor">
-					{requisitionSlip?.vendor?.name}
+				<Descriptions.Item label="Encoder:">
+					{getFullName(requisitionSlip?.prepared_by)}
 				</Descriptions.Item>
 			</Descriptions>
 
@@ -137,25 +149,17 @@ export const ViewRequisitionSlipModal = ({
 				bordered
 			/>
 
-			<Descriptions
-				className="mt-6 w-100"
-				column={1}
-				contentStyle={{
-					textAlign: 'right',
-					display: 'block',
-				}}
-				labelStyle={{
-					width: 200,
-				}}
-				size="small"
+			<Space
+				align="center"
+				className="w-100 text-center"
+				direction="vertical"
+				size={0}
 			>
-				<Descriptions.Item label="Date & Time Printed">
-					{dayjs().format('MM/DD/YYYY h:mmA')}
-				</Descriptions.Item>
-				<Descriptions.Item label="Printed By">
-					{getFullName(user)}
-				</Descriptions.Item>
-			</Descriptions>
+				<br />
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					Print Details: {dayjs().format('MM/DD/YYYY--h:mmA')}{' '}
+				</Text>
+			</Space>
 
 			<div
 				// eslint-disable-next-line react/no-danger

@@ -80,7 +80,7 @@ export const InventoryTransfer = () => {
 						type="link"
 						onClick={() => setSelectedBackOrder(item)}
 					>
-						{item.id}
+						{item.reference_number}
 					</Button>
 				),
 				supplierName: item.branch?.name || EMPTY_CELL, // The branch is the supplier/vendor
@@ -99,7 +99,7 @@ export const InventoryTransfer = () => {
 						type="link"
 						onClick={() => setSelectedReceivingVoucher(item)}
 					>
-						{item.id}
+						{item.reference_number}
 					</Button>
 				),
 				supplierName: item.supplier_name || EMPTY_CELL,
@@ -268,7 +268,7 @@ const Filter = ({ isLoading, branches, isHeadOffice }) => {
 
 	return (
 		<Row>
-			<Col className="InventoryTransfer_timeRangeFilter" lg={4}>
+			<Col className="InventoryTransfer_timeRangeFilter" lg={6}>
 				<TimeRangeFilter disabled={isLoading} />
 			</Col>
 

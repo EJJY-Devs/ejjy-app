@@ -1,13 +1,13 @@
 import { PrinterOutlined } from '@ant-design/icons';
-import { Button, Modal, Space, Table, Typography } from 'antd';
+import { Button, Modal, Space, Table, Typography, Descriptions } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import { PdfButtons, ReceiptHeader } from 'components/Printing';
+import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import { printReceivingReport, getFullName } from 'ejjy-global';
 import dayjs from 'dayjs';
 import { VIEW_PRINTING_MODAL_WIDTH } from 'global';
 import { usePdf, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { formatDateTime, formatQuantity } from 'utils';
+import { formatQuantity } from 'utils';
 
 const { Text } = Typography;
 
@@ -91,11 +91,38 @@ export const ViewReceivingVoucherModal = ({
 			open
 			onCancel={onClose}
 		>
-			<ReceiptHeader
+			<ReceiptHeaderV2
 				branchHeader={receivingVoucher.branch}
 				title="RECEIVING REPORT"
 			/>
 
+			<Descriptions
+				className="mt-6 w-100"
+				column={1}
+				contentStyle={{
+					textAlign: 'right',
+					display: 'block',
+				}}
+				labelStyle={{
+					width: 200,
+				}}
+				size="small"
+			>
+				<Descriptions.Item label="Reference #:">
+					{receivingVoucher?.reference_number}
+				</Descriptions.Item>
+				<Descriptions.Item label="Vendor:">
+					{receivingVoucher?.supplier_name}
+				</Descriptions.Item>
+				<Descriptions.Item label="Customer">
+					{receivingVoucher?.branch?.name}
+				</Descriptions.Item>
+				<Descriptions.Item label="Encoder:">
+					{getFullName(receivingVoucher?.encoded_by)}
+				</Descriptions.Item>
+			</Descriptions>
+
+			{/* Products Table */}
 			<Table
 				className="mt-6"
 				columns={columns}
@@ -105,17 +132,16 @@ export const ViewReceivingVoucherModal = ({
 				bordered
 			/>
 
-			<Space className="mt-4 w-100" direction="vertical">
-				<Space className="w-100 justify-space-between">
-					<Text>Encoder: {getFullName(receivingVoucher.encoded_by)}</Text>
-					<Text>Inspector: {getFullName(receivingVoucher.checked_by)}</Text>
-				</Space>
-				<Space className="mt-2 w-100">
-					<Text>Vendor: {receivingVoucher.supplier_name}</Text>
-				</Space>
-
-				<Text>GDT: {formatDateTime(receivingVoucher.datetime_created)}</Text>
-				<Text>PDT: {formatDateTime(dayjs(), false)}</Text>
+			<Space
+				align="center"
+				className="w-100 text-center"
+				direction="vertical"
+				size={0}
+			>
+				<br />
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					Print Details: {dayjs().format('MM/DD/YYYY--h:mmA')}{' '}
+				</Text>
 			</Space>
 
 			<div

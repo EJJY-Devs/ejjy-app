@@ -268,7 +268,7 @@ const Filter = ({ isLoading, branches, isHeadOffice }) => {
 
 	return (
 		<Row>
-			<Col className="InventoryTransfer_timeRangeFilter" lg={6}>
+			<Col className="InventoryTransfer_timeRangeFilter">
 				<TimeRangeFilter disabled={isLoading} />
 			</Col>
 

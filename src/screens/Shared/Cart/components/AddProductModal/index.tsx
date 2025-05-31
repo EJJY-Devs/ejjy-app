@@ -41,12 +41,16 @@ export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 					quantity: existingProduct.quantity + formData.quantity,
 				},
 			});
+		} else if (existingProduct && allowsMultiple) {
+			// Add duplicate immediately after original
+			addProduct(
+				{ ...product, quantity: formData.quantity },
+				true,
+				product.product.key,
+			);
 		} else {
-			// Either new product or multiple instances allowed
-			addProduct({
-				...product,
-				quantity: formData.quantity,
-			});
+			// Default add logic
+			addProduct({ ...product, quantity: formData.quantity });
 		}
 
 		message.success(`${product.product.name} was added successfully.`);

@@ -152,6 +152,33 @@ export const CreateInventoryTransferModal = ({
 							) : (
 								<>
 									<Col span={24}>
+										<Label id="encodedById" label="Encoder" spacing />
+										<Select
+											className="w-100"
+											disabled={isFetchingUsers}
+											filterOption={filterOption}
+											optionFilterProp="children"
+											value={values['encodedById']}
+											showSearch
+											onChange={(value) => {
+												setFieldValue('encodedById', value);
+											}}
+										>
+											{usersData?.list.map((user) => {
+												const id = getId(user);
+												return id ? (
+													<Select.Option key={id} value={id}>
+														{getFullName(user)}
+													</Select.Option>
+												) : null;
+											})}
+										</Select>
+										<ErrorMessage
+											name="encodedById"
+											render={(error) => <FieldError error={error} />}
+										/>
+									</Col>
+									<Col span={24}>
 										<Label label="Vendor Name" spacing />
 										<Input
 											name="supplierName"
@@ -176,33 +203,6 @@ export const CreateInventoryTransferModal = ({
 										/>
 										<ErrorMessage
 											name="supplierAddress"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
-									<Col span={24}>
-										<Label id="encodedById" label="Encoder" spacing />
-										<Select
-											className="w-100"
-											disabled={isFetchingUsers}
-											filterOption={filterOption}
-											optionFilterProp="children"
-											value={values['encodedById']}
-											showSearch
-											onChange={(value) => {
-												setFieldValue('encodedById', value);
-											}}
-										>
-											{usersData?.list.map((user) => {
-												const id = getId(user);
-												return id ? (
-													<Select.Option key={id} value={id}>
-														{getFullName(user)}
-													</Select.Option>
-												) : null;
-											})}
-										</Select>
-										<ErrorMessage
-											name="encodedById"
 											render={(error) => <FieldError error={error} />}
 										/>
 									</Col>

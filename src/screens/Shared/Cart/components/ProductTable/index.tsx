@@ -109,7 +109,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 						type="primary"
 						danger
 						ghost
-						onClick={() => showRemoveProductConfirmation(branchProduct)}
+						onClick={() => showRemoveProductConfirmation(branchProduct, index)}
 					/>
 				</Tooltip>,
 
@@ -193,6 +193,9 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 							onClick={() => {
 								setSelectedProduct(branchProduct);
 								setAddProductModalVisible(true);
+								const newIndex =
+									(pageNumber - 1) * PRODUCT_LENGTH_PER_PAGE + index;
+								setActiveIndex(newIndex);
 							}}
 						/>
 					</Tooltip>
@@ -217,7 +220,9 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		}
 	}, [products, activeIndex]);
 
-	const showRemoveProductConfirmation = (branchProduct) => {
+	const showRemoveProductConfirmation = (branchProduct, index) => {
+		const newIndex = (pageNumber - 1) * PRODUCT_LENGTH_PER_PAGE + index;
+		setActiveIndex(newIndex);
 		Modal.confirm({
 			className: 'EJJYModal Modal__hasFooter',
 			title: 'Delete Confirmation',

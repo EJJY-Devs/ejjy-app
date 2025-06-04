@@ -19,7 +19,7 @@ import { Logs } from 'screens/BranchManager/Logs';
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
 import { Stocks } from 'screens/BranchManager/Stock';
-import { InventoryTransfer } from 'screens/BranchManager/InventoryTransfer';
+import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { CreateStockIn } from 'screens/BranchManager/Stock/components/TabStockIn/CreateStockIn';
 import { CreateStockOut } from 'screens/BranchManager/Stock/components/TabStockOut/CreateStockOut';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';

@@ -2,8 +2,21 @@ import _ from 'lodash';
 
 export const createProductsSlice: any = (set) => ({
 	products: [],
-	addProduct: (product) =>
-		set((state) => ({ products: [product, ...state.products] })),
+	addProduct: (product, isDuplicate = false, originalKey = null) =>
+		set((state) => {
+			if (isDuplicate && originalKey) {
+				const index = state.products.findIndex(
+					(p) => p?.product?.key === originalKey,
+				);
+				if (index !== -1) {
+					const newProducts = [...state.products];
+					newProducts.splice(index + 1, 0, product);
+					return { products: newProducts };
+				}
+			}
+			// Default behavior: add to beginning
+			return { products: [product, ...state.products] };
+		}),
 	editProduct: ({ key, product }) => {
 		set((state) => {
 			const index = state.products.findIndex((p) => {

@@ -3,11 +3,9 @@ import { Button, Descriptions } from 'antd';
 import { ViewRequisitionSlipModal } from 'components';
 import { EMPTY_CELL, getFullName } from 'ejjy-global';
 import { requisitionSlipDetailsType } from 'global';
-import { useRequisitionSlips } from 'hooks/useRequisitionSlips';
 import { upperFirst } from 'lodash';
 import React, { useState } from 'react';
-import { useUserStore } from 'stores';
-import { formatDateTime, isUserFromBranch } from 'utils';
+import { formatDateTime } from 'utils';
 
 interface Props {
 	requisitionSlip: any;
@@ -17,13 +15,6 @@ interface Props {
 export const RequisitionSlipDetails = ({ requisitionSlip, type }: Props) => {
 	// STATES
 	const [isPrintPreviewVisible, setIsPrintPreviewVisible] = useState(false);
-
-	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
-	const {
-		editRequisitionSlip,
-		status: requisitionSlipsStatus,
-	} = useRequisitionSlips();
 
 	// METHODS
 	// const handleStatusChange = (status) => {
@@ -66,7 +57,7 @@ export const RequisitionSlipDetails = ({ requisitionSlip, type }: Props) => {
 							</Descriptions.Item>
 						)} */}
 
-						<Descriptions.Item label="Requesting Branch">
+						<Descriptions.Item label="Customer">
 							{requisitionSlip.branch?.name || EMPTY_CELL}
 						</Descriptions.Item>
 

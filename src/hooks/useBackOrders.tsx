@@ -86,6 +86,7 @@ const useBackOrdersNew = ({ params }: Query) =>
 			params?.type,
 			params?.pageSize,
 			params?.timeRange,
+			params?.branchId,
 		],
 		() =>
 			wrapServiceWithCatch(
@@ -95,6 +96,7 @@ const useBackOrdersNew = ({ params }: Query) =>
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						type: params?.type,
 						time_range: params?.timeRange,
+						branch_id: params?.branchId,
 					},
 					getLocalApiUrl(),
 				),

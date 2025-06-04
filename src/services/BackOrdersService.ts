@@ -6,6 +6,7 @@ interface List extends IListRequest {
 	receiver_id?: number;
 	type?: string;
 	time_range?: string;
+	branch_id?: number;
 }
 
 interface Create {

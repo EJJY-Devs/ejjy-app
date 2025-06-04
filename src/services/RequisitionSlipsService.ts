@@ -4,6 +4,9 @@ import { IListRequest } from './interfaces';
 interface List extends IListRequest {
 	branch_id?: number;
 	status?: string;
+	vendor_id?: number;
+	slip_type?: string;
+	time_range?: string;
 }
 
 interface ListBranchId {
@@ -19,6 +22,7 @@ interface Create {
 	prepared_by?: number;
 	approved_by?: number;
 	branch_id?: number;
+	vendor_id?: number;
 	products: Product[];
 }
 

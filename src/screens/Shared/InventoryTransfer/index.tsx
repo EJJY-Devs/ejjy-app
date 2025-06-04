@@ -1,4 +1,4 @@
-import { Button, Table, Row, Col, Radio } from 'antd';
+import { Button, Table, Row, Col, Radio, Select } from 'antd';
 import {
 	Content,
 	ViewReceivingVoucherModal,
@@ -6,12 +6,17 @@ import {
 	TimeRangeFilter,
 } from 'components';
 import { Box, Label } from 'components/elements';
-import { useQueryParams, useReceivingVouchers, useBackOrders } from 'hooks';
-import { formatInPeso } from 'utils';
+import {
+	useQueryParams,
+	useReceivingVouchers,
+	useBackOrders,
+	useBranches,
+} from 'hooks';
+import { formatInPeso, getAppType } from 'utils';
 import React, { useState, useEffect } from 'react';
 import { Cart } from 'screens/Shared/Cart';
-import { backOrderTypes, EMPTY_CELL } from 'ejjy-global';
-import { pageSizeOptions, DEFAULT_PAGE } from 'global';
+import { EMPTY_CELL, filterOption, MAX_PAGE_SIZE } from 'ejjy-global';
+import { pageSizeOptions, DEFAULT_PAGE, appTypes } from 'global';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
 
 import './style.scss';
@@ -31,6 +36,15 @@ export const InventoryTransfer = () => {
 	const { refetchData, setRefetchData } = useBoundStore();
 	const { params, setQueryParams } = useQueryParams();
 
+	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
+
+	const {
+		data: { branches },
+		isFetching: isFetchingBranches,
+	} = useBranches({
+		params: { pageSize: MAX_PAGE_SIZE },
+	});
+
 	const {
 		data: { backOrders = [], total: backOrderTotal },
 		isFetching: isFetchingBackOrders,
@@ -38,8 +52,6 @@ export const InventoryTransfer = () => {
 	} = useBackOrders({
 		params: {
 			...params,
-			type: backOrderTypes.FOR_RETURN,
-			timeRange: params?.timeRange,
 		},
 	});
 
@@ -48,7 +60,9 @@ export const InventoryTransfer = () => {
 		isFetching: isFetchingReceivingVouchers,
 		refetch: refetchReceivingVouchers,
 	} = useReceivingVouchers({
-		params: { ...params, timeRange: params?.timeRange },
+		params: {
+			...params,
+		},
 	});
 
 	useEffect(() => {
@@ -66,10 +80,10 @@ export const InventoryTransfer = () => {
 						type="link"
 						onClick={() => setSelectedBackOrder(item)}
 					>
-						{item.id}
+						{item.reference_number}
 					</Button>
 				),
-				supplierName: item.vendor_name || EMPTY_CELL,
+				supplierName: item.branch?.name || EMPTY_CELL, // The branch is the supplier/vendor
 				customer: item.customer_name || EMPTY_CELL,
 				amountPaid: formatInPeso(item.amount),
 			}));
@@ -85,11 +99,11 @@ export const InventoryTransfer = () => {
 						type="link"
 						onClick={() => setSelectedReceivingVoucher(item)}
 					>
-						{item.id}
+						{item.reference_number}
 					</Button>
 				),
 				supplierName: item.supplier_name || EMPTY_CELL,
-				customer: item.customer_name || EMPTY_CELL,
+				customer: item.branch?.name || EMPTY_CELL, // The branch is the customer
 				amountPaid: formatInPeso(item.amount_paid),
 			}));
 
@@ -148,7 +162,13 @@ export const InventoryTransfer = () => {
 			<Content title="Inventory Transfer">
 				<Box className="InventoryTransfer_box">
 					<Filter
-						isLoading={isFetchingReceivingVouchers || isFetchingBackOrders}
+						branches={branches}
+						isHeadOffice={isHeadOffice}
+						isLoading={
+							isFetchingReceivingVouchers ||
+							isFetchingBackOrders ||
+							isFetchingBranches
+						}
 					/>
 
 					<div className="InventoryTransfer_buttons">
@@ -171,26 +191,28 @@ export const InventoryTransfer = () => {
 								}}
 							/>
 						</div>
-						<div className="InventoryTransfer_create">
-							<Button
-								type="primary"
-								onClick={() => {
-									setIsCartModalVisible(true);
-									setCreateSelectedType('Delivery Receipt');
-								}}
-							>
-								Create Delivery Receipt
-							</Button>
-							<Button
-								type="primary"
-								onClick={() => {
-									setIsCartModalVisible(true);
-									setCreateSelectedType('Receiving Report');
-								}}
-							>
-								Create Receiving Report
-							</Button>
-						</div>
+						{!isHeadOffice && (
+							<div className="InventoryTransfer_create">
+								<Button
+									type="primary"
+									onClick={() => {
+										setIsCartModalVisible(true);
+										setCreateSelectedType('Delivery Receipt');
+									}}
+								>
+									Create Delivery Receipt
+								</Button>
+								<Button
+									type="primary"
+									onClick={() => {
+										setIsCartModalVisible(true);
+										setCreateSelectedType('Receiving Report');
+									}}
+								>
+									Create Receiving Report
+								</Button>
+							</div>
+						)}
 					</div>
 
 					<Table
@@ -241,10 +263,39 @@ export const InventoryTransfer = () => {
 	);
 };
 
-const Filter = ({ isLoading }) => (
-	<Row className="m-10" gutter={[24, 24]}>
-		<Col className="InventoryTransfer_timeRangeFilter" lg={12} span={24}>
-			<TimeRangeFilter disabled={isLoading} />
-		</Col>
-	</Row>
-);
+const Filter = ({ isLoading, branches, isHeadOffice }) => {
+	const { params, setQueryParams } = useQueryParams();
+
+	return (
+		<Row>
+			<Col className="InventoryTransfer_timeRangeFilter">
+				<TimeRangeFilter disabled={isLoading} />
+			</Col>
+
+			{isHeadOffice && (
+				<Col className="InventoryTransfer_timeRangeFilter" lg={4}>
+					<Label label="Branch" spacing />
+					<Select
+						className="w-100"
+						disabled={isLoading}
+						filterOption={filterOption}
+						optionFilterProp="children"
+						placeholder="Select Branch"
+						value={params.branchId ? Number(params.branchId) : undefined}
+						allowClear
+						showSearch
+						onChange={(value) => {
+							setQueryParams({ branchId: value }, { shouldResetPage: true });
+						}}
+					>
+						{branches?.map(({ id, name }) => (
+							<Select.Option key={id} value={id}>
+								{name}
+							</Select.Option>
+						))}
+					</Select>
+				</Col>
+			)}
+		</Row>
+	);
+};

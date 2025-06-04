@@ -179,6 +179,9 @@ const useRequisitionSlipsNew = ({ params }: Query) =>
 			params?.page,
 			params?.pageSize,
 			params?.status,
+			params?.vendorId,
+			params?.slipType,
+			params?.timeRange,
 		],
 		() =>
 			wrapServiceWithCatch(
@@ -188,6 +191,9 @@ const useRequisitionSlipsNew = ({ params }: Query) =>
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						status: params?.status,
+						vendor_id: params?.vendorId,
+						slip_type: params?.slipType,
+						time_range: params?.timeRange,
 					},
 					getLocalApiUrl(),
 				),
@@ -223,13 +229,14 @@ export const useRequisitionSlipCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ preparedBy, approvedBy, products, branchId }: any) =>
+		({ preparedBy, approvedBy, products, branchId, vendorId }: any) =>
 			RequisitionSlipsService.create(
 				{
 					prepared_by: preparedBy,
 					approved_by: approvedBy,
 					products,
 					branch_id: branchId,
+					vendor_id: vendorId,
 				},
 				getLocalApiUrl(),
 			),

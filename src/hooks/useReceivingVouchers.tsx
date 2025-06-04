@@ -7,7 +7,13 @@ import { getLocalApiUrl } from 'utils';
 
 const useReceivingVouchers = ({ params }: Query) =>
 	useQuery<any>(
-		['useReceivingVouchers', params?.page, params?.pageSize, params?.timeRange],
+		[
+			'useReceivingVouchers',
+			params?.page,
+			params?.pageSize,
+			params?.timeRange,
+			params?.branchId,
+		],
 		() =>
 			wrapServiceWithCatch(
 				ReceivingVouchersService.list(
@@ -15,6 +21,7 @@ const useReceivingVouchers = ({ params }: Query) =>
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						time_range: params?.timeRange,
+						branch_id: params?.branchId,
 					},
 					getLocalApiUrl(),
 				),

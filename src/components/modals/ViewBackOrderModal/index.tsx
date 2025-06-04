@@ -1,10 +1,10 @@
-import { Modal, Space, Table, Typography, Button } from 'antd';
+import { Modal, Space, Table, Typography, Button, Descriptions } from 'antd';
 import { PrinterOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
-import { PdfButtons, ReceiptHeader } from 'components/Printing';
+import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import dayjs from 'dayjs';
 import { getFullName, printDeliveryReceipt } from 'ejjy-global';
-import { EMPTY_CELL, VIEW_PRINTING_MODAL_WIDTH } from 'global';
+import { VIEW_PRINTING_MODAL_WIDTH } from 'global';
 import { useBackOrderRetrieve, usePdf, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { formatDateTime, formatQuantity } from 'utils';
@@ -105,8 +105,51 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 			open
 			onCancel={onClose}
 		>
-			<ReceiptHeader branchHeader={backOrder.branch} title="DELIVERY RECEIPT" />
+			<ReceiptHeaderV2
+				branchHeader={backOrder.branch}
+				title="DELIVERY RECEIPT"
+			/>
 
+			<Space
+				align="center"
+				className="w-100 text-center"
+				direction="vertical"
+				size={0}
+			>
+				<br />
+				<Text style={{ whiteSpace: 'pre-line' }}>Datetime Generated:</Text>
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					{formatDateTime(backOrderData?.datetime_created)}
+				</Text>
+			</Space>
+
+			<Descriptions
+				className="mt-6 w-100"
+				column={1}
+				contentStyle={{
+					textAlign: 'right',
+					display: 'block',
+				}}
+				labelStyle={{
+					width: 200,
+				}}
+				size="small"
+			>
+				<Descriptions.Item label="Reference #:">
+					{backOrderData?.reference_number}
+				</Descriptions.Item>
+				<Descriptions.Item label="Vendor:">
+					{backOrderData?.branch?.name}
+				</Descriptions.Item>
+				<Descriptions.Item label="Customer">
+					{backOrderData?.customer_name}
+				</Descriptions.Item>
+				<Descriptions.Item label="Encoder:">
+					{getFullName(backOrderData?.encoded_by)}
+				</Descriptions.Item>
+			</Descriptions>
+
+			{/* Products Table */}
 			<Table
 				className="mt-6"
 				columns={columnsForDeliveryReceipt}
@@ -116,20 +159,16 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 				bordered
 			/>
 
-			<Space className="mt-4 w-100 mr-6" direction="vertical">
-				<Space className="w-100 justify-space-between">
-					<Text>Customer: {backOrderData?.customer_name || EMPTY_CELL}</Text>
-					<Text>
-						Encoder: {getFullName(backOrderData?.encoded_by) || EMPTY_CELL}
-					</Text>
-				</Space>
-
-				<Space className="w-100">
-					<Text>Remarks: {backOrderData?.overall_remarks || EMPTY_CELL}</Text>
-				</Space>
-
-				<Text>GDT: {formatDateTime(backOrderData?.datetime_created)}</Text>
-				<Text>PDT: {formatDateTime(dayjs(), false)}</Text>
+			<Space
+				align="center"
+				className="w-100 text-center"
+				direction="vertical"
+				size={0}
+			>
+				<br />
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					Print Details: {dayjs().format('MM/DD/YYYY--h:mmA')}{' '}
+				</Text>
 			</Space>
 
 			<div

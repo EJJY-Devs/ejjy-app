@@ -27,6 +27,7 @@ import { SiteSettings } from 'screens/Shared/SiteSettings';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
 import shallow from 'zustand/shallow';
+import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { BackOrders } from './BackOrders/BackOrders';
 import { ViewBackOrder } from './BackOrders/ViewBackOrder';
 import { Checkings } from './Checkings/Checkings';
@@ -212,6 +213,13 @@ const OfficeManager = () => {
 				link: '/office-manager/product-groups',
 			},
 			{
+				key: 'inventory-transfer',
+				name: 'Inventory Transfer',
+				activeIcon: require('../../assets/images/icon-product-active.svg'),
+				defaultIcon: require('../../assets/images/icon-product.svg'),
+				link: '/office-manager/inventory-transfer',
+			},
+			{
 				key: 'requisition-slips',
 				name: 'Branch Requisitions',
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
@@ -285,6 +293,12 @@ const OfficeManager = () => {
 					<Route
 						component={ViewBranchMachine}
 						path="/office-manager/branch-machines/:id"
+						exact
+					/>
+
+					<Route
+						component={InventoryTransfer}
+						path="/office-manager/inventory-transfer"
 						exact
 					/>
 

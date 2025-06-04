@@ -23,11 +23,10 @@ const formDetails = {
 		checkedById: null,
 	},
 	schema: Yup.object().shape({
-		supplierName: Yup.string().required().label('Supplier Name').trim(),
-		supplierAddress: Yup.string().required().label('Supplier Address').trim(),
-		supplierTin: Yup.string().label('Supplier TIN').trim(),
+		supplierName: Yup.string().required().label('Vendor Name').trim(),
+		supplierAddress: Yup.string().label('Vendor Address').trim(),
 		encodedById: Yup.number().nullable().required().label('Encoded By Id'),
-		checkedById: Yup.number().nullable().required().label('Checked By Id'),
+		checkedById: Yup.number().nullable().label('Checked By Id'),
 	}),
 };
 
@@ -53,10 +52,7 @@ export const CreateInventoryTransferModal = ({
 					encodedById: Yup.number().nullable().required().label('Encoder'),
 					overallRemarks: Yup.string().nullable().label('Remarks').trim(),
 					customerName: Yup.string().required().label('Customer Name').trim(),
-					customerAddress: Yup.string()
-						.required()
-						.label('Customer Address')
-						.trim(),
+					customerAddress: Yup.string().label('Customer Address').trim(),
 					customerTin: Yup.string().label('Customer TIN').trim(),
 			  })
 			: formDetails.schema;
@@ -65,7 +61,6 @@ export const CreateInventoryTransferModal = ({
 		type === 'Delivery Receipt'
 			? {
 					encodedById: null,
-					overallRemarks: '',
 					customerName: '',
 					customerAddress: '',
 					customerTin: '',
@@ -153,79 +148,9 @@ export const CreateInventoryTransferModal = ({
 											render={(error) => <FieldError error={error} />}
 										/>
 									</Col>
-									<Col span={24}>
-										<Label label="Customer TIN" spacing />
-										<Input
-											name="customerTin"
-											value={values['customerTin']}
-											onChange={(e) => {
-												setFieldValue('customerTin', e.target.value);
-											}}
-										/>
-										<ErrorMessage
-											name="customerTin"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
-									<Col span={24}>
-										<Label label="Remarks" spacing />
-										<Input.TextArea
-											name="overallRemarks"
-											value={values['overallRemarks']}
-											onChange={(e) =>
-												setFieldValue('overallRemarks', e.target.value)
-											}
-										/>
-										<ErrorMessage
-											name="overallRemarks"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
 								</>
 							) : (
 								<>
-									<Col span={24}>
-										<Label label="Supplier Name" spacing />
-										<Input
-											name="supplierName"
-											value={values['supplierName']}
-											onChange={(e) => {
-												setFieldValue('supplierName', e.target.value);
-											}}
-										/>
-										<ErrorMessage
-											name="supplierName"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
-									<Col span={24}>
-										<Label label="Supplier Address" spacing />
-										<Input
-											name="supplierAddress"
-											value={values['supplierAddress']}
-											onChange={(e) => {
-												setFieldValue('supplierAddress', e.target.value);
-											}}
-										/>
-										<ErrorMessage
-											name="supplierAddress"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
-									<Col span={24}>
-										<Label label="Supplier TIN" spacing />
-										<Input
-											name="supplierTin"
-											value={values['supplierTin']}
-											onChange={(e) => {
-												setFieldValue('supplierTin', e.target.value);
-											}}
-										/>
-										<ErrorMessage
-											name="supplierTin"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
 									<Col span={24}>
 										<Label id="encodedById" label="Encoder" spacing />
 										<Select
@@ -254,29 +179,30 @@ export const CreateInventoryTransferModal = ({
 										/>
 									</Col>
 									<Col span={24}>
-										<Label id="checkedById" label="Checker" spacing />
-										<Select
-											className="w-100"
-											disabled={isFetchingUsers}
-											filterOption={filterOption}
-											optionFilterProp="children"
-											value={values['checkedById']}
-											showSearch
-											onChange={(value) => {
-												setFieldValue('checkedById', value);
+										<Label label="Vendor Name" spacing />
+										<Input
+											name="supplierName"
+											value={values['supplierName']}
+											onChange={(e) => {
+												setFieldValue('supplierName', e.target.value);
 											}}
-										>
-											{usersData?.list.map((user) => {
-												const id = getId(user);
-												return id ? (
-													<Select.Option key={id} value={id}>
-														{getFullName(user)}
-													</Select.Option>
-												) : null;
-											})}
-										</Select>
+										/>
 										<ErrorMessage
-											name="checkedById"
+											name="supplierName"
+											render={(error) => <FieldError error={error} />}
+										/>
+									</Col>
+									<Col span={24}>
+										<Label label="Vendor Address" spacing />
+										<Input
+											name="supplierAddress"
+											value={values['supplierAddress']}
+											onChange={(e) => {
+												setFieldValue('supplierAddress', e.target.value);
+											}}
+										/>
+										<ErrorMessage
+											name="supplierAddress"
 											render={(error) => <FieldError error={error} />}
 										/>
 									</Col>

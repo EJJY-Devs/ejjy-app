@@ -13,7 +13,7 @@
 			"provider": "github",
 			"owner": "EJJY-Devs",
 			"repo": "ejjy-app",
-			"releaseType": "release"
+			"releaseType": "prerelease"
 		}
 	],
 	"icon": "icons/BO.ico"

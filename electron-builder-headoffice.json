@@ -13,7 +13,7 @@
 			"provider": "github",
 			"owner": "EJJY-Devs",
 			"repo": "ejjy-app-headoffice-release",
-			"releaseType": "release"
+			"releaseType": "prerelease"
 		}
 	],
 	"nsis": {

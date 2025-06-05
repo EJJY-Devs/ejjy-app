@@ -15,8 +15,12 @@ const { spawn, exec } = require('child_process');
 const Store = require('electron-store');
 const fs = require('fs');
 
+// Persistent store for automatic zoom level
+const store = new Store({ defaults: { zoomLevel: 1 } });
+
 const TUNNELING_INTERVAL_MS = 60_000;
 const SPLASH_SCREEN_SHOWN_MS = 8_000;
+let zoomLevel = store.get('zoomLevel', 1); // Default zoom level is 1 (100%)
 
 const appTypes = {
 	BACK_OFFICE: 'back_office',
@@ -96,6 +100,7 @@ function createWindow() {
 		splashWindow.destroy();
 		mainWindow.maximize();
 		mainWindow.show();
+		mainWindow.webContents.setZoomFactor(zoomLevel);
 	});
 
 	mainWindow.on('closed', () => {
@@ -110,67 +115,43 @@ function createWindow() {
 	initServer(store);
 
 	// Set Menu
-	const menu = Menu.getApplicationMenu().items;
-	menu.push({
-		label: 'Database',
-		submenu: [
-			{
-				label: 'Reset Clean',
-				click: () => {
-					mainWindow.setProgressBar(1);
-					killSpawns();
+	const menuItems = Menu.getApplicationMenu().items;
 
-					setTimeout(() => {
-						const result = resetDB.resetClean();
-						mainWindow.setProgressBar(-1);
-
-						if (result) {
-							const choice = dialog.showMessageBoxSync(mainWindow, {
-								type: 'info',
-								title: 'Success',
-								buttons: ['Close'],
-								message:
-									'Database was reset successfully. Click button below to restart the app.',
-								cancelId: -1,
-							});
-
-							if (choice === 0) {
-								relaunchApp();
-							}
-						}
-					}, 1000);
+	if (!isDev) {
+		menuItems.push({
+			label: 'Options',
+			submenu: [
+				{
+					label: 'Zoom In',
+					accelerator: 'CmdOrCtrl+Plus',
+					click() {
+						zoomLevel += 0.1;
+						mainWindow.webContents.setZoomFactor(zoomLevel);
+						store.set('zoomLevel', zoomLevel);
+					},
 				},
-			},
-			{
-				label: 'Reset Standalone',
-				click: () => {
-					mainWindow.setProgressBar(1);
-					killSpawns();
-
-					setTimeout(() => {
-						const result = resetDB.resetStandalone();
-						mainWindow.setProgressBar(-1);
-
-						if (result) {
-							const choice = dialog.showMessageBoxSync(mainWindow, {
-								type: 'info',
-								title: 'Success',
-								buttons: ['Close'],
-								message:
-									'Database was reset successfully. Click button below to restart the app.',
-								cancelId: -1,
-							});
-
-							if (choice === 0) {
-								relaunchApp();
-							}
-						}
-					}, 1000);
+				{
+					label: 'Zoom Out',
+					accelerator: 'CmdOrCtrl+-',
+					click() {
+						zoomLevel -= 0.1;
+						mainWindow.webContents.setZoomFactor(zoomLevel);
+						store.set('zoomLevel', zoomLevel);
+					},
 				},
-			},
-		],
-	});
-	Menu.setApplicationMenu(Menu.buildFromTemplate(menu));
+				{
+					label: 'Reset Zoom',
+					accelerator: 'CmdOrCtrl+0',
+					click() {
+						zoomLevel = 1;
+						mainWindow.webContents.setZoomFactor(zoomLevel);
+						store.set('zoomLevel', zoomLevel);
+					},
+				},
+			],
+		});
+	}
+	Menu.setApplicationMenu(Menu.buildFromTemplate(menuItems));
 }
 
 //-------------------------------------------------------------------
@@ -193,16 +174,11 @@ function initStore() {
 	const store = new Store({ schema });
 
 	ipcMain.handle('getStoreValue', (event, key) => {
-		console.log('key', key);
 		return store.get(key);
 	});
 
 	ipcMain.handle('setStoreValue', (event, { key, value, relaunch = false }) => {
-		console.log('key', key);
-		console.log('value', value);
-
 		store.set(key, value);
-
 		if (relaunch) {
 			relaunchApp();
 		}
@@ -259,24 +235,16 @@ function initServer(store) {
 				exec(
 					'ngrok http --domain=headoffice.ngrok.app 8001',
 					(error, stdout, stderr) => {
-						if (error) {
-							logStatus(`Tunneling error: ${error.message}`);
-							return;
-						}
-						if (stderr) {
-							logStatus(`Tunneling stderr: ${stderr}`);
-							return;
-						}
+						if (error) return logStatus(`Tunneling error: ${error.message}`);
+						if (stderr) return logStatus(`Tunneling stderr: ${stderr}`);
 						logStatus(`Tunneling stdout: ${stdout}`);
 					},
 				);
 			};
 
 			startTunneling();
-
 			setInterval(startTunneling, TUNNELING_INTERVAL_MS);
-
-			logStatus('Server: Starded Tunneling');
+			logStatus('Server: Started Tunneling');
 		}
 
 		setTimeout(() => {
@@ -303,106 +271,22 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
 	app.quit();
 } else {
-	app.on('second-instance', (event, commandLine, workingDirectory) => {
-		// Someone tried to run a second instance, we should focus our window.
+	app.on('second-instance', () => {
 		if (mainWindow) {
 			if (mainWindow.isMinimized()) mainWindow.restore();
 			mainWindow.focus();
 		}
 	});
-
-	// Load the rest of the app, etc...
 	app.on('ready', createWindow);
 }
 
-const envPath = path.join(apiPath, 'backend', '.env');
-const dbPath = path.join(apiPath, 'db.sqlite3');
-
-const cachePath = path.join(app.getPath('userData'), 'TemporaryFiles');
-const backupDbPath = path.join(cachePath, 'db.sqlite3'); // Backup path for db.sqlite3
-const backupEnvPath = path.join(cachePath, '.env');
-
-const restorationFlagPath = path.join(
-	app.getPath('userData'),
-	'restorationFlag.json',
-);
-
-// Function to save restoration flag
-function saveRestorationFlag(value) {
-	fs.writeFileSync(
-		restorationFlagPath,
-		JSON.stringify({ restorationFlag: value }),
-	);
-}
-
-// Function to load restoration flag
-function loadRestorationFlag() {
-	if (fs.existsSync(restorationFlagPath)) {
-		const data = JSON.parse(fs.readFileSync(restorationFlagPath, 'utf8'));
-		return data.restorationFlag || false;
-	}
-	return false;
-}
-
-// Function to clear the restoration flag
-function clearRestorationFlag() {
-	if (fs.existsSync(restorationFlagPath)) {
-		fs.unlinkSync(restorationFlagPath);
-	}
-}
-
-let restorationFlag = loadRestorationFlag();
-
-function backupFilesToCache() {
-	// Ensure the cache folder exists
-	if (!fs.existsSync(cachePath)) {
-		fs.mkdirSync(cachePath);
-		logStatus('Create cache folder at', cachePath);
-	}
-
-	// Back up db.sqlite3
-	if (fs.existsSync(dbPath)) {
-		fs.copyFileSync(dbPath, backupDbPath);
-		logStatus('Backup db at', backupDbPath);
-	}
-
-	// Back up .env file
-	if (fs.existsSync(envPath)) {
-		fs.copyFileSync(envPath, backupEnvPath);
-		logStatus('Restore env at', backupEnvPath);
-	}
-
-	logStatus('Backup to cache completed');
-}
-
-// Function to restore files from the cache folder
-function restoreFilesFromCache() {
-	// Restore db.sqlite3
-	if (fs.existsSync(backupDbPath)) {
-		fs.copyFileSync(backupDbPath, dbPath);
-		logStatus('Restored db');
-	}
-
-	// Restore .env file
-	if (fs.existsSync(backupEnvPath)) {
-		fs.copyFileSync(backupEnvPath, envPath);
-		logStatus('Restored env');
-	}
-
-	logStatus('Restore from cache completed');
-	clearRestorationFlag();
-}
-
 //-------------------------------------------------------------------
-// Check for updates
-//
-// We must only perform auto update in Windows OS
+// Check for updates (Windows only)
 //-------------------------------------------------------------------
 if (process.platform === 'win32') {
-	autoUpdater.on('checking-for-update', () => {
-		logStatus('Checking for update...');
-	});
-
+	autoUpdater.on('checking-for-update', () =>
+		logStatus('Checking for update...'),
+	);
 	autoUpdater.on('update-available', (info) => {
 		dialog
 			.showMessageBox(mainWindow, {
@@ -413,35 +297,21 @@ if (process.platform === 'win32') {
 				cancelId: -1,
 			})
 			.then(({ response }) => {
-				if (response === 0) {
-					// Backup files before starting the update
-					backupFilesToCache();
-					autoUpdater.downloadUpdate();
-				}
+				if (response === 0) autoUpdater.downloadUpdate();
 			});
 	});
-
-	autoUpdater.on('update-not-available', (info) => {
-		logStatus('Update not available');
-	});
-
-	autoUpdater.on('error', (err) => {
-		logStatus('Error in auto-updater: ' + err);
-	});
-
+	autoUpdater.on('update-not-available', () =>
+		logStatus('Update not available'),
+	);
+	autoUpdater.on('error', (err) => logStatus('Error in auto-updater: ' + err));
 	autoUpdater.on('download-progress', (progress) => {
 		mainWindow.setProgressBar(Number(progress.percent) / 100);
-
-		let log_message = 'Download speed: ' + progress.bytesPerSecond;
-		log_message = log_message + ' - Downloaded ' + progress.percent + '%';
-		log_message =
-			log_message + ' (' + progress.transferred + '/' + progress.total + ')';
-		logStatus(log_message);
+		logStatus(
+			`Download speed: ${progress.bytesPerSecond} - Downloaded ${progress.percent}% (${progress.transferred}/${progress.total})`,
+		);
 	});
-
-	autoUpdater.on('update-downloaded', (info) => {
+	autoUpdater.on('update-downloaded', () => {
 		logStatus('Update downloaded');
-
 		dialog
 			.showMessageBox(mainWindow, {
 				type: 'info',
@@ -451,24 +321,10 @@ if (process.platform === 'win32') {
 				cancelId: -1,
 			})
 			.then(({ response }) => {
-				if (response === 0) {
-					autoUpdater.quitAndInstall();
-					restoreFilesFromCache();
-					saveRestorationFlag(true);
-				}
+				if (response === 0) autoUpdater.quitAndInstall();
 			});
 	});
-
-	if (restorationFlag) {
-		logStatus('Restoration flag is true, restoring files...');
-		restoreFilesFromCache();
-	} else {
-		logStatus('Restoration flag is false.');
-	}
-
-	app.on('ready', function () {
-		autoUpdater.checkForUpdates();
-	});
+	app.on('ready', () => autoUpdater.checkForUpdates());
 }
 
 //-------------------------------------------------------------------
@@ -478,7 +334,6 @@ ipcMain.on('openFolder', (event, folderPath) => {
 	const mediaPath = isDev
 		? path.resolve(__dirname, '../api/' + folderPath)
 		: path.join(process.resourcesPath, 'api/' + folderPath);
-
 	shell.openPath(mediaPath);
 });
 
@@ -491,27 +346,19 @@ function relaunchApp() {
 }
 
 function killSpawns() {
-	if (spawnApi) {
-		kill(spawnApi.pid);
-	}
-
-	if (spawnLocalhostRun) {
-		kill(spawnLocalhostRun.pid);
-	}
+	if (spawnApi) kill(spawnApi.pid);
+	if (spawnLocalhostRun) kill(spawnLocalhostRun.pid);
 }
 
 function logSpawn(key, spawn) {
 	if (spawn) {
 		if (spawn.stdout) {
-			spawn.stdout.on('data', (data) => {
-				logStatus(`[Spawn] ${key}: ${data}`);
-			});
+			spawn.stdout.on('data', (data) => logStatus(`[Spawn] ${key}: ${data}`));
 		}
-
 		if (spawn.stderr) {
-			spawn.stderr.on('data', (data) => {
-				logStatus(`[Spawn] ${key} err: ${data}`);
-			});
+			spawn.stderr.on('data', (data) =>
+				logStatus(`[Spawn] ${key} err: ${data}`),
+			);
 		}
 	}
 }

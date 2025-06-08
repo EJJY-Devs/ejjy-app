@@ -36,7 +36,7 @@ export const RequestedProducts = ({ requisitionSlip }: Props) => {
 	return (
 		<Box>
 			<TableHeader
-				title={`Requisition Slip [${requisitionSlip?.slip_type.toUpperCase()}]`}
+				title={`Requisition Slip [${requisitionSlip?.slip_type?.toUpperCase()}]`}
 			/>
 			<RequisitionSlipDetails
 				requisitionSlip={requisitionSlip}

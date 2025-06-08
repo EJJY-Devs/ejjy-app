@@ -15,12 +15,12 @@ const { spawn, exec } = require('child_process');
 const Store = require('electron-store');
 const fs = require('fs');
 
-// Persistent store for automatic zoom level
+// Persistent store for UI/app settings (zoomLevel, appType, headOfficeType)
 const store = new Store({ defaults: { zoomLevel: 1 } });
 
 const TUNNELING_INTERVAL_MS = 60_000;
 const SPLASH_SCREEN_SHOWN_MS = 8_000;
-let zoomLevel = store.get('zoomLevel', 1); // Default zoom level is 1 (100%)
+let zoomLevel = store.get('zoomLevel', 1);
 
 const appTypes = {
 	BACK_OFFICE: 'back_office',
@@ -52,14 +52,20 @@ function logStatus(text) {
 	}
 }
 
-function createWindow() {
-	let resetDB = null;
-	if (isDev) {
-		resetDB = require('./resetDB.js');
+// Helper to get backend config path (unique file name)
+function getBackendConfigPath(appType) {
+	let configDir;
+	if (appType === appTypes.HEAD_OFFICE) {
+		configDir = 'EJJY-Inventory-Headoffice-App';
+	} else if (appType === appTypes.BACK_OFFICE) {
+		configDir = 'EJJY-Inventory-App';
 	} else {
-		resetDB = require('../build/resetDB.js');
+		configDir = 'EJJY-Cashiering';
 	}
+	return path.join(app.getPath('appData'), configDir, 'backend-config.json');
+}
 
+function createWindow() {
 	// Splash screen
 	splashWindow = new BrowserWindow({
 		width: 800,
@@ -117,7 +123,99 @@ function createWindow() {
 	// Set Menu
 	const menuItems = Menu.getApplicationMenu().items;
 
+	// --- Backup Handler ---
+	async function handleBackup() {
+		mainWindow.setProgressBar(1);
+
+		// Read config to get app type and DB name
+		const appType = store.get('appType');
+		const configPath = getBackendConfigPath(appType);
+		let config = {};
+		try {
+			config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+		} catch (e) {
+			logStatus('Failed to read backend-config.json: ' + e.message);
+			mainWindow.setProgressBar(-1);
+			return;
+		}
+
+		const dbName = config.LOCAL_DB_NAME || 'backoffice'; // 'headoffice' or 'backoffice'
+		const backupFileName = `${dbName}-${new Date()
+			.toISOString()
+			.replace(/[-:T]/g, '')
+			.slice(0, 15)}.sql`;
+
+		const { filePath } = await dialog.showSaveDialog(mainWindow, {
+			title: 'Save MySQL Backup',
+			defaultPath: path.join(app.getPath('desktop'), backupFileName),
+			filters: [{ name: 'SQL Files', extensions: ['sql'] }],
+		});
+
+		if (!filePath) {
+			isUploading = false;
+			mainWindow.setProgressBar(-1);
+			return;
+		}
+
+		const mysqldumpPath =
+			'C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe';
+		const dbUser = config.DB_USER || 'root';
+		const dbPassword = config.DB_PASSWORD || '';
+		const dumpArgs = [`-u${dbUser}`, `-p${dbPassword}`, dbName];
+
+		logStatus(`[START BACKUP]: Running mysqldump to ${filePath}`);
+
+		const dump = require('child_process').spawn(mysqldumpPath, dumpArgs);
+		const writeStream = fs.createWriteStream(filePath);
+		dump.stdout.pipe(writeStream);
+
+		let errorMsg = '';
+		dump.stderr.on('data', (data) => {
+			errorMsg += data.toString();
+		});
+
+		dump.on('close', (code) => {
+			isUploading = false;
+			mainWindow.setProgressBar(-1);
+
+			const filteredError = errorMsg.replace(
+				/mysqldump: \[Warning\] Using a password on the command line interface can be insecure\.\s*/g,
+				'',
+			);
+
+			if (code === 0 && !filteredError.trim()) {
+				dialog.showMessageBoxSync(mainWindow, {
+					type: 'info',
+					title: 'Success',
+					buttons: ['Close'],
+					message: 'Database backup has been completed successfully.',
+				});
+				logStatus('[START BACKUP]: Upload Success!');
+			} else {
+				dialog.showMessageBoxSync(mainWindow, {
+					type: 'error',
+					title: 'Error',
+					message:
+						'An error occurred while backing up the database.\n' +
+						filteredError,
+				});
+				logStatus(`[START BACKUP]: Upload Err: ${filteredError}`);
+			}
+		});
+	}
+
 	if (!isDev) {
+		menuItems.push({
+			label: 'Database',
+			submenu: [
+				{
+					label: 'Backup Database',
+					click: () => {
+						handleBackup();
+					},
+				},
+			],
+		});
 		menuItems.push({
 			label: 'Options',
 			submenu: [
@@ -186,12 +284,13 @@ function initStore() {
 
 	return store;
 }
-
 //-------------------------------------------------------------------
 // Server
 //-------------------------------------------------------------------
 let spawnApi = null;
 let spawnLocalhostRun = null;
+let appType = null;
+let headOfficeType = null;
 function initServer(store) {
 	if (!isDev) {
 		logStatus('Server: Starting');
@@ -199,11 +298,24 @@ function initServer(store) {
 		appType = store.get('appType');
 		headOfficeType = store.get('headOfficeType');
 
+		// Set EJJY_APP_TYPE and ENV for Django child processes
+		const djangoEnv = {
+			...process.env,
+			EJJY_APP_TYPE:
+				appType === appTypes.HEAD_OFFICE
+					? 'headoffice'
+					: appType === appTypes.BACK_OFFICE
+					? 'backoffice'
+					: 'cashiering',
+			ENV: 'prod',
+		};
+
 		spawn('python', ['manage.py', 'migrate'], {
 			cwd: apiPath,
 			detached: true,
 			stdio: 'ignore',
 			windowsHide: true,
+			env: djangoEnv,
 		});
 
 		let apiPort = '0.0.0.0:8000';
@@ -219,6 +331,7 @@ function initServer(store) {
 			detached: true,
 			stdio: 'ignore',
 			windowsHide: true,
+			env: djangoEnv,
 		});
 		logSpawn('API', spawnApi);
 
@@ -253,6 +366,7 @@ function initServer(store) {
 				detached: true,
 				stdio: 'ignore',
 				windowsHide: true,
+				env: djangoEnv,
 			});
 		}, SPLASH_SCREEN_SHOWN_MS + 500);
 

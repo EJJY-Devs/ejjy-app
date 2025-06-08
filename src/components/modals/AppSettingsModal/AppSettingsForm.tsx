@@ -16,6 +16,7 @@ import { filterOption, printingTypes } from 'ejjy-global';
 import { ErrorMessage, Form, Formik, useFormikContext } from 'formik';
 import { appTypes, headOfficeTypes, serviceTypes } from 'global';
 import { useBranches } from 'hooks';
+import { getLocalApiUrl } from 'utils';
 import qz from 'qz-tray';
 import React, { useCallback, useEffect, useState } from 'react';
 import * as Yup from 'yup';
@@ -61,16 +62,13 @@ export const AppSettingsForm = ({
 	tagPrinterPaperHeight,
 	tagPrinterPaperWidth,
 }: Props) => {
-	// STATES
-	const [baseURL, setBaseURL] = useState(onlineApiUrl || localApiUrl);
-
 	// CUSTOM HOOKS
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
 	} = useBranches({
 		params: {
-			baseURL,
+			baseURL: getLocalApiUrl(),
 			serviceType: serviceTypes.NORMAL,
 		},
 	});
@@ -244,14 +242,8 @@ export const AppSettingsForm = ({
 							<Input
 								name="onlineApiUrl"
 								value={values['onlineApiUrl']}
-								onBlur={(e) => {
-									setBaseURL(e.target.value);
-								}}
 								onChange={(e) => {
 									setFieldValue('onlineApiUrl', e.target.value);
-								}}
-								onFocus={(e) => {
-									setBaseURL(e.target.value);
 								}}
 							/>
 							<ErrorMessage

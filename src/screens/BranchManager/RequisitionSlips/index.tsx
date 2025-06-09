@@ -7,7 +7,7 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, EMPTY_CELL } from 'global';
 import { useQueryParams, useRequisitionSlips } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { convertIntoArray, formatDateTime } from 'utils';
+import { convertIntoArray } from 'utils';
 import { capitalize } from 'lodash';
 
 const columns = [
@@ -53,7 +53,7 @@ export const RequisitionSlips = () => {
 					</Link>
 				),
 				type: capitalize(slip_type) || EMPTY_CELL,
-				datetimeCreated: formatDateTime(datetime_created),
+				datetimeCreated: datetime_created,
 				status: EMPTY_CELL,
 				remarks: EMPTY_CELL,
 			};

@@ -167,7 +167,7 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 			>
 				<br />
 				<Text style={{ whiteSpace: 'pre-line' }}>
-					Print Details: {dayjs().format('MM/DD/YYYY--h:mmA')}{' '}
+					Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}{' '}
 				</Text>
 			</Space>
 

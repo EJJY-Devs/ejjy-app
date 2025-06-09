@@ -16,6 +16,7 @@ import {
 	Spin,
 	Table,
 	Tooltip,
+	message,
 } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
@@ -25,7 +26,7 @@ import {
 	ModifyUserModal,
 	RequestErrors,
 	TableHeader,
-	UserPendingApprovalType,
+	// UserPendingApprovalType,
 	ViewUserModal,
 } from 'components';
 import { Box, Label } from 'components/elements';
@@ -34,9 +35,10 @@ import {
 	filterOption,
 	getFullName,
 	useBranches,
-	useUserRequestUserDeletion,
+	useUserDelete,
+	// useUserRequestUserDeletion,
 	useUsers,
-	userPendingApprovalTypes,
+	// userPendingApprovalTypes,
 } from 'ejjy-global';
 import {
 	DEFAULT_PAGE,
@@ -120,11 +122,20 @@ export const Users = () => {
 			type: isStandAlone() ? ServiceType.ONLINE : ServiceType.OFFLINE,
 		},
 	});
+
 	const {
 		mutateAsync: requestUserDeletion,
 		isLoading: isRequestingUserDeletion,
 		error: requestUserDeletionError,
-	} = useUserRequestUserDeletion(null, getBaseUrl());
+	} = useUserDelete({}, getBaseUrl());
+
+	// TEMPORARILY DISABLE REQUEST USER CRUD FUNCTIONS
+
+	// const {
+	// 	mutateAsync: requestUserDeletion,
+	// 	isLoading: isRequestingUserDeletion,
+	// 	error: requestUserDeletionError,
+	// } = useUserRequestUserDeletion(null, getBaseUrl());
 
 	// METHODS
 	useEffect(() => {
@@ -156,11 +167,12 @@ export const Users = () => {
 				),
 				name: getFullName(user),
 				type: getUserTypeName(user.user_type),
-				actions: user.pending_approval?.approval_type ? (
-					<UserPendingApprovalType
-						type={user.pending_approval?.approval_type}
-					/>
-				) : (
+				actions: (
+					// user.pending_approval?.approval_type ? (
+					// 	<UserPendingApprovalType
+					// 		type={user.pending_approval?.approval_type}
+					// 	/>
+					// )
 					<Space>
 						{user.user_type !== userTypes.ADMIN && (
 							<>
@@ -210,8 +222,13 @@ export const Users = () => {
 								placement="left"
 								title="Are you sure to remove this user?"
 								onConfirm={async () => {
-									await requestUserDeletion(getId(user));
-									queryClient.invalidateQueries('useUserPendingApprovals');
+									try {
+										await requestUserDeletion(getId(user));
+										message.success('User deleted successfully');
+										queryClient.invalidateQueries('useUsers');
+									} catch (e) {
+										// Optionally handle error here
+									}
 								}}
 							>
 								<Tooltip title="Remove">
@@ -232,33 +249,33 @@ export const Users = () => {
 		setDataSource(formattedUsers);
 	}, [usersData?.list, params?.branchId, branchesData?.list, isConnected]);
 
-	const handleUserCreateSuccess = (user) => {
-		if (!user.online_id) {
-			const formattedUsers = _.cloneDeep(dataSource);
-			formattedUsers.unshift({
-				key: user.id,
-				id: (
-					<Button
-						className="pa-0"
-						type="link"
-						onClick={() => {
-							setViewUserModalVisible(true);
-							setSelectedUser(user);
-						}}
-					>
-						{user.employee_id}
-					</Button>
-				),
-				name: getFullName(user),
-				type: getUserTypeName(user.user_type),
-				actions: (
-					<UserPendingApprovalType type={userPendingApprovalTypes.CREATE} />
-				),
-			});
+	// const handleUserCreateSuccess = (user) => {
+	// 	if (!user.online_id) {
+	// 		const formattedUsers = _.cloneDeep(dataSource);
+	// 		formattedUsers.unshift({
+	// 			key: user.id,
+	// 			id: (
+	// 				<Button
+	// 					className="pa-0"
+	// 					type="link"
+	// 					onClick={() => {
+	// 						setViewUserModalVisible(true);
+	// 						setSelectedUser(user);
+	// 					}}
+	// 				>
+	// 					{user.employee_id}
+	// 				</Button>
+	// 			),
+	// 			name: getFullName(user),
+	// 			type: getUserTypeName(user.user_type),
+	// 			actions: (
+	// 				<UserPendingApprovalType type={userPendingApprovalTypes.CREATE} />
+	// 			),
+	// 		});
 
-			setDataSource(formattedUsers);
-		}
-	};
+	// 		setDataSource(formattedUsers);
+	// 	}
+	// };
 
 	return (
 		<Content title="Users">
@@ -329,7 +346,7 @@ export const Users = () => {
 								setModifyUserModalVisible(false);
 								setSelectedUser(null);
 							}}
-							onSuccess={handleUserCreateSuccess}
+							// onSuccess={handleUserCreateSuccess}
 						/>
 					)}
 

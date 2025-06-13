@@ -9,13 +9,13 @@ interface List extends IListRequest {
 
 interface Modify {
 	acting_user_id: number;
-	// allowable_spoilage?: number;
-	// barcode: string;
-	// conversion_amount?: number;
+	allowable_spoilage?: number;
+	barcode: string;
+	conversion_amount?: number;
 	cost_per_bulk: number;
 	cost_per_piece: number;
-	// description: string;
-	// has_quantity_allowance: boolean;
+	description: string;
+	has_quantity_allowance: boolean;
 	is_daily_checked?: boolean;
 	is_randomly_checked?: boolean;
 	is_shown_in_scale_list?: boolean;
@@ -36,6 +36,7 @@ interface Modify {
 	selling_barcode_unit_of_measurement?: 'Weighing' | 'Non-Weighing';
 	selling_barcode?: string;
 	textcode: number;
+	scale_code?: string;
 	type: 'Wet' | 'Dry';
 	unit_of_measurement: 'Weighing' | 'Non-Weighing';
 	wholesale_price: number;

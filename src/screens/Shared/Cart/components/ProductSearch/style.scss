@@ -2,6 +2,12 @@
 
 .ProductSearch {
 	position: relative;
+	display: flex; // Add this for layout
+
+	&_wrapper {
+		position: relative;
+		flex: 1;
+	}
 
 	&_input {
 		height: 100%;
@@ -19,6 +25,15 @@
 		right: 30px;
 		color: $color-red !important;
 		cursor: pointer;
+	}
+	&_btnTextcode {
+		margin-left: 0.75em;
+		padding-top: 1.15em;
+		padding-bottom: 1.15em;
+		width: 140px; /* or any fixed value you prefer */
+		min-width: 140px;
+		max-width: 140px;
+		text-align: center;
 	}
 
 	&_suggestion {
@@ -97,19 +112,9 @@
 	}
 }
 
-.ProductSearchV2 {
-	display: flex;
-
-	&_wrapper {
-		position: relative;
-		flex: 1;
-	}
-
-	.ProductSearch_input {
-		height: 100%;
-	}
-
-	.ProductSearchV2_btnTextcode {
-		margin-left: 15px;
-	}
+.ProductSearch_input:focus {
+	border-color: #ffae00; /* bold orange-yellow outline */
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(255, 174, 0, 0.8); /* stronger yellow-orange glow */
+	transition: all 0.2s ease-in-out;
 }

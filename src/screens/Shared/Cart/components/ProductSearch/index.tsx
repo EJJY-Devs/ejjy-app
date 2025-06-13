@@ -7,6 +7,7 @@ import KeyboardEventHandler from 'react-keyboard-event-handler';
 import { AddProductModal } from 'screens/Shared/Cart/components/AddProductModal';
 import { SearchInput } from 'screens/Shared/Cart/components/ProductSearch/components/SearchInput';
 import { SearchSuggestion } from 'screens/Shared/Cart/components/ProductSearch/components/SearchSuggestion';
+import { MainButton } from 'components/elements'; // <-- import MainButton
 import { NO_INDEX_SELECTED } from 'screens/Shared/Cart/data';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
 import { convertIntoArray, getLocalBranchId } from 'utils';
@@ -15,6 +16,12 @@ import './style.scss';
 
 const ERROR_MESSAGE_KEY = 'ERROR_MESSAGE_KEY';
 const WARNING_MESSAGE_KEY = 'WARNING_MESSAGE_KEY';
+
+const searchModes = [
+	{ key: 'name', label: 'Name' },
+	{ key: 'sku', label: 'SKU' },
+	{ key: 'barcode', label: 'Barcode' },
+];
 
 interface Props {
 	barcodeScannerRef: any;
@@ -29,6 +36,8 @@ export const ProductSearch = ({
 	const [productKeysInTable, setProductKeysInTable] = useState([]);
 	const [selectedProduct, setSelectedProduct] = useState(null);
 	const [searchableProducts, setSearchableProducts] = useState([]);
+	const [searchModeIndex, setSearchModeIndex] = useState(0);
+	const currentSearchMode = searchModes[searchModeIndex];
 
 	// REFS
 	const searchInputRef = useRef(null);
@@ -54,10 +63,12 @@ export const ProductSearch = ({
 	const {
 		isFetching: isFetchingBranchProducts,
 		error: branchProductsError,
+		refetch: refetchBranchProducts,
 	} = useBranchProducts({
 		params: {
 			branchId: getLocalBranchId(),
 			search: searchedText,
+			searchBy: currentSearchMode.key,
 		},
 		options: {
 			enabled: searchedText?.length > 0,
@@ -92,6 +103,24 @@ export const ProductSearch = ({
 
 		setProductKeysInTable(keys);
 	}, [products]);
+
+	// F3 keyboard shortcut for search mode toggle
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === 'F3') {
+				e.preventDefault();
+				handleToggleSearchMode();
+			}
+		};
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
+	}, [searchModeIndex]);
+
+	const handleToggleSearchMode = () => {
+		const nextIndex = (searchModeIndex + 1) % searchModes.length;
+		setSearchModeIndex(nextIndex);
+		refetchBranchProducts();
+	};
 
 	const handleSelectProduct = () => {
 		const branchProduct = searchableProducts?.[activeIndex];
@@ -150,47 +179,57 @@ export const ProductSearch = ({
 
 	return (
 		<div className="ProductSearch">
-			<RequestErrors
-				errors={convertIntoArray(branchProductsError)}
-				withSpaceBottom
-			/>
-
-			<KeyboardEventHandler
-				handleKeys={['up', 'down', 'enter', 'esc']}
-				isDisabled={searchableProducts.length <= 0}
-				handleFocusableElements
-				onKeyEvent={handleKeyPress}
-			>
-				<SearchInput
-					ref={searchInputRef}
-					barcodeScannerRef={barcodeScannerRef}
+			<div className="ProductSearch_wrapper">
+				<RequestErrors
+					errors={convertIntoArray(branchProductsError)}
+					withSpaceBottom
 				/>
 
-				{searchedText.length > 0 && (
-					<SearchSuggestion
-						loading={isFetchingBranchProducts}
-						searchedProducts={searchableProducts}
-						onSelect={handleSelectProduct}
+				<KeyboardEventHandler
+					handleKeys={['up', 'down', 'enter', 'esc']}
+					isDisabled={searchableProducts.length <= 0}
+					handleFocusableElements
+					onKeyEvent={handleKeyPress}
+				>
+					<SearchInput
+						ref={searchInputRef}
+						barcodeScannerRef={barcodeScannerRef}
+						searchMode={currentSearchMode.key}
 					/>
-				)}
 
-				{selectedProduct && (
-					<AddProductModal
-						product={selectedProduct}
-						onClose={() => {
-							if (searchedText.length > 0) {
-								searchInputRef.current.focusInput();
-							}
+					{searchedText.length > 0 && (
+						<SearchSuggestion
+							loading={isFetchingBranchProducts}
+							searchedProducts={searchableProducts}
+							onSelect={handleSelectProduct}
+						/>
+					)}
 
-							setSelectedProduct(null);
-						}}
-						onSuccess={() => {
-							setSearchedText('');
-							setSearchableProducts([]);
-						}}
-					/>
-				)}
-			</KeyboardEventHandler>
+					{selectedProduct && (
+						<AddProductModal
+							product={selectedProduct}
+							onClose={() => {
+								if (searchedText.length > 0) {
+									searchInputRef.current.focusInput();
+								}
+								setSelectedProduct(null);
+							}}
+							onSuccess={() => {
+								setSearchedText('');
+								setSearchableProducts([]);
+								setSearchModeIndex(0);
+							}}
+						/>
+					)}
+				</KeyboardEventHandler>
+			</div>
+
+			<MainButton
+				className="ProductSearch_btnTextcode"
+				shortcutKey="[F3]"
+				title={currentSearchMode.label}
+				onClick={handleToggleSearchMode}
+			/>
 		</div>
 	);
 };

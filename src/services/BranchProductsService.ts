@@ -12,6 +12,7 @@ interface List extends IListRequest {
 	product_status?: string;
 	time_range?: string;
 	ids?: string;
+	search_by?: string;
 }
 
 interface Edit {

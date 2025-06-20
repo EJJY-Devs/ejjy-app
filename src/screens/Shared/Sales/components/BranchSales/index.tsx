@@ -1,6 +1,6 @@
 import { Col, Row, Statistic, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table/interface';
-import { RequestErrors, TimeRangeFilter } from 'components';
+import { RequestErrors } from 'components';
 import { MAX_PAGE_SIZE, refetchOptions, timeRangeTypes } from 'global';
 import { useBranchMachines, useQueryParams } from 'hooks';
 import _ from 'lodash';
@@ -128,8 +128,6 @@ export const BranchSales = ({ branchId }: Props) => {
 					errors={convertIntoArray(branchMachinesError)}
 					withSpaceBottom
 				/>
-
-				<TimeRangeFilter />
 			</Col>
 
 			<Col span={24}>

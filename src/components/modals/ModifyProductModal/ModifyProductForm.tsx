@@ -381,7 +381,7 @@ export const ModifyProductForm = ({
 						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'textcode',
-								label: 'SKU/Textcode',
+								label: 'SKU',
 								setFieldValue,
 								values,
 							})}

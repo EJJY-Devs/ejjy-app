@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 export const formatDateTime = (datetime, withTimezone = true) => {
 	const dt = withTimezone ? dayjs.tz(datetime, 'GMT') : dayjs(datetime);
-	return dt.format('MM/DD/YYYY--h:mmA');
+	return dt.format('MM/DD/YYYY h:mmA');
 };
 
 export const formatDateTimeExtended = _.memoize((datetime) =>

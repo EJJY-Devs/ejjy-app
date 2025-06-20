@@ -56,7 +56,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 	const baseColumns = [
 		{ name: '', width: '1px' },
 		{ name: 'Barcode', width: '40px' },
-		{ name: 'Description', alignment: 'center' },
+		{ name: 'Product Name', alignment: 'center' },
 		{ name: 'Qty', alignment: 'center' },
 	];
 
@@ -96,7 +96,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 			const {
 				barcode,
 				textcode,
-				print_details,
+				name,
 				price_per_piece,
 				key,
 				is_multiple_instance,
@@ -121,12 +121,8 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 					{barcode || textcode}
 				</Tooltip>,
 
-				<Tooltip
-					key={`tooltip-name-${key}`}
-					placement="top"
-					title={print_details}
-				>
-					{print_details}
+				<Tooltip key={`tooltip-name-${key}`} placement="top" title={name}>
+					{name}
 				</Tooltip>,
 
 				<Button

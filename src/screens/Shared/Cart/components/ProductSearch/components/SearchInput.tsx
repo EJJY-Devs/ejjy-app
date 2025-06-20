@@ -23,9 +23,10 @@ const SEARCH_DEBOUNCE_TIME = 250;
 
 interface Props {
 	barcodeScannerRef: any;
+	searchMode: any;
 }
 
-const Component = ({ barcodeScannerRef }: Props, ref) => {
+const Component = ({ barcodeScannerRef, searchMode }: Props, ref) => {
 	// STATES
 	const [inputText, setInputText] = useState('');
 	// REFS
@@ -102,12 +103,23 @@ const Component = ({ barcodeScannerRef }: Props, ref) => {
 		},
 	}));
 
+	let placeholder = '';
+	if (searchMode === 'name') {
+		placeholder = 'Search by product name';
+	} else if (searchMode === 'sku') {
+		placeholder = 'Search by SKU';
+	} else if (searchMode === 'barcode') {
+		placeholder = 'Search by barcode';
+	} else {
+		placeholder = 'Search';
+	}
+
 	return (
 		<>
 			<ControlledInput
 				ref={inputRef}
 				className="ProductSearch_input"
-				placeholder="Search by textcode and name"
+				placeholder={placeholder}
 				value={inputText}
 				onChange={(value) => {
 					setInputText(value);

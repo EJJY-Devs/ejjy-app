@@ -16,7 +16,7 @@ import {
 import { useQueryParams, useRequisitionSlips, useBranches } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { convertIntoArray, formatDateTime } from 'utils';
+import { convertIntoArray } from 'utils';
 import './style.scss';
 
 const columns = [
@@ -72,7 +72,7 @@ export const RequisitionSlips = () => {
 				),
 				branch: branch?.name || EMPTY_CELL,
 				vendor: vendor?.name || EMPTY_CELL,
-				datetimeCreated: formatDateTime(datetime_created),
+				datetimeCreated: datetime_created,
 				status: EMPTY_CELL,
 				remarks: EMPTY_CELL,
 			};

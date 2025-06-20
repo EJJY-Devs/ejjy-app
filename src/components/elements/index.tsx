@@ -1,6 +1,7 @@
 export { default as BadgePill } from './BadgePill/BadgePill';
 export { default as Box } from './Box/Box';
 export { default as Button } from './Button/Button';
+export { default as MainButton } from './Button/MainButton';
 export { default as ButtonIcon } from './ButtonIcon/ButtonIcon';
 export { default as ButtonLink } from './ButtonLink/ButtonLink';
 export { default as ControlledInput } from './ControlledInput/ControlledInput';

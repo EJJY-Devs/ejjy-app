@@ -42,6 +42,7 @@ export const useInitializeData = ({ params, options }: Query) =>
 							branch_product_ids: params.branchProductIds,
 							branch_product_balance_update_logs_ids:
 								params.branchProductBalanceUpdateLogsIds,
+							is_head_office: params.isHeadOffice,
 						},
 						baseURL,
 					),
@@ -54,6 +55,7 @@ export const useInitializeData = ({ params, options }: Query) =>
 						await DataService.initialize(
 							{
 								branch_id: branchId,
+								is_head_office: params.isHeadOffice,
 							},
 							baseURL,
 						);
@@ -74,6 +76,7 @@ export const useInitializeData = ({ params, options }: Query) =>
 						branch_product_ids: params.branchProductIds,
 						branch_product_balance_update_logs_ids:
 							params.branchProductBalanceUpdateLogsIds,
+						is_head_office: params.isHeadOffice,
 					},
 					baseURL,
 				);

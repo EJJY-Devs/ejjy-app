@@ -131,6 +131,7 @@ export const ModifyProductForm = ({
 			DefaultValues: {
 				allowableSpoilage: product?.allowable_spoilage || 0.1,
 				barcode: product?.barcode || '',
+				scaleCode: product?.scale_code || '',
 				sellingBarcode: product?.selling_barcode || '',
 				packingBarcode: product?.packing_barcode || '',
 				description: product?.description || '',
@@ -191,6 +192,7 @@ export const ModifyProductForm = ({
 				{
 					textcode: Yup.string().max(50),
 					barcode: Yup.string().max(50).label('Barcode'),
+					scaleCode: Yup.string().max(50).label('Scale Code'),
 					name: Yup.string().required().max(70).label('Name').trim(),
 					type: Yup.string().label('TT-001'),
 					unitOfMeasurement: Yup.string().label('unitOfMeasurement'),
@@ -359,11 +361,19 @@ export const ModifyProductForm = ({
 								setFieldValue,
 								values,
 							})}
+						</Col>
+
+						<Col sm={12} span={24}>
+							{renderInputField({
+								name: 'scaleCode',
+								label: 'Scale Code',
+								setFieldValue,
+								values,
+							})}
 
 							<Tooltip title="Note">
 								<span style={{ color: 'grey' }}>
-									Note: Products tagged as &quot;WEIGHING&quot; must only have 7
-									digit barcode.
+									Note: Scale Code must only have 3 digits.
 								</span>
 							</Tooltip>
 						</Col>
@@ -449,12 +459,12 @@ export const ModifyProductForm = ({
 							<Select
 								className="w-100"
 								id="productCategory"
+								placeholder="None"
 								value={values.productCategory}
+								allowClear
 								onChange={(value) => {
 									setFieldValue('productCategory', value);
 								}}
-								allowClear
-								placeholder="None"
 							>
 								{productCategories.map((productCategory) => (
 									<Select.Option

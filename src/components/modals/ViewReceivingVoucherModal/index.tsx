@@ -140,7 +140,7 @@ export const ViewReceivingVoucherModal = ({
 			>
 				<br />
 				<Text style={{ whiteSpace: 'pre-line' }}>
-					Print Details: {dayjs().format('MM/DD/YYYY--h:mmA')}{' '}
+					Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}{' '}
 				</Text>
 			</Space>
 

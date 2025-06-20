@@ -106,7 +106,7 @@ export const CreateInventoryTransferModal = ({
 											}}
 										>
 											{usersData?.list.map((user) => {
-												const id = getId(user);
+												const { id } = user;
 												return id ? (
 													<Select.Option key={id} value={id}>
 														{getFullName(user)}
@@ -165,7 +165,7 @@ export const CreateInventoryTransferModal = ({
 											}}
 										>
 											{usersData?.list.map((user) => {
-												const id = getId(user);
+												const { id } = user;
 												return id ? (
 													<Select.Option key={id} value={id}>
 														{getFullName(user)}

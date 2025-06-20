@@ -12,7 +12,7 @@ import {
 	useBackOrders,
 	useBranches,
 } from 'hooks';
-import { formatInPeso, getAppType } from 'utils';
+import { formatInPeso, getAppType, formatDateTime } from 'utils';
 import React, { useState, useEffect } from 'react';
 import { Cart } from 'screens/Shared/Cart';
 import { EMPTY_CELL, filterOption, MAX_PAGE_SIZE } from 'ejjy-global';
@@ -72,7 +72,7 @@ export const InventoryTransfer = () => {
 			// Convert Back Orders to table rows
 			const backOrdersData = backOrders.map((item) => ({
 				key: `backorder-${item.id}`,
-				datetime: item.datetime_created, // Keep raw datetime for sorting
+				datetime: formatDateTime(item.datetime_created),
 				type: 'Delivery Receipt',
 				id: (
 					<Button
@@ -91,7 +91,7 @@ export const InventoryTransfer = () => {
 			// Convert Receiving Vouchers to table rows
 			const receivingVouchersData = receivingVouchers.map((item) => ({
 				key: `receiving-${item.id}`,
-				datetime: item.datetime_created, // Keep raw datetime for sorting
+				datetime: formatDateTime(item.datetime_created), // Keep raw datetime for sorting
 				type: 'Receiving Report',
 				id: (
 					<Button

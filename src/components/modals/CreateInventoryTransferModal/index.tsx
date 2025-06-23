@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import React from 'react';
 import { MAX_PAGE_SIZE } from 'global';
-import { getId, getLocalApiUrl } from 'utils';
+import { getLocalApiUrl } from 'utils';
 import { FieldError, Label } from '../../elements';
 
 type ModalProps = {
@@ -21,12 +21,14 @@ const formDetails = {
 		supplierTin: '',
 		encodedById: null,
 		checkedById: null,
+		overallRemarks: '',
 	},
 	schema: Yup.object().shape({
 		supplierName: Yup.string().required().label('Vendor Name').trim(),
 		supplierAddress: Yup.string().label('Vendor Address').trim(),
 		encodedById: Yup.number().nullable().required().label('Encoded By Id'),
 		checkedById: Yup.number().nullable().label('Checked By Id'),
+		overallRemarks: Yup.string().nullable().label('Remarks').trim(),
 	}),
 };
 
@@ -148,6 +150,20 @@ export const CreateInventoryTransferModal = ({
 											render={(error) => <FieldError error={error} />}
 										/>
 									</Col>
+									<Col span={24}>
+										<Label label="Remarks" spacing />
+										<Input
+											name="overallRemarks"
+											value={values['overallRemarks']}
+											onChange={(e) => {
+												setFieldValue('overallRemarks', e.target.value);
+											}}
+										/>
+										<ErrorMessage
+											name="overallRemarks"
+											render={(error) => <FieldError error={error} />}
+										/>
+									</Col>
 								</>
 							) : (
 								<>
@@ -203,6 +219,20 @@ export const CreateInventoryTransferModal = ({
 										/>
 										<ErrorMessage
 											name="supplierAddress"
+											render={(error) => <FieldError error={error} />}
+										/>
+									</Col>
+									<Col span={24}>
+										<Label label="Remarks" spacing />
+										<Input
+											name="overallRemarks"
+											value={values['overallRemarks']}
+											onChange={(e) => {
+												setFieldValue('overallRemarks', e.target.value);
+											}}
+										/>
+										<ErrorMessage
+											name="overallRemarks"
 											render={(error) => <FieldError error={error} />}
 										/>
 									</Col>

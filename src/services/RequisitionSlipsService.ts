@@ -24,6 +24,7 @@ interface Create {
 	branch_id?: number;
 	vendor_id?: number;
 	products: Product[];
+	overall_remarks?: string;
 }
 
 interface Edit {

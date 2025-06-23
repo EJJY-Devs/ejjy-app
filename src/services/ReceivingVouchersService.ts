@@ -20,6 +20,7 @@ interface Modify {
 	encoded_by_id?: string;
 	checked_by_id: string;
 	branch_id: number;
+	overall_remarks?: string;
 }
 
 const service = {

@@ -15,7 +15,7 @@ const columns = [
 	{ title: 'Date & Time', dataIndex: 'datetimeCreated' },
 	{ title: 'Type', dataIndex: 'type' },
 	{ title: 'Status', dataIndex: 'status' },
-	{ title: 'Remarks', dataIndex: 'remarks' },
+	{ title: 'Remarks', dataIndex: 'overallRemarks' },
 ];
 
 export const RequisitionSlips = () => {
@@ -43,6 +43,7 @@ export const RequisitionSlips = () => {
 				datetime_created,
 				reference_number,
 				slip_type,
+				overall_remarks,
 			} = requisitionSlip;
 
 			return {
@@ -55,7 +56,7 @@ export const RequisitionSlips = () => {
 				type: capitalize(slip_type) || EMPTY_CELL,
 				datetimeCreated: datetime_created,
 				status: EMPTY_CELL,
-				remarks: EMPTY_CELL,
+				overallRemarks: overall_remarks,
 			};
 		});
 

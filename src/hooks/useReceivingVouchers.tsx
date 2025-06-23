@@ -45,6 +45,7 @@ export const useReceivingVoucherCreate = () =>
 			encodedById,
 			checkedById,
 			branchId,
+			overallRemarks,
 		}: any) =>
 			ReceivingVouchersService.create(
 				{
@@ -55,6 +56,7 @@ export const useReceivingVoucherCreate = () =>
 					encoded_by_id: encodedById,
 					checked_by_id: checkedById,
 					branch_id: branchId,
+					overall_remarks: overallRemarks,
 				},
 				getLocalApiUrl(),
 			),

@@ -2,7 +2,7 @@ import { Button, Table, Row, Col, Select } from 'antd';
 import { Content, TimeRangeFilter } from 'components';
 import { Box, Label } from 'components/elements';
 import { useQueryParams, useBranches, useAdjustmentSlips } from 'hooks';
-import { getAppType, formatDateTime } from 'utils';
+import { getAppType, formatDateTime, getLocalBranchId } from 'utils';
 import React, { useState, useEffect } from 'react';
 import { Cart } from 'screens/Shared/Cart';
 import { EMPTY_CELL, filterOption, MAX_PAGE_SIZE } from 'ejjy-global';
@@ -15,12 +15,16 @@ export const AdjustmentSlip = () => {
 	const [isCartModalVisible, setIsCartModalVisible] = useState(false);
 
 	const { params, setQueryParams } = useQueryParams();
+	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 
 	const {
 		data: adjustmentSlips,
 		isFetching: isFetchingAdjustmentSlips,
 	} = useAdjustmentSlips({
-		params,
+		params: {
+			...params,
+			...(!isHeadOffice && { branchId: getLocalBranchId() }),
+		},
 		options: { enabled: true },
 	});
 
@@ -46,8 +50,6 @@ export const AdjustmentSlip = () => {
 		}));
 		setDataSource(mapped);
 	}, [adjustmentSlips]);
-
-	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 
 	return (
 		<>

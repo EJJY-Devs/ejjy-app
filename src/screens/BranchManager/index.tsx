@@ -37,6 +37,7 @@ import shallow from 'zustand/shallow';
 import useInterval from 'use-interval';
 import { getBranchKey, getLocalBranchId } from 'utils';
 import { Reports } from 'screens/Shared/Reports';
+import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
 import { Accounts } from '../Shared/Accounts';
 import { BackOrders } from './BackOrders';
 import { CreateBackOrder } from './BackOrders/CreateBackOrder';
@@ -228,6 +229,13 @@ const BranchManager = () => {
 				link: '/branch-manager/requisition-slips',
 			},
 			{
+				key: 'adjustment-slip',
+				name: 'Adjustment Slip',
+				activeIcon: require('../../assets/images/icon-product-active.svg'),
+				defaultIcon: require('../../assets/images/icon-product.svg'),
+				link: '/branch-manager/adjustment-slip',
+			},
+			{
 				key: 'return-item-slips',
 				name: 'Return Item Slips',
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
@@ -386,6 +394,12 @@ const BranchManager = () => {
 					/>
 
 					<Route
+						component={AdjustmentSlip}
+						path="/branch-manager/adjustment-slip"
+						exact
+					/>
+
+					<Route
 						component={ReturnItemSlips}
 						path="/branch-manager/return-item-slips"
 						exact
@@ -401,6 +415,7 @@ const BranchManager = () => {
 						path="/branch-manager/back-orders"
 						exact
 					/>
+
 					<Route
 						component={CreateBackOrder}
 						path="/branch-manager/back-orders/create"

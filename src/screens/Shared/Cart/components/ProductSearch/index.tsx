@@ -26,11 +26,13 @@ const searchModes = [
 interface Props {
 	barcodeScannerRef: any;
 	isCreateInventoryTransfer: any;
+	branchId: string | null;
 }
 
 export const ProductSearch = ({
 	barcodeScannerRef,
 	isCreateInventoryTransfer,
+	branchId,
 }: Props) => {
 	// STATES
 	const [productKeysInTable, setProductKeysInTable] = useState([]);
@@ -66,7 +68,7 @@ export const ProductSearch = ({
 		refetch: refetchBranchProducts,
 	} = useBranchProducts({
 		params: {
-			branchId: getLocalBranchId(),
+			branchId: branchId ?? getLocalBranchId(),
 			search: searchedText,
 			searchBy: currentSearchMode.key,
 		},

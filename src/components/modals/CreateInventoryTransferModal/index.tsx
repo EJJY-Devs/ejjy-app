@@ -73,6 +73,7 @@ export const CreateInventoryTransferModal = ({
 		<Modal
 			footer={null}
 			title={`Create ${type}`}
+			centered
 			closable
 			destroyOnClose
 			open

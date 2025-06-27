@@ -50,4 +50,15 @@ export const createProductsSlice: any = (set) => ({
 		});
 	},
 	resetProducts: () => set(() => ({ products: [] })),
+	updateProductQuantitySign: ({ key, makeNegative }) =>
+		set((state) => {
+			const index = state.products.findIndex((p) => p.product.key === key);
+			if (index >= 0) {
+				const newProducts = _.cloneDeep(state.products);
+				const absQty = Math.abs(newProducts[index].quantity);
+				newProducts[index].quantity = makeNegative ? -absQty : absQty;
+				return { products: newProducts };
+			}
+			return { products: state.products };
+		}),
 });

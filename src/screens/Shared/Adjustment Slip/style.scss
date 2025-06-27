@@ -1,0 +1,47 @@
+@use 'assets/styles' as *;
+
+.AdjustmentSlip {
+	&_buttons {
+		justify-content: space-between;
+		width: 100%;
+		display: flex;
+		margin: 25px;
+		margin-bottom: 0px;
+	}
+
+	&_create {
+		display: flex;
+		position: relative;
+		margin-left: auto; // Pushes the button to the far right if needed
+		right: 25px;
+		top: 30px;
+	}
+
+	&_tableWrapper {
+		margin: 25px;
+		margin-bottom: 10px;
+	}
+
+	&_div {
+		display: flex;
+	}
+
+	&_box {
+		padding: 10px;
+	}
+
+	&_timeRangeFilter {
+		margin: 10px;
+		position: relative;
+		left: 20px;
+		top: 10px;
+	}
+
+	&_branchFilter {
+		width: 1000px;
+		left: 20px;
+		top: 10px;
+		margin: 10px;
+		position: relative;
+	}
+}

@@ -1,16 +1,19 @@
 import { RequestErrors, CreateInventoryTransferModal } from 'components';
-import { Modal, message } from 'antd';
+import { Modal, message, Select, Spin } from 'antd';
 import React, { useRef, useState } from 'react';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
 import { convertIntoArray, getLocalBranchId } from 'utils';
 import shallow from 'zustand/shallow';
-import { backOrderTypes } from 'ejjy-global';
+import { backOrderTypes, MAX_PAGE_SIZE } from 'ejjy-global';
 import {
 	useReceivingVoucherCreate,
 	useBackOrderCreate,
 	useRequisitionSlipCreate,
+	useBranches,
+	useAdjustmentSlipCreate,
 } from 'hooks';
 import { CreateRequisitionSlipModal } from 'components/modals/CreateRequisitionSlipModal';
+import { CreateAdjustmentSlipModal } from 'components/modals/CreateAdjustmentSlipModal';
 import { BarcodeScanner } from './components/BarcodeScanner';
 import { FooterButtons } from './components/FooterButtons';
 import { ProductSearch } from './components/ProductSearch';
@@ -35,11 +38,27 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		isCreateRequisitionSlipVisible,
 		setIsCreateRequisitionSlipVisible,
 	] = useState(false);
+	const [
+		isCreateAdjustmentSlipVisible,
+		setIsCreateAdjustmentSlipVisible,
+	] = useState(false);
+
+	const [isBranchSelectVisible, setIsBranchSelectVisible] = useState(
+		type === 'Adjustment Slip',
+	);
+	const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
 
 	// REFS
 	const barcodeScannerRef = useRef(null);
 
 	const branchId = getLocalBranchId();
+
+	const {
+		data: { branches = [] } = {},
+		isFetching: isFetchingBranches,
+	} = useBranches({
+		params: { pageSize: MAX_PAGE_SIZE },
+	});
 
 	// CUSTOM HOOKS
 	const {
@@ -60,6 +79,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	const { mutateAsync: createReceivingVoucher } = useReceivingVoucherCreate();
 	const { mutateAsync: createBackOrder } = useBackOrderCreate();
 	const { mutateAsync: createRequisitionSlip } = useRequisitionSlipCreate();
+	const { mutateAsync: createAdjustmentSlip } = useAdjustmentSlipCreate();
 
 	const { products } = useBoundStore.getState();
 
@@ -76,6 +96,30 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 				...formData,
 				products: mappedProducts,
 				branchId,
+			});
+
+			if (!response) {
+				throw Error;
+			}
+
+			message.success('Receiving Report was created successfully');
+		}
+	};
+
+	const handleCreateAdjustmentSlip = async (formData) => {
+		if (products.length > 0) {
+			const mappedProducts = products.map(
+				({ product, quantity, remarks, errorRemarks }) => ({
+					product_id: product.id,
+					adjusted_value: quantity,
+					remarks,
+					error_remarks: errorRemarks,
+				}),
+			);
+			const response = await createAdjustmentSlip({
+				...formData,
+				products: mappedProducts,
+				branchId: selectedBranchId,
 			});
 
 			if (!response) {
@@ -120,7 +164,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 			const response = await createRequisitionSlip({
 				...formData,
 				products: mappedProducts,
-				branchId,
+				branchId: type === 'Adjustment Slip' ? selectedBranchId : branchId,
 			});
 
 			if (!response) {
@@ -141,6 +185,8 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 				await handleCreateReceivingVoucher(formData);
 			} else if (type === 'Requisition Slip') {
 				await handleCreateRequisitionSlip(formData);
+			} else if (type === 'Adjustment Slip') {
+				await handleCreateAdjustmentSlip(formData);
 			}
 		} catch (error) {
 			message.error(`Failed to create ${type}`);
@@ -179,10 +225,56 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	const handleSubmit = () => {
 		if (type === 'Requisition Slip') {
 			setIsCreateRequisitionSlipVisible(true);
+		} else if (type === 'Adjustment Slip') {
+			setIsCreateAdjustmentSlipVisible(true);
 		} else {
 			setIsCreateInventoryTransferModalVisible(true);
 		}
 	};
+
+	const handleBranchSelect = (branch: string) => {
+		setSelectedBranchId(branch);
+		setIsBranchSelectVisible(false);
+	};
+
+	// Prevent opening the cart modal until a branch is selected for Adjustment Slip
+	if (type === 'Adjustment Slip' && isBranchSelectVisible) {
+		return (
+			<Modal
+				footer={null}
+				title="Select Branch"
+				centered
+				closable
+				open
+				onCancel={() => {
+					setIsBranchSelectVisible(false);
+					onClose();
+				}}
+			>
+				{isFetchingBranches ? (
+					<Spin />
+				) : (
+					<Select
+						filterOption={(input, option) =>
+							((option?.children as unknown) as string)
+								.toLowerCase()
+								.includes(input.toLowerCase())
+						}
+						placeholder="Select a branch"
+						style={{ width: '100%' }}
+						showSearch
+						onChange={handleBranchSelect}
+					>
+						{branches.map((branch) => (
+							<Select.Option key={branch.id} value={branch.id}>
+								{branch.name}
+							</Select.Option>
+						))}
+					</Select>
+				)}
+			</Modal>
+		);
+	}
 
 	return (
 		<Modal
@@ -208,6 +300,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 
 				<ProductSearch
 					barcodeScannerRef={barcodeScannerRef}
+					branchId={type === 'Adjustment Slip' ? selectedBranchId : branchId}
 					isCreateInventoryTransfer={type !== 'Requisition Slip'}
 				/>
 				<ProductTable isLoading={barcodeScanLoading || isLoading} type={type} />
@@ -226,6 +319,14 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 					<CreateRequisitionSlipModal
 						isLoading={isLoading}
 						onClose={() => setIsCreateRequisitionSlipVisible(false)}
+						onSubmit={handleModalSubmit}
+					/>
+				)}
+
+				{isCreateAdjustmentSlipVisible && (
+					<CreateAdjustmentSlipModal
+						isLoading={isLoading}
+						onClose={() => setIsCreateAdjustmentSlipVisible(false)}
 						onSubmit={handleModalSubmit}
 					/>
 				)}

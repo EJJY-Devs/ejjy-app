@@ -14,9 +14,10 @@ import './style.scss';
 interface Props {
 	product: any;
 	onClose: any;
+	sign: any;
 }
 
-export const EditProductModal = ({ product, onClose }: Props) => {
+export const EditProductModal = ({ product, onClose, sign }: Props) => {
 	// CUSTOM HOOKS
 	const editProduct = useBoundStore((state: any) => state.editProduct);
 
@@ -26,7 +27,7 @@ export const EditProductModal = ({ product, onClose }: Props) => {
 			key: product.product.key,
 			product: {
 				...product,
-				quantity: formData.quantity,
+				quantity: sign * Math.abs(formData.quantity),
 			},
 		});
 

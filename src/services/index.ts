@@ -5,6 +5,7 @@ export const NO_VERIFICATION_NEEDED = 'NO_VERIFICATION_NEEDED';
 export const NO_VERIFICATION_CONFIG = { params: NO_VERIFICATION_NEEDED };
 
 export { default as AccountsService } from './AccountsService';
+export { default as AdjustmentSlipsService } from './AdjustmentSlipsService';
 export { default as AttendanceLogsService } from './AttendanceLogsService';
 export { default as AttendanceSchedulesService } from './AttendanceSchedulesService';
 export { default as AuthService } from './AuthService';

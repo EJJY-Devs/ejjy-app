@@ -70,11 +70,10 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 			? [
 					{ name: '', width: '1px' },
 					{ name: 'Barcode', width: '40px' },
-					{ name: 'Description', alignment: 'center', width: '60px' },
-					{ name: 'Action', alignment: 'center', width: '60px' },
-					{ name: 'Value', alignment: 'center', width: '60px' },
-					{ name: 'Remarks', alignment: 'center', width: '60px' },
-					{ name: 'Error Remarks', alignment: 'center', width: '60px' },
+					{ name: 'Description', alignment: 'center' },
+					{ name: 'Action', alignment: 'center' },
+					{ name: 'Value', alignment: 'center' },
+					{ name: 'Remarks', alignment: 'center', width: '275px' },
 			  ]
 			: [
 					{ name: '', width: '1px' },
@@ -168,55 +167,75 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 						})}
 					</Button>,
 
-					<Select
-						key={`select-remarks-${key}`}
-						options={[
-							{ label: 'Error', value: 'Error' },
-							{ label: 'Spoilage', value: 'Spoilage' },
-						]}
-						style={{ width: 140 }}
-						value={remarks[key]}
-						onChange={(value) => {
-							setRemarks((prev) => ({
-								...prev,
-								[key]: value,
-							}));
-							// Update product in store
-							editProduct({
-								key,
-								product: {
-									...branchProduct,
-									remarks: value,
-								},
-							});
+					<div
+						key={`div-remarks-${key}`}
+						style={{
+							display: 'flex',
+							flexDirection: 'column',
+							gap: '4px',
 						}}
-					/>,
-
-					// Error Remarks column
-					remarks[key] === 'Error' ? (
-						<Input
-							key={`input-error-remarks-${key}`}
-							style={{ width: 150 }}
-							value={errorRemarks[key] || ''}
-							onChange={(e) => {
-								const { value } = e.target;
-								setErrorRemarks((prev) => ({
+					>
+						<Select
+							options={[
+								{ label: 'Error', value: 'Error' },
+								{ label: 'Spoilage', value: 'Spoilage' },
+							]}
+							style={{ width: '100%' }}
+							value={remarks[key]}
+							onChange={(value) => {
+								setRemarks((prev) => ({
 									...prev,
 									[key]: value,
 								}));
-								// Update product in store
-								editProduct({
-									key,
-									product: {
-										...branchProduct,
-										errorRemarks: value,
-									},
-								});
+								// Clear error remarks if not "Error"
+								if (value !== 'Error') {
+									setErrorRemarks((prev) => ({
+										...prev,
+										[key]: '',
+									}));
+									editProduct({
+										key,
+										product: {
+											...branchProduct,
+											remarks: value,
+											errorRemarks: '',
+										},
+									});
+								} else {
+									// Update product in store
+									editProduct({
+										key,
+										product: {
+											...branchProduct,
+											remarks: value,
+										},
+									});
+								}
 							}}
 						/>
-					) : (
-						<div style={{ width: 150 }} />
-					),
+						{remarks[key] === 'Error' && (
+							<Input
+								placeholder="Error remarks"
+								style={{ width: '100%', textAlign: 'center' }}
+								value={errorRemarks[key] || ''}
+								onChange={(e) => {
+									const { value } = e.target;
+									setErrorRemarks((prev) => ({
+										...prev,
+										[key]: value,
+									}));
+									// Update product in store
+									editProduct({
+										key,
+										product: {
+											...branchProduct,
+											errorRemarks: value,
+										},
+									});
+								}}
+							/>
+						)}
+					</div>,
 				];
 			});
 			setDataSource(data);

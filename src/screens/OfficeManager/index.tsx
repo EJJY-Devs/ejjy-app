@@ -221,11 +221,11 @@ const OfficeManager = () => {
 				link: '/office-manager/inventory-transfer',
 			},
 			{
-				key: 'adjustment-slip',
-				name: 'Adjustment Slip',
+				key: 'adjustment-slips',
+				name: 'Adjustment Slips',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/office-manager/adjustment-slip',
+				link: '/office-manager/adjustment-slips',
 			},
 			{
 				key: 'requisition-slips',
@@ -312,7 +312,7 @@ const OfficeManager = () => {
 
 					<Route
 						component={AdjustmentSlip}
-						path="/office-manager/adjustment-slip"
+						path="/office-manager/adjustment-slips"
 						exact
 					/>
 

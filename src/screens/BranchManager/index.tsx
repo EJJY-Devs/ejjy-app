@@ -229,11 +229,11 @@ const BranchManager = () => {
 				link: '/branch-manager/requisition-slips',
 			},
 			{
-				key: 'adjustment-slip',
-				name: 'Adjustment Slip',
+				key: 'adjustment-slips',
+				name: 'Adjustment Slips',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/branch-manager/adjustment-slip',
+				link: '/branch-manager/adjustment-slips',
 			},
 			{
 				key: 'return-item-slips',
@@ -395,7 +395,7 @@ const BranchManager = () => {
 
 					<Route
 						component={AdjustmentSlip}
-						path="/branch-manager/adjustment-slip"
+						path="/branch-manager/adjustment-slips"
 						exact
 					/>
 

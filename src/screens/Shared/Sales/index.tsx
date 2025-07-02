@@ -7,6 +7,7 @@ import _ from 'lodash';
 import React, { useEffect } from 'react';
 import { useUserStore } from 'stores';
 import { convertIntoArray, getLocalBranchId, isUserFromOffice } from 'utils';
+import { CumulativeSales } from './components/CumulativeSales';
 import { BranchSales } from './components/BranchSales';
 
 export const Sales = () => {
@@ -44,35 +45,41 @@ export const Sales = () => {
 	};
 
 	return (
-		<Content title="Sales">
-			<Box padding={user.user_type === userTypes.BRANCH_MANAGER}>
-				{isUserFromOffice(user.user_type) && (
-					<Spin spinning={isFetchingBranches}>
-						<RequestErrors
-							className="px-6 pt-6"
-							errors={convertIntoArray(branchesErrors, 'Branches')}
-						/>
+		<>
+			<Content title="Sales">
+				<Box padding>
+					<CumulativeSales />
+				</Box>
 
-						<Tabs
-							activeKey={_.toString(currentBranchId)}
-							className="pa-6"
-							type="card"
-							destroyInactiveTabPane
-							onTabClick={handleTabClick}
-						>
-							{branches.map(({ name, id }) => (
-								<Tabs.TabPane key={id} tab={name}>
-									<BranchSales branchId={id} />
-								</Tabs.TabPane>
-							))}
-						</Tabs>
-					</Spin>
-				)}
+				<Box padding={user.user_type === userTypes.BRANCH_MANAGER}>
+					{isUserFromOffice(user.user_type) && (
+						<Spin spinning={isFetchingBranches}>
+							<RequestErrors
+								className="px-6 pt-6"
+								errors={convertIntoArray(branchesErrors, 'Branches')}
+							/>
 
-				{user.user_type === userTypes.BRANCH_MANAGER && (
-					<BranchSales branchId={getLocalBranchId()} />
-				)}
-			</Box>
-		</Content>
+							<Tabs
+								activeKey={_.toString(currentBranchId)}
+								className="pa-6"
+								type="card"
+								destroyInactiveTabPane
+								onTabClick={handleTabClick}
+							>
+								{branches.map(({ name, id }) => (
+									<Tabs.TabPane key={id} tab={name}>
+										<BranchSales branchId={id} />
+									</Tabs.TabPane>
+								))}
+							</Tabs>
+						</Spin>
+					)}
+
+					{user.user_type === userTypes.BRANCH_MANAGER && (
+						<BranchSales branchId={getLocalBranchId()} />
+					)}
+				</Box>
+			</Content>
+		</>
 	);
 };

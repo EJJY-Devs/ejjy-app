@@ -2,8 +2,9 @@ import {
 	ExclamationCircleOutlined,
 	DeleteOutlined,
 	PlusOutlined,
+	MinusOutlined,
 } from '@ant-design/icons';
-import { Button, Modal, Tooltip } from 'antd';
+import { Button, Modal, Tooltip, Input, Select } from 'antd';
 import { formatInPeso } from 'ejjy-global';
 import React, { useEffect, useState } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
@@ -34,31 +35,52 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 	const [addProductModalVisible, setAddProductModalVisible] = useState(false);
 	const [selectedProduct, setSelectedProduct] = useState(null);
 	const [dataSource, setDataSource] = useState([]);
+	const [toggleAction, setToggleAction] = useState<{ [key: string]: boolean }>(
+		{},
+	);
+	const [remarks, setRemarks] = useState<{ [key: string]: string }>({});
+	const [errorRemarks, setErrorRemarks] = useState<{ [key: string]: string }>(
+		{},
+	);
 
 	const {
 		products,
 		pageNumber,
 		deleteProduct,
+		editProduct,
 		prevPage,
 		resetPage,
+		updateProductQuantitySign,
 	} = useBoundStore(
 		(state: any) => ({
 			products: state.products,
 			pageNumber: state.pageNumber,
 			deleteProduct: state.deleteProduct,
+			editProduct: state.editProduct,
 			nextPage: state.nextPage,
 			prevPage: state.prevPage,
 			resetPage: state.resetPage,
+			updateProductQuantitySign: state.updateProductQuantitySign,
 		}),
 		shallow,
 	);
 
-	const baseColumns = [
-		{ name: '', width: '1px' },
-		{ name: 'Barcode', width: '40px' },
-		{ name: 'Product Name', alignment: 'center' },
-		{ name: 'Qty', alignment: 'center' },
-	];
+	const baseColumns =
+		type === 'Adjustment Slip'
+			? [
+					{ name: '', width: '1px' },
+					{ name: 'Barcode', width: '40px' },
+					{ name: 'Description', alignment: 'center' },
+					{ name: 'Action', alignment: 'center' },
+					{ name: 'Value', alignment: 'center' },
+					{ name: 'Remarks', alignment: 'center', width: '275px' },
+			  ]
+			: [
+					{ name: '', width: '1px' },
+					{ name: 'Barcode', width: '40px' },
+					{ name: 'Product Name', alignment: 'center' },
+					{ name: 'Qty', alignment: 'center' },
+			  ];
 
 	const columns = [...baseColumns];
 
@@ -67,7 +89,11 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 			{ name: 'Balance', alignment: 'center' },
 			{ name: 'Status', alignment: 'center' },
 		);
-	} else if (type !== 'Receiving Report' && type !== 'Delivery Receipt') {
+	} else if (
+		type !== 'Receiving Report' &&
+		type !== 'Delivery Receipt' &&
+		type !== 'Adjustment Slip'
+	) {
 		columns.push(
 			{ name: 'Unit Price', alignment: 'center' },
 			{ name: 'Amount', alignment: 'center' },
@@ -79,6 +105,143 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 	}
 
 	useEffect(() => {
+		if (type === 'Adjustment Slip') {
+			const data = products.map((branchProduct, index) => {
+				const { product, quantity } = branchProduct;
+				const { barcode, name, key } = product;
+
+				return [
+					<Tooltip key={`tooltip-delete-${key}`} placement="top" title="Remove">
+						<Button
+							icon={<DeleteOutlined />}
+							type="primary"
+							danger
+							ghost
+							onClick={() =>
+								showRemoveProductConfirmation(branchProduct, index)
+							}
+						/>
+					</Tooltip>,
+
+					<Tooltip
+						key={`tooltip-barcode-${key}`}
+						placement="top"
+						title={barcode}
+					>
+						{barcode}
+					</Tooltip>,
+
+					<Tooltip key={`tooltip-name-${key}`} placement="top" title={name}>
+						{name}
+					</Tooltip>,
+
+					<Tooltip
+						key={`tooltip-action-${key}`}
+						placement="top"
+						title={toggleAction[key] ? 'Decrease' : 'Increase'}
+					>
+						<Button
+							icon={toggleAction[key] ? <MinusOutlined /> : <PlusOutlined />}
+							type="default"
+							onClick={() => {
+								setToggleAction((prev) => ({
+									...prev,
+									[key]: !prev[key],
+								}));
+								updateProductQuantitySign({
+									key,
+									makeNegative: !toggleAction[key],
+								});
+							}}
+						/>
+					</Tooltip>,
+
+					<Button
+						key={`btn-edit-quantity-${key}`}
+						type="text"
+						onClick={() => handleEdit(index)}
+					>
+						{formatQuantity({
+							unitOfMeasurement: product.unit_of_measurement,
+							quantity,
+						})}
+					</Button>,
+
+					<div
+						key={`div-remarks-${key}`}
+						style={{
+							display: 'flex',
+							flexDirection: 'column',
+							gap: '4px',
+						}}
+					>
+						<Select
+							options={[
+								{ label: 'Error', value: 'Error' },
+								{ label: 'Spoilage', value: 'Spoilage' },
+							]}
+							style={{ width: '100%' }}
+							value={remarks[key]}
+							onChange={(value) => {
+								setRemarks((prev) => ({
+									...prev,
+									[key]: value,
+								}));
+								// Clear error remarks if not "Error"
+								if (value !== 'Error') {
+									setErrorRemarks((prev) => ({
+										...prev,
+										[key]: '',
+									}));
+									editProduct({
+										key,
+										product: {
+											...branchProduct,
+											remarks: value,
+											errorRemarks: '',
+										},
+									});
+								} else {
+									// Update product in store
+									editProduct({
+										key,
+										product: {
+											...branchProduct,
+											remarks: value,
+										},
+									});
+								}
+							}}
+						/>
+						{remarks[key] === 'Error' && (
+							<Input
+								placeholder="Reference number"
+								style={{ width: '100%', textAlign: 'center' }}
+								value={errorRemarks[key] || ''}
+								onChange={(e) => {
+									const { value } = e.target;
+									setErrorRemarks((prev) => ({
+										...prev,
+										[key]: value,
+									}));
+									// Update product in store
+									editProduct({
+										key,
+										product: {
+											...branchProduct,
+											errorRemarks: value,
+										},
+									});
+								}}
+							/>
+						)}
+					</div>,
+				];
+			});
+			setDataSource(data);
+			return;
+		}
+
 		const paginatedProducts = products.slice(
 			(pageNumber - 1) * PRODUCT_LENGTH_PER_PAGE,
 			pageNumber * PRODUCT_LENGTH_PER_PAGE,
@@ -204,7 +367,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		});
 
 		setDataSource(data);
-	}, [pageNumber, products, type]);
+	}, [pageNumber, products, type, toggleAction, remarks, errorRemarks]);
 
 	useEffect(() => {
 		if (products.length === 0) {
@@ -271,6 +434,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 			{editProductModalVisible && products?.[activeIndex] && (
 				<EditProductModal
 					product={products[activeIndex]}
+					sign={toggleAction[products[activeIndex]?.product?.key] ? -1 : 1}
 					onClose={() => setEditProductModalVisible(false)}
 				/>
 			)}

@@ -86,6 +86,7 @@ export const InventoryTransfer = () => {
 				supplierName: item.branch?.name || EMPTY_CELL, // The branch is the supplier/vendor
 				customer: item.customer_name || EMPTY_CELL,
 				amountPaid: formatInPeso(item.amount),
+				overallRemarks: item.overall_remarks || EMPTY_CELL,
 			}));
 
 			// Convert Receiving Vouchers to table rows
@@ -105,6 +106,7 @@ export const InventoryTransfer = () => {
 				supplierName: item.supplier_name || EMPTY_CELL,
 				customer: item.branch?.name || EMPTY_CELL, // The branch is the customer
 				amountPaid: formatInPeso(item.amount_paid),
+				overallRemarks: item.overall_remarks || EMPTY_CELL,
 			}));
 
 			// Filter data based on selectedType
@@ -146,6 +148,10 @@ export const InventoryTransfer = () => {
 		{ title: 'Vendor', dataIndex: 'supplierName' },
 		{ title: 'Customer', dataIndex: 'customer' },
 		{ title: 'Amount', dataIndex: 'amountPaid' },
+		{
+			title: 'Remarks',
+			dataIndex: 'overallRemarks',
+		},
 	];
 
 	let total = 0;

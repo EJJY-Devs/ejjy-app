@@ -25,7 +25,7 @@ const columns = [
 	{ title: 'Customer', dataIndex: 'branch' },
 	{ title: 'Vendor', dataIndex: 'vendor' },
 	{ title: 'Status', dataIndex: 'status' },
-	{ title: 'Remarks', dataIndex: 'remarks' },
+	{ title: 'Remarks', dataIndex: 'overallRemarks' },
 ];
 
 export const RequisitionSlips = () => {
@@ -61,6 +61,7 @@ export const RequisitionSlips = () => {
 				datetime_created,
 				reference_number,
 				vendor,
+				overall_remarks,
 			} = requisitionSlip;
 
 			return {
@@ -74,7 +75,7 @@ export const RequisitionSlips = () => {
 				vendor: vendor?.name || EMPTY_CELL,
 				datetimeCreated: datetime_created,
 				status: EMPTY_CELL,
-				remarks: EMPTY_CELL,
+				overallRemarks: overall_remarks,
 			};
 		});
 

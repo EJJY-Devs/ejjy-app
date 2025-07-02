@@ -1,4 +1,4 @@
-import { Button, Col, Modal, Row, Select } from 'antd';
+import { Button, Col, Modal, Row, Select, Input } from 'antd';
 import { ErrorMessage, Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -25,10 +25,12 @@ const formDetails = {
 		preparedBy: null,
 		approvedBy: null,
 		vendorId: null,
+		overallRemarks: null,
 	},
 	schema: Yup.object().shape({
 		preparedBy: Yup.number().nullable().required().label('Encoder'),
 		vendorId: Yup.number().nullable().required().label('Vendor'),
+		overallRemarks: Yup.string().nullable().label('Remarks'),
 	}),
 };
 
@@ -104,33 +106,6 @@ export const CreateRequisitionSlipModal = ({
 								/>
 							</Col>
 
-							{/* <Col span={24}>
-								<Label id="approvedBy" label="Requestor" spacing />
-								<Select
-									className="w-100"
-									disabled={isFetchingUsers}
-									filterOption={filterOption}
-									optionFilterProp="children"
-									value={values['approvedBy']}
-									showSearch
-									onChange={(value) => {
-										setFieldValue('approvedBy', value);
-									}}
-								>
-									{usersData?.list.map((user) => {
-										const id = user?.id;
-										return id ? (
-											<Select.Option key={id} value={id}>
-												{getFullName(user)}
-											</Select.Option>
-										) : null;
-									})}
-								</Select>
-								<ErrorMessage
-									name="approvedBy"
-									render={(error) => <FieldError error={error} />}
-								/>
-							</Col> */}
 							<Col span={24}>
 								<Label id="vendorId" label="Vendor" spacing />
 								<Select
@@ -159,6 +134,20 @@ export const CreateRequisitionSlipModal = ({
 								</Select>
 								<ErrorMessage
 									name="vendorId"
+									render={(error) => <FieldError error={error} />}
+								/>
+							</Col>
+							<Col span={24}>
+								<Label label="Remarks" spacing />
+								<Input
+									name="overallRemarks"
+									value={values['overallRemarks']}
+									onChange={(e) => {
+										setFieldValue('overallRemarks', e.target.value);
+									}}
+								/>
+								<ErrorMessage
+									name="overallRemarks"
 									render={(error) => <FieldError error={error} />}
 								/>
 							</Col>

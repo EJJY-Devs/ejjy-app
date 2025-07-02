@@ -27,6 +27,7 @@ export const useProductsData = ({ params, user }) => {
 		params: {
 			...params,
 			branchId: getLocalBranchId(),
+			searchBy: 'name',
 			serviceType: serviceTypes.OFFLINE,
 		},
 		options: {

@@ -72,6 +72,7 @@ export const TabBranchProducts = ({ branch, disabled }: Props) => {
 		params: {
 			...params,
 			branchId: branch.id,
+			searchBy: 'name',
 			isSoldInBranch: (() => {
 				let isSoldInBranch = null;
 				if (params?.isSoldInBranch === isSoldInBranchOptions.SHOW_IN_STOCK) {

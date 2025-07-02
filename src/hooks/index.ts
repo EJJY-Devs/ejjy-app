@@ -1,6 +1,8 @@
 /* eslint-disable import/export */
 export * from './useAccounts';
 export { default as useAccounts } from './useAccounts';
+export * from './useAdjustmentSlips';
+export { default as useAdjustmentSlips } from './useAdjustmentSlips';
 export { default as useAppType } from './useAppType';
 export * from './useAttendanceLogs';
 export { default as useAttendanceLogs } from './useAttendanceLogs';

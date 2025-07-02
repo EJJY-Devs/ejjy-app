@@ -229,7 +229,14 @@ export const useRequisitionSlipCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ preparedBy, approvedBy, products, branchId, vendorId }: any) =>
+		({
+			preparedBy,
+			approvedBy,
+			products,
+			branchId,
+			vendorId,
+			overallRemarks,
+		}: any) =>
 			RequisitionSlipsService.create(
 				{
 					prepared_by: preparedBy,
@@ -237,6 +244,7 @@ export const useRequisitionSlipCreate = () => {
 					products,
 					branch_id: branchId,
 					vendor_id: vendorId,
+					overall_remarks: overallRemarks,
 				},
 				getLocalApiUrl(),
 			),

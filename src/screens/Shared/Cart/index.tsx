@@ -81,11 +81,10 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	const { mutateAsync: createRequisitionSlip } = useRequisitionSlipCreate();
 	const { mutateAsync: createAdjustmentSlip } = useAdjustmentSlipCreate();
 
-	const { products } = useBoundStore.getState();
-
 	const handleCreateReceivingVoucher = async (formData) => {
-		if (products.length > 0) {
-			const mappedProducts = products.map(
+		const currentProducts = useBoundStore.getState().products;
+		if (currentProducts.length > 0) {
+			const mappedProducts = currentProducts.map(
 				({ product, quantity, cost_per_piece }) => ({
 					product_id: product.id,
 					quantity,
@@ -107,10 +106,11 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	};
 
 	const handleCreateAdjustmentSlip = async (formData) => {
-		if (products.length > 0) {
-			const mappedProducts = products.map(
-				({ product, quantity, remarks, errorRemarks }) => ({
-					product_id: product.id,
+		const currentProducts = useBoundStore.getState().products;
+		if (currentProducts.length > 0) {
+			const mappedProducts = currentProducts.map(
+				({ id, quantity, remarks, errorRemarks }) => ({
+					product_id: id,
 					adjusted_value: quantity,
 					remarks,
 					error_remarks: errorRemarks,
@@ -126,13 +126,14 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 				throw Error;
 			}
 
-			message.success('Receiving Report was created successfully');
+			message.success('Adjustment Slip was created successfully');
 		}
 	};
 
 	const handleCreateDeliveryReceipt = async (formData) => {
-		if (products.length > 0) {
-			const mappedProducts = products.map(
+		const currentProducts = useBoundStore.getState().products;
+		if (currentProducts.length > 0) {
+			const mappedProducts = currentProducts.map(
 				({ product, quantity, price_per_piece }) => ({
 					product_id: product.id,
 					quantity_returned: quantity,
@@ -155,8 +156,9 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	};
 
 	const handleCreateRequisitionSlip = async (formData) => {
-		if (products.length > 0) {
-			const mappedProducts = products.map(({ product, quantity }) => ({
+		const currentProducts = useBoundStore.getState().products;
+		if (currentProducts.length > 0) {
+			const mappedProducts = currentProducts.map(({ product, quantity }) => ({
 				key: product.key,
 				quantity,
 			}));
@@ -203,7 +205,8 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	};
 
 	const handleBack = () => {
-		if (products.length > 0) {
+		const currentProducts = useBoundStore.getState().products;
+		if (currentProducts.length > 0) {
 			Modal.confirm({
 				title: 'Warning',
 				content:
@@ -226,6 +229,39 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		if (type === 'Requisition Slip') {
 			setIsCreateRequisitionSlipVisible(true);
 		} else if (type === 'Adjustment Slip') {
+			// Get current products from store
+			const currentProducts = useBoundStore.getState().products;
+			// Check if there are products in the cart
+			if (!currentProducts || currentProducts.length === 0) {
+				message.error('Please add products to the cart before submission.');
+				return; // Prevent modal from opening
+			}
+
+			// Validate that all products have remarks
+			const productsWithoutRemarks = currentProducts.filter(
+				({ remarks }) => !remarks || remarks.trim() === '',
+			);
+
+			if (productsWithoutRemarks.length > 0) {
+				message.error(
+					'All products must have a remarks value before submission.',
+				);
+				return; // Prevent modal from opening
+			}
+
+			// Validate that products with "Error" remarks have errorRemarks
+			const productsWithoutErrorRemarks = currentProducts.filter(
+				({ remarks, errorRemarks }) =>
+					remarks === 'Error' && (!errorRemarks || errorRemarks.trim() === ''),
+			);
+
+			if (productsWithoutErrorRemarks.length > 0) {
+				message.error(
+					'All products with "Error" remarks must have a reference number before submission.',
+				);
+				return; // Prevent modal from opening
+			}
+
 			setIsCreateAdjustmentSlipVisible(true);
 		} else {
 			setIsCreateInventoryTransferModalVisible(true);

@@ -144,6 +144,17 @@ export const ViewReceivingVoucherModal = ({
 				</Text>
 			</Space>
 
+			<Space
+				align="center"
+				className="w-100 text-center"
+				direction="vertical"
+				size={0}
+			>
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					Remarks: {receivingVoucher?.overall_remarks || 'N/A'}
+				</Text>
+			</Space>
+
 			<div
 				// eslint-disable-next-line react/no-danger
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}

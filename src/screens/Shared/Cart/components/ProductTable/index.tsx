@@ -215,7 +215,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 						/>
 						{remarks[key] === 'Error' && (
 							<Input
-								placeholder="Error remarks"
+								placeholder="Reference number"
 								style={{ width: '100%', textAlign: 'center' }}
 								value={errorRemarks[key] || ''}
 								onChange={(e) => {

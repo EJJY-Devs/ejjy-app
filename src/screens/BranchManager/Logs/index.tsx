@@ -42,6 +42,7 @@ export const Logs = () => {
 		params: {
 			statuses: transactionStatuses.CANCELLED,
 			timeRange: timeRangeTypes.DAILY,
+			branchId: Number(getLocalBranchId()),
 		},
 		options: refetchOptions,
 	});

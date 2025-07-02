@@ -25,6 +25,9 @@ const service = {
 	list: async (params: ListParams, baseURL: string) =>
 		axios.get('/adjustment-slips/', { baseURL, params }),
 
+	retrieve: async (id: number, baseURL: string) =>
+		axios.get(`/adjustment-slips/${id}/`, { baseURL }),
+
 	create: async (body: Create, baseURL: string) =>
 		axios.post('/adjustment-slips/', body, { baseURL }),
 };

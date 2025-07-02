@@ -73,4 +73,17 @@ export const useAdjustmentSlipCreate = () => {
 	);
 };
 
+export const useAdjustmentSlipRetrieve = (id: number) =>
+	useQuery<any>(
+		['useAdjustmentSlipRetrieve', id],
+		() =>
+			wrapServiceWithCatch(
+				AdjustmentSlipsService.retrieve(id, getLocalApiUrl()),
+			),
+		{
+			enabled: !!id,
+			select: (query) => query.data,
+		},
+	);
+
 export default useAdjustmentSlips;

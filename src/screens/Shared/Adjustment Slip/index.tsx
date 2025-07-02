@@ -1,6 +1,7 @@
 import { Button, Table, Row, Col, Select } from 'antd';
 import { Content, TimeRangeFilter } from 'components';
 import { Box, Label } from 'components/elements';
+import { ViewAdjustmentSlipModal } from 'components/modals/ViewAdjustmentSlipModal';
 import { useQueryParams, useBranches, useAdjustmentSlips } from 'hooks';
 import { getAppType, formatDateTime, getLocalBranchId } from 'utils';
 import React, { useState, useEffect } from 'react';
@@ -13,6 +14,7 @@ import './style.scss';
 export const AdjustmentSlip = () => {
 	const [dataSource, setDataSource] = useState([]);
 	const [isCartModalVisible, setIsCartModalVisible] = useState(false);
+	const [selectedAdjustmentSlip, setSelectedAdjustmentSlip] = useState(null);
 
 	const { params, setQueryParams } = useQueryParams();
 	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
@@ -44,7 +46,15 @@ export const AdjustmentSlip = () => {
 	useEffect(() => {
 		const mapped = adjustmentSlips?.adjustmentSlips?.map((item) => ({
 			key: item.id,
-			id: item.id,
+			id: (
+				<Button
+					className="pa-0"
+					type="link"
+					onClick={() => setSelectedAdjustmentSlip(item.id)}
+				>
+					{item.id}
+				</Button>
+			),
 			datetime: formatDateTime(item.datetime_created),
 			branch: item.branch?.name || EMPTY_CELL,
 		}));
@@ -103,6 +113,13 @@ export const AdjustmentSlip = () => {
 					<Cart
 						type="Adjustment Slip"
 						onClose={() => setIsCartModalVisible(false)}
+					/>
+				)}
+
+				{selectedAdjustmentSlip && (
+					<ViewAdjustmentSlipModal
+						adjustmentSlipId={selectedAdjustmentSlip}
+						onClose={() => setSelectedAdjustmentSlip(null)}
 					/>
 				)}
 			</Content>

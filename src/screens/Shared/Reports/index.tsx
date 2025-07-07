@@ -105,6 +105,10 @@ export const Reports = () => {
 	} = useProductCategories({
 		params: { pageSize: MAX_PAGE_SIZE },
 	});
+	const branchId = isUserFromBranch(user.user_type)
+		? getLocalBranchId()
+		: params?.branchId;
+
 	const {
 		data: { branchProducts, total },
 		isFetching: isFetchingBranchProducts,
@@ -125,7 +129,11 @@ export const Reports = () => {
 				params?.productIds?.length > 0 ? params.productIds : undefined,
 			timeRange: params?.timeRange || timeRangeTypes.DAILY,
 		},
-		options: refetchOptions,
+		options: {
+			...refetchOptions,
+			// Only enable the query when we have a branch ID
+			enabled: !!branchId,
+		},
 	});
 
 	const columns: ColumnsType = useMemo(() => {
@@ -190,7 +198,7 @@ export const Reports = () => {
 	}, [params?.ordering]);
 
 	useEffect(() => {
-		const data = branchProducts.map((branchProduct) => {
+		const data = branchProducts?.map((branchProduct) => {
 			const {
 				product,
 				bo_balance,

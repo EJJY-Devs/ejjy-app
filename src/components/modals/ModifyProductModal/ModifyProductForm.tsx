@@ -192,7 +192,7 @@ export const ModifyProductForm = ({
 				{
 					textcode: Yup.string().max(50),
 					barcode: Yup.string().max(50).label('Barcode'),
-					scaleCode: Yup.string().max(50).label('Scale Code'),
+					scaleCode: Yup.string().min(3).max(3).label('Scale Code'),
 					name: Yup.string().required().max(70).label('Name').trim(),
 					type: Yup.string().label('TT-001'),
 					unitOfMeasurement: Yup.string().label('unitOfMeasurement'),

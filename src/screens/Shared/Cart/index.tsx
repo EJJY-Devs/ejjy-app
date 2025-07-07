@@ -158,10 +158,13 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	const handleCreateRequisitionSlip = async (formData) => {
 		const currentProducts = useBoundStore.getState().products;
 		if (currentProducts.length > 0) {
-			const mappedProducts = currentProducts.map(({ product, quantity }) => ({
-				key: product.key,
-				quantity,
-			}));
+			const mappedProducts = currentProducts.map(
+				({ product, quantity, unit }) => ({
+					key: product.key,
+					quantity,
+					unit,
+				}),
+			);
 
 			const response = await createRequisitionSlip({
 				...formData,

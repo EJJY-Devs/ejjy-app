@@ -42,6 +42,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 	const [errorRemarks, setErrorRemarks] = useState<{ [key: string]: string }>(
 		{},
 	);
+	const [unitInputs, setUnitInputs] = useState<{ [key: string]: string }>({});
 
 	const {
 		products,
@@ -86,7 +87,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 
 	if (type === 'Requisition Slip') {
 		columns.push(
-			{ name: 'Balance', alignment: 'center' },
+			{ name: 'Unit', alignment: 'center' },
 			{ name: 'Status', alignment: 'center' },
 		);
 	} else if (
@@ -248,13 +249,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		);
 
 		const data = paginatedProducts.map((branchProduct, index) => {
-			const {
-				product,
-				max_balance,
-				current_balance,
-				product_status,
-				quantity,
-			} = branchProduct;
+			const { product, product_status, quantity } = branchProduct;
 
 			const {
 				barcode,
@@ -264,6 +259,18 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 				key,
 				is_multiple_instance,
 			} = product;
+
+			// Initialize unit input from store if not already set
+			if (
+				type === 'Requisition Slip' &&
+				branchProduct.unit &&
+				!unitInputs[key]
+			) {
+				setUnitInputs((prev) => ({
+					...prev,
+					[key]: branchProduct.unit,
+				}));
+			}
 
 			const row = [
 				<Tooltip key={`tooltip-delete-${key}`} placement="top" title="Remove">
@@ -301,17 +308,30 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 			];
 
 			if (type === 'Requisition Slip') {
-				const balance = `${current_balance} / ${max_balance}`;
 				const status = getBranchProductStatus(product_status);
 
 				row.push(
-					<Tooltip
-						key={`tooltip-balance-${key}`}
-						placement="top"
-						title={`Balance: ${balance}`}
-					>
-						{balance}
-					</Tooltip>,
+					<Input
+						key={`input-unit-${key}`}
+						placeholder="Enter unit"
+						style={{ textAlign: 'center' }}
+						value={unitInputs[key] || ''}
+						onChange={(e) => {
+							const { value } = e.target;
+							setUnitInputs((prev) => ({
+								...prev,
+								[key]: value,
+							}));
+							// Update unit in the store
+							editProduct({
+								key,
+								product: {
+									...branchProduct,
+									unit: value,
+								},
+							});
+						}}
+					/>,
 					<Tooltip
 						key={`tooltip-status-${key}`}
 						placement="top"
@@ -367,7 +387,15 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		});
 
 		setDataSource(data);
-	}, [pageNumber, products, type, toggleAction, remarks, errorRemarks]);
+	}, [
+		pageNumber,
+		products,
+		type,
+		toggleAction,
+		remarks,
+		errorRemarks,
+		unitInputs,
+	]);
 
 	useEffect(() => {
 		if (products.length === 0) {

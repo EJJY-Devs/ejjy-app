@@ -1,7 +1,7 @@
 import { Spin } from 'antd';
-import { Content } from 'components';
+import { Breadcrumb, Content } from 'components';
 import { useRequisitionSlipById } from 'hooks/useRequisitionSlips';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useUserStore } from 'stores';
 import { OrderSlips } from './components/OrderSlips/OrderSlips';
 import { RequestedProducts } from './components/RequestedProducts';
@@ -23,8 +23,21 @@ export const ViewRequisitionSlip = ({ match }: Props) => {
 		requestingUserType: user.user_type,
 	});
 
+	// METHODS
+	const getBreadcrumbItems = useCallback(
+		() => [
+			{
+				name: 'Requisition Slips',
+				link: '/branch-manager/requisition-slips',
+			},
+			{ name: `#${requisitionSlip?.reference_number || requisitionSlipId}` },
+		],
+		[requisitionSlip?.reference_number, requisitionSlipId],
+	);
+
 	return (
 		<Content
+			breadcrumb={<Breadcrumb items={getBreadcrumbItems()} />}
 			className="ViewRequisitionSlip"
 			rightTitle={`#${requisitionSlip?.reference_number}`}
 			title="View Requisition Slip"

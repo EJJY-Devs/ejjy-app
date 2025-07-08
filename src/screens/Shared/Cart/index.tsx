@@ -230,6 +230,19 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 
 	const handleSubmit = () => {
 		if (type === 'Requisition Slip') {
+			// Get current products from store
+			const currentProducts = useBoundStore.getState().products;
+
+			// Check if there are products with missing units
+			const productsWithoutUnit = currentProducts.filter(
+				({ unit }) => !unit || unit.trim() === '',
+			);
+
+			if (productsWithoutUnit.length > 0) {
+				message.error('All products must have a unit before submission.');
+				return; // Prevent modal from opening
+			}
+
 			setIsCreateRequisitionSlipVisible(true);
 		} else if (type === 'Adjustment Slip') {
 			// Get current products from store
@@ -341,6 +354,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 					barcodeScannerRef={barcodeScannerRef}
 					branchId={type === 'Adjustment Slip' ? selectedBranchId : branchId}
 					isCreateInventoryTransfer={type !== 'Requisition Slip'}
+					type={type}
 				/>
 				<ProductTable isLoading={barcodeScanLoading || isLoading} type={type} />
 				<FooterButtons isDisabled={isLoading} onSubmit={handleSubmit} />

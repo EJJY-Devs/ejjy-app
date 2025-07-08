@@ -50,7 +50,7 @@ const Component = ({ barcodeScannerRef, searchMode }: Props, ref) => {
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown);
 		};
-	});
+	}, []); // Add empty dependency array to run only once
 
 	useEffect(() => {
 		if (searchedText.length === 0) {

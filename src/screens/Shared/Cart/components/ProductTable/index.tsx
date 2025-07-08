@@ -6,7 +6,7 @@ import {
 } from '@ant-design/icons';
 import { Button, Modal, Tooltip, Input, Select } from 'antd';
 import { formatInPeso } from 'ejjy-global';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
 import { AddProductModal } from 'screens/Shared/Cart/components/AddProductModal';
 import { Table } from 'screens/Shared/Cart/components/ProductTable/components/Table';
@@ -43,6 +43,10 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		{},
 	);
 	const [unitInputs, setUnitInputs] = useState<{ [key: string]: string }>({});
+	const [previousProductCount, setPreviousProductCount] = useState(0);
+
+	// Ref to store unit input references
+	const unitInputRefs = useRef<{ [key: string]: any }>({});
 
 	const {
 		products,
@@ -104,6 +108,39 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 	if (type === 'Delivery Receipt' || type === 'Receiving Report') {
 		columns.push({ name: 'Action', alignment: 'center' });
 	}
+
+	// Focus on unit input when a new product is added in Requisition Slip mode
+	useEffect(() => {
+		if (type === 'Requisition Slip' && products.length > previousProductCount) {
+			// Get the newly added product (first in the array since they're added to the beginning)
+			const newProduct = products[0];
+			if (newProduct?.product?.key) {
+				// Use requestAnimationFrame to ensure DOM is updated, then focus immediately
+				requestAnimationFrame(() => {
+					const inputRef = unitInputRefs.current[newProduct.product.key];
+					if (inputRef) {
+						inputRef.focus();
+						// Position cursor at the beginning (left) of the input
+						inputRef.setSelectionRange(0, 0);
+					}
+				});
+			}
+		}
+		setPreviousProductCount(products.length);
+	}, [products.length, type, previousProductCount]);
+
+	// Cleanup refs when products are removed
+	useEffect(() => {
+		const currentKeys = products.map((p) => p.product?.key).filter(Boolean);
+		const refKeys = Object.keys(unitInputRefs.current);
+
+		// Remove refs for products that no longer exist
+		refKeys.forEach((key) => {
+			if (!currentKeys.includes(key)) {
+				delete unitInputRefs.current[key];
+			}
+		});
+	}, [products]);
 
 	useEffect(() => {
 		if (type === 'Adjustment Slip') {
@@ -313,8 +350,13 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 				row.push(
 					<Input
 						key={`input-unit-${key}`}
+						ref={(el) => {
+							if (el) {
+								unitInputRefs.current[key] = el;
+							}
+						}}
 						placeholder="Enter unit"
-						style={{ textAlign: 'center' }}
+						style={{ textAlign: 'center', width: '240px' }}
 						value={unitInputs[key] || ''}
 						onChange={(e) => {
 							const { value } = e.target;
@@ -322,6 +364,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 								...prev,
 								[key]: value,
 							}));
+
 							// Update unit in the store
 							editProduct({
 								key,
@@ -330,6 +373,9 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 									unit: value,
 								},
 							});
+						}}
+						onPressEnter={(e) => {
+							(e.target as HTMLInputElement).blur();
 						}}
 					/>,
 					<Tooltip

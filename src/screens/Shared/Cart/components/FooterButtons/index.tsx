@@ -16,7 +16,7 @@ import './style.scss';
 export const FooterButtons = ({ isDisabled, onSubmit }) => {
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'F1') {
+			if (event.key === 'F8') {
 				event.preventDefault();
 				if (!isDisabled) {
 					onSubmit();
@@ -83,7 +83,7 @@ export const FooterButtons = ({ isDisabled, onSubmit }) => {
 
 			<CartButton
 				disabled={products.length === 0 || isDisabled}
-				shortcutKey="F1"
+				shortcutKey="F8"
 				size="lg"
 				text="Submit"
 				variant="primary"

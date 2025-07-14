@@ -25,15 +25,17 @@ const searchModes = [
 
 interface Props {
 	barcodeScannerRef: any;
-	isCreateInventoryTransfer: any;
 	branchId: string | null;
+	isCreateInventoryTransfer: any;
+	isDisabled?: boolean;
 	type: string;
 }
 
 export const ProductSearch = ({
 	barcodeScannerRef,
-	isCreateInventoryTransfer,
 	branchId,
+	isCreateInventoryTransfer,
+	isDisabled,
 	type,
 }: Props) => {
 	// STATES
@@ -77,7 +79,7 @@ export const ProductSearch = ({
 			searchBy: currentSearchMode.key,
 		},
 		options: {
-			enabled: searchedText?.length > 0,
+			enabled: searchedText?.length > 0 && searchedText.trim().length > 0,
 			onSuccess: (data: any) => {
 				const newSearchableProducts = data.branchProducts.filter(
 					({ product }) => {
@@ -215,6 +217,7 @@ export const ProductSearch = ({
 					<SearchInput
 						ref={searchInputRef}
 						barcodeScannerRef={barcodeScannerRef}
+						isDisabled={isDisabled}
 						searchMode={currentSearchMode.key}
 					/>
 
@@ -230,8 +233,15 @@ export const ProductSearch = ({
 						<AddProductModal
 							product={selectedProduct}
 							onClose={() => {
-								// Only auto-focus search input if it's NOT a Requisition Slip
-								if (type !== 'Requisition Slip' && searchedText.length > 0) {
+								// Only auto-focus search input for document types that need it
+								// Don't focus for Requisition Slip, Delivery Receipt, Receiving Report, or Adjustment Slip
+								if (
+									type !== 'Requisition Slip' &&
+									type !== 'Delivery Receipt' &&
+									type !== 'Receiving Report' &&
+									type !== 'Adjustment Slip' &&
+									searchedText.length > 0
+								) {
 									searchInputRef.current.focusInput();
 								}
 								setSelectedProduct(null);

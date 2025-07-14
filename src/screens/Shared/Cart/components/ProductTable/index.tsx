@@ -4,7 +4,7 @@ import {
 	PlusOutlined,
 	MinusOutlined,
 } from '@ant-design/icons';
-import { Button, Modal, Tooltip, Input, Select } from 'antd';
+import { Button, Modal, Tooltip, Input, Select, message } from 'antd';
 import { formatInPeso } from 'ejjy-global';
 import React, { useEffect, useState, useRef } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
@@ -27,9 +27,14 @@ export const editTypes = {
 interface Props {
 	isLoading: boolean;
 	type: string;
+	onUnitValidationChange?: (hasEmptyUnits: boolean) => void;
 }
 
-export const ProductTable = ({ isLoading, type }: Props) => {
+export const ProductTable = ({
+	isLoading,
+	type,
+	onUnitValidationChange,
+}: Props) => {
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [editProductModalVisible, setEditProductModalVisible] = useState(false);
 	const [addProductModalVisible, setAddProductModalVisible] = useState(false);
@@ -44,6 +49,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 	);
 	const [unitInputs, setUnitInputs] = useState<{ [key: string]: string }>({});
 	const [previousProductCount, setPreviousProductCount] = useState(0);
+	const [unitErrors, setUnitErrors] = useState<{ [key: string]: boolean }>({});
 
 	// Ref to store unit input references
 	const unitInputRefs = useRef<{ [key: string]: any }>({});
@@ -133,6 +139,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 	useEffect(() => {
 		const currentKeys = products.map((p) => p.product?.key).filter(Boolean);
 		const refKeys = Object.keys(unitInputRefs.current);
+		const errorKeys = Object.keys(unitErrors);
 
 		// Remove refs for products that no longer exist
 		refKeys.forEach((key) => {
@@ -140,7 +147,18 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 				delete unitInputRefs.current[key];
 			}
 		});
-	}, [products]);
+
+		// Remove unit errors for products that no longer exist
+		errorKeys.forEach((key) => {
+			if (!currentKeys.includes(key)) {
+				setUnitErrors((prev) => {
+					const newErrors = { ...prev };
+					delete newErrors[key];
+					return newErrors;
+				});
+			}
+		});
+	}, [products, unitErrors]);
 
 	useEffect(() => {
 		if (type === 'Adjustment Slip') {
@@ -356,14 +374,50 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 							}
 						}}
 						placeholder="Enter unit"
-						style={{ textAlign: 'center', width: '240px' }}
+						status={unitErrors[key] ? 'error' : ''}
+						style={{
+							textAlign: 'center',
+							width: '240px',
+						}}
 						value={unitInputs[key] || ''}
+						onBlur={(e) => {
+							const { value } = e.target;
+							// Validate on blur - prevent leaving if empty
+							if (!value.trim()) {
+								setUnitErrors((prev) => ({
+									...prev,
+									[key]: true,
+								}));
+								message.error('Unit field is required');
+								// Refocus the input to prevent leaving
+								setTimeout(() => {
+									const inputRef = unitInputRefs.current[key];
+									if (inputRef) {
+										inputRef.focus();
+									}
+								}, 100);
+								return;
+							}
+							// Clear error if value is provided
+							setUnitErrors((prev) => ({
+								...prev,
+								[key]: false,
+							}));
+						}}
 						onChange={(e) => {
 							const { value } = e.target;
 							setUnitInputs((prev) => ({
 								...prev,
 								[key]: value,
 							}));
+
+							// Clear error if user starts typing and field has content
+							if (value.trim() && unitErrors[key]) {
+								setUnitErrors((prev) => ({
+									...prev,
+									[key]: false,
+								}));
+							}
 
 							// Update unit in the store
 							editProduct({
@@ -375,7 +429,25 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 							});
 						}}
 						onPressEnter={(e) => {
-							(e.target as HTMLInputElement).blur();
+							const target = e.target as HTMLInputElement;
+							const value = target.value.trim();
+
+							// Validate before allowing blur
+							if (!value) {
+								setUnitErrors((prev) => ({
+									...prev,
+									[key]: true,
+								}));
+								message.error('Unit field is required');
+								return; // Don't blur if validation fails
+							}
+
+							// Clear any existing error and blur
+							setUnitErrors((prev) => ({
+								...prev,
+								[key]: false,
+							}));
+							target.blur();
 						}}
 					/>,
 					<Tooltip
@@ -452,6 +524,18 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 			resetPage();
 		}
 	}, [products, activeIndex]);
+
+	// Check for empty Unit inputs and notify parent component
+	useEffect(() => {
+		if (type === 'Requisition Slip' && onUnitValidationChange) {
+			const hasEmptyUnits = products.some((product) => {
+				const key = product.product?.key;
+				const unitValue = unitInputs[key] || '';
+				return !unitValue.trim();
+			});
+			onUnitValidationChange(hasEmptyUnits);
+		}
+	}, [products, unitInputs, type, onUnitValidationChange]);
 
 	const showRemoveProductConfirmation = (branchProduct, index) => {
 		const newIndex = (pageNumber - 1) * PRODUCT_LENGTH_PER_PAGE + index;

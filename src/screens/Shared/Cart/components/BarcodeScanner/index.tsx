@@ -39,7 +39,7 @@ const Component = (props, ref) => {
 			identifier: scannedBarcode,
 		},
 		options: {
-			enabled: scannedBarcode !== null,
+			enabled: scannedBarcode !== null && scannedBarcode.trim().length > 0,
 			onSuccess: (data: any) => {
 				const scannedProduct = data.branchProducts[0];
 
@@ -82,8 +82,17 @@ const Component = (props, ref) => {
 
 	const handleScan = (value) => {
 		const barcode = _.toString(value);
-		message.info(`Scanned Code: ${barcode}`);
 
+		// Don't process empty or whitespace-only barcodes
+		if (!barcode || barcode.trim().length === 0) {
+			message.warning({
+				key: MESSAGE_KEY,
+				content: 'Invalid barcode scanned.',
+			});
+			return;
+		}
+
+		message.info(`Scanned Code: ${barcode}`);
 		setScannedBarcode(barcode);
 	};
 

@@ -52,6 +52,8 @@ export const InventoryTransfer = () => {
 	} = useBackOrders({
 		params: {
 			...params,
+			// When showing 'All', fetch all data by setting a large pageSize
+			...(selectedType === 'All' && { page: 1, pageSize: MAX_PAGE_SIZE }),
 		},
 	});
 
@@ -62,6 +64,8 @@ export const InventoryTransfer = () => {
 	} = useReceivingVouchers({
 		params: {
 			...params,
+			// When showing 'All', fetch all data by setting a large pageSize
+			...(selectedType === 'All' && { page: 1, pageSize: MAX_PAGE_SIZE }),
 		},
 	});
 
@@ -73,6 +77,7 @@ export const InventoryTransfer = () => {
 			const backOrdersData = backOrders.map((item) => ({
 				key: `backorder-${item.id}`,
 				datetime: formatDateTime(item.datetime_created),
+				rawDatetime: item.datetime_created, // Keep raw datetime for sorting
 				type: 'Delivery Receipt',
 				id: (
 					<Button
@@ -92,7 +97,8 @@ export const InventoryTransfer = () => {
 			// Convert Receiving Vouchers to table rows
 			const receivingVouchersData = receivingVouchers.map((item) => ({
 				key: `receiving-${item.id}`,
-				datetime: formatDateTime(item.datetime_created), // Keep raw datetime for sorting
+				datetime: formatDateTime(item.datetime_created),
+				rawDatetime: item.datetime_created, // Keep raw datetime for sorting
 				type: 'Receiving Report',
 				id: (
 					<Button
@@ -118,10 +124,10 @@ export const InventoryTransfer = () => {
 				filteredData = receivingVouchersData;
 			}
 
-			// Sort data by datetimeCreated (descending order)
+			// Sort data by rawDatetime (descending order - newest first)
 			filteredData.sort(
 				(a, b) =>
-					new Date(b.datetime).getTime() - new Date(a.datetime).getTime(),
+					new Date(b.rawDatetime).getTime() - new Date(a.rawDatetime).getTime(),
 			);
 
 			setDataSource(filteredData);
@@ -192,7 +198,7 @@ export const InventoryTransfer = () => {
 									setSelectedType(e.target.value);
 									setQueryParams({
 										page: DEFAULT_PAGE,
-										pageSize: e.target.value === 'All' ? 5 : 10,
+										pageSize: e.target.value === 'All' ? 10 : 10,
 									});
 								}}
 							/>
@@ -229,12 +235,13 @@ export const InventoryTransfer = () => {
 						pagination={{
 							current: Number(params.page) || DEFAULT_PAGE,
 							total,
-							pageSize: 10,
+							pageSize:
+								selectedType === 'All' ? 10 : Number(params.pageSize) || 10,
 							position: ['bottomCenter'],
 							pageSizeOptions,
 							onChange: (page, newPageSize) => {
 								const adjustedPageSize =
-									selectedType === 'All' ? 5 : newPageSize;
+									selectedType === 'All' ? 10 : newPageSize;
 								setQueryParams({ page, pageSize: adjustedPageSize });
 							},
 							disabled: !dataSource,

@@ -374,7 +374,6 @@ export const ProductTable = ({
 							}
 						}}
 						placeholder="Enter unit"
-						status={unitErrors[key] ? 'error' : ''}
 						style={{
 							textAlign: 'center',
 							width: '240px',

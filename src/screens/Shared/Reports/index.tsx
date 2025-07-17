@@ -169,7 +169,11 @@ export const Reports = () => {
 						<div>Quantity Sold</div>
 						<Button
 							size="small"
-							style={{ marginTop: 11, fontSize: '11px', padding: '2px 8px' }}
+							style={{
+								marginTop: 20,
+								fontSize: '11px',
+								padding: '2px 8px',
+							}}
 							type="primary"
 							onClick={(e) => {
 								e.stopPropagation();

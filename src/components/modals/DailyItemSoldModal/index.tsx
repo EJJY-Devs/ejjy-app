@@ -3,8 +3,6 @@ import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors, TimeRangeFilter } from 'components';
 import {
 	DATE_FORMAT,
-	DEFAULT_PAGE,
-	DEFAULT_PAGE_SIZE,
 	TransactionProduct,
 	ViewDailyItemSoldModal,
 	convertIntoArray,
@@ -51,8 +49,10 @@ export const DailyItemSoldModal = ({ branchId, onClose }: Props) => {
 		error: transactionProductsError,
 	} = useTransactionProducts({
 		params: {
-			...params,
 			branchId,
+			timeRange: Array.isArray(params.timeRange)
+				? params.timeRange.join(',')
+				: params.timeRange, // Convert to string if array
 		},
 		serviceOptions: {
 			baseURL: getLocalApiUrl(),
@@ -161,8 +161,17 @@ export const DailyItemSoldModal = ({ branchId, onClose }: Props) => {
 				{} as Record<string, TransactionProduct[]>,
 			);
 
-			// Convert to table data format
-			const data = Object.keys(dateGroups).map((date) => ({
+			// Get all dates
+			const allDates = Object.keys(dateGroups);
+
+			// Paginate dates (divide by 5)
+			const paginatedDates = allDates.slice(
+				(Number(params.page) - 1) * 5, // 5 dates per page
+				Number(params.page) * 5,
+			);
+
+			// Convert paginated dates to table data format
+			const data = paginatedDates.map((date) => ({
 				key: date,
 				date,
 				formattedDate: moment(date).format('MM/DD/YYYY'),
@@ -170,13 +179,11 @@ export const DailyItemSoldModal = ({ branchId, onClose }: Props) => {
 
 			setDataSource(data);
 		}
-	}, [transactionProductsData?.list]);
+	}, [transactionProductsData?.list, params.page]);
 
 	const handleClose = () => {
 		const today = moment().format(DATE_FORMAT);
 		setQueryParams({
-			page: DEFAULT_PAGE,
-			pageSize: DEFAULT_PAGE_SIZE,
 			timeRange: [today, today].join(','),
 		});
 
@@ -216,13 +223,24 @@ export const DailyItemSoldModal = ({ branchId, onClose }: Props) => {
 					dataSource={dataSource}
 					loading={isFetchingTransactionProducts}
 					pagination={{
-						current: Number(params.page) || DEFAULT_PAGE,
-						total: transactionProductsData?.total || 0,
-						pageSize: Number(params.pageSize) || DEFAULT_PAGE_SIZE,
+						current: Number(params.page),
+						total: transactionProductsData?.list
+							? Object.keys(
+									transactionProductsData.list.reduce(
+										(acc, transactionProduct) => {
+											const date = moment(
+												transactionProduct.datetime_created,
+											).format(DATE_FORMAT);
+											acc[date] = true;
+											return acc;
+										},
+										{} as Record<string, boolean>,
+									),
+							  ).length
+							: 0, // Count of unique dates
+						pageSize: 5,
 						onChange: (page) => setQueryParams({ page }),
-						disabled: !dataSource,
-						showSizeChanger: false,
-						position: ['bottomCenter'],
+						position: ['bottomCenter'], // Center the pagination
 					}}
 					scroll={{ x: 500 }}
 				/>

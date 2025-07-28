@@ -25,7 +25,10 @@ interface Modify {
 
 const service = {
 	list: async (params: List, baseURL: string) =>
-		axios.get('/receiving-vouchers/', { baseURL, params }),
+		axios.get('/receiving-vouchers/', {
+			baseURL,
+			params: { ...params, limit: 'all' },
+		}),
 
 	create: async (body: Modify, baseURL: string) =>
 		axios.post('/receiving-vouchers/', body, { baseURL }),

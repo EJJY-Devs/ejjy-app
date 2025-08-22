@@ -173,4 +173,17 @@ export const useAccountRedeemPoints = () =>
 			),
 	);
 
+export const useCreditLogs = ({ options }: Query = {}) =>
+	useQuery<any>(
+		['useCreditLogs'],
+		() => wrapServiceWithCatch(AccountsService.creditLogs(getLocalApiUrl())),
+		{
+			initialData: { data: [] },
+			select: (query) => ({
+				creditLogs: query.data,
+			}),
+			...options,
+		},
+	);
+
 export default useAccounts;

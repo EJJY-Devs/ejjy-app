@@ -93,7 +93,7 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 									setQueryParams(
 										{
 											tab: accountTabs.CREDIT_TRANSACTIONS,
-											payor: JSON.stringify(creditRegistration),
+											payorId: creditRegistration.account.id,
 										},
 										{ shouldResetPage: true },
 									);

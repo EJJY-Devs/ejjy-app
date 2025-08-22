@@ -1,8 +1,7 @@
 import { PrinterOutlined, WifiOutlined } from '@ant-design/icons';
 import { Tooltip } from 'antd';
 import cn from 'classnames';
-import { configurePrinter } from 'ejjy-global';
-import { printerStatuses } from 'global';
+import { configurePrinter, printerStatuses } from 'ejjy-global';
 import { useConnectivity } from 'hooks';
 import qz from 'qz-tray';
 import React, { useEffect } from 'react';
@@ -35,35 +34,66 @@ const Component = () => {
 	const startPrinterConfiguration = () => {
 		const printerName = getAppReceiptPrinterName();
 
-		if (printerName) {
-			handlePrinterClick();
-
-			// setup a callback
-			setTimeout(() => {
-				qz.printers.setPrinterCallbacks((event) => {
-					const { statusText } = event;
-
-					if (statusText === printerStatuses.NOT_AVAILABLE) {
-						setUserInterface({ isPrinterConnected: false });
-					} else if (statusText === printerStatuses.OK) {
-						setUserInterface({ isPrinterConnected: true });
-					}
-				});
-
-				qz.printers
-					.find(printerName)
-					.then((printer) => {
-						qz.printers.startListening(printer).then(() => {
-							setUserInterface({ isPrinterConnected: true });
-							return qz.printers.getStatus();
-						});
-					})
-					.catch((e) => {
-						setUserInterface({ isPrinterConnected: false });
-						console.error('Printer Listener', e);
-					});
-			}, 5000);
+		if (!printerName) {
+			setUserInterface({
+				...userInterface,
+				isPrinterConnected: false,
+			});
+			return;
 		}
+
+		handlePrinterClick();
+
+		// setup a callback
+		setTimeout(() => {
+			qz.printers.setPrinterCallbacks((event: any) => {
+				const { statusText } = event;
+
+				console.log(event);
+
+				if (
+					statusText === printerStatuses.NOT_AVAILABLE ||
+					statusText === printerStatuses.OFFLINE
+				) {
+					setUserInterface({
+						...userInterface,
+						isPrinterConnected: false,
+					});
+				} else if (statusText === printerStatuses.OK) {
+					setUserInterface({
+						...userInterface,
+						isPrinterConnected: true,
+					});
+				} else {
+					setUserInterface({
+						...userInterface,
+						isPrinterConnected: null,
+					});
+				}
+			});
+
+			qz.printers
+				.find(printerName)
+				.then((printer: any) => {
+					qz.printers.startListening(printer).then(() => {
+						qz.printers.getStatus().then((status: any) => {
+							if (status === printerStatuses.OK) {
+								setUserInterface({
+									...userInterface,
+									isPrinterConnected: true,
+								});
+							}
+						});
+					});
+				})
+				.catch((e: Error) => {
+					setUserInterface({
+						...userInterface,
+						isPrinterConnected: false,
+					});
+					console.error('Printer Listener', e);
+				});
+		}, 5000);
 	};
 
 	const handleConnectionClick = () => {

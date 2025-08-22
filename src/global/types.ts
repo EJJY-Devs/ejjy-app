@@ -1,3 +1,5 @@
+import { Account as BaseAccount } from 'ejjy-global';
+
 export const request = {
 	NONE: 0,
 	REQUESTING: 1,
@@ -285,3 +287,8 @@ export const authorizationStatuses = {
 	OPENED: 'opened',
 	CLOSED: 'ended',
 };
+
+// Extended types
+export interface Account extends BaseAccount {
+	outstanding_balance?: number;
+}

@@ -51,6 +51,9 @@ const service = {
 
 	redeemPoints: async (id: number, body: RedeemPoints, baseURL: string) =>
 		axios.post(`/accounts/${id}/redeem-points/`, body, { baseURL }),
+
+	creditLogs: async (baseURL: string) =>
+		axios.get('/accounts/credit-logs/', { baseURL }),
 };
 
 const serviceOffline = {

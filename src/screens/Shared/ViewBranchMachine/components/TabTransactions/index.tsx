@@ -85,6 +85,7 @@ export const TabTransactions = ({ branchMachineId }: Props) => {
 			...params,
 			branchMachineId,
 			timeRange: params?.timeRange || timeRangeTypes.DAILY,
+			statuses: `${transactionStatuses.HOLD},${transactionStatuses.VOID_EDITED},${transactionStatuses.VOID_CANCELLED},${transactionStatuses.FULLY_PAID}`,
 		},
 		options: refetchOptions,
 	});

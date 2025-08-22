@@ -84,7 +84,9 @@ export const TabDailyProductSalesReport = ({ branchMachineId }: Props) => {
 			isVatExempted: params.isVatExempted
 				? params.isVatExempted === 'true'
 				: undefined,
-			statuses: params.statuses || undefined,
+			statuses:
+				params.statuses ||
+				`${transactionStatuses.HOLD},${transactionStatuses.VOID_EDITED},${transactionStatuses.VOID_CANCELLED},${transactionStatuses.FULLY_PAID}`,
 		},
 		options: refetchOptions,
 	});

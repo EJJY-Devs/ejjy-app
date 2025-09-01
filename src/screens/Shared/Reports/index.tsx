@@ -49,6 +49,7 @@ import {
 	isUserFromBranch,
 	isUserFromOffice,
 } from 'utils';
+import DailyItemSoldReport from './DailyItemSoldReport';
 
 const sorts = {
 	CURRENT_BALANCE_ASC: 'current_balance',
@@ -103,43 +104,35 @@ export const Reports = () => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
 	const user = useUserStore((state) => state.user);
-	const {
-		data: { productCategories },
-		isFetching: isFetchingProductCategories,
-		error: productCategoriesErrors,
-	} = useProductCategories({
-		params: { pageSize: MAX_PAGE_SIZE },
-	});
-	const branchId = isUserFromBranch(user.user_type)
-		? getLocalBranchId()
-		: params?.branchId;
-
-	const {
-		data: { branchProducts, total },
-		isFetching: isFetchingBranchProducts,
-		isFetchedAfterMount: isBranchProductsFetchedAfterMount,
-		error: branchProductsError,
-	} = useBranchProductsWithAnalytics({
-		params: {
-			...params,
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: params?.branchId,
-			hasBoBalance: params.hasBoBalance === 'true' ? true : undefined,
-			isSoldInBranch:
-				params?.isSoldInBranch === ALL_OPTION_KEY || !params?.isSoldInBranch
-					? undefined
-					: true,
-			productIds:
-				params?.productIds?.length > 0 ? params.productIds : undefined,
-			timeRange: params?.timeRange || timeRangeTypes.DAILY,
-		},
-		options: {
-			...refetchOptions,
-			// Only enable the query when we have a branch ID
-			enabled: !!branchId,
-		},
-	});
+	// const {
+	// 	data: { productCategories },
+	// 	isFetching: isFetchingProductCategories,
+	// 	error: productCategoriesErrors,
+	// } = useProductCategories({
+	// 	params: { pageSize: MAX_PAGE_SIZE },
+	// });
+	// const {
+	// 	data: { branchProducts, total },
+	// 	isFetching: isFetchingBranchProducts,
+	// 	isFetchedAfterMount: isBranchProductsFetchedAfterMount,
+	// 	error: branchProductsError,
+	// } = useBranchProductsWithAnalytics({
+	// 	params: {
+	// 		...params,
+	// 		branchId: isUserFromBranch(user.user_type)
+	// 			? getLocalBranchId()
+	// 			: params?.branchId,
+	// 		hasBoBalance: params.hasBoBalance === 'true' ? true : undefined,
+	// 		isSoldInBranch:
+	// 			params?.isSoldInBranch === ALL_OPTION_KEY || !params?.isSoldInBranch
+	// 				? undefined
+	// 				: true,
+	// 		productIds:
+	// 			params?.productIds?.length > 0 ? params.productIds : undefined,
+	// 		timeRange: params?.timeRange || timeRangeTypes.DAILY,
+	// 	},
+	// 	options: refetchOptions,
+	// });
 
 	const columns: ColumnsType = useMemo(() => {
 		const getSortOrderFromParam = (field: string) => {
@@ -221,81 +214,81 @@ export const Reports = () => {
 		];
 	}, [params?.ordering]);
 
-	useEffect(() => {
-		const data = branchProducts?.map((branchProduct) => {
-			const {
-				product,
-				bo_balance,
-				max_balance,
-				current_balance,
-				product_status,
-				quantity_sold,
-				daily_average_sold,
-				daily_average_sold_percentage,
-				average_daily_consumption,
-			} = branchProduct;
-			const { name, unit_of_measurement, pieces_in_bulk } = product;
+	// useEffect(() => {
+	// 	const data = branchProducts.map((branchProduct) => {
+	// 		const {
+	// 			product,
+	// 			bo_balance,
+	// 			max_balance,
+	// 			current_balance,
+	// 			product_status,
+	// 			quantity_sold,
+	// 			daily_average_sold,
+	// 			daily_average_sold_percentage,
+	// 			average_daily_consumption,
+	// 		} = branchProduct;
+	// 		const { name, unit_of_measurement, pieces_in_bulk } = product;
 
-			const convertQuantity = (quantity) =>
-				params?.quantityType === quantityTypes.BULK
-					? convertToBulk(quantity, pieces_in_bulk)
-					: quantity;
+	// 		const convertQuantity = (quantity) =>
+	// 			params?.quantityType === quantityTypes.BULK
+	// 				? convertToBulk(quantity, pieces_in_bulk)
+	// 				: quantity;
 
-			const currentBalance = formatQuantity({
-				unitOfMeasurement: unit_of_measurement,
-				quantity: convertQuantity(current_balance),
-			});
+	// 		const currentBalance = formatQuantity({
+	// 			unitOfMeasurement: unit_of_measurement,
+	// 			quantity: convertQuantity(current_balance),
+	// 		});
 
-			const quantitySold = formatQuantity({
-				unitOfMeasurement: unit_of_measurement,
-				quantity: convertQuantity(quantity_sold),
-			});
+	// 		const quantitySold = formatQuantity({
+	// 			unitOfMeasurement: unit_of_measurement,
+	// 			quantity: convertQuantity(quantity_sold),
+	// 		});
 
-			const maxBalance = formatQuantity({
-				unitOfMeasurement: unit_of_measurement,
-				quantity: convertQuantity(max_balance),
-			});
+	// 		const maxBalance = formatQuantity({
+	// 			unitOfMeasurement: unit_of_measurement,
+	// 			quantity: convertQuantity(max_balance),
+	// 		});
 
-			const boBalance = formatQuantity({
-				unitOfMeasurement: unit_of_measurement,
-				quantity: convertQuantity(bo_balance),
-			});
+	// 		const boBalance = formatQuantity({
+	// 			unitOfMeasurement: unit_of_measurement,
+	// 			quantity: convertQuantity(bo_balance),
+	// 		});
 
-			return {
-				key: branchProduct.id,
-				code: getProductCode(product),
-				name,
-				balance: `${currentBalance} / ${maxBalance}`,
-				boBalance,
-				quantitySold,
-				dailyAverageSold: daily_average_sold,
-				dailyAverageSoldPercentage: `${daily_average_sold_percentage}%`,
-				averageDailyConsumption: formatQuantity({
-					unitOfMeasurement: unit_of_measurement,
-					quantity: convertQuantity(average_daily_consumption),
-				}),
-				status: getBranchProductStatus(product_status),
-				actions: (
-					<Tooltip title="Edit">
-						<Button
-							icon={<EditFilled />}
-							type="primary"
-							ghost
-							onClick={() => setSelectedBranchProduct(branchProduct)}
-						/>
-					</Tooltip>
-				),
-			};
-		});
+	// 		return {
+	// 			key: branchProduct.id,
+	// 			code: getProductCode(product),
+	// 			name,
+	// 			balance: `${currentBalance} / ${maxBalance}`,
+	// 			boBalance,
+	// 			quantitySold,
+	// 			dailyAverageSold: daily_average_sold,
+	// 			dailyAverageSoldPercentage: `${daily_average_sold_percentage}%`,
+	// 			averageDailyConsumption: formatQuantity({
+	// 				unitOfMeasurement: unit_of_measurement,
+	// 				quantity: convertQuantity(average_daily_consumption),
+	// 			}),
+	// 			status: getBranchProductStatus(product_status),
+	// 			actions: (
+	// 				<Tooltip title="Edit">
+	// 					<Button
+	// 						icon={<EditFilled />}
+	// 						type="primary"
+	// 						ghost
+	// 						onClick={() => setSelectedBranchProduct(branchProduct)}
+	// 					/>
+	// 				</Tooltip>
+	// 			),
+	// 		};
+	// 	});
 
-		setDataSource(data);
-	}, [branchProducts, params?.quantityType]);
+	// 	setDataSource(data);
+	// }, [branchProducts, params?.quantityType]);
 
 	return (
 		<Content title="Reports">
 			<Box>
-				<Spin spinning={isFetchingProductCategories}>
-					<RequestErrors
+				{/* <Spin spinning={isFetchingProductCategories}> */}
+				{/* <RequestErrors
 						className="px-6 pt-6"
 						errors={[
 							...convertIntoArray(
@@ -352,26 +345,36 @@ export const Reports = () => {
 								);
 							}
 						}}
+					/> */}
+
+				{/* Daily Item Sold Report */}
+				<div
+					style={{
+						marginTop: 32,
+						padding: '16px',
+					}}
+				>
+					<DailyItemSoldReport />
+				</div>
+
+				{selectedBranchProduct && (
+					<EditBranchProductBalanceModal
+						branchProduct={selectedBranchProduct}
+						onClose={() => setSelectedBranchProduct(null)}
 					/>
+				)}
 
-					{selectedBranchProduct && (
-						<EditBranchProductBalanceModal
-							branchProduct={selectedBranchProduct}
-							onClose={() => setSelectedBranchProduct(null)}
-						/>
-					)}
-
-					{isDailyItemSoldModalVisible && (
-						<DailyItemSoldModal
-							branchId={
-								isUserFromBranch(user.user_type)
-									? getLocalBranchId()
-									: params.branchId
-							}
-							onClose={() => setIsDailyItemSoldModalVisible(false)}
-						/>
-					)}
-				</Spin>
+				{isDailyItemSoldModalVisible && (
+					<DailyItemSoldModal
+						branchId={
+							isUserFromBranch(user.user_type)
+								? getLocalBranchId()
+								: params.branchId
+						}
+						onClose={() => setIsDailyItemSoldModalVisible(false)}
+					/>
+				)}
+				{/* </Spin> */}
 			</Box>
 		</Content>
 	);

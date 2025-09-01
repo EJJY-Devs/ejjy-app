@@ -40,4 +40,33 @@ const useTransactionProducts = ({ params, options }: Query) =>
 		},
 	);
 
+export const useTransactionProductDates = ({
+	params,
+	options,
+}: {
+	params?: {
+		timeRange?: string;
+		branchId?: string | number;
+	};
+	options?: any;
+} = {}) =>
+	useQuery<any>(
+		['useTransactionProductDates', params?.timeRange, params?.branchId],
+		() =>
+			wrapServiceWithCatch(
+				TransactionProductsService.getDates(
+					{
+						time_range: params?.timeRange,
+						branch_id: params?.branchId,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: [] },
+			select: (query) => query.data,
+			...options,
+		},
+	);
+
 export default useTransactionProducts;

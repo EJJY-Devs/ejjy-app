@@ -11,22 +11,66 @@ const columns: ColumnsType = [
 		title: 'Total Gross Sales of the Day',
 		dataIndex: 'totalGrossSalesOfTheDay',
 		fixed: 'left',
-		width: 180,
+		width: 220,
+		render: (text: string) => (
+			<div
+				style={{
+					fontSize: '24px',
+					fontWeight: 'bold',
+					color: 'rgba(0, 0, 0, 0.85)',
+				}}
+			>
+				{text}
+			</div>
+		),
 	},
 	{
 		title: 'Total Cash Sales Invoice',
 		dataIndex: 'totalCashSalesInvoice',
-		width: 150,
+		width: 200,
+		render: (text: string) => (
+			<div
+				style={{
+					fontSize: '24px',
+					fontWeight: 'bold',
+					color: 'rgba(0, 0, 0, 0.85)',
+				}}
+			>
+				{text}
+			</div>
+		),
 	},
 	{
 		title: 'Total Charge Sales Invoice',
 		dataIndex: 'totalChargeSalesInvoice',
-		width: 150,
+		width: 200,
+		render: (text: string) => (
+			<div
+				style={{
+					fontSize: '24px',
+					fontWeight: 'bold',
+					color: 'rgba(0, 0, 0, 0.85)',
+				}}
+			>
+				{text}
+			</div>
+		),
 	},
 	{
 		title: 'Total Payments Received',
 		dataIndex: 'totalPaymentsReceived',
-		width: 150,
+		width: 200,
+		render: (text: string) => (
+			<div
+				style={{
+					fontSize: '24px',
+					fontWeight: 'bold',
+					color: 'rgba(0, 0, 0, 0.85)',
+				}}
+			>
+				{text}
+			</div>
+		),
 	},
 ];
 

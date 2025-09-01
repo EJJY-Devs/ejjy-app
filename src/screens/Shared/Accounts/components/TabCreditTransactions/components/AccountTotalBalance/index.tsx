@@ -23,7 +23,10 @@ export const AccountTotalBalance = ({
 				<Statistic title="Client" value={getFullName(account)} />
 			</Col>
 			<Col md={12}>
-				<Statistic title="Total Balance" value={formatInPeso(totalBalance)} />
+				<Statistic
+					title="Outstanding Balance"
+					value={formatInPeso(totalBalance)}
+				/>
 				<Button
 					className="mt-3"
 					disabled={disabled}

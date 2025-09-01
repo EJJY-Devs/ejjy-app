@@ -4,9 +4,9 @@ import {
 	PlusOutlined,
 	MinusOutlined,
 } from '@ant-design/icons';
-import { Button, Modal, Tooltip, Input, Select } from 'antd';
+import { Button, Modal, Tooltip, Input, Select, message } from 'antd';
 import { formatInPeso } from 'ejjy-global';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
 import { AddProductModal } from 'screens/Shared/Cart/components/AddProductModal';
 import { Table } from 'screens/Shared/Cart/components/ProductTable/components/Table';
@@ -27,9 +27,14 @@ export const editTypes = {
 interface Props {
 	isLoading: boolean;
 	type: string;
+	onUnitValidationChange?: (hasEmptyUnits: boolean) => void;
 }
 
-export const ProductTable = ({ isLoading, type }: Props) => {
+export const ProductTable = ({
+	isLoading,
+	type,
+	onUnitValidationChange,
+}: Props) => {
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [editProductModalVisible, setEditProductModalVisible] = useState(false);
 	const [addProductModalVisible, setAddProductModalVisible] = useState(false);
@@ -42,6 +47,12 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 	const [errorRemarks, setErrorRemarks] = useState<{ [key: string]: string }>(
 		{},
 	);
+	const [unitInputs, setUnitInputs] = useState<{ [key: string]: string }>({});
+	const [previousProductCount, setPreviousProductCount] = useState(0);
+	const [unitErrors, setUnitErrors] = useState<{ [key: string]: boolean }>({});
+
+	// Ref to store unit input references
+	const unitInputRefs = useRef<{ [key: string]: any }>({});
 
 	const {
 		products,
@@ -86,7 +97,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 
 	if (type === 'Requisition Slip') {
 		columns.push(
-			{ name: 'Balance', alignment: 'center' },
+			{ name: 'Unit', alignment: 'center' },
 			{ name: 'Status', alignment: 'center' },
 		);
 	} else if (
@@ -103,6 +114,51 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 	if (type === 'Delivery Receipt' || type === 'Receiving Report') {
 		columns.push({ name: 'Action', alignment: 'center' });
 	}
+
+	// Focus on unit input when a new product is added in Requisition Slip mode
+	useEffect(() => {
+		if (type === 'Requisition Slip' && products.length > previousProductCount) {
+			// Get the newly added product (first in the array since they're added to the beginning)
+			const newProduct = products[0];
+			if (newProduct?.product?.key) {
+				// Use requestAnimationFrame to ensure DOM is updated, then focus immediately
+				requestAnimationFrame(() => {
+					const inputRef = unitInputRefs.current[newProduct.product.key];
+					if (inputRef) {
+						inputRef.focus();
+						// Position cursor at the beginning (left) of the input
+						inputRef.setSelectionRange(0, 0);
+					}
+				});
+			}
+		}
+		setPreviousProductCount(products.length);
+	}, [products.length, type, previousProductCount]);
+
+	// Cleanup refs when products are removed
+	useEffect(() => {
+		const currentKeys = products.map((p) => p.product?.key).filter(Boolean);
+		const refKeys = Object.keys(unitInputRefs.current);
+		const errorKeys = Object.keys(unitErrors);
+
+		// Remove refs for products that no longer exist
+		refKeys.forEach((key) => {
+			if (!currentKeys.includes(key)) {
+				delete unitInputRefs.current[key];
+			}
+		});
+
+		// Remove unit errors for products that no longer exist
+		errorKeys.forEach((key) => {
+			if (!currentKeys.includes(key)) {
+				setUnitErrors((prev) => {
+					const newErrors = { ...prev };
+					delete newErrors[key];
+					return newErrors;
+				});
+			}
+		});
+	}, [products, unitErrors]);
 
 	useEffect(() => {
 		if (type === 'Adjustment Slip') {
@@ -248,13 +304,7 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		);
 
 		const data = paginatedProducts.map((branchProduct, index) => {
-			const {
-				product,
-				max_balance,
-				current_balance,
-				product_status,
-				quantity,
-			} = branchProduct;
+			const { product, product_status, quantity } = branchProduct;
 
 			const {
 				barcode,
@@ -264,6 +314,18 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 				key,
 				is_multiple_instance,
 			} = product;
+
+			// Initialize unit input from store if not already set
+			if (
+				type === 'Requisition Slip' &&
+				branchProduct.unit &&
+				!unitInputs[key]
+			) {
+				setUnitInputs((prev) => ({
+					...prev,
+					[key]: branchProduct.unit,
+				}));
+			}
 
 			const row = [
 				<Tooltip key={`tooltip-delete-${key}`} placement="top" title="Remove">
@@ -301,17 +363,92 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 			];
 
 			if (type === 'Requisition Slip') {
-				const balance = `${current_balance} / ${max_balance}`;
 				const status = getBranchProductStatus(product_status);
 
 				row.push(
-					<Tooltip
-						key={`tooltip-balance-${key}`}
-						placement="top"
-						title={`Balance: ${balance}`}
-					>
-						{balance}
-					</Tooltip>,
+					<Input
+						key={`input-unit-${key}`}
+						ref={(el) => {
+							if (el) {
+								unitInputRefs.current[key] = el;
+							}
+						}}
+						placeholder="Enter unit"
+						style={{
+							textAlign: 'center',
+							width: '240px',
+						}}
+						value={unitInputs[key] || ''}
+						onBlur={(e) => {
+							const { value } = e.target;
+							// Validate on blur - prevent leaving if empty
+							if (!value.trim()) {
+								setUnitErrors((prev) => ({
+									...prev,
+									[key]: true,
+								}));
+								message.error('Unit field is required');
+								// Refocus the input to prevent leaving
+								setTimeout(() => {
+									const inputRef = unitInputRefs.current[key];
+									if (inputRef) {
+										inputRef.focus();
+									}
+								}, 100);
+								return;
+							}
+							// Clear error if value is provided
+							setUnitErrors((prev) => ({
+								...prev,
+								[key]: false,
+							}));
+						}}
+						onChange={(e) => {
+							const { value } = e.target;
+							setUnitInputs((prev) => ({
+								...prev,
+								[key]: value,
+							}));
+
+							// Clear error if user starts typing and field has content
+							if (value.trim() && unitErrors[key]) {
+								setUnitErrors((prev) => ({
+									...prev,
+									[key]: false,
+								}));
+							}
+
+							// Update unit in the store
+							editProduct({
+								key,
+								product: {
+									...branchProduct,
+									unit: value,
+								},
+							});
+						}}
+						onPressEnter={(e) => {
+							const target = e.target as HTMLInputElement;
+							const value = target.value.trim();
+
+							// Validate before allowing blur
+							if (!value) {
+								setUnitErrors((prev) => ({
+									...prev,
+									[key]: true,
+								}));
+								message.error('Unit field is required');
+								return; // Don't blur if validation fails
+							}
+
+							// Clear any existing error and blur
+							setUnitErrors((prev) => ({
+								...prev,
+								[key]: false,
+							}));
+							target.blur();
+						}}
+					/>,
 					<Tooltip
 						key={`tooltip-status-${key}`}
 						placement="top"
@@ -367,7 +504,15 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 		});
 
 		setDataSource(data);
-	}, [pageNumber, products, type, toggleAction, remarks, errorRemarks]);
+	}, [
+		pageNumber,
+		products,
+		type,
+		toggleAction,
+		remarks,
+		errorRemarks,
+		unitInputs,
+	]);
 
 	useEffect(() => {
 		if (products.length === 0) {
@@ -378,6 +523,18 @@ export const ProductTable = ({ isLoading, type }: Props) => {
 			resetPage();
 		}
 	}, [products, activeIndex]);
+
+	// Check for empty Unit inputs and notify parent component
+	useEffect(() => {
+		if (type === 'Requisition Slip' && onUnitValidationChange) {
+			const hasEmptyUnits = products.some((product) => {
+				const key = product.product?.key;
+				const unitValue = unitInputs[key] || '';
+				return !unitValue.trim();
+			});
+			onUnitValidationChange(hasEmptyUnits);
+		}
+	}, [products, unitInputs, type, onUnitValidationChange]);
 
 	const showRemoveProductConfirmation = (branchProduct, index) => {
 		const newIndex = (pageNumber - 1) * PRODUCT_LENGTH_PER_PAGE + index;

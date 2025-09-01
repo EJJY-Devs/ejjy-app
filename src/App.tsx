@@ -139,8 +139,8 @@ const App = () => {
 			...(storageData.branchProductBalanceUpdateLogsIds && {
 				branchProductBalanceUpdateLogsIds: storageData.branchProductBalanceUpdateLogsIds
 					.split(',')
-					.slice(0, 100)
-					.join(','), // Limit to 100
+					.slice(0, 20)
+					.join(','), // Limit to 20
 			}),
 		},
 		options: {

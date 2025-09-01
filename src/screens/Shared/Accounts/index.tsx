@@ -67,7 +67,7 @@ export const Accounts = () => {
 						key={accountTabs.CREDIT_TRANSACTIONS}
 						tab={accountTabs.CREDIT_TRANSACTIONS}
 					>
-						<TabCreditTransactions disabled={isConnected === false} />
+						<TabCreditTransactions />
 					</Tabs.TabPane>
 
 					<Tabs.TabPane

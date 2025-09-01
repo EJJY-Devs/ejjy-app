@@ -47,6 +47,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		type === 'Adjustment Slip',
 	);
 	const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+	const [hasEmptyUnits, setHasEmptyUnits] = useState(false);
 
 	// REFS
 	const barcodeScannerRef = useRef(null);
@@ -158,10 +159,13 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	const handleCreateRequisitionSlip = async (formData) => {
 		const currentProducts = useBoundStore.getState().products;
 		if (currentProducts.length > 0) {
-			const mappedProducts = currentProducts.map(({ product, quantity }) => ({
-				key: product.key,
-				quantity,
-			}));
+			const mappedProducts = currentProducts.map(
+				({ product, quantity, unit }) => ({
+					key: product.key,
+					quantity,
+					unit,
+				}),
+			);
 
 			const response = await createRequisitionSlip({
 				...formData,
@@ -338,9 +342,20 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 					barcodeScannerRef={barcodeScannerRef}
 					branchId={type === 'Adjustment Slip' ? selectedBranchId : branchId}
 					isCreateInventoryTransfer={type !== 'Requisition Slip'}
+					isDisabled={type === 'Requisition Slip' && hasEmptyUnits}
+					type={type}
 				/>
-				<ProductTable isLoading={barcodeScanLoading || isLoading} type={type} />
-				<FooterButtons isDisabled={isLoading} onSubmit={handleSubmit} />
+				<ProductTable
+					isLoading={barcodeScanLoading || isLoading}
+					type={type}
+					onUnitValidationChange={setHasEmptyUnits}
+				/>
+				<FooterButtons
+					isDisabled={
+						isLoading || (type === 'Requisition Slip' && hasEmptyUnits)
+					}
+					onSubmit={handleSubmit}
+				/>
 
 				{isCreateInventoryTransferModalVisible && (
 					<CreateInventoryTransferModal

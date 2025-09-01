@@ -68,6 +68,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 			...params,
 			branchMachineId,
 			timeRange: params?.timeRange?.toString() || timeRangeTypes.DAILY,
+			statuses: `${transactionStatuses.VOID_EDITED},${transactionStatuses.VOID_CANCELLED},${transactionStatuses.FULLY_PAID}`,
 		},
 		serviceOptions: { baseURL: getLocalApiUrl() },
 	});

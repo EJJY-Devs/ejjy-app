@@ -3,7 +3,7 @@ import { Button, Descriptions, Modal, Table, Space, Typography } from 'antd';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import dayjs from 'dayjs';
 import { ColumnsType } from 'antd/lib/table';
-import { getFullName, printRequisitionSlip } from 'ejjy-global';
+import { EMPTY_CELL, getFullName, printRequisitionSlip } from 'ejjy-global';
 import { useSiteSettings, usePdf } from 'hooks';
 import React from 'react';
 import { useUserStore } from 'stores';
@@ -55,17 +55,26 @@ export const ViewRequisitionSlipModal = ({
 			key: 'quantity',
 			align: 'center',
 		},
+		{
+			title: 'Unit',
+			dataIndex: 'unit',
+			key: 'unit',
+			align: 'center',
+		},
 	];
 
 	// Map products to table data
-	const dataSource = requisitionSlip.products.map(({ quantity, product }) => ({
-		key: product.id,
-		product_name: product.name,
-		quantity: formatQuantity({
-			unitOfMeasurement: product.unit_of_measurement,
-			quantity,
+	const dataSource = requisitionSlip.products.map(
+		({ quantity, product, unit }) => ({
+			key: product.id,
+			product_name: product.name,
+			quantity: formatQuantity({
+				unitOfMeasurement: product.unit_of_measurement,
+				quantity,
+			}),
+			unit: unit || EMPTY_CELL,
 		}),
-	}));
+	);
 
 	return (
 		<Modal

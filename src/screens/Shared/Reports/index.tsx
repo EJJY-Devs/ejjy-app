@@ -4,6 +4,7 @@ import { ColumnsType } from 'antd/lib/table';
 import { SorterResult } from 'antd/lib/table/interface';
 import {
 	Content,
+	DailyItemSoldModal,
 	EditBranchProductBalanceModal,
 	RequestErrors,
 	TimeRangeFilter,
@@ -94,6 +95,10 @@ export const Reports = () => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedBranchProduct, setSelectedBranchProduct] = useState(null);
+	const [
+		isDailyItemSoldModalVisible,
+		setIsDailyItemSoldModalVisible,
+	] = useState(false);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -167,7 +172,26 @@ export const Reports = () => {
 				],
 			},
 			{
-				title: 'Quantity Sold',
+				title: (
+					<div style={{ textAlign: 'center' }}>
+						<div>Quantity Sold</div>
+						<Button
+							size="small"
+							style={{
+								marginTop: 20,
+								fontSize: '11px',
+								padding: '2px 8px',
+							}}
+							type="primary"
+							onClick={(e) => {
+								e.stopPropagation();
+								setIsDailyItemSoldModalVisible(true);
+							}}
+						>
+							View Daily Item Sold
+						</Button>
+					</div>
+				),
 				dataIndex: 'quantitySold',
 				align: 'center',
 				sorter: true,
@@ -334,6 +358,17 @@ export const Reports = () => {
 						<EditBranchProductBalanceModal
 							branchProduct={selectedBranchProduct}
 							onClose={() => setSelectedBranchProduct(null)}
+						/>
+					)}
+
+					{isDailyItemSoldModalVisible && (
+						<DailyItemSoldModal
+							branchId={
+								isUserFromBranch(user.user_type)
+									? getLocalBranchId()
+									: params.branchId
+							}
+							onClose={() => setIsDailyItemSoldModalVisible(false)}
 						/>
 					)}
 				</Spin>

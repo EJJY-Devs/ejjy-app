@@ -16,6 +16,7 @@ interface ListBranchId {
 type Product = {
 	key: number;
 	quantity_piece: number;
+	unit: string;
 };
 
 interface Create {

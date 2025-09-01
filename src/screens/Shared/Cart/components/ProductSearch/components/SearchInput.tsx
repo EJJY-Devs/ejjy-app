@@ -23,10 +23,14 @@ const SEARCH_DEBOUNCE_TIME = 250;
 
 interface Props {
 	barcodeScannerRef: any;
+	isDisabled?: boolean;
 	searchMode: any;
 }
 
-const Component = ({ barcodeScannerRef, searchMode }: Props, ref) => {
+const Component = (
+	{ barcodeScannerRef, isDisabled, searchMode }: Props,
+	ref,
+) => {
 	// STATES
 	const [inputText, setInputText] = useState('');
 	// REFS
@@ -50,7 +54,7 @@ const Component = ({ barcodeScannerRef, searchMode }: Props, ref) => {
 		return () => {
 			document.removeEventListener('keydown', handleKeyDown);
 		};
-	});
+	}, []); // Add empty dependency array to run only once
 
 	useEffect(() => {
 		if (searchedText.length === 0) {
@@ -119,6 +123,7 @@ const Component = ({ barcodeScannerRef, searchMode }: Props, ref) => {
 			<ControlledInput
 				ref={inputRef}
 				className="ProductSearch_input"
+				disabled={isDisabled}
 				placeholder={placeholder}
 				value={inputText}
 				onChange={(value) => {

@@ -25,14 +25,18 @@ const searchModes = [
 
 interface Props {
 	barcodeScannerRef: any;
-	isCreateInventoryTransfer: any;
 	branchId: string | null;
+	isCreateInventoryTransfer: any;
+	isDisabled?: boolean;
+	type: string;
 }
 
 export const ProductSearch = ({
 	barcodeScannerRef,
-	isCreateInventoryTransfer,
 	branchId,
+	isCreateInventoryTransfer,
+	isDisabled,
+	type,
 }: Props) => {
 	// STATES
 	const [productKeysInTable, setProductKeysInTable] = useState([]);
@@ -51,6 +55,7 @@ export const ProductSearch = ({
 		setSearchedText,
 		activeIndex,
 		setActiveIndex,
+		setFocusSearchInput,
 	} = useBoundStore(
 		(state: any) => ({
 			products: state.products,
@@ -58,6 +63,7 @@ export const ProductSearch = ({
 			setSearchedText: state.setSearchedText,
 			activeIndex: state.activeIndex,
 			setActiveIndex: state.setActiveIndex,
+			setFocusSearchInput: state.setFocusSearchInput,
 		}),
 		shallow,
 	);
@@ -73,7 +79,7 @@ export const ProductSearch = ({
 			searchBy: currentSearchMode.key,
 		},
 		options: {
-			enabled: searchedText?.length > 0,
+			enabled: searchedText?.length > 0 && searchedText.trim().length > 0,
 			onSuccess: (data: any) => {
 				const newSearchableProducts = data.branchProducts.filter(
 					({ product }) => {
@@ -117,6 +123,21 @@ export const ProductSearch = ({
 		window.addEventListener('keydown', handleKeyDown);
 		return () => window.removeEventListener('keydown', handleKeyDown);
 	}, [searchModeIndex]);
+
+	// Register focus function in the store
+	useEffect(() => {
+		const focusInput = () => {
+			if (searchInputRef.current?.focusInput) {
+				searchInputRef.current.focusInput();
+			}
+		};
+		setFocusSearchInput(focusInput);
+
+		// Cleanup on unmount
+		return () => {
+			setFocusSearchInput(null);
+		};
+	}, [setFocusSearchInput]);
 
 	const handleToggleSearchMode = () => {
 		const nextIndex = (searchModeIndex + 1) % searchModes.length;
@@ -196,6 +217,7 @@ export const ProductSearch = ({
 					<SearchInput
 						ref={searchInputRef}
 						barcodeScannerRef={barcodeScannerRef}
+						isDisabled={isDisabled}
 						searchMode={currentSearchMode.key}
 					/>
 
@@ -211,7 +233,15 @@ export const ProductSearch = ({
 						<AddProductModal
 							product={selectedProduct}
 							onClose={() => {
-								if (searchedText.length > 0) {
+								// Only auto-focus search input for document types that need it
+								// Don't focus for Requisition Slip, Delivery Receipt, Receiving Report, or Adjustment Slip
+								if (
+									type !== 'Requisition Slip' &&
+									type !== 'Delivery Receipt' &&
+									type !== 'Receiving Report' &&
+									type !== 'Adjustment Slip' &&
+									searchedText.length > 0
+								) {
 									searchInputRef.current.focusInput();
 								}
 								setSelectedProduct(null);

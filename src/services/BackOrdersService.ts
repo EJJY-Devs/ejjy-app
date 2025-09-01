@@ -54,4 +54,13 @@ const service = {
 	receive: async (id: number, body: Receive, baseURL) =>
 		axios.post(`/back-orders/${id}/receive/`, body, { baseURL }),
 };
-export default service;
+
+const serviceOffline = {
+	listOffline: async (params: List, baseURL) =>
+		axios.get('/offline-back-orders/', { baseURL, params }),
+};
+
+export default {
+	...service,
+	...serviceOffline,
+};

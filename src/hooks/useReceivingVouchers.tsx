@@ -3,7 +3,7 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery } from 'react-query';
 import { ReceivingVouchersService } from 'services';
-import { getLocalApiUrl } from 'utils';
+import { getLocalApiUrl, isStandAlone } from 'utils';
 
 const useReceivingVouchers = ({ params }: Query) =>
 	useQuery<any>(
@@ -14,9 +14,13 @@ const useReceivingVouchers = ({ params }: Query) =>
 			params?.timeRange,
 			params?.branchId,
 		],
-		() =>
-			wrapServiceWithCatch(
-				ReceivingVouchersService.list(
+		() => {
+			const service = isStandAlone()
+				? ReceivingVouchersService.list
+				: ReceivingVouchersService.listOffline;
+
+			return wrapServiceWithCatch(
+				service(
 					{
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
@@ -25,7 +29,8 @@ const useReceivingVouchers = ({ params }: Query) =>
 					},
 					getLocalApiUrl(),
 				),
-			),
+			);
+		},
 		{
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => ({

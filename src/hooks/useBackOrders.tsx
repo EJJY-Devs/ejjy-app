@@ -4,7 +4,12 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { BackOrdersService } from 'services';
-import { getLocalApiUrl, modifiedCallback, modifiedExtraCallback } from 'utils';
+import {
+	getLocalApiUrl,
+	modifiedCallback,
+	modifiedExtraCallback,
+	isStandAlone,
+} from 'utils';
 import { Query } from './inteface';
 import { useActionDispatch } from './useActionDispatch';
 
@@ -88,9 +93,13 @@ const useBackOrdersNew = ({ params }: Query) =>
 			params?.timeRange,
 			params?.branchId,
 		],
-		() =>
-			wrapServiceWithCatch(
-				BackOrdersService.list(
+		() => {
+			const service = isStandAlone()
+				? BackOrdersService.list
+				: BackOrdersService.listOffline;
+
+			return wrapServiceWithCatch(
+				service(
 					{
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
@@ -100,7 +109,8 @@ const useBackOrdersNew = ({ params }: Query) =>
 					},
 					getLocalApiUrl(),
 				),
-			),
+			);
+		},
 		{
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => ({

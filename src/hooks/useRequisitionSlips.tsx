@@ -186,7 +186,7 @@ const useRequisitionSlipsNew = ({ params }: Query) =>
 			params?.status,
 			params?.vendorId,
 			params?.slipType,
-			params?.timeRange,
+			params?.timeRange || 'daily',
 		],
 		() => {
 			const service = isStandAlone()
@@ -202,7 +202,7 @@ const useRequisitionSlipsNew = ({ params }: Query) =>
 						status: params?.status,
 						vendor_id: params?.vendorId,
 						slip_type: params?.slipType,
-						time_range: params?.timeRange,
+						time_range: params?.timeRange || 'daily',
 					},
 					getLocalApiUrl(),
 				),

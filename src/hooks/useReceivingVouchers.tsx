@@ -11,7 +11,7 @@ const useReceivingVouchers = ({ params }: Query) =>
 			'useReceivingVouchers',
 			params?.page,
 			params?.pageSize,
-			params?.timeRange,
+			params?.timeRange || 'daily',
 			params?.branchId,
 		],
 		() => {
@@ -24,7 +24,7 @@ const useReceivingVouchers = ({ params }: Query) =>
 					{
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
-						time_range: params?.timeRange,
+						time_range: params?.timeRange || 'daily',
 						branch_id: params?.branchId,
 					},
 					getLocalApiUrl(),

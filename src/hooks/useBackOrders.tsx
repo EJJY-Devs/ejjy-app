@@ -90,7 +90,7 @@ const useBackOrdersNew = ({ params }: Query) =>
 			params?.pageSize,
 			params?.type,
 			params?.pageSize,
-			params?.timeRange,
+			params?.timeRange || 'daily',
 			params?.branchId,
 		],
 		() => {
@@ -104,7 +104,7 @@ const useBackOrdersNew = ({ params }: Query) =>
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						type: params?.type,
-						time_range: params?.timeRange,
+						time_range: params?.timeRange || 'daily',
 						branch_id: params?.branchId,
 					},
 					getLocalApiUrl(),

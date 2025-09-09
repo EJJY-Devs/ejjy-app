@@ -66,4 +66,12 @@ const service = {
 		axios.patch(`/requisition-slips/${body.id}/`, body, { baseURL }),
 };
 
-export default service;
+const serviceOffline = {
+	listOffline: async (params: List, baseURL) =>
+		axios.get('/offline-requisition-slips/', { baseURL, params }),
+};
+
+export default {
+	...service,
+	...serviceOffline,
+};

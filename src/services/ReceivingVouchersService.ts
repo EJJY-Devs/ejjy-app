@@ -34,4 +34,15 @@ const service = {
 		axios.post('/receiving-vouchers/', body, { baseURL }),
 };
 
-export default service;
+const serviceOffline = {
+	listOffline: async (params: List, baseURL: string) =>
+		axios.get('/offline-receiving-vouchers/', {
+			baseURL,
+			params: { ...params, limit: 'all' },
+		}),
+};
+
+export default {
+	...service,
+	...serviceOffline,
+};

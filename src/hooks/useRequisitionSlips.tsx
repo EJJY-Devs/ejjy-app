@@ -5,7 +5,12 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useSelector } from 'react-redux';
 import { RequisitionSlipsService } from 'services';
-import { getLocalApiUrl, modifiedCallback, modifiedExtraCallback } from 'utils';
+import {
+	getLocalApiUrl,
+	modifiedCallback,
+	modifiedExtraCallback,
+	isStandAlone,
+} from 'utils';
 import { actions, selectors, types } from '../ducks/requisition-slips';
 import { request } from '../global/types';
 import { useActionDispatch } from './useActionDispatch';
@@ -181,11 +186,15 @@ const useRequisitionSlipsNew = ({ params }: Query) =>
 			params?.status,
 			params?.vendorId,
 			params?.slipType,
-			params?.timeRange,
+			params?.timeRange || 'daily',
 		],
-		() =>
-			wrapServiceWithCatch(
-				RequisitionSlipsService.list(
+		() => {
+			const service = isStandAlone()
+				? RequisitionSlipsService.list
+				: RequisitionSlipsService.listOffline;
+
+			return wrapServiceWithCatch(
+				service(
 					{
 						branch_id: params?.branchId,
 						page: params?.page || DEFAULT_PAGE,
@@ -193,11 +202,12 @@ const useRequisitionSlipsNew = ({ params }: Query) =>
 						status: params?.status,
 						vendor_id: params?.vendorId,
 						slip_type: params?.slipType,
-						time_range: params?.timeRange,
+						time_range: params?.timeRange || 'daily',
 					},
 					getLocalApiUrl(),
 				),
-			),
+			);
+		},
 		{
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => ({

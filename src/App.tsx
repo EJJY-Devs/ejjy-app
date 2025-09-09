@@ -9,6 +9,7 @@ import {
 	APP_BRANCH_KEY_KEY,
 	APP_LOCAL_BRANCH_ID_KEY,
 	appTypes,
+	headOfficeTypes,
 	serviceTypes,
 	userTypes,
 } from 'global';
@@ -38,6 +39,7 @@ import {
 	getOnlineBranchId,
 	getProductIds,
 	isStandAlone,
+	getHeadOfficeType,
 } from 'utils';
 import npmPackage from '../package.json';
 
@@ -121,6 +123,7 @@ const App = () => {
 	useInitializeData({
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
+			notMainHeadOffice: getHeadOfficeType() === headOfficeTypes.NOT_MAIN,
 			branchId:
 				getAppType() === appTypes.BACK_OFFICE ? getOnlineBranchId() : undefined,
 			branchIds:

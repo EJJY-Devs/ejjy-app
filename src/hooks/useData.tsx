@@ -28,6 +28,7 @@ export const useInitializeData = ({ params, options }: Query) =>
 			params?.productIds,
 			params?.branchProductIds,
 			params?.branchProductBalanceUpdateLogsIds,
+			params?.notMainHeadOffice,
 		],
 		async () => {
 			const baseURL = getLocalApiUrl();
@@ -56,6 +57,7 @@ export const useInitializeData = ({ params, options }: Query) =>
 							{
 								branch_id: branchId,
 								is_head_office: params.isHeadOffice,
+								not_main_head_office: params.notMainHeadOffice || false,
 							},
 							baseURL,
 						);

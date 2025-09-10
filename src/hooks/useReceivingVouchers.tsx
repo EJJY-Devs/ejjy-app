@@ -1,9 +1,14 @@
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
+import {
+	DEFAULT_PAGE,
+	DEFAULT_PAGE_SIZE,
+	appTypes,
+	headOfficeTypes,
+} from 'global';
 import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery } from 'react-query';
 import { ReceivingVouchersService } from 'services';
-import { getLocalApiUrl, isStandAlone } from 'utils';
+import { getLocalApiUrl, getHeadOfficeType, getAppType } from 'utils';
 
 const useReceivingVouchers = ({ params }: Query) =>
 	useQuery<any>(
@@ -15,9 +20,11 @@ const useReceivingVouchers = ({ params }: Query) =>
 			params?.branchId,
 		],
 		() => {
-			const service = isStandAlone()
-				? ReceivingVouchersService.list
-				: ReceivingVouchersService.listOffline;
+			const service =
+				getHeadOfficeType() === headOfficeTypes.MAIN ||
+				getAppType() === appTypes.BACK_OFFICE
+					? ReceivingVouchersService.list
+					: ReceivingVouchersService.listOffline;
 
 			return wrapServiceWithCatch(
 				service(

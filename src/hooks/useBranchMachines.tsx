@@ -3,7 +3,7 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useQuery } from 'react-query';
 import { BranchMachinesService } from 'services';
-import { getLocalApiUrl } from 'utils';
+import { getReportsApiUrl } from 'utils';
 
 const useBranchMachines = ({ params, options }: Query = {}) =>
 	useQuery<any>(
@@ -23,7 +23,7 @@ const useBranchMachines = ({ params, options }: Query = {}) =>
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						sales_time_range: params?.salesTimeRange,
 					},
-					getLocalApiUrl(),
+					getReportsApiUrl(),
 				),
 			);
 		},
@@ -42,7 +42,7 @@ export const useBranchMachineRetrieve = ({ id, options }: Query) =>
 		['useBranchMachineRetrieve', id],
 		() =>
 			wrapServiceWithCatch(
-				BranchMachinesService.retrieve(id, getLocalApiUrl()),
+				BranchMachinesService.retrieve(id, getReportsApiUrl()),
 			),
 		{
 			select: (query) => query.data,

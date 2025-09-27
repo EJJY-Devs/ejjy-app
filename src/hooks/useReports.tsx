@@ -13,11 +13,12 @@ import {
 	XReadReportsService,
 	ZReadReportsService,
 } from 'services';
-import { getLocalApiUrl, getLocalBranchId } from 'utils';
+import { getLocalApiUrl, getLocalBranchId, getReportsApiUrl } from 'utils';
 
 export const useBulkExport = () =>
 	useMutation<any, any, any>(async ({ siteSettings, timeRange, user }: any) => {
 		const localApiUrl = getLocalApiUrl();
+		const reportsApiUrl = getReportsApiUrl();
 
 		const params = {
 			page_size: MAX_PAGE_SIZE,
@@ -26,15 +27,15 @@ export const useBulkExport = () =>
 		};
 
 		const [transactions, xreadReports, zreadReports] = await Promise.all<any>([
-			TransactionsService.list(params, localApiUrl),
+			TransactionsService.list(params, reportsApiUrl),
 			XReadReportsService.list(
 				{
 					...params,
 					is_with_daily_sales_data: false,
 				},
-				localApiUrl,
+				reportsApiUrl,
 			),
-			ZReadReportsService.list(params, localApiUrl),
+			ZReadReportsService.list(params, reportsApiUrl),
 		]);
 
 		const requests = [];
@@ -109,7 +110,7 @@ export const useGenerateReports = () => {
 					{
 						branch_id: branchId ? Number(branchId) : undefined,
 					},
-					getLocalApiUrl(),
+					getReportsApiUrl(),
 				),
 			),
 		{

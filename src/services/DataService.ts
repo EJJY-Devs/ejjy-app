@@ -6,6 +6,7 @@ interface Initialize {
 	product_ids?: string;
 	branch_product_ids?: string;
 	branch_product_balance_update_logs_ids?: string;
+	transaction_ids?: string;
 	not_main_head_office?: boolean;
 }
 

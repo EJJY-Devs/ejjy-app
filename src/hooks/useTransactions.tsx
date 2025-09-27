@@ -2,7 +2,7 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, timeRangeTypes } from 'global';
 import { wrapServiceWithCatch } from 'hooks/helper';
 import { useQuery } from 'react-query';
 import { TransactionsService } from 'services';
-import { getLocalApiUrl } from 'utils';
+import { getReportsApiUrl } from 'utils';
 import { Query } from './inteface';
 
 const useTransactions = ({ params, options }: Query) =>
@@ -35,7 +35,7 @@ const useTransactions = ({ params, options }: Query) =>
 						statuses: params?.statuses,
 						time_range: params?.timeRange || timeRangeTypes.DAILY,
 					},
-					getLocalApiUrl(),
+					getReportsApiUrl(),
 				),
 			),
 		{
@@ -53,7 +53,9 @@ export const useTransactionRetrieve = ({ id, options }: Query) =>
 	useQuery<any>(
 		['useTransactionRetrieve', id],
 		() =>
-			wrapServiceWithCatch(TransactionsService.retrieve(id, getLocalApiUrl())),
+			wrapServiceWithCatch(
+				TransactionsService.retrieve(id, getReportsApiUrl()),
+			),
 		{
 			select: (query) => query.data,
 			...options,
@@ -76,7 +78,7 @@ export const useTransactionsSummary = ({ params, options }: Query) =>
 						statuses: params?.statuses,
 						time_range: params?.timeRange || timeRangeTypes.DAILY,
 					},
-					getLocalApiUrl(),
+					getReportsApiUrl(),
 				),
 			),
 		{

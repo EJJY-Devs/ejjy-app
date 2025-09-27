@@ -20,7 +20,40 @@ const store = new Store({ defaults: { zoomLevel: 1 } });
 
 const TUNNELING_INTERVAL_MS = 60_000;
 const SPLASH_SCREEN_SHOWN_MS = 8_000;
-let zoomLevel = store.get('zoomLevel', 1);
+
+// Zoom configuration with bounds
+const ZOOM_CONFIG = {
+	DEFAULT: 1,
+	MIN: 0.5,
+	MAX: 2.0,
+	STEP: 0.1,
+};
+
+// Validate and sanitize zoom level
+function validateZoomLevel(level) {
+	const numLevel = parseFloat(level);
+	if (
+		isNaN(numLevel) ||
+		numLevel < ZOOM_CONFIG.MIN ||
+		numLevel > ZOOM_CONFIG.MAX
+	) {
+		return ZOOM_CONFIG.DEFAULT;
+	}
+	return Math.round(numLevel * 10) / 10; // Round to 1 decimal place
+}
+
+let zoomLevel = validateZoomLevel(store.get('zoomLevel', ZOOM_CONFIG.DEFAULT));
+
+// Safe zoom update function
+function updateZoom(newLevel) {
+	const validatedLevel = validateZoomLevel(newLevel);
+	zoomLevel = validatedLevel;
+	if (mainWindow && !mainWindow.isDestroyed()) {
+		mainWindow.webContents.setZoomFactor(zoomLevel);
+		store.set('zoomLevel', zoomLevel);
+		logStatus(`Zoom level set to: ${(zoomLevel * 100).toFixed(0)}%`);
+	}
+}
 
 const appTypes = {
 	BACK_OFFICE: 'back_office',
@@ -84,6 +117,7 @@ function createWindow() {
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: false,
+			zoomFactor: 1.0,
 		},
 	});
 
@@ -106,7 +140,27 @@ function createWindow() {
 		splashWindow.destroy();
 		mainWindow.maximize();
 		mainWindow.show();
-		mainWindow.webContents.setZoomFactor(zoomLevel);
+		// Apply validated zoom level using the safe function
+		updateZoom(zoomLevel);
+	});
+
+	// Prevent unintended zoom changes from system gestures or shortcuts
+	mainWindow.webContents.once('dom-ready', () => {
+		// Disable zoom via Ctrl+MouseWheel and other zoom gestures
+		mainWindow.webContents.executeJavaScript(`
+			document.addEventListener('wheel', function(e) {
+				if (e.ctrlKey) {
+					e.preventDefault();
+				}
+			}, { passive: false });
+			
+			document.addEventListener('keydown', function(e) {
+				// Block Ctrl+Plus, Ctrl+Minus, Ctrl+0 from web content (let Electron handle them)
+				if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+					e.preventDefault();
+				}
+			});
+		`);
 	});
 
 	mainWindow.on('closed', () => {
@@ -223,27 +277,27 @@ function createWindow() {
 					label: 'Zoom In',
 					accelerator: 'CmdOrCtrl+Plus',
 					click() {
-						zoomLevel += 0.1;
-						mainWindow.webContents.setZoomFactor(zoomLevel);
-						store.set('zoomLevel', zoomLevel);
+						const newZoomLevel = zoomLevel + ZOOM_CONFIG.STEP;
+						if (newZoomLevel <= ZOOM_CONFIG.MAX) {
+							updateZoom(newZoomLevel);
+						}
 					},
 				},
 				{
 					label: 'Zoom Out',
 					accelerator: 'CmdOrCtrl+-',
 					click() {
-						zoomLevel -= 0.1;
-						mainWindow.webContents.setZoomFactor(zoomLevel);
-						store.set('zoomLevel', zoomLevel);
+						const newZoomLevel = zoomLevel - ZOOM_CONFIG.STEP;
+						if (newZoomLevel >= ZOOM_CONFIG.MIN) {
+							updateZoom(newZoomLevel);
+						}
 					},
 				},
 				{
 					label: 'Reset Zoom',
 					accelerator: 'CmdOrCtrl+0',
 					click() {
-						zoomLevel = 1;
-						mainWindow.webContents.setZoomFactor(zoomLevel);
-						store.set('zoomLevel', zoomLevel);
+						updateZoom(ZOOM_CONFIG.DEFAULT);
 					},
 				},
 			],

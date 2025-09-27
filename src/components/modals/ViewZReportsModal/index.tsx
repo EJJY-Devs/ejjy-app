@@ -23,7 +23,7 @@ import {
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { useQueryParams, useSiteSettingsNew } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { getLocalApiUrl } from 'utils';
+import { getReportsApiUrl } from 'utils';
 
 type TableRow = {
 	key: number;
@@ -64,7 +64,7 @@ export const ViewZReportsModal = ({ branchMachine, onClose }: Props) => {
 			branchMachineName: branchMachine.name,
 			timeRange: params[TIME_RANGE_PARAM_KEY] as string,
 		},
-		serviceOptions: { baseURL: getLocalApiUrl() },
+		serviceOptions: { baseURL: getReportsApiUrl() },
 	});
 
 	// METHODS
@@ -153,7 +153,7 @@ export const ViewZReportsModal = ({ branchMachine, onClose }: Props) => {
 			{authorizeConfig && (
 				<AuthorizationModal
 					{...authorizeConfig}
-					baseURL={getLocalApiUrl()}
+					baseURL={getReportsApiUrl()}
 					onCancel={() => setAuthorizeConfig(null)}
 				/>
 			)}

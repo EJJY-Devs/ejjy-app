@@ -22,8 +22,10 @@ import {
 	APP_PRODUCTS_IDS,
 	APP_BRANCH_PRODUCT_IDS,
 	headOfficeTypes,
+	appTypes,
 	APP_GOOGLE_API_URL_KEY,
 	APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
+	APP_TRANSACTION_IDS,
 } from 'global';
 
 export const getAppType = () => localStorage.getItem(APP_APP_TYPE_KEY);
@@ -40,6 +42,9 @@ export const getBranchProductIds = () =>
 
 export const getBranchProductBalanceUpdateLogsIds = () =>
 	localStorage.getItem(APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS);
+
+export const getTransactionIds = () =>
+	localStorage.getItem(APP_TRANSACTION_IDS);
 
 export const getOnlineBranchId = () =>
 	localStorage.getItem(APP_ONLINE_BRANCH_ID_KEY);
@@ -66,6 +71,23 @@ export const getGoogleApiUrl = () => {
 		localStorage.getItem(APP_GOOGLE_API_URL_KEY) ||
 		'https://ejjy-api-production-ftmuaasxva-de.a.run.app/v1'
 	);
+};
+
+// For specific API calls that should use Google API when head office is NOT_MAIN
+export const getReportsApiUrl = () => {
+	const appType = getAppType();
+	const headOfficeType = getHeadOfficeType();
+
+	// If it's head office and NOT main head office, use Google API URL for reports
+	if (
+		appType === appTypes.HEAD_OFFICE &&
+		headOfficeType === headOfficeTypes.NOT_MAIN
+	) {
+		return getGoogleApiUrl();
+	}
+
+	// Otherwise use local API URL
+	return getLocalApiUrl();
 };
 
 export const getAppReceiptPrinterName = () =>

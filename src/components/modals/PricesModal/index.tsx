@@ -97,7 +97,9 @@ export const PricesModal = ({ product, onClose }: Props) => {
 			await editBranchProductPriceCost({
 				actingUserId: appType === appTypes.BACK_OFFICE ? user.id : getId(user),
 				productId:
-					appType === appTypes.BACK_OFFICE ? product.id : getId(product),
+					appType === appTypes.BACK_OFFICE
+						? product?.product?.id
+						: getId(product?.product),
 				data: branchProductFormData,
 				serverUrl:
 					appType === appTypes.BACK_OFFICE

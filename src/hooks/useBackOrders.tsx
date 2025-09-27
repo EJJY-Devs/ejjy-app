@@ -1,5 +1,12 @@
 import { actions } from 'ducks/back-orders';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, IS_APP_LIVE, request } from 'global';
+import {
+	DEFAULT_PAGE,
+	DEFAULT_PAGE_SIZE,
+	IS_APP_LIVE,
+	request,
+	appTypes,
+	headOfficeTypes,
+} from 'global';
 import { wrapServiceWithCatch } from 'hooks/helper';
 import { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -8,7 +15,8 @@ import {
 	getLocalApiUrl,
 	modifiedCallback,
 	modifiedExtraCallback,
-	isStandAlone,
+	getHeadOfficeType,
+	getAppType,
 } from 'utils';
 import { Query } from './inteface';
 import { useActionDispatch } from './useActionDispatch';
@@ -94,9 +102,11 @@ const useBackOrdersNew = ({ params }: Query) =>
 			params?.branchId,
 		],
 		() => {
-			const service = isStandAlone()
-				? BackOrdersService.list
-				: BackOrdersService.listOffline;
+			const service =
+				getHeadOfficeType() === headOfficeTypes.MAIN ||
+				getAppType() === appTypes.BACK_OFFICE
+					? BackOrdersService.list
+					: BackOrdersService.listOffline;
 
 			return wrapServiceWithCatch(
 				service(

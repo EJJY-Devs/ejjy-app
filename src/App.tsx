@@ -9,6 +9,7 @@ import {
 	APP_BRANCH_KEY_KEY,
 	APP_LOCAL_BRANCH_ID_KEY,
 	appTypes,
+	headOfficeTypes,
 	serviceTypes,
 	userTypes,
 } from 'global';
@@ -37,7 +38,9 @@ import {
 	getOnlineApiUrl,
 	getOnlineBranchId,
 	getProductIds,
+	getTransactionIds,
 	isStandAlone,
+	getHeadOfficeType,
 } from 'utils';
 import npmPackage from '../package.json';
 
@@ -82,6 +85,7 @@ const App = () => {
 		branchProductIds: getBranchProductIds() || null,
 		branchProductBalanceUpdateLogsIds:
 			getBranchProductBalanceUpdateLogsIds() || null,
+		transactionIds: getTransactionIds() || null,
 	}));
 
 	useEffect(() => {
@@ -91,6 +95,7 @@ const App = () => {
 				branchProductIds: getBranchProductIds() || null,
 				branchProductBalanceUpdateLogsIds:
 					getBranchProductBalanceUpdateLogsIds() || null,
+				transactionIds: getTransactionIds() || null,
 			});
 		};
 
@@ -118,15 +123,29 @@ const App = () => {
 		};
 	}, []);
 
-	useInitializeData({
+	const [branchId, setBranchId] = useState(null);
+	const [isAnyInitializationRunning, setIsAnyInitializationRunning] = useState(
+		false,
+	);
+
+	// Initialize products and branch products first
+	const {
+		isFetching: isInitializingProducts,
+		isSuccess: isProductsInitialized,
+	} = useInitializeData({
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
+			notMainHeadOffice: getHeadOfficeType() === headOfficeTypes.NOT_MAIN,
 			branchId:
 				getAppType() === appTypes.BACK_OFFICE ? getOnlineBranchId() : undefined,
-			branchIds:
-				getAppType() === appTypes.HEAD_OFFICE
-					? branches.map(({ id }) => id)
-					: undefined,
+			// Only include branchIds if there are no existing stored IDs (bulk initialize every 5 mins)
+			...(getAppType() === appTypes.HEAD_OFFICE &&
+				!storageData.productIds &&
+				!storageData.branchProductIds &&
+				!storageData.branchProductBalanceUpdateLogsIds &&
+				!storageData.transactionIds && {
+					branchIds: branches.map(({ id }) => id),
+				}),
 			...(storageData.productIds && {
 				productIds: storageData.productIds.split(',').slice(0, 100).join(','), // Limit to 100
 			}),
@@ -148,31 +167,36 @@ const App = () => {
 				isNetworkSuccess &&
 				isFetchingBranchesSuccess &&
 				!!getOnlineApiUrl() &&
-				!isStandAlone(),
+				!isStandAlone() &&
+				!isAnyInitializationRunning,
+			// Set refetch interval to 5 minutes (300,000 ms) when doing bulk branch initialization
+			refetchInterval:
+				getAppType() === appTypes.HEAD_OFFICE &&
+				!storageData.productIds &&
+				!storageData.branchProductIds &&
+				!storageData.branchProductBalanceUpdateLogsIds &&
+				!storageData.transactionIds
+					? 300000 // 5 minutes
+					: undefined, // Use default from useInitializeData hook
 		},
 	});
 
-	// THIS IS FOR BULK-INITIALIZING LARGE SCALE DATA
-	const [branchId, setBranchId] = useState(null);
-
-	// Effect to wait for branchId to be available
-	useEffect(() => {
-		if (getAppType() === appTypes.BACK_OFFICE && isFetchingBranchesSuccess) {
-			const id = Number(getOnlineBranchId()); // Ensure it's a number
-			const branchExists = branches?.some((branch) => Number(branch.id) === id); // Compare numbers
-
-			if (id && branchExists) {
-				setBranchId(id); // ✅ Only set branchId if it exists in the branches list
-			} else {
-				setBranchId(null); // ❌ Prevent invalid branchId
-			}
-		}
-	}, [isFetchingBranchesSuccess, branches]);
-
-	useInitializeIds({
+	// Initialize transactions AFTER products are done - only when products/branch products don't exist
+	const {
+		isFetching: isInitializingTransactions,
+		isSuccess: isTransactionsInitialized,
+	} = useInitializeData({
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
-			...(getAppType() === appTypes.BACK_OFFICE && branchId && { branchId }), // ✅ Only add branchId if it's needed and available
+			notMainHeadOffice: getHeadOfficeType() === headOfficeTypes.NOT_MAIN,
+			...(storageData.transactionIds &&
+				!storageData.productIds &&
+				!storageData.branchProductIds && {
+					transactionIds: storageData.transactionIds
+						.split(',')
+						.slice(0, 20)
+						.join(','),
+				}),
 		},
 		options: {
 			enabled:
@@ -180,9 +204,59 @@ const App = () => {
 				isFetchingBranchesSuccess &&
 				!!getOnlineApiUrl() &&
 				!isStandAlone() &&
-				(getAppType() === appTypes.HEAD_OFFICE || branchId !== null), // ✅ Only enable if conditions are met
+				!isAnyInitializationRunning &&
+				isProductsInitialized &&
+				!storageData.productIds &&
+				!storageData.branchProductIds &&
+				!!storageData.transactionIds &&
+				getHeadOfficeType() === headOfficeTypes.NOT_MAIN &&
+				getAppType() === appTypes.HEAD_OFFICE,
 		},
 	});
+
+	// Effect to wait for branchId to be available
+	useEffect(() => {
+		if (getAppType() === appTypes.BACK_OFFICE && isFetchingBranchesSuccess) {
+			const id = Number(getOnlineBranchId());
+			const branchExists = branches?.some((branch) => Number(branch.id) === id);
+
+			if (id && branchExists) {
+				setBranchId(id);
+			} else {
+				setBranchId(null);
+			}
+		}
+	}, [isFetchingBranchesSuccess, branches]);
+
+	const { isFetching: isInitializingIds } = useInitializeIds({
+		params: {
+			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
+			...(getAppType() === appTypes.BACK_OFFICE && branchId && { branchId }),
+			notMainHeadOffice: getHeadOfficeType() === headOfficeTypes.NOT_MAIN,
+		},
+		options: {
+			enabled:
+				isNetworkSuccess &&
+				isFetchingBranchesSuccess &&
+				!!getOnlineApiUrl() &&
+				!isStandAlone() &&
+				(getAppType() === appTypes.HEAD_OFFICE || branchId !== null) &&
+				// Wait for products to be initialized first
+				isProductsInitialized &&
+				// If transactions are supposed to run, wait for them too
+				(!storageData.transactionIds ||
+					!!storageData.productIds ||
+					!!storageData.branchProductIds ||
+					isTransactionsInitialized),
+		},
+	});
+
+	// Track initialization status to prevent multiple concurrent calls
+	useEffect(() => {
+		setIsAnyInitializationRunning(
+			isInitializingProducts || isInitializingTransactions || isInitializingIds,
+		);
+	}, [isInitializingProducts, isInitializingTransactions, isInitializingIds]);
 
 	// METHODS
 	useEffect(() => {

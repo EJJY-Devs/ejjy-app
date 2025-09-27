@@ -20,7 +20,12 @@ const service = {
 	) => axios.get('/transaction-products/dates/', { baseURL, params }),
 
 	getDailySummary: async (
-		params: { date?: string; branch_id?: string | number; ordering?: string },
+		params: {
+			date?: string;
+			branch_id?: string | number;
+			ordering?: string;
+			product_category?: string;
+		},
 		baseURL,
 	) => axios.get('/transaction-products/daily-summary/', { baseURL, params }),
 };

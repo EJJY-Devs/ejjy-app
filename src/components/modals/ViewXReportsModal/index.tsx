@@ -20,7 +20,7 @@ import { Props as AuthorizationModalProps } from 'ejjy-global/dist/components/mo
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
 import { useQueryParams, useSiteSettingsNew } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { convertIntoArray, getLocalApiUrl } from 'utils';
+import { convertIntoArray, getReportsApiUrl } from 'utils';
 
 const TIME_RANGE_PARAM_KEY = 'xreadTimeRange';
 
@@ -67,9 +67,8 @@ export const ViewXReportsModal = ({ branchMachine, onClose }: Props) => {
 			...params,
 			branchMachineName: branchMachine.name,
 			timeRange: params[TIME_RANGE_PARAM_KEY] as string,
-			isWithDailySalesData: false,
 		},
-		serviceOptions: { baseURL: getLocalApiUrl() },
+		serviceOptions: { baseURL: getReportsApiUrl() },
 	});
 
 	// METHODS
@@ -159,7 +158,7 @@ export const ViewXReportsModal = ({ branchMachine, onClose }: Props) => {
 			{authorizeConfig && (
 				<AuthorizationModal
 					{...authorizeConfig}
-					baseURL={getLocalApiUrl()}
+					baseURL={getReportsApiUrl()}
 					onCancel={() => setAuthorizeConfig(null)}
 				/>
 			)}

@@ -1,17 +1,17 @@
-import { Col, Row, Table, Typography, Select, Button } from 'antd';
+import { Col, Row, Table, Typography, Select, DatePicker } from 'antd';
+import { EyeFilled } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
-import { RequestErrors, TimeRangeFilter } from 'components';
 import { Box, Label } from 'components/elements';
 import {
 	ViewDailyItemSoldModal,
-	convertIntoArray,
 	useBranches,
 	useQueryParams,
 	filterOption,
 } from 'ejjy-global';
+import { useProductCategories } from 'hooks';
 import { DEFAULT_PAGE, MAX_PAGE_SIZE } from 'global';
 import { useUserStore } from 'stores';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 import React, { useEffect, useState } from 'react';
 import {
 	getLocalApiUrl,
@@ -20,7 +20,6 @@ import {
 	isUserFromOffice,
 } from 'utils';
 import { TransactionProductsService } from 'services';
-import { useTransactionProductDates } from 'hooks/useTransactionProducts';
 
 interface DailyItemSoldSummaryItem {
 	productId: number;
@@ -37,6 +36,7 @@ interface TableRow {
 	totalProductsSold?: number;
 	branchName?: string;
 	branchId?: number;
+	actions?: React.ReactElement;
 }
 
 const DailyItemSoldReport = () => {
@@ -52,29 +52,16 @@ const DailyItemSoldReport = () => {
 	const [selectedBranch, setSelectedBranch] = useState<any>(null);
 	const [isLoadingTableData, setIsLoadingTableData] = useState(false);
 	const [isLoadingModalData, setIsLoadingModalData] = useState(false);
+	const [selectedReportDate, setSelectedReportDate] = useState<string>('');
+
+	// Filter states
+	const [selectedDateRangeFilter, setSelectedDateRangeFilter] = useState('');
+	const [selectedProductCategory, setSelectedProductCategory] = useState('');
+	const [selectedDate, setSelectedDate] = useState<Moment>(moment());
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
 	const user = useUserStore((state) => state.user);
-
-	// Fetch available dates for all time ranges
-	const {
-		data: availableDates,
-		isFetching: isFetchingDates,
-		error: datesError,
-	} = useTransactionProductDates({
-		params: {
-			timeRange: Array.isArray(params.timeRange)
-				? params.timeRange.join(',')
-				: params.timeRange,
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: (params?.branchId as string | number),
-		},
-		options: {
-			enabled: !!params.timeRange, // Fetch for all time ranges
-		},
-	});
 
 	const { data: branchesData } = useBranches({
 		params: {
@@ -85,22 +72,19 @@ const DailyItemSoldReport = () => {
 		},
 	});
 
+	const {
+		data: { productCategories },
+		isFetching: isFetchingProductCategories,
+	} = useProductCategories({
+		params: { pageSize: MAX_PAGE_SIZE },
+	});
+
 	const getColumns = (): ColumnsType<TableRow> => {
 		const columns: ColumnsType<TableRow> = [
 			{
 				title: 'Date',
 				dataIndex: 'formattedDate',
-				render: (formattedDate: string, record: TableRow) => (
-					<Button
-						style={{ padding: 0 }}
-						type="link"
-						onClick={() =>
-							handleDateClick(record.date, record.branchId, record)
-						}
-					>
-						{formattedDate}
-					</Button>
-				),
+				width: 800,
 			},
 		];
 
@@ -110,6 +94,7 @@ const DailyItemSoldReport = () => {
 				title: 'Branch',
 				dataIndex: 'branchName',
 				render: (branchName: string) => branchName || 'All Branches',
+				width: 500,
 			});
 		}
 
@@ -120,16 +105,117 @@ const DailyItemSoldReport = () => {
 			render: (total: number) => total?.toLocaleString() || '0',
 		});
 
+		// Add Actions column
+		columns.push({
+			title: 'Actions',
+			dataIndex: 'actions',
+			render: (_, record: TableRow) => (
+				<EyeFilled
+					style={{ fontSize: '20px', cursor: 'pointer', color: '#00a143ff' }}
+					onClick={() => handleDateClick(record.date, record.branchId, record)}
+				/>
+			),
+		});
+
 		return columns;
 	};
 
 	// METHODS
+	const getDateRanges = () => {
+		if (selectedDateRangeFilter === 'last3days') {
+			// Last 3 days: from 3 days before selected date to 1 day before selected date
+			const endDate = selectedDate.clone().subtract(1, 'day');
+			const startDate = selectedDate.clone().subtract(3, 'days');
+			return {
+				startDate: startDate.format('YYYY-MM-DD'),
+				endDate: endDate.format('YYYY-MM-DD'),
+				dates: [
+					startDate.format('YYYY-MM-DD'),
+					startDate.clone().add(1, 'day').format('YYYY-MM-DD'),
+					endDate.format('YYYY-MM-DD'),
+				],
+			};
+		}
+		if (selectedDateRangeFilter === 'last7days') {
+			// Last 7 days: from 7 days before selected date to 1 day before selected date
+			const endDate = selectedDate.clone().subtract(1, 'day');
+			const startDate = selectedDate.clone().subtract(7, 'days');
+			const dates = [];
+			for (let i = 0; i < 7; i += 1) {
+				dates.push(
+					selectedDate
+						.clone()
+						.subtract(7 - i, 'days')
+						.format('YYYY-MM-DD'),
+				);
+			}
+			return {
+				startDate: startDate.format('YYYY-MM-DD'),
+				endDate: endDate.format('YYYY-MM-DD'),
+				dates,
+			};
+		}
+
+		return null;
+	};
+
+	const fetchAggregatedProductsSold = async (
+		dates: string[],
+		branchId?: number,
+	) => {
+		try {
+			const productAggregation: Record<number, DailyItemSoldSummaryItem> = {};
+
+			// Fetch data for each date and aggregate
+			const promises = dates.map(async (date) => {
+				const response = await TransactionProductsService.getDailySummary(
+					{
+						date,
+						branch_id: branchId,
+						product_category: selectedProductCategory || undefined,
+						ordering: '-quantity',
+					},
+					getLocalApiUrl(),
+				);
+				return response.data;
+			});
+
+			const results = await Promise.all(promises);
+
+			// Aggregate all results
+			results.forEach((dailyData) => {
+				dailyData.forEach((item: any) => {
+					const productId = item.product_id;
+					if (!productAggregation[productId]) {
+						productAggregation[productId] = {
+							productId,
+							name: item.name,
+							code: item.code,
+							unitOfMeasurement: item.unit_of_measurement,
+							quantity: 0,
+						};
+					}
+					productAggregation[productId].quantity += Number(item.quantity);
+				});
+			});
+
+			// Sort by quantity in descending order (highest to lowest)
+			return Object.values(productAggregation).sort(
+				(a, b) => b.quantity - a.quantity,
+			);
+		} catch (error) {
+			console.error('Error fetching aggregated products sold:', error);
+			return [];
+		}
+	};
+
 	const fetchTotalProductsSold = async (date: string, branchId?: number) => {
 		try {
 			const response = await TransactionProductsService.getDailySummary(
 				{
 					date,
 					branch_id: branchId,
+					product_category: selectedProductCategory || undefined,
 					ordering: '-quantity',
 				},
 				getLocalApiUrl(),
@@ -150,25 +236,109 @@ const DailyItemSoldReport = () => {
 
 	useEffect(() => {
 		const loadData = async () => {
-			// Start loading immediately
 			setIsLoadingTableData(true);
 
 			try {
-				// Only proceed if we have dates
-				if (!availableDates || availableDates.length === 0) {
-					console.log('No available dates, skipping data load');
-					setDataSource([]);
+				// Handle date range filtering first
+				if (selectedDateRangeFilter) {
+					const dateRanges = getDateRanges();
+					if (!dateRanges) {
+						setDataSource([]);
+						return;
+					}
+
+					const isHeadOffice = isUserFromOffice(user.user_type);
+
+					// For head office users, wait for branches data to be loaded
+					if (isHeadOffice && !branchesData?.list) {
+						console.log(
+							'Head office user - waiting for branches data to load...',
+						);
+						return;
+					}
+
+					const data: TableRow[] = [];
+
+					if (isHeadOffice && !params?.branchId) {
+						// Head office user without specific branch selected - show all branches
+						const branches = (branchesData as any)?.list || [];
+
+						const promises = branches.map(async (branch: any) => {
+							const aggregatedProducts = await fetchAggregatedProductsSold(
+								dateRanges.dates,
+								branch.id,
+							);
+							const totalProductsCount = aggregatedProducts.length;
+
+							if (totalProductsCount > 0) {
+								return {
+									key: `${selectedDateRangeFilter}-${branch.id}`,
+									date: `${dateRanges.startDate}-${dateRanges.endDate}`,
+									formattedDate: String(
+										`${moment(dateRanges.startDate).format(
+											'M/D/YY',
+										)} - ${moment(dateRanges.endDate).format('M/D/YY')}`,
+									),
+									totalProductsSold: totalProductsCount,
+									branchName: branch.name,
+									branchId: branch.id,
+								};
+							}
+							return null;
+						});
+
+						const results = await Promise.all(promises);
+						data.push(...results.filter((item) => item !== null));
+					} else {
+						// Branch user or head office user with specific branch selected
+						const branchId = isUserFromBranch(user.user_type)
+							? getLocalBranchId()
+							: params?.branchId;
+
+						const branchName =
+							isHeadOffice && branchId
+								? (branchesData as any)?.list?.find(
+										(b: any) => b.id === Number(branchId),
+								  )?.name
+								: undefined;
+
+						const aggregatedProducts = await fetchAggregatedProductsSold(
+							dateRanges.dates,
+							branchId ? Number(branchId) : undefined,
+						);
+
+						const totalProductsCount = aggregatedProducts.length;
+
+						if (totalProductsCount > 0) {
+							data.push({
+								key: selectedDateRangeFilter,
+								date: `${dateRanges.startDate}-${dateRanges.endDate}`,
+								formattedDate: String(
+									`${moment(dateRanges.startDate).format('M/D/YY')} to ${moment(
+										dateRanges.endDate,
+									).format('M/D/YY')}`,
+								),
+								totalProductsSold: totalProductsCount,
+								branchName,
+								branchId: branchId ? Number(branchId) : undefined,
+							});
+						}
+					}
+
+					setDataSource(data);
 					return;
 				}
 
+				// Handle single date selection from calendar
 				const isHeadOffice = isUserFromOffice(user.user_type);
+				const selectedDateString = selectedDate.format('YYYY-MM-DD');
 
 				// For head office users, wait for branches data to be loaded
 				if (isHeadOffice && !branchesData?.list) {
 					console.log(
 						'Head office user - waiting for branches data to load...',
 					);
-					return; // Keep loading state true
+					return;
 				}
 
 				const data: TableRow[] = [];
@@ -177,25 +347,23 @@ const DailyItemSoldReport = () => {
 					// Head office user without specific branch selected - show all branches
 					const branches = (branchesData as any)?.list || [];
 
-					const promises = availableDates.flatMap((date: string) =>
-						branches.map(async (branch: any) => {
-							const totalProductsSold = await fetchTotalProductsSold(
-								date,
-								branch.id,
-							);
-							if (totalProductsSold > 0) {
-								return {
-									key: `${date}-${branch.id}`,
-									date,
-									formattedDate: moment(date).format('MM/DD/YYYY'),
-									totalProductsSold,
-									branchName: branch.name,
-									branchId: branch.id,
-								};
-							}
-							return null;
-						}),
-					);
+					const promises = branches.map(async (branch: any) => {
+						const totalProductsSold = await fetchTotalProductsSold(
+							selectedDateString,
+							branch.id,
+						);
+						if (totalProductsSold > 0) {
+							return {
+								key: `${selectedDateString}-${branch.id}`,
+								date: selectedDateString,
+								formattedDate: String(selectedDate.format('MM/DD/YYYY')),
+								totalProductsSold,
+								branchName: branch.name,
+								branchId: branch.id,
+							};
+						}
+						return null;
+					});
 
 					const results = await Promise.all(promises);
 					data.push(...results.filter((item) => item !== null));
@@ -212,40 +380,39 @@ const DailyItemSoldReport = () => {
 							  )?.name
 							: undefined;
 
-					const promises = availableDates.map(async (date: string) => {
-						const totalProductsSold = await fetchTotalProductsSold(
-							date,
-							branchId ? Number(branchId) : undefined,
-						);
-						return {
-							key: date,
-							date,
-							formattedDate: moment(date).format('MM/DD/YYYY'),
+					const totalProductsSold = await fetchTotalProductsSold(
+						selectedDateString,
+						branchId ? Number(branchId) : undefined,
+					);
+
+					if (totalProductsSold > 0) {
+						data.push({
+							key: selectedDateString,
+							date: selectedDateString,
+							formattedDate: String(selectedDate.format('MM/DD/YYYY')),
 							totalProductsSold,
 							branchName,
 							branchId: branchId ? Number(branchId) : undefined,
-						};
-					});
-
-					const results = await Promise.all(promises);
-					data.push(...results);
+						});
+					}
 				}
 
 				setDataSource(data);
 			} catch (error) {
 				console.error('Error loading table data:', error);
 			} finally {
-				// Always end loading state
 				setIsLoadingTableData(false);
 			}
 		};
 
 		loadData();
 	}, [
-		availableDates,
+		selectedDate,
+		selectedDateRangeFilter,
 		user.user_type,
 		params?.branchId,
-		branchesData?.list?.length, // Only react to length change, not the entire object
+		branchesData?.list?.length,
+		selectedProductCategory,
 	]);
 
 	// Handle date click to open modal with products for that date
@@ -258,6 +425,9 @@ const DailyItemSoldReport = () => {
 		setIsLoadingModalData(true);
 		setViewDailyItemSoldModalVisible(true);
 		setSelectedDailySummary([]); // Clear previous data
+		// Always use formattedDate from record, which is already a proper string
+		const reportDateString = String(record?.formattedDate || 'N/A');
+		setSelectedReportDate(reportDateString);
 
 		try {
 			// Set the selected branch first (for immediate display)
@@ -287,27 +457,46 @@ const DailyItemSoldReport = () => {
 				setSelectedBranch(branch || null);
 			}
 
-			const response = await TransactionProductsService.getDailySummary(
-				{
-					date,
-					branch_id:
+			let products: DailyItemSoldSummaryItem[] = [];
+
+			// Check if this is a date range filter result
+			if (selectedDateRangeFilter && date.includes('-')) {
+				// This is a date range - fetch aggregated data
+				const dateRanges = getDateRanges();
+				if (dateRanges) {
+					products = await fetchAggregatedProductsSold(
+						dateRanges.dates,
 						!isUserFromBranch(user.user_type) && (branchId || params?.branchId)
-							? branchId || (params.branchId as string | number)
+							? branchId || Number(params.branchId as string | number)
 							: undefined,
-					ordering: '-quantity', // Sort by quantity in descending order
-				},
-				getLocalApiUrl(),
-			);
+					);
+				}
+			} else {
+				// This is a single date - use the original logic
+				const response = await TransactionProductsService.getDailySummary(
+					{
+						date,
+						branch_id:
+							!isUserFromBranch(user.user_type) &&
+							(branchId || params?.branchId)
+								? branchId || Number(params.branchId as string | number)
+								: undefined,
+						product_category: selectedProductCategory || undefined,
+						ordering: '-quantity', // Sort by quantity in descending order
+					},
+					getLocalApiUrl(),
+				);
 
-			const { data } = response;
+				const { data } = response;
 
-			const products: DailyItemSoldSummaryItem[] = data.map((item: any) => ({
-				productId: item.product_id,
-				name: item.name,
-				code: item.code,
-				unitOfMeasurement: item.unit_of_measurement,
-				quantity: Number(item.quantity),
-			}));
+				products = data.map((item: any) => ({
+					productId: item.product_id,
+					name: item.name,
+					code: item.code,
+					unitOfMeasurement: item.unit_of_measurement,
+					quantity: Number(item.quantity),
+				}));
+			}
 
 			setSelectedDailySummary(products);
 			setIsLoadingModalData(false);
@@ -335,9 +524,54 @@ const DailyItemSoldReport = () => {
 
 			<br />
 
+			{/* All filters in one row */}
 			<Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-				<Col span={24}>
-					<TimeRangeFilter disabled={isFetchingDates} />
+				<Col span={8}>
+					<Label label="Select Date" spacing />
+					<DatePicker
+						className="w-100"
+						value={selectedDate}
+						onChange={(date: Moment | null) => {
+							if (date) {
+								setSelectedDate(date);
+							}
+						}}
+					/>
+				</Col>
+				<Col span={8}>
+					<Label label="Date Range" spacing />
+					<Select
+						className="w-100"
+						placeholder="Select Date Range"
+						value={selectedDateRangeFilter || undefined}
+						allowClear
+						onChange={(value) => {
+							setSelectedDateRangeFilter(value || '');
+						}}
+					>
+						<Select.Option value="last3days">Last 3 Days</Select.Option>
+						<Select.Option value="last7days">Last 7 Days</Select.Option>
+					</Select>
+				</Col>
+				<Col span={8}>
+					<Label label="Product Category" spacing />
+					<Select
+						className="w-100"
+						disabled={isFetchingProductCategories}
+						filterOption={filterOption}
+						optionFilterProp="children"
+						placeholder="Select Category"
+						value={selectedProductCategory || undefined}
+						allowClear
+						showSearch
+						onChange={(value) => setSelectedProductCategory(value || '')}
+					>
+						{productCategories.map(({ id, name }) => (
+							<Select.Option key={id} value={name}>
+								{name}
+							</Select.Option>
+						))}
+					</Select>
 				</Col>
 			</Row>
 
@@ -347,7 +581,7 @@ const DailyItemSoldReport = () => {
 						<Label label="Branch" spacing />
 						<Select
 							className="w-100"
-							disabled={isFetchingDates}
+							disabled={isLoadingTableData}
 							filterOption={filterOption}
 							optionFilterProp="children"
 							placeholder="Select Branch"
@@ -368,15 +602,10 @@ const DailyItemSoldReport = () => {
 				</Row>
 			)}
 
-			<RequestErrors
-				errors={[...convertIntoArray(datesError, 'Available Dates')]}
-				withSpaceBottom
-			/>
-
 			<Table
 				columns={getColumns()}
 				dataSource={dataSource}
-				loading={isFetchingDates || isLoadingTableData}
+				loading={isLoadingTableData}
 				pagination={{
 					current: Number(params.page) || DEFAULT_PAGE,
 					total: dataSource.length,
@@ -392,6 +621,7 @@ const DailyItemSoldReport = () => {
 					branch={selectedBranch}
 					dailyItemSoldSummary={selectedDailySummary}
 					loading={isLoadingModalData}
+					reportDate={selectedReportDate}
 					onClose={handleViewDailyItemSoldModalClose}
 				/>
 			)}

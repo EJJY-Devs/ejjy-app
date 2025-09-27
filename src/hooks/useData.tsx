@@ -6,6 +6,7 @@ import {
 	APP_PRODUCTS_IDS,
 	APP_BRANCH_PRODUCT_IDS,
 	APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
+	APP_TRANSACTION_IDS,
 } from 'global';
 
 import {
@@ -14,6 +15,7 @@ import {
 	getProductIds,
 	getBranchProductIds,
 	getBranchProductBalanceUpdateLogsIds,
+	getTransactionIds,
 } from 'utils';
 
 const REFETCH_INTERVAL_MS = 30_000;
@@ -28,6 +30,8 @@ export const useInitializeData = ({ params, options }: Query) =>
 			params?.productIds,
 			params?.branchProductIds,
 			params?.branchProductBalanceUpdateLogsIds,
+			params?.notMainHeadOffice,
+			params?.transactionIds,
 		],
 		async () => {
 			const baseURL = getLocalApiUrl();
@@ -68,7 +72,8 @@ export const useInitializeData = ({ params, options }: Query) =>
 				params?.isHeadOffice &&
 				((params.productIds?.length ?? 0) > 0 ||
 					(params.branchProductIds?.length ?? 0) > 0 ||
-					(params.branchProductBalanceUpdateLogsIds?.length ?? 0) > 0)
+					(params.branchProductBalanceUpdateLogsIds?.length ?? 0) > 0 ||
+					(params.transactionIds?.length ?? 0) > 0)
 			) {
 				await DataService.initialize(
 					{
@@ -76,7 +81,9 @@ export const useInitializeData = ({ params, options }: Query) =>
 						branch_product_ids: params.branchProductIds,
 						branch_product_balance_update_logs_ids:
 							params.branchProductBalanceUpdateLogsIds,
+						transaction_ids: params.transactionIds,
 						is_head_office: params.isHeadOffice,
+						not_main_head_office: params.notMainHeadOffice,
 					},
 					baseURL,
 				);
@@ -135,6 +142,14 @@ export const useInitializeData = ({ params, options }: Query) =>
 					initializedBranchProductBalanceUpdateLogsIdsString,
 					params?.branchProductBalanceUpdateLogsIds,
 				);
+
+				// Update transaction IDs
+				const initializedTransactionIdsString = getTransactionIds(); // Fetch transaction IDs from local storage
+				updateRemainingIds(
+					APP_TRANSACTION_IDS,
+					initializedTransactionIdsString,
+					params?.transactionIds,
+				);
 			},
 			...options,
 		},
@@ -142,7 +157,12 @@ export const useInitializeData = ({ params, options }: Query) =>
 
 export const useInitializeIds = ({ params, options }: Query) =>
 	useQuery<any>(
-		['useInitializeIds', params?.branchId, params?.isHeadOffice],
+		[
+			'useInitializeIds',
+			params?.branchId,
+			params?.isHeadOffice,
+			params?.notMainHeadOffice,
+		],
 		async () => {
 			const baseURL = getLocalApiUrl();
 
@@ -159,6 +179,7 @@ export const useInitializeIds = ({ params, options }: Query) =>
 				response = await DataService.initializeIds(
 					{
 						is_head_office: params?.isHeadOffice,
+						not_main_head_office: params?.notMainHeadOffice,
 					},
 					baseURL,
 				);
@@ -206,6 +227,11 @@ export const useInitializeIds = ({ params, options }: Query) =>
 						APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
 						data.data.branch_product_balance_update_logs_ids,
 					);
+				}
+
+				// Handle transaction_ids
+				if (data?.data?.transaction_ids) {
+					updateStoredIds(APP_TRANSACTION_IDS, data.data.transaction_ids);
 				}
 			},
 			...options,

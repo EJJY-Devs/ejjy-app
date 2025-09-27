@@ -9,10 +9,12 @@ import {
 	getLocalApiUrl,
 	modifiedCallback,
 	modifiedExtraCallback,
-	isStandAlone,
+	getHeadOfficeType,
+	getAppType,
 } from 'utils';
+import { appTypes } from 'ejjy-global';
 import { actions, selectors, types } from '../ducks/requisition-slips';
-import { request } from '../global/types';
+import { headOfficeTypes, request } from '../global/types';
 import { useActionDispatch } from './useActionDispatch';
 
 const EDIT_SUCCESS_MESSAGE = 'Requisition slip was edited successfully';
@@ -189,9 +191,11 @@ const useRequisitionSlipsNew = ({ params }: Query) =>
 			params?.timeRange || 'daily',
 		],
 		() => {
-			const service = isStandAlone()
-				? RequisitionSlipsService.list
-				: RequisitionSlipsService.listOffline;
+			const service =
+				getHeadOfficeType() === headOfficeTypes.MAIN ||
+				getAppType() === appTypes.BACK_OFFICE
+					? RequisitionSlipsService.list
+					: RequisitionSlipsService.listOffline;
 
 			return wrapServiceWithCatch(
 				service(

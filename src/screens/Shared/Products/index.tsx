@@ -6,6 +6,7 @@ import {
 	HomeOutlined,
 	PrinterFilled,
 	SearchOutlined,
+	SyncOutlined,
 	UploadOutlined,
 } from '@ant-design/icons';
 import {
@@ -52,6 +53,7 @@ import {
 	usePingOnlineServer,
 	useProductCategories,
 	useProductDelete,
+	useProductEditLocal,
 	useProductReinitialize,
 	useQueryParams,
 	useSiteSettings,
@@ -59,6 +61,7 @@ import {
 import jsPDF from 'jspdf';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useQuery } from 'react-query';
 import { useProductsData } from 'screens/Shared/Products/useProductsData';
 import { useUserStore } from 'stores';
 import {
@@ -72,6 +75,7 @@ import {
 	isCUDShown,
 	isUserFromBranch,
 	isUserFromOffice,
+	isStandAlone,
 } from 'utils';
 
 const columns: ColumnsType = [
@@ -101,6 +105,7 @@ export const Products = () => {
 	const [hasPendingTransactions] = useState(false);
 	const [isCreatingPdf, setIsCreatingPdf] = useState(false);
 	const [html, setHtml] = useState('');
+	const [isSyncing, setIsSyncing] = useState(false);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -132,6 +137,21 @@ export const Products = () => {
 		isLoading: isReinitializingProduct,
 		error: reinitializeProductError,
 	} = useProductReinitialize();
+	const { mutateAsync: editProductLocal } = useProductEditLocal();
+
+	// Add sync status monitoring
+	useQuery(
+		'syncStatus',
+		() => {
+			// Check if we have pending sync operations
+			const hasPendingSync = localStorage.getItem('pendingProductSync');
+			return { hasPendingSync: !!hasPendingSync };
+		},
+		{
+			refetchInterval: 1000, // Check every second
+			enabled: isStandAlone(),
+		},
+	);
 
 	// METHODS
 	useEffect(() => {
@@ -203,6 +223,14 @@ export const Products = () => {
 								onClick={() => handleOpenModal(product, modals.CHART)}
 							/>
 						</Tooltip>
+						<Tooltip title="Sync Manually">
+							<Button
+								icon={<SyncOutlined />}
+								type="primary"
+								ghost
+								onClick={() => handleManualSync(product)}
+							/>
+						</Tooltip>
 						{isCUDShown(user.user_type) && (
 							<Popconfirm
 								cancelText="No"
@@ -240,6 +268,56 @@ export const Products = () => {
 	const handleOpenModal = (product, type) => {
 		setModalType(type);
 		setSelectedProduct(product);
+	};
+
+	// Add a method to handle successful operations
+	const handleOperationSuccess = (successMessage: string) => {
+		message.success(successMessage);
+
+		// If standalone, mark that we have pending sync
+		if (isStandAlone()) {
+			localStorage.setItem('pendingProductSync', 'true');
+			setIsSyncing(true);
+
+			// Clear the sync flag after a delay (background sync should complete)
+			setTimeout(() => {
+				localStorage.removeItem('pendingProductSync');
+				setIsSyncing(false);
+			}, 5000);
+		}
+	};
+
+	const handleManualSync = async (product) => {
+		try {
+			// Use local API edit function to ensure branch products are updated
+			// This updates both product and branch products datetime_updated fields
+			await editProductLocal({
+				id: getId(product),
+				actingUserId: getId(user),
+				// Just pass the essential fields to trigger the update
+				name: product.name,
+				description: product.description || '',
+				type: product.type,
+				unitOfMeasurement: product.unit_of_measurement,
+				piecesInBulk: product.pieces_in_bulk,
+				pricePerPiece: product.price_per_piece,
+				pricePerBulk: product.price_per_bulk,
+				costPerPiece: product.cost_per_piece,
+				costPerBulk: product.cost_per_bulk,
+				isSoldInBranch: product.is_sold_in_branch,
+				isVatExempted: product.is_vat_exempted,
+				reorderPoint: product.reorder_point,
+				maxBalance: product.max_balance,
+				productCategory: product.product_category,
+			});
+
+			message.success(
+				'Manual sync completed. Product and branch products datetime updated for syncing.',
+			);
+		} catch (error) {
+			message.error('Failed to synchronize product');
+			console.error('Manual sync error:', error);
+		}
 	};
 
 	const handleCreatePdf = (product) => {
@@ -314,6 +392,24 @@ export const Products = () => {
 			} Products`}
 		>
 			<ConnectionAlert />
+
+			{/* Add sync indicator */}
+			{isSyncing && (
+				<div
+					className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded"
+					style={{
+						margin: '16px 0',
+						padding: '8px 16px',
+						backgroundColor: '#e6f7ff',
+						border: '1px solid #91d5ff',
+						borderRadius: '4px',
+					}}
+				>
+					<span style={{ color: '#1890ff' }}>
+						🔄 Syncing product changes in background...
+					</span>
+				</div>
+			)}
 
 			<Box>
 				{isCUDShown(user.user_type) && (
@@ -396,6 +492,7 @@ export const Products = () => {
 					<ModifyProductModal
 						product={selectedProduct}
 						onClose={() => handleOpenModal(null, null)}
+						onSuccess={handleOperationSuccess}
 					/>
 				)}
 

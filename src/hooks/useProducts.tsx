@@ -86,7 +86,7 @@ export const useProductCreate = () => {
 			scaleCode,
 			isMultipleInstance,
 		}: any) => {
-			const baseURL = isStandAlone() ? getGoogleApiUrl() : getLocalApiUrl();
+			const baseURL = isStandAlone() ? getLocalApiUrl() : getGoogleApiUrl();
 			const result = await ProductsService.create(
 				{
 					acting_user_id: actingUserId,
@@ -163,7 +163,7 @@ export const useProductReinitialize = () => {
 
 	return useMutation<any, any, any>(
 		async (data) => {
-			const baseURL = isStandAlone() ? getGoogleApiUrl() : getLocalApiUrl();
+			const baseURL = isStandAlone() ? getLocalApiUrl() : getGoogleApiUrl();
 			const result = await ProductsService.reinitialize(data, baseURL);
 
 			// If using Google API (standalone), trigger background sync
@@ -230,7 +230,7 @@ export const useProductEdit = () => {
 			isMultipleInstance,
 			scaleCode,
 		}: any) => {
-			const baseURL = isStandAlone() ? getGoogleApiUrl() : getLocalApiUrl();
+			const baseURL = isStandAlone() ? getLocalApiUrl() : getGoogleApiUrl();
 			const result = await ProductsService.edit(
 				id,
 				{
@@ -317,7 +317,7 @@ export const useProductDelete = () => {
 
 	return useMutation<any, any, any>(
 		async ({ id, actingUserId }) => {
-			const baseURL = isStandAlone() ? getGoogleApiUrl() : getLocalApiUrl();
+			const baseURL = isStandAlone() ? getLocalApiUrl() : getGoogleApiUrl();
 			const result = await ProductsService.delete(
 				id,
 				{ acting_user_id: actingUserId },

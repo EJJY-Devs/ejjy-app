@@ -397,7 +397,7 @@ export const useProductEditLocal = () => {
 			isMultipleInstance,
 			scaleCode,
 		}: any) => {
-			// Always use local API to ensure branch products are updated
+			// Always use Google API for manual sync
 			const result = await ProductsService.edit(
 				id,
 				{
@@ -434,7 +434,7 @@ export const useProductEditLocal = () => {
 					credit_price: creditPrice,
 					special_price: specialPrice,
 				},
-				getLocalApiUrl(), // Always use local API
+				getGoogleApiUrl(), // Always use Google API
 			);
 
 			return result;

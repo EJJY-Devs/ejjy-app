@@ -66,6 +66,7 @@ import { useProductsData } from 'screens/Shared/Products/useProductsData';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
+	formatDateTime,
 	getAppTagPrinterFontFamily,
 	getAppTagPrinterFontSize,
 	getAppTagPrinterPaperHeight,
@@ -385,6 +386,12 @@ export const Products = () => {
 	// 	);
 	// };
 
+	// Calculate product statistics
+	const productCount = productsTotal || 0;
+	const latestDateTime = siteSettings?.datetime_last_updated_products
+		? formatDateTime(siteSettings.datetime_last_updated_products)
+		: 'No updates';
+
 	return (
 		<Content
 			title={`${
@@ -392,6 +399,28 @@ export const Products = () => {
 			} Products`}
 		>
 			<ConnectionAlert />
+
+			{/* Product Statistics */}
+			<div
+				style={{
+					display: 'flex',
+					justifyContent: 'flex-end',
+					padding: '16px 24px 0 24px',
+					fontSize: '14px',
+					color: '#666',
+				}}
+			>
+				<div style={{ textAlign: 'right' }}>
+					<span style={{ color: '#fa8c16', fontSize: '12px' }}>
+						Product Count: <strong>{productCount.toLocaleString()}</strong>
+					</span>
+					<span
+						style={{ marginLeft: '16px', fontSize: '12px', color: '#fa8c16' }}
+					>
+						Product Last Updated: <strong>{latestDateTime}</strong>
+					</span>
+				</div>
+			</div>
 
 			{/* Add sync indicator */}
 			{isSyncing && (

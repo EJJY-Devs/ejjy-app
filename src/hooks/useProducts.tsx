@@ -3,7 +3,12 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { ProductsService } from 'services';
-import { getGoogleApiUrl, getLocalApiUrl, isStandAlone } from 'utils';
+import {
+	getGoogleApiUrl,
+	getLocalApiUrl,
+	getOnlineApiUrl,
+	isStandAlone,
+} from 'utils';
 
 const useProducts = ({ params, options }: Query) =>
 	useQuery<any>(
@@ -434,7 +439,7 @@ export const useProductEditLocal = () => {
 					credit_price: creditPrice,
 					special_price: specialPrice,
 				},
-				getGoogleApiUrl(), // Always use Google API
+				getOnlineApiUrl(),
 			);
 
 			return result;

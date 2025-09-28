@@ -42,6 +42,7 @@ import {
 	printProductPriceTag,
 } from 'ejjy-global';
 import {
+	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	MAX_PAGE_SIZE,
@@ -71,6 +72,7 @@ import {
 	getAppTagPrinterFontSize,
 	getAppTagPrinterPaperHeight,
 	getAppTagPrinterPaperWidth,
+	getAppType,
 	getId,
 	getLocalBranchId,
 	isCUDShown,
@@ -224,14 +226,16 @@ export const Products = () => {
 								onClick={() => handleOpenModal(product, modals.CHART)}
 							/>
 						</Tooltip>
-						<Tooltip title="Sync Manually">
-							<Button
-								icon={<SyncOutlined />}
-								type="primary"
-								ghost
-								onClick={() => handleManualSync(product)}
-							/>
-						</Tooltip>
+						{getAppType() !== appTypes.BACK_OFFICE && (
+							<Tooltip title="Sync Manually">
+								<Button
+									icon={<SyncOutlined />}
+									type="primary"
+									ghost
+									onClick={() => handleManualSync(product)}
+								/>
+							</Tooltip>
+						)}
 						{isCUDShown(user.user_type) && (
 							<Popconfirm
 								cancelText="No"

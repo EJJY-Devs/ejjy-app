@@ -16,5 +16,36 @@
 			"releaseType": "prerelease"
 		}
 	],
-	"icon": "icons/BO.ico"
+	"nsis": {
+		"oneClick": false,
+		"allowToChangeInstallationDirectory": false
+	},
+	"icon": "icons/BO.ico",
+	"mac": {
+		"category": "public.app-category.business",
+		"icon": "icons/BO.icns",
+		"target": [
+			{
+				"target": "dmg",
+				"arch": ["x64", "arm64"]
+			},
+			{
+				"target": "zip",
+				"arch": ["x64", "arm64"]
+			}
+		],
+		"hardenedRuntime": true,
+		"gatekeeperAssess": false,
+		"entitlements": "entitlements.mac.plist",
+		"entitlementsInherit": "entitlements.mac.plist"
+	},
+	"win": {
+		"icon": "icons/BO.ico",
+		"target": [
+			{
+				"target": "nsis",
+				"arch": ["x64"]
+			}
+		]
+	}
 }

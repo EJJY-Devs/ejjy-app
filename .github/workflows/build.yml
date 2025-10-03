@@ -1,4 +1,4 @@
-name: Build Electron App
+name: Build & Publish Electron App
 
 on:
   push:
@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, master, dev]
   workflow_dispatch:
+
+# Needed so electron-builder can push releases with GITHUB_TOKEN
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -17,20 +21,16 @@ jobs:
         include:
           - os: windows-latest
             app: backoffice
-            build_script: 'build:electron:ci'
-            artifact_name: 'backoffice-windows'
+            build_script: build:electron:ci
           - os: windows-latest
             app: headoffice
-            build_script: 'build:electron:headoffice:ci'
-            artifact_name: 'headoffice-windows'
+            build_script: build:electron:headoffice:ci
           - os: macos-latest
             app: backoffice
-            build_script: 'build:electron:mac:ci'
-            artifact_name: 'backoffice-macos'
+            build_script: build:electron:mac:ci
           - os: macos-latest
             app: headoffice
-            build_script: 'build:electron:headoffice:mac:ci'
-            artifact_name: 'headoffice-macos'
+            build_script: build:electron:headoffice:mac:ci
 
     steps:
       - uses: actions/checkout@v4
@@ -38,8 +38,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '16'
-          cache: 'npm'
+          node-version: 16
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -47,13 +47,7 @@ jobs:
       - name: Build React app
         run: npm run build:local:ci
 
-      - name: Build Electron app (${{ matrix.app }})
+      - name: Build & Publish Electron App (${{ matrix.app }})
         run: npm run ${{ matrix.build_script }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: dist/

@@ -17,19 +17,19 @@ jobs:
         include:
           - os: windows-latest
             app: backoffice
-            build_script: 'build:electron'
+            build_script: 'build:electron:ci'
             artifact_name: 'backoffice-windows'
           - os: windows-latest
             app: headoffice
-            build_script: 'build:electron:headoffice'
+            build_script: 'build:electron:headoffice:ci'
             artifact_name: 'headoffice-windows'
           - os: macos-latest
             app: backoffice
-            build_script: 'build:electron:mac'
+            build_script: 'build:electron:mac:ci'
             artifact_name: 'backoffice-macos'
           - os: macos-latest
             app: headoffice
-            build_script: 'build:electron:headoffice:mac'
+            build_script: 'build:electron:headoffice:mac:ci'
             artifact_name: 'headoffice-macos'
 
     steps:

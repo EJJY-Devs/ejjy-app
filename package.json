@@ -23,7 +23,7 @@
 		"postinstall": "electron-builder install-app-deps",
 		"build:online": "env-cmd -f .env.online react-scripts build",
 		"build:local": "env-cmd -f .env.local react-scripts build",
-		"build:local:ci": "env-cmd -f .env.local node --openssl-legacy-provider ./node_modules/.bin/react-scripts build",
+		"build:local:ci": "env-cmd -f .env.local react-scripts build",
 		"build:electron": "electron-builder -w --x64 -p always --config electron-builder.json",
 		"build:electron:mac": "electron-builder -m --x64 --arm64 -p always --config electron-builder.json",
 		"build:electron:headoffice": "electron-builder -w --x64 -p always --config electron-builder-headoffice.json",

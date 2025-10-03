@@ -1,22 +1,14 @@
-name: Build & Publish Electron App
+name: Build & Publish Electron Apps
 
 on:
   push:
-    branches: [main, master, dev]
-  pull_request:
-    branches: [main, master, dev]
-  workflow_dispatch:
-
-# Needed so electron-builder can push releases with GITHUB_TOKEN
-permissions:
-  contents: write
+    tags:
+      - 'v*.*.*' # runs only when you push a version tag (e.g. v0.1.842)
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-
     strategy:
-      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -33,13 +25,14 @@ jobs:
             build_script: build:electron:headoffice:mac:ci
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 16
-          cache: npm
+          node-version: 18
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -47,7 +40,27 @@ jobs:
       - name: Build React app
         run: npm run build:local:ci
 
-      - name: Build & Publish Electron App (${{ matrix.app }})
+      - name: Setup Python (needed for macOS DMG cleanup)
+        if: runner.os == 'macOS'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Create Python symlink for macOS
+        if: runner.os == 'macOS'
+        run: |
+          echo "Python3 location: $(which python3)"
+          echo "Python location: $(which python || echo 'not found')"
+          sudo ln -sf $(which python3) /usr/bin/python || true
+          echo "After symlink - Python location: $(which python || echo 'not found')"
+
+      - name: Build Electron app (${{ matrix.app }})
         run: npm run ${{ matrix.build_script }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-${{ matrix.app }}
+          path: dist/**

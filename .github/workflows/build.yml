@@ -14,13 +14,24 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
+        app: [backoffice, headoffice]
         include:
           - os: windows-latest
+            app: backoffice
             build_script: 'build:electron'
-            artifact_name: 'windows-build'
+            artifact_name: 'backoffice-windows'
+          - os: windows-latest
+            app: headoffice
+            build_script: 'build:electron:headoffice'
+            artifact_name: 'headoffice-windows'
           - os: macos-latest
+            app: backoffice
             build_script: 'build:electron:mac'
-            artifact_name: 'macos-build'
+            artifact_name: 'backoffice-macos'
+          - os: macos-latest
+            app: headoffice
+            build_script: 'build:electron:headoffice:mac'
+            artifact_name: 'headoffice-macos'
 
     steps:
       - uses: actions/checkout@v3
@@ -37,7 +48,7 @@ jobs:
       - name: Build React app
         run: npm run build:local
 
-      - name: Build Electron app
+      - name: Build Electron app (${{ matrix.app }})
         run: npm run ${{ matrix.build_script }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

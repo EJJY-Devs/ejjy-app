@@ -10,9 +10,10 @@ import { ModifyProductForm } from './ModifyProductForm';
 interface Props {
 	product: any;
 	onClose: any;
+	onSuccess?: (successMessage: string) => void;
 }
 
-export const ModifyProductModal = ({ product, onClose }: Props) => {
+export const ModifyProductModal = ({ product, onClose, onSuccess }: Props) => {
 	// CUSTOM HOOKS
 	const {
 		data: { pointSystemTags },
@@ -40,13 +41,21 @@ export const ModifyProductModal = ({ product, onClose }: Props) => {
 				id: getId(product),
 				actingUserId: getId(user),
 			});
-			message.success('Product was edited successfully');
+			if (onSuccess) {
+				onSuccess('Product was edited successfully');
+			} else {
+				message.success('Product edit failed');
+			}
 		} else {
 			await createProduct({
 				...formData,
 				actingUserId: getId(user),
 			});
-			message.success('Product was created successfully');
+			if (onSuccess) {
+				onSuccess('Product was created successfully');
+			} else {
+				message.success('Product creation failed');
+			}
 		}
 
 		onClose();

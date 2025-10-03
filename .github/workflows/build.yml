@@ -38,7 +38,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '16'
           cache: 'npm'
 
       - name: Install dependencies
@@ -46,6 +46,8 @@ jobs:
 
       - name: Build React app
         run: npm run build:local
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
 
       - name: Build Electron app (${{ matrix.app }})
         run: npm run ${{ matrix.build_script }}

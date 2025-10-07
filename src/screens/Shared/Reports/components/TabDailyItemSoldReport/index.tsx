@@ -103,6 +103,7 @@ const DailyItemSoldReport = () => {
 			title: 'Total Products Sold',
 			dataIndex: 'totalProductsSold',
 			render: (total: number) => total?.toLocaleString() || '0',
+			width: 500,
 		});
 
 		// Add Actions column
@@ -115,6 +116,7 @@ const DailyItemSoldReport = () => {
 					onClick={() => handleDateClick(record.date, record.branchId, record)}
 				/>
 			),
+			width: 400,
 		});
 
 		return columns;

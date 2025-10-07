@@ -99,7 +99,7 @@ export const PricesModal = ({ product, onClose }: Props) => {
 				productId:
 					appType === appTypes.BACK_OFFICE
 						? product?.product?.id
-						: getId(product?.product),
+						: getId(product),
 				data: branchProductFormData,
 				serverUrl:
 					appType === appTypes.BACK_OFFICE

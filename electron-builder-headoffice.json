@@ -23,5 +23,32 @@
 	"extraMetadata": {
 		"name": "ejjy-inventory-headoffice-app"
 	},
-	"icon": "icons/HO.ico"
+	"icon": "icons/HO.ico",
+	"mac": {
+		"category": "public.app-category.business",
+		"icon": "icons/HO.icns",
+		"target": [
+			{
+				"target": "dmg",
+				"arch": ["x64", "arm64"]
+			},
+			{
+				"target": "zip",
+				"arch": ["x64", "arm64"]
+			}
+		],
+		"hardenedRuntime": true,
+		"gatekeeperAssess": false,
+		"entitlements": "entitlements.mac.plist",
+		"entitlementsInherit": "entitlements.mac.plist"
+	},
+	"win": {
+		"icon": "icons/HO.ico",
+		"target": [
+			{
+				"target": "nsis",
+				"arch": ["x64"]
+			}
+		]
+	}
 }

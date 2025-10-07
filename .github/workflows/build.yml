@@ -1,0 +1,68 @@
+name: Build & Publish Electron Apps
+
+on:
+  push:
+    branches: [main, master, dev]
+  pull_request:
+    branches: [main, master, dev]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            app: backoffice
+            build_script: build:electron:ci
+          - os: windows-latest
+            app: headoffice
+            build_script: build:electron:headoffice:ci
+          - os: macos-latest
+            app: backoffice
+            build_script: build:electron:mac:ci
+          - os: macos-latest
+            app: headoffice
+            build_script: build:electron:headoffice:mac:ci
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build React app
+        run: npm run build:local:ci
+
+      - name: Setup Python (needed for macOS DMG cleanup)
+        if: runner.os == 'macOS'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Create Python symlink for macOS
+        if: runner.os == 'macOS'
+        run: |
+          echo "Python3 location: $(which python3)"
+          echo "Python location: $(which python || echo 'not found')"
+          sudo ln -sf $(which python3) /usr/bin/python || true
+          echo "After symlink - Python location: $(which python || echo 'not found')"
+
+      - name: Build Electron app (${{ matrix.app }})
+        run: npm run ${{ matrix.build_script }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-${{ matrix.app }}
+          path: dist/**

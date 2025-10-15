@@ -4,11 +4,11 @@ import _ from 'lodash';
 import { Content } from 'components';
 import { Box } from 'components/elements';
 import TabDailyItemSoldReport from './components/TabDailyItemSoldReport';
-import TabProductBalances from './components/TabProductBalances';
+import TabProductBalances from './components/TabBranchProductBalances';
 
 const tabs = {
 	DAILY_ITEM_SOLD_REPORT: 'Daily Item Sold Report',
-	PRODUCT_BALANCES: 'Product Balances',
+	BRANCH_PRODUCT_BALANCES: 'Branch Product Balances',
 };
 
 export const Reports = () => {
@@ -37,7 +37,10 @@ export const Reports = () => {
 						<TabDailyItemSoldReport />
 					</Tabs.TabPane>
 
-					<Tabs.TabPane key={tabs.PRODUCT_BALANCES} tab={tabs.PRODUCT_BALANCES}>
+					<Tabs.TabPane
+						key={tabs.BRANCH_PRODUCT_BALANCES}
+						tab={tabs.BRANCH_PRODUCT_BALANCES}
+					>
 						<TabProductBalances />
 					</Tabs.TabPane>
 				</Tabs>

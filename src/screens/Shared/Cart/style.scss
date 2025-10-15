@@ -22,6 +22,10 @@
 .Cart {
 	height: 750px !important;
 	padding: 20px;
+
+	&--prepopulated {
+		height: 650px !important;
+	}
 }
 
 .CartModal {

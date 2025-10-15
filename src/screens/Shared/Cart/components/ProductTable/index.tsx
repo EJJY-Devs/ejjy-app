@@ -82,6 +82,7 @@ export const ProductTable = ({
 					{ name: '', width: '1px' },
 					{ name: 'Barcode', width: '40px' },
 					{ name: 'Description', alignment: 'center' },
+					{ name: 'Current Balance', alignment: 'center' },
 					{ name: 'Action', alignment: 'center' },
 					{ name: 'Value', alignment: 'center' },
 					{ name: 'Remarks', alignment: 'center', width: '275px' },
@@ -166,6 +167,8 @@ export const ProductTable = ({
 				const { product, quantity } = branchProduct;
 				const { barcode, name, key } = product;
 
+				console.log('branchProduct', branchProduct);
+
 				return [
 					<Tooltip key={`tooltip-delete-${key}`} placement="top" title="Remove">
 						<Button
@@ -189,6 +192,20 @@ export const ProductTable = ({
 
 					<Tooltip key={`tooltip-name-${key}`} placement="top" title={name}>
 						{name}
+					</Tooltip>,
+
+					<Tooltip
+						key={`tooltip-current-balance-${key}`}
+						placement="top"
+						title={`Current Balance: ${
+							product.current_balance || branchProduct.current_balance || 0
+						}`}
+					>
+						<div style={{ textAlign: 'center' }}>
+							{Number(
+								product.current_balance || branchProduct.current_balance || 0,
+							).toFixed(3)}
+						</div>
 					</Tooltip>,
 
 					<Tooltip

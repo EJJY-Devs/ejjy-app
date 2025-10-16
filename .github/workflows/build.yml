@@ -1,11 +1,7 @@
 name: Build & Publish Electron Apps
 
 on:
-  push:
-    branches: [main, master, dev]
-  pull_request:
-    branches: [main, master, dev]
-  workflow_dispatch:
+  workflow_dispatch:  # 👈 manual trigger only
 
 jobs:
   build:

@@ -433,8 +433,7 @@ export const useBranchProductBalanceEdit = () => {
 			),
 		{
 			onSuccess: () => {
-				queryClient.invalidateQueries('useBranchProducts');
-				queryClient.invalidateQueries('useBranchProductRetrieve');
+				queryClient.invalidateQueries('useBranchProductBalances');
 			},
 		},
 	);

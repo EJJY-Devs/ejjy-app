@@ -4,7 +4,11 @@ import { PrinterOutlined } from '@ant-design/icons';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import { formatDateTime, formatQuantity } from 'utils';
 import { useAdjustmentSlipRetrieve } from 'hooks/useAdjustmentSlips';
-import { getFullName, VIEW_PRINTING_MODAL_WIDTH } from 'ejjy-global';
+import {
+	EMPTY_CELL,
+	getFullName,
+	VIEW_PRINTING_MODAL_WIDTH,
+} from 'ejjy-global';
 import dayjs from 'dayjs';
 
 const { Text } = Typography;
@@ -27,11 +31,11 @@ export const ViewAdjustmentSlipModal = ({
 	// Prepare products data for display
 	const productsData = adjustmentSlip?.products?.map((product) => ({
 		key: product.id,
-		productName: `${product.product.product.name}${
-			product.product.product.is_vat_exempted ? ' - VE' : ' - V'
+		productName: `${product?.branch_product?.product.name}${
+			product?.branch_product?.product?.is_vat_exempted ? ' - VE' : ' - V'
 		}`,
 		adjustedQuantity: formatQuantity({
-			unitOfMeasurement: product.product.product.unit_of_measurement,
+			unitOfMeasurement: product?.branch_product?.product?.unit_of_measurement,
 			quantity: product.adjusted_value,
 		}),
 		adjustedValue: product.adjusted_value,
@@ -112,7 +116,7 @@ export const ViewAdjustmentSlipModal = ({
 				size="small"
 			>
 				<Descriptions.Item label="Adjustment Slip ID">
-					{adjustmentSlip.id}
+					{adjustmentSlip.reference_number || EMPTY_CELL}
 				</Descriptions.Item>
 				<Descriptions.Item label="Branch">
 					{adjustmentSlip.branch?.name || 'N/A'}

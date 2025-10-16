@@ -53,6 +53,7 @@ export const useAdjustmentSlipCreate = () => {
 				adjusted_value: string;
 				remarks: string;
 				error_remarks: string;
+				branch_product_id: number;
 			}[];
 			encodedById: number;
 			branchId: number;

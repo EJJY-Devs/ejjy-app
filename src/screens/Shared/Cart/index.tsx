@@ -1,6 +1,6 @@
 import { RequestErrors, CreateInventoryTransferModal } from 'components';
 import { Modal, message, Select, Spin } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
 import { convertIntoArray, getLocalBranchId } from 'utils';
 import shallow from 'zustand/shallow';
@@ -24,9 +24,16 @@ import './style.scss';
 interface ModalProps {
 	onClose: () => void;
 	type: string;
+	prePopulatedProduct?: any;
+	onRefetch?: () => void;
 }
 
-export const Cart = ({ onClose, type }: ModalProps) => {
+export const Cart = ({
+	onClose,
+	type,
+	prePopulatedProduct,
+	onRefetch,
+}: ModalProps) => {
 	// STATES
 	const [barcodeScanLoading, setBarcodeScanLoading] = useState(false);
 	const [responseError] = useState([]);
@@ -44,9 +51,13 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	] = useState(false);
 
 	const [isBranchSelectVisible, setIsBranchSelectVisible] = useState(
-		type === 'Adjustment Slip',
+		type === 'Adjustment Slip' && !prePopulatedProduct,
 	);
-	const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+	const [selectedBranchId, setSelectedBranchId] = useState<string | null>(
+		prePopulatedProduct?.branch_product?.branch_id ||
+			prePopulatedProduct?.branch_product?.branch?.id ||
+			null,
+	);
 	const [hasEmptyUnits, setHasEmptyUnits] = useState(false);
 
 	// REFS
@@ -82,6 +93,31 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 	const { mutateAsync: createRequisitionSlip } = useRequisitionSlipCreate();
 	const { mutateAsync: createAdjustmentSlip } = useAdjustmentSlipCreate();
 
+	// Effect to handle pre-populated single product
+	useEffect(() => {
+		if (prePopulatedProduct && type === 'Adjustment Slip') {
+			resetProducts();
+			const { addProduct } = useBoundStore.getState();
+			addProduct({
+				id: prePopulatedProduct.branch_product?.id,
+				product: {
+					...prePopulatedProduct.branch_product?.product,
+					current_balance: prePopulatedProduct.value,
+				},
+				quantity: 1,
+				remarks: '',
+				errorRemarks: '',
+			});
+			const productBranchId =
+				prePopulatedProduct.branch_product?.branch_id ||
+				prePopulatedProduct.branch_product?.branch?.id;
+
+			if (productBranchId) {
+				setSelectedBranchId(productBranchId);
+			}
+		}
+	}, [prePopulatedProduct, type, resetProducts]);
+
 	const handleCreateReceivingVoucher = async (formData) => {
 		const currentProducts = useBoundStore.getState().products;
 		if (currentProducts.length > 0) {
@@ -108,10 +144,13 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 
 	const handleCreateAdjustmentSlip = async (formData) => {
 		const currentProducts = useBoundStore.getState().products;
+
+		console.log(currentProducts);
 		if (currentProducts.length > 0) {
 			const mappedProducts = currentProducts.map(
-				({ id, quantity, remarks, errorRemarks }) => ({
+				({ id, product, quantity, remarks, errorRemarks }) => ({
 					product_id: id,
+					branch_product_id: product.id,
 					adjusted_value: quantity,
 					remarks,
 					error_remarks: errorRemarks,
@@ -206,6 +245,11 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 
 		const { setRefetchData } = useBoundStore.getState();
 		setRefetchData(); // Toggle the refetch flag
+
+		// Call the refetch callback if provided
+		if (onRefetch) {
+			onRefetch();
+		}
 	};
 
 	const handleBack = () => {
@@ -233,12 +277,11 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 		if (type === 'Requisition Slip') {
 			setIsCreateRequisitionSlipVisible(true);
 		} else if (type === 'Adjustment Slip') {
-			// Get current products from store
 			const currentProducts = useBoundStore.getState().products;
-			// Check if there are products in the cart
+
 			if (!currentProducts || currentProducts.length === 0) {
 				message.error('Please add products to the cart before submission.');
-				return; // Prevent modal from opening
+				return;
 			}
 
 			// Validate that all products have remarks
@@ -250,7 +293,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 				message.error(
 					'All products must have a remarks value before submission.',
 				);
-				return; // Prevent modal from opening
+				return;
 			}
 
 			// Validate that products with "Error" remarks have errorRemarks
@@ -263,7 +306,7 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 				message.error(
 					'All products with "Error" remarks must have a reference number before submission.',
 				);
-				return; // Prevent modal from opening
+				return;
 			}
 
 			setIsCreateAdjustmentSlipVisible(true);
@@ -327,24 +370,30 @@ export const Cart = ({ onClose, type }: ModalProps) => {
 			open
 			onCancel={handleBack}
 		>
-			<BarcodeScanner
-				ref={barcodeScannerRef}
-				setLoading={setBarcodeScanLoading}
-			/>
+			{!prePopulatedProduct && (
+				<BarcodeScanner
+					ref={barcodeScannerRef}
+					setLoading={setBarcodeScanLoading}
+				/>
+			)}
 
-			<section className="Cart">
+			<section
+				className={`Cart ${prePopulatedProduct ? 'Cart--prepopulated' : ''}`}
+			>
 				<RequestErrors
 					errors={convertIntoArray(responseError)}
 					withSpaceBottom
 				/>
 
-				<ProductSearch
-					barcodeScannerRef={barcodeScannerRef}
-					branchId={type === 'Adjustment Slip' ? selectedBranchId : branchId}
-					isCreateInventoryTransfer={type !== 'Requisition Slip'}
-					isDisabled={type === 'Requisition Slip' && hasEmptyUnits}
-					type={type}
-				/>
+				{!prePopulatedProduct && (
+					<ProductSearch
+						barcodeScannerRef={barcodeScannerRef}
+						branchId={type === 'Adjustment Slip' ? selectedBranchId : branchId}
+						isCreateInventoryTransfer={type !== 'Requisition Slip'}
+						isDisabled={type === 'Requisition Slip' && hasEmptyUnits}
+						type={type}
+					/>
+				)}
 				<ProductTable
 					isLoading={barcodeScanLoading || isLoading}
 					type={type}

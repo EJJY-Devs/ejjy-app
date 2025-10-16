@@ -22,6 +22,7 @@ const service = {
 	getDailySummary: async (
 		params: {
 			date?: string;
+			month?: string;
 			branch_id?: string | number;
 			ordering?: string;
 			product_category?: string;

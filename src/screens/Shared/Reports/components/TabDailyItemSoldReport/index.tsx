@@ -1,4 +1,4 @@
-import { Col, Row, Table, Typography, Select, DatePicker } from 'antd';
+import { Col, Row, Table, Select, DatePicker } from 'antd';
 import { EyeFilled } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
 import { Box, Label } from 'components/elements';
@@ -58,9 +58,32 @@ const DailyItemSoldReport = () => {
 	const [selectedDateRangeFilter, setSelectedDateRangeFilter] = useState('');
 	const [selectedProductCategory, setSelectedProductCategory] = useState('');
 	const [selectedDate, setSelectedDate] = useState<Moment>(moment());
+	const [selectedMonth, setSelectedMonth] = useState('');
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
+
+	// Initialize filters from URL params
+	useEffect(() => {
+		if (params.month && params.month !== selectedMonth) {
+			setSelectedMonth(params.month as string);
+		}
+		if (params.dateRange && params.dateRange !== selectedDateRangeFilter) {
+			setSelectedDateRangeFilter(params.dateRange as string);
+		}
+		if (
+			params.productCategory &&
+			params.productCategory !== selectedProductCategory
+		) {
+			setSelectedProductCategory(params.productCategory as string);
+		}
+		if (params.selectedDate) {
+			const paramDate = moment(params.selectedDate as string);
+			if (paramDate.isValid() && !paramDate.isSame(selectedDate, 'day')) {
+				setSelectedDate(paramDate);
+			}
+		}
+	}, [params]);
 	const user = useUserStore((state) => state.user);
 
 	const { data: branchesData } = useBranches({
@@ -103,6 +126,7 @@ const DailyItemSoldReport = () => {
 			title: 'Total Products Sold',
 			dataIndex: 'totalProductsSold',
 			render: (total: number) => total?.toLocaleString() || '0',
+			width: 500,
 		});
 
 		// Add Actions column
@@ -115,12 +139,37 @@ const DailyItemSoldReport = () => {
 					onClick={() => handleDateClick(record.date, record.branchId, record)}
 				/>
 			),
+			width: 400,
 		});
 
 		return columns;
 	};
 
 	// METHODS
+	const getMonthDates = () => {
+		if (selectedMonth) {
+			// Parse the selected month (format: YYYY-MM)
+			const [year, month] = selectedMonth.split('-').map(Number);
+			const startDate = moment({ year, month: month - 1, day: 1 });
+			const endDate = startDate.clone().endOf('month');
+
+			// Generate all dates in the month
+			const dates = [];
+			const current = startDate.clone();
+			while (current.isSameOrBefore(endDate, 'day')) {
+				dates.push(current.format('YYYY-MM-DD'));
+				current.add(1, 'day');
+			}
+
+			return {
+				startDate: startDate.format('YYYY-MM-DD'),
+				endDate: endDate.format('YYYY-MM-DD'),
+				dates,
+			};
+		}
+		return null;
+	};
+
 	const getDateRanges = () => {
 		if (selectedDateRangeFilter === 'last3days') {
 			// Last 3 days: from 3 days before selected date to 1 day before selected date
@@ -159,6 +208,32 @@ const DailyItemSoldReport = () => {
 		return null;
 	};
 
+	const fetchMonthProductsSold = async (month: string, branchId?: number) => {
+		try {
+			const response = await TransactionProductsService.getDailySummary(
+				{
+					month,
+					branch_id: branchId,
+					product_category: selectedProductCategory || undefined,
+					ordering: '-quantity',
+				},
+				getLocalApiUrl(),
+			);
+
+			const { data } = response;
+			return data.map((item: any) => ({
+				productId: item.product_id,
+				name: item.print_details,
+				code: item.code,
+				unitOfMeasurement: item.unit_of_measurement,
+				quantity: Number(item.quantity),
+			}));
+		} catch (error) {
+			console.error('Error fetching month products sold:', error);
+			return [];
+		}
+	};
+
 	const fetchAggregatedProductsSold = async (
 		dates: string[],
 		branchId?: number,
@@ -189,7 +264,7 @@ const DailyItemSoldReport = () => {
 					if (!productAggregation[productId]) {
 						productAggregation[productId] = {
 							productId,
-							name: item.name,
+							name: item.print_details,
 							code: item.code,
 							unitOfMeasurement: item.unit_of_measurement,
 							quantity: 0,
@@ -239,7 +314,93 @@ const DailyItemSoldReport = () => {
 			setIsLoadingTableData(true);
 
 			try {
-				// Handle date range filtering first
+				// Handle month filtering first (highest priority)
+				if (selectedMonth) {
+					const monthDates = getMonthDates();
+					if (!monthDates) {
+						setDataSource([]);
+						return;
+					}
+
+					const isHeadOffice = isUserFromOffice(user.user_type);
+
+					// For head office users, wait for branches data to be loaded
+					if (isHeadOffice && !branchesData?.list) {
+						console.log(
+							'Head office user - waiting for branches data to load...',
+						);
+						return;
+					}
+
+					const data: TableRow[] = [];
+
+					if (isHeadOffice && !params?.branchId) {
+						// Head office user without specific branch selected - show all branches
+						const branches = (branchesData as any)?.list || [];
+
+						const promises = branches.map(async (branch: any) => {
+							const monthProducts = await fetchMonthProductsSold(
+								selectedMonth,
+								branch.id,
+							);
+							const totalProductsCount = monthProducts.length;
+
+							if (totalProductsCount > 0) {
+								return {
+									key: `${selectedMonth}-${branch.id}`,
+									date: `${monthDates.startDate}-${monthDates.endDate}`,
+									formattedDate: String(
+										`${moment(monthDates.startDate).format('MMMM YYYY')}`,
+									),
+									totalProductsSold: totalProductsCount,
+									branchName: branch.name,
+									branchId: branch.id,
+								};
+							}
+							return null;
+						});
+
+						const results = await Promise.all(promises);
+						data.push(...results.filter((item) => item !== null));
+					} else {
+						// Branch user or head office user with specific branch selected
+						const branchId = isUserFromBranch(user.user_type)
+							? getLocalBranchId()
+							: params?.branchId;
+
+						const branchName =
+							isHeadOffice && branchId
+								? (branchesData as any)?.list?.find(
+										(b: any) => b.id === Number(branchId),
+								  )?.name
+								: undefined;
+
+						const monthProducts = await fetchMonthProductsSold(
+							selectedMonth,
+							branchId ? Number(branchId) : undefined,
+						);
+
+						const totalProductsCount = monthProducts.length;
+
+						if (totalProductsCount > 0) {
+							data.push({
+								key: selectedMonth,
+								date: `${monthDates.startDate}-${monthDates.endDate}`,
+								formattedDate: String(
+									`${moment(monthDates.startDate).format('MMMM YYYY')}`,
+								),
+								totalProductsSold: totalProductsCount,
+								branchName,
+								branchId: branchId ? Number(branchId) : undefined,
+							});
+						}
+					}
+
+					setDataSource(data);
+					return;
+				}
+
+				// Handle date range filtering
 				if (selectedDateRangeFilter) {
 					const dateRanges = getDateRanges();
 					if (!dateRanges) {
@@ -409,6 +570,7 @@ const DailyItemSoldReport = () => {
 	}, [
 		selectedDate,
 		selectedDateRangeFilter,
+		selectedMonth,
 		user.user_type,
 		params?.branchId,
 		branchesData?.list?.length,
@@ -428,7 +590,6 @@ const DailyItemSoldReport = () => {
 		// Always use formattedDate from record, which is already a proper string
 		const reportDateString = String(record?.formattedDate || 'N/A');
 		setSelectedReportDate(reportDateString);
-
 		try {
 			// Set the selected branch first (for immediate display)
 			if (isUserFromOffice(user.user_type)) {
@@ -459,8 +620,15 @@ const DailyItemSoldReport = () => {
 
 			let products: DailyItemSoldSummaryItem[] = [];
 
-			// Check if this is a date range filter result
-			if (selectedDateRangeFilter && date.includes('-')) {
+			// Check if this is a month filter result
+			if (selectedMonth && date.includes('-')) {
+				products = await fetchMonthProductsSold(
+					selectedMonth,
+					!isUserFromBranch(user.user_type) && (branchId || params?.branchId)
+						? branchId || Number(params.branchId as string | number)
+						: undefined,
+				);
+			} else if (selectedDateRangeFilter && date.includes('-')) {
 				// This is a date range - fetch aggregated data
 				const dateRanges = getDateRanges();
 				if (dateRanges) {
@@ -491,13 +659,14 @@ const DailyItemSoldReport = () => {
 
 				products = data.map((item: any) => ({
 					productId: item.product_id,
-					name: item.name,
+					name: item.print_details,
 					code: item.code,
 					unitOfMeasurement: item.unit_of_measurement,
 					quantity: Number(item.quantity),
 				}));
 			}
 
+			console.log('products', products);
 			setSelectedDailySummary(products);
 			setIsLoadingModalData(false);
 		} catch (error) {
@@ -516,44 +685,93 @@ const DailyItemSoldReport = () => {
 
 	return (
 		<Box>
-			<Row gutter={[16, 16]}>
-				<Col span={24}>
-					<Typography.Title level={5}>Daily Item Sold Report</Typography.Title>
-				</Col>
-			</Row>
-
 			<br />
 
 			{/* All filters in one row */}
 			<Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-				<Col span={8}>
+				<Col span={6}>
 					<Label label="Select Date" spacing />
 					<DatePicker
 						className="w-100"
+						disabled={!!selectedMonth}
 						value={selectedDate}
 						onChange={(date: Moment | null) => {
 							if (date) {
 								setSelectedDate(date);
+								// Clear month filter when date is selected
+								setSelectedMonth('');
+								setQueryParams(
+									{
+										selectedDate: date.format('YYYY-MM-DD'),
+										month: undefined,
+									},
+									{ shouldResetPage: true },
+								);
 							}
 						}}
 					/>
 				</Col>
-				<Col span={8}>
+				<Col span={6}>
 					<Label label="Date Range" spacing />
 					<Select
 						className="w-100"
+						disabled={!!selectedMonth}
 						placeholder="Select Date Range"
 						value={selectedDateRangeFilter || undefined}
 						allowClear
 						onChange={(value) => {
 							setSelectedDateRangeFilter(value || '');
+							// Clear month filter when date range is selected
+							if (value) {
+								setSelectedMonth('');
+								setQueryParams(
+									{
+										dateRange: value,
+										month: undefined,
+									},
+									{ shouldResetPage: true },
+								);
+							} else {
+								setQueryParams(
+									{ dateRange: undefined },
+									{ shouldResetPage: true },
+								);
+							}
 						}}
 					>
 						<Select.Option value="last3days">Last 3 Days</Select.Option>
 						<Select.Option value="last7days">Last 7 Days</Select.Option>
 					</Select>
 				</Col>
-				<Col span={8}>
+				<Col span={6}>
+					<Label label="Month" spacing />
+					<DatePicker.MonthPicker
+						className="w-100"
+						format="MMMM YYYY"
+						placeholder="Select Month"
+						value={selectedMonth ? moment(selectedMonth) : undefined}
+						allowClear
+						onChange={(date) => {
+							const monthValue = date ? date.format('YYYY-MM') : '';
+							setSelectedMonth(monthValue);
+							// Update URL params and clear other date filters when month is selected
+							if (monthValue) {
+								setSelectedDateRangeFilter('');
+								setQueryParams(
+									{
+										month: monthValue,
+										dateRange: undefined,
+										selectedDate: undefined,
+									},
+									{ shouldResetPage: true },
+								);
+							} else {
+								setQueryParams({ month: undefined }, { shouldResetPage: true });
+							}
+						}}
+					/>
+				</Col>
+				<Col span={6}>
 					<Label label="Product Category" spacing />
 					<Select
 						className="w-100"
@@ -564,7 +782,13 @@ const DailyItemSoldReport = () => {
 						value={selectedProductCategory || undefined}
 						allowClear
 						showSearch
-						onChange={(value) => setSelectedProductCategory(value || '')}
+						onChange={(value) => {
+							setSelectedProductCategory(value || '');
+							setQueryParams(
+								{ productCategory: value || undefined },
+								{ shouldResetPage: true },
+							);
+						}}
 					>
 						{productCategories.map(({ id, name }) => (
 							<Select.Option key={id} value={name}>

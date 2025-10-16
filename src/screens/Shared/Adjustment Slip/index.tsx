@@ -38,7 +38,7 @@ export const AdjustmentSlip = () => {
 	});
 
 	const columns = [
-		{ title: 'ID', dataIndex: 'id' },
+		{ title: 'Reference Number', dataIndex: 'reference_number' },
 		{ title: 'Date/Time', dataIndex: 'datetime' },
 		{ title: 'Branch', dataIndex: 'branch' },
 	];
@@ -46,13 +46,13 @@ export const AdjustmentSlip = () => {
 	useEffect(() => {
 		const mapped = adjustmentSlips?.adjustmentSlips?.map((item) => ({
 			key: item.id,
-			id: (
+			reference_number: (
 				<Button
 					className="pa-0"
 					type="link"
 					onClick={() => setSelectedAdjustmentSlip(item.id)}
 				>
-					{item.id}
+					{item.reference_number || EMPTY_CELL}
 				</Button>
 			),
 			datetime: formatDateTime(item.datetime_created),

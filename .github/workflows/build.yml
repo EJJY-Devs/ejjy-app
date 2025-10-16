@@ -1,35 +1,27 @@
-name: Build & Publish Electron Apps
+name: Build Electron Apps (macOS Only)
 
 on:
-  workflow_dispatch:  # 👈 manual trigger only
+  workflow_dispatch:  # 👈 manually triggered only
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            app: backoffice
-            build_script: build:electron:ci
-          - os: windows-latest
-            app: headoffice
-            build_script: build:electron:headoffice:ci
-          - os: macos-latest
-            app: backoffice
+          - app: backoffice
             build_script: build:electron:mac:ci
-          - os: macos-latest
-            app: headoffice
+          - app: headoffice
             build_script: build:electron:headoffice:mac:ci
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 16.13.2
         uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 16.13.2
           cache: 'npm'
 
       - name: Install dependencies
@@ -39,13 +31,11 @@ jobs:
         run: npm run build:local:ci
 
       - name: Setup Python (needed for macOS DMG cleanup)
-        if: runner.os == 'macOS'
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
       - name: Create Python symlink for macOS
-        if: runner.os == 'macOS'
         run: |
           echo "Python3 location: $(which python3)"
           echo "Python location: $(which python || echo 'not found')"
@@ -60,5 +50,5 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-${{ matrix.app }}
+          name: macos-${{ matrix.app }}
           path: dist/**

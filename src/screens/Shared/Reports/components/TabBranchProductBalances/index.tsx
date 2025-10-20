@@ -38,7 +38,13 @@ const BranchProductBalances = () => {
 	const columns: ColumnsType = [
 		{ title: 'Barcode', dataIndex: 'barcode' },
 		{ title: 'Description', dataIndex: 'description' },
-		{ title: 'Value', dataIndex: 'value', align: 'right' },
+		{
+			title: 'Value',
+			dataIndex: 'value',
+			align: 'right',
+			sorter: (a: any, b: any) => parseFloat(a.value) - parseFloat(b.value),
+			sortDirections: ['ascend', 'descend', 'ascend'],
+		},
 		...(isUserFromOffice(user.user_type)
 			? [{ title: 'Action', dataIndex: 'action' }]
 			: []),

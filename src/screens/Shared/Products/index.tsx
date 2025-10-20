@@ -47,7 +47,6 @@ import {
 	DEFAULT_PAGE_SIZE,
 	MAX_PAGE_SIZE,
 	SEARCH_DEBOUNCE_TIME,
-	TAG_MM_TO_PX,
 	pageSizeOptions,
 } from 'global';
 import {
@@ -59,7 +58,6 @@ import {
 	useQueryParams,
 	useSiteSettings,
 } from 'hooks';
-import jsPDF from 'jspdf';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
@@ -107,7 +105,6 @@ export const Products = () => {
 	const [selectedProduct, setSelectedProduct] = useState(null);
 	const [hasPendingTransactions] = useState(false);
 	const [isCreatingPdf, setIsCreatingPdf] = useState(false);
-	const [html, setHtml] = useState('');
 	const [isSyncing, setIsSyncing] = useState(false);
 
 	// CUSTOM HOOKS
@@ -214,7 +211,7 @@ export const Products = () => {
 								type="primary"
 								ghost
 								onClick={() => {
-									handleCreatePdf(product);
+									handlePrintPriceTag(product);
 								}}
 							/>
 						</Tooltip>
@@ -325,38 +322,20 @@ export const Products = () => {
 		}
 	};
 
-	const handleCreatePdf = (product) => {
+	const handlePrintPriceTag = (product) => {
 		setIsCreatingPdf(product.id);
 
 		const tagWidth = Number(getAppTagPrinterPaperWidth());
 		const tagHeight = Number(getAppTagPrinterPaperHeight());
 
-		// eslint-disable-next-line new-cap
-		const pdf = new jsPDF('l', 'px', [
-			tagWidth * TAG_MM_TO_PX,
-			tagHeight * TAG_MM_TO_PX,
-		]);
-
-		const dataHtml = printProductPriceTag(product, siteSettings, {
+		printProductPriceTag(product, siteSettings, {
 			paperWidth: tagWidth,
 			paperHeight: tagHeight,
 			fontSize: Number(getAppTagPrinterFontSize()),
 			fontFamily: getAppTagPrinterFontFamily(),
 		});
 
-		setHtml(dataHtml);
-
-		setTimeout(() => {
-			pdf.html(dataHtml, {
-				margin: 20,
-				filename: `ProductPriceTag_${product.print_details}`,
-				callback: (instance) => {
-					window.open(instance.output('bloburl').toString());
-					setIsCreatingPdf(false);
-					setHtml('');
-				},
-			});
-		}, 500);
+		setIsCreatingPdf(false);
 	};
 
 	const handleReinitialize = async (file) => {
@@ -555,12 +534,6 @@ export const Products = () => {
 					/>
 				)}
 			</Box>
-
-			<div
-				// eslint-disable-next-line react/no-danger
-				dangerouslySetInnerHTML={{ __html: html }}
-				style={{ display: 'none' }}
-			/>
 
 			{/* TODO: Temporarily hid the Pending Transactions section. Need to be revisited if this is still needed */}
 			{/* {!isUserFromBranch(user.user_type) && (

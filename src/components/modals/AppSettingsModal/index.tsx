@@ -45,8 +45,17 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 
 	// METHODS
 	const handleSubmit = (formData) => {
+		const currentAppType = getAppType();
+
+		// Only trigger relaunch if app type actually changed
+		const shouldRelaunch = formData.appType !== currentAppType;
+
 		setHeadOfficeType(formData.headOfficeType);
-		setAppType(formData.appType, true);
+		if (shouldRelaunch) {
+			setAppType(formData.appType, true);
+		} else {
+			setAppType(formData.appType, false);
+		}
 
 		localStorage.setItem(APP_APP_TYPE_KEY, formData.appType);
 		localStorage.setItem(

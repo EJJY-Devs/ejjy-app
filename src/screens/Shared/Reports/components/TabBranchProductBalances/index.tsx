@@ -37,12 +37,20 @@ const BranchProductBalances = () => {
 	// DYNAMIC COLUMNS
 	const columns: ColumnsType = [
 		{ title: 'Barcode', dataIndex: 'barcode' },
-		{ title: 'Description', dataIndex: 'description' },
+		{
+			title: 'Description',
+			dataIndex: 'description',
+		},
 		{
 			title: 'Value',
 			dataIndex: 'value',
 			align: 'right',
-			sorter: (a: any, b: any) => parseFloat(a.value) - parseFloat(b.value),
+			sorter: true,
+			sortOrder: (() => {
+				if (params?.ordering === 'value') return 'ascend';
+				if (params?.ordering === '-value') return 'descend';
+				return null;
+			})(),
 			sortDirections: ['ascend', 'descend', 'ascend'],
 		},
 		...(isUserFromOffice(user.user_type)
@@ -142,6 +150,29 @@ const BranchProductBalances = () => {
 				}}
 				scroll={{ x: 800 }}
 				bordered
+				onChange={(pagination, filters, sorter) => {
+					// Handle sorting
+					if (sorter && !Array.isArray(sorter)) {
+						const { field, order } = sorter;
+						if (field === 'value') {
+							let ordering;
+							if (order === 'ascend') {
+								ordering = 'value';
+							} else if (order === 'descend') {
+								ordering = '-value';
+							} else {
+								ordering = undefined;
+							}
+							setQueryParams({ ordering }, { shouldResetPage: true });
+						}
+					} else if (
+						!sorter ||
+						(Array.isArray(sorter) && sorter.length === 0)
+					) {
+						// Clear sorting
+						setQueryParams({ ordering: undefined }, { shouldResetPage: true });
+					}
+				}}
 			/>
 		</Box>
 	);

@@ -7,6 +7,7 @@ interface List extends IListRequest {
 	branch_id?: number;
 	product_id?: number;
 	product_category?: string;
+	ordering?: string;
 }
 
 interface Edit {

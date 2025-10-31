@@ -92,7 +92,6 @@ export const useInitializeData = ({ params, options }: Query) =>
 			return service;
 		},
 		{
-			refetchInterval: params?.isHeadOffice ? 60_000 : 10_000,
 			refetchIntervalInBackground: true,
 			notifyOnChangeProps: ['isLoading', 'isSuccess'],
 			onSuccess: () => {
@@ -188,7 +187,7 @@ export const useInitializeIds = ({ params, options }: Query) =>
 			return response;
 		},
 		{
-			refetchInterval: REFETCH_INTERVAL_MS,
+			refetchInterval: 30_000,
 			refetchIntervalInBackground: true,
 			notifyOnChangeProps: ['isLoading', 'isSuccess'],
 			onSuccess: (data) => {

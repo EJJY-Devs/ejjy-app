@@ -174,43 +174,9 @@ const App = () => {
 				getAppType() === appTypes.HEAD_OFFICE &&
 				!storageData.productIds &&
 				!storageData.branchProductIds &&
-				!storageData.branchProductBalanceUpdateLogsIds &&
-				!storageData.transactionIds
-					? 300000 // 5 minutes
-					: undefined, // Use default from useInitializeData hook
-		},
-	});
-
-	// Initialize transactions AFTER products are done - only when products/branch products don't exist
-	const {
-		isFetching: isInitializingTransactions,
-		isSuccess: isTransactionsInitialized,
-	} = useInitializeData({
-		params: {
-			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
-			notMainHeadOffice: getHeadOfficeType() === headOfficeTypes.NOT_MAIN,
-			...(storageData.transactionIds &&
-				!storageData.productIds &&
-				!storageData.branchProductIds && {
-					transactionIds: storageData.transactionIds
-						.split(',')
-						.slice(0, 20)
-						.join(','),
-				}),
-		},
-		options: {
-			enabled:
-				isNetworkSuccess &&
-				isFetchingBranchesSuccess &&
-				!!getOnlineApiUrl() &&
-				!isStandAlone() &&
-				!isAnyInitializationRunning &&
-				isProductsInitialized &&
-				!storageData.productIds &&
-				!storageData.branchProductIds &&
-				!!storageData.transactionIds &&
-				getHeadOfficeType() === headOfficeTypes.NOT_MAIN &&
-				getAppType() === appTypes.HEAD_OFFICE,
+				!storageData.branchProductBalanceUpdateLogsIds
+					? 300_000 // 5 minutes
+					: 10_000, // 10 seconds
 		},
 	});
 
@@ -244,19 +210,14 @@ const App = () => {
 				// Wait for products to be initialized first
 				isProductsInitialized &&
 				// If transactions are supposed to run, wait for them too
-				(!storageData.transactionIds ||
-					!!storageData.productIds ||
-					!!storageData.branchProductIds ||
-					isTransactionsInitialized),
+				(!!storageData.productIds || !!storageData.branchProductIds),
 		},
 	});
 
 	// Track initialization status to prevent multiple concurrent calls
 	useEffect(() => {
-		setIsAnyInitializationRunning(
-			isInitializingProducts || isInitializingTransactions || isInitializingIds,
-		);
-	}, [isInitializingProducts, isInitializingTransactions, isInitializingIds]);
+		setIsAnyInitializationRunning(isInitializingProducts || isInitializingIds);
+	}, [isInitializingProducts, isInitializingIds]);
 
 	// METHODS
 	useEffect(() => {

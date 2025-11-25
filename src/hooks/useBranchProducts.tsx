@@ -486,4 +486,40 @@ export const useBranchProductEditPriceCost = () => {
 	);
 };
 
+export const useBranchProductDelete = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation<any, any, any>(
+		async ({
+			id,
+			actingUserId,
+			baseURL,
+		}: {
+			id: number;
+			actingUserId: number;
+			baseURL?: string;
+		}) => {
+			console.log('useBranchProductDelete called with:', {
+				id,
+				actingUserId,
+				acting_user_id: actingUserId,
+				baseURL,
+			});
+			return wrapServiceWithCatch(
+				BranchProductsService.delete(
+					id,
+					{ acting_user_id: actingUserId },
+					baseURL || getLocalApiUrl(),
+				),
+			);
+		},
+		{
+			onSuccess: () => {
+				queryClient.invalidateQueries('useBranchProducts');
+				queryClient.invalidateQueries('useBranchProductRetrieve');
+			},
+		},
+	);
+};
+
 export default useBranchProductsNew;

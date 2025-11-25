@@ -49,6 +49,7 @@ export const Cart = ({
 		isCreateAdjustmentSlipVisible,
 		setIsCreateAdjustmentSlipVisible,
 	] = useState(false);
+	const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
 	const [isBranchSelectVisible, setIsBranchSelectVisible] = useState(
 		type === 'Adjustment Slip' && !prePopulatedProduct,
@@ -62,6 +63,7 @@ export const Cart = ({
 
 	// REFS
 	const barcodeScannerRef = useRef(null);
+	const cartModalRef = useRef(null);
 
 	const branchId = getLocalBranchId();
 
@@ -117,6 +119,25 @@ export const Cart = ({
 			}
 		}
 	}, [prePopulatedProduct, type, resetProducts]);
+
+	// Cleanup messages on unmount
+	useEffect(() => {
+		return () => {
+			message.destroy(); // Clear any pending error messages when component unmounts
+		};
+	}, []);
+
+	// Focus the cart after adding products so ESC key works
+	useEffect(() => {
+		if (cartModalRef.current) {
+			// Small delay to ensure DOM is updated after product is added
+			setTimeout(() => {
+				if (cartModalRef.current) {
+					cartModalRef.current.focus();
+				}
+			}, 100);
+		}
+	}, [useBoundStore((state) => state.products)]);
 
 	const handleCreateReceivingVoucher = async (formData) => {
 		const currentProducts = useBoundStore.getState().products;
@@ -254,21 +275,54 @@ export const Cart = ({
 
 	const handleBack = () => {
 		const currentProducts = useBoundStore.getState().products;
-		if (currentProducts.length > 0) {
-			Modal.confirm({
-				title: 'Warning',
-				content:
-					'Closing this will reset the products in your cart. Are you sure you want to continue?',
-				okText: 'Confirm',
-				cancelText: 'Cancel',
-				onOk: () => {
-					resetProducts(); // Reset the products
-					onClose(); // Close the modal
-				},
-			});
-		} else {
+
+		// If no products, close immediately
+		if (!currentProducts || currentProducts.length === 0) {
 			onClose(); // Close the modal if no products
+			setSearchedText('');
+			return;
 		}
+
+		// Prevent multiple confirmation modals from opening
+		if (isConfirmModalOpen) {
+			return;
+		}
+
+		// Show confirmation modal for products
+		setIsConfirmModalOpen(true);
+		Modal.confirm({
+			title: 'Warning',
+			content:
+				'Closing this will reset the products in your cart. Are you sure you want to continue?',
+			okText: 'Confirm',
+			cancelText: 'Cancel',
+			autoFocusButton: 'ok',
+			onOk: () => {
+				resetProducts(); // Reset the products
+				message.destroy(); // Clear any pending error messages
+				setIsConfirmModalOpen(false);
+				onClose(); // Close the modal
+			},
+			onCancel: () => {
+				setIsConfirmModalOpen(false);
+				// Restore focus to cart modal after confirmation modal closes
+				setTimeout(() => {
+					if (cartModalRef.current) {
+						cartModalRef.current.focus();
+					}
+				}, 100);
+			},
+			afterClose: () => {
+				// Ensure state is reset even if modal is closed by other means
+				setIsConfirmModalOpen(false);
+				// Restore focus to cart modal after confirmation modal closes
+				setTimeout(() => {
+					if (cartModalRef.current) {
+						cartModalRef.current.focus();
+					}
+				}, 100);
+			},
+		});
 
 		setSearchedText('');
 	};
@@ -330,6 +384,7 @@ export const Cart = ({
 				closable
 				open
 				onCancel={() => {
+					message.destroy(); // Clear any pending error messages
 					setIsBranchSelectVisible(false);
 					onClose();
 				}}
@@ -378,7 +433,10 @@ export const Cart = ({
 			)}
 
 			<section
+				ref={cartModalRef}
 				className={`Cart ${prePopulatedProduct ? 'Cart--prepopulated' : ''}`}
+				style={{ outline: 'none' }}
+				tabIndex={-1}
 			>
 				<RequestErrors
 					errors={convertIntoArray(responseError)}
@@ -410,7 +468,15 @@ export const Cart = ({
 					<CreateInventoryTransferModal
 						isLoading={isLoading}
 						type={type}
-						onClose={() => setIsCreateInventoryTransferModalVisible(false)}
+						onClose={() => {
+							setIsCreateInventoryTransferModalVisible(false);
+							// Restore focus to cart modal after closing
+							setTimeout(() => {
+								if (cartModalRef.current) {
+									cartModalRef.current.focus();
+								}
+							}, 100);
+						}}
 						onSubmit={handleModalSubmit}
 					/>
 				)}
@@ -418,7 +484,15 @@ export const Cart = ({
 				{isCreateRequisitionSlipVisible && (
 					<CreateRequisitionSlipModal
 						isLoading={isLoading}
-						onClose={() => setIsCreateRequisitionSlipVisible(false)}
+						onClose={() => {
+							setIsCreateRequisitionSlipVisible(false);
+							// Restore focus to cart modal after closing
+							setTimeout(() => {
+								if (cartModalRef.current) {
+									cartModalRef.current.focus();
+								}
+							}, 100);
+						}}
 						onSubmit={handleModalSubmit}
 					/>
 				)}
@@ -426,7 +500,15 @@ export const Cart = ({
 				{isCreateAdjustmentSlipVisible && (
 					<CreateAdjustmentSlipModal
 						isLoading={isLoading}
-						onClose={() => setIsCreateAdjustmentSlipVisible(false)}
+						onClose={() => {
+							setIsCreateAdjustmentSlipVisible(false);
+							// Restore focus to cart modal after closing
+							setTimeout(() => {
+								if (cartModalRef.current) {
+									cartModalRef.current.focus();
+								}
+							}, 100);
+						}}
 						onSubmit={handleModalSubmit}
 					/>
 				)}

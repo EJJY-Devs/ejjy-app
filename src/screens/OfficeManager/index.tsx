@@ -29,20 +29,13 @@ import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
 import shallow from 'zustand/shallow';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
-import { BackOrders } from './BackOrders/BackOrders';
-import { ViewBackOrder } from './BackOrders/ViewBackOrder';
 import { Checkings } from './Checkings/Checkings';
 import { ViewChecking } from './Checkings/ViewChecking';
 import { Dashboard } from './Dashboard';
 import { Logs } from './Logs';
 import { Notifications } from './Notifications';
-import { PendingTransactions } from './PendingTransactions/PendingTransactions';
-import { ViewPendingTransaction } from './PendingTransactions/ViewPendingTransaction';
 import { RequisitionSlips } from './RequisitionSlips';
-import { ViewDeliveryReceipt } from './RequisitionSlips/ViewDeliveryReceipt';
 import { ViewRequisitionSlip } from './RequisitionSlips/ViewRequisitionSlip';
-import { ReturnItemSlips } from './ReturnItemSlips';
-import { ViewReturnItemSlip } from './ReturnItemSlips/ViewReturnItemSlip';
 import { Users } from './Users';
 
 const OfficeManager = () => {
@@ -384,32 +377,6 @@ const OfficeManager = () => {
 						path="/office-manager/requisition-slips/:id"
 						exact
 					/>
-					<Route
-						component={ViewDeliveryReceipt}
-						path="/office-manager/requisition-slips/delivery-receipt/:id"
-					/>
-
-					<Route
-						component={ReturnItemSlips}
-						path="/office-manager/return-item-slips"
-						exact
-					/>
-					<Route
-						component={ViewReturnItemSlip}
-						path="/office-manager/return-item-slips/:id"
-						exact
-					/>
-
-					<Route
-						component={BackOrders}
-						path="/office-manager/back-orders"
-						exact
-					/>
-					<Route
-						component={ViewBackOrder}
-						path="/office-manager/back-orders/:id"
-						exact
-					/>
 
 					<Route component={Logs} path="/office-manager/logs" />
 
@@ -418,17 +385,6 @@ const OfficeManager = () => {
 						path="/office-manager/notifications"
 					/>
 					<Route component={Reports} path="/office-manager/reports" />
-
-					<Route
-						component={PendingTransactions}
-						path="/office-manager/pending-transactions"
-						exact
-					/>
-					<Route
-						component={ViewPendingTransaction}
-						path="/office-manager/pending-transactions/:id"
-						exact
-					/>
 
 					<Redirect to="/office-manager/products" />
 				</Switch>

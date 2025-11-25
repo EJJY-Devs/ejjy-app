@@ -29,6 +29,17 @@ const service = {
 		},
 		baseURL,
 	) => axios.get('/transaction-products/daily-summary/', { baseURL, params }),
+
+	getUnsoldSummary: async (
+		params: {
+			date?: string;
+			month?: string;
+			branch_id?: string | number;
+			ordering?: string;
+			product_category?: string;
+		},
+		baseURL,
+	) => axios.get('/transaction-products/unsold-summary/', { baseURL, params }),
 };
 
 export default service;

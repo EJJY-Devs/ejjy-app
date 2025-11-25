@@ -47,7 +47,6 @@ export const ProductTable = ({
 	const [errorRemarks, setErrorRemarks] = useState<{ [key: string]: string }>(
 		{},
 	);
-	const [unitInputs, setUnitInputs] = useState<{ [key: string]: string }>({});
 	const [previousProductCount, setPreviousProductCount] = useState(0);
 	const [unitErrors, setUnitErrors] = useState<{ [key: string]: boolean }>({});
 
@@ -167,8 +166,6 @@ export const ProductTable = ({
 				const { product, quantity } = branchProduct;
 				const { barcode, name, key } = product;
 
-				console.log('branchProduct', branchProduct);
-
 				return [
 					<Tooltip key={`tooltip-delete-${key}`} placement="top" title="Remove">
 						<Button
@@ -202,9 +199,17 @@ export const ProductTable = ({
 						}`}
 					>
 						<div style={{ textAlign: 'center' }}>
-							{Number(
-								product.current_balance || branchProduct.current_balance || 0,
-							).toFixed(3)}
+							{product.unit_of_measurement === 'weighing'
+								? Number(
+										product.current_balance ||
+											branchProduct.current_balance ||
+											0,
+								  ).toFixed(3)
+								: Number(
+										product.current_balance ||
+											branchProduct.current_balance ||
+											0,
+								  )}
 						</div>
 					</Tooltip>,
 
@@ -332,18 +337,6 @@ export const ProductTable = ({
 				is_multiple_instance,
 			} = product;
 
-			// Initialize unit input from store if not already set
-			if (
-				type === 'Requisition Slip' &&
-				branchProduct.unit &&
-				!unitInputs[key]
-			) {
-				setUnitInputs((prev) => ({
-					...prev,
-					[key]: branchProduct.unit,
-				}));
-			}
-
 			const row = [
 				<Tooltip key={`tooltip-delete-${key}`} placement="top" title="Remove">
 					<Button
@@ -390,13 +383,20 @@ export const ProductTable = ({
 								unitInputRefs.current[key] = el;
 							}
 						}}
+						defaultValue={branchProduct.unit || ''}
 						placeholder="Enter unit"
 						style={{
 							textAlign: 'center',
 							width: '240px',
 						}}
-						value={unitInputs[key] || ''}
 						onBlur={(e) => {
+							// Check if a confirmation modal is open
+							const confirmModal = document.querySelector('.ant-modal-confirm');
+							if (confirmModal) {
+								// Confirmation modal is open, don't trap focus
+								return;
+							}
+
 							const { value } = e.target;
 							// Validate on blur - prevent leaving if empty
 							if (!value.trim()) {
@@ -404,7 +404,6 @@ export const ProductTable = ({
 									...prev,
 									[key]: true,
 								}));
-								message.error('Unit field is required');
 								// Refocus the input to prevent leaving
 								setTimeout(() => {
 									const inputRef = unitInputRefs.current[key];
@@ -419,23 +418,8 @@ export const ProductTable = ({
 								...prev,
 								[key]: false,
 							}));
-						}}
-						onChange={(e) => {
-							const { value } = e.target;
-							setUnitInputs((prev) => ({
-								...prev,
-								[key]: value,
-							}));
 
-							// Clear error if user starts typing and field has content
-							if (value.trim() && unitErrors[key]) {
-								setUnitErrors((prev) => ({
-									...prev,
-									[key]: false,
-								}));
-							}
-
-							// Update unit in the store
+							// Update store on blur
 							editProduct({
 								key,
 								product: {
@@ -444,7 +428,28 @@ export const ProductTable = ({
 								},
 							});
 						}}
+						onChange={(e) => {
+							const { value } = e.target;
+
+							// Clear error if user starts typing and field has content
+							if (value.trim() && unitErrors[key]) {
+								setUnitErrors((prev) => ({
+									...prev,
+									[key]: false,
+								}));
+							}
+						}}
 						onPressEnter={(e) => {
+							// Check if a confirmation modal is open
+							const confirmModal = document.querySelector('.ant-modal-confirm');
+							if (confirmModal) {
+								// Confirmation modal is open, don't validate unit field
+								// Let the modal handle the Enter key
+								e.preventDefault();
+								e.stopPropagation();
+								return;
+							}
+
 							const target = e.target as HTMLInputElement;
 							const value = target.value.trim();
 
@@ -454,15 +459,25 @@ export const ProductTable = ({
 									...prev,
 									[key]: true,
 								}));
-								message.error('Unit field is required');
+								message.error('Unit field is required!');
 								return; // Don't blur if validation fails
 							}
 
-							// Clear any existing error and blur
+							// Clear any existing error
 							setUnitErrors((prev) => ({
 								...prev,
 								[key]: false,
 							}));
+
+							// Update store before blurring
+							editProduct({
+								key,
+								product: {
+									...branchProduct,
+									unit: value,
+								},
+							});
+
 							target.blur();
 						}}
 					/>,
@@ -528,7 +543,7 @@ export const ProductTable = ({
 		toggleAction,
 		remarks,
 		errorRemarks,
-		unitInputs,
+		unitErrors,
 	]);
 
 	useEffect(() => {
@@ -545,13 +560,12 @@ export const ProductTable = ({
 	useEffect(() => {
 		if (type === 'Requisition Slip' && onUnitValidationChange) {
 			const hasEmptyUnits = products.some((product) => {
-				const key = product.product?.key;
-				const unitValue = unitInputs[key] || '';
+				const unitValue = product.unit || '';
 				return !unitValue.trim();
 			});
 			onUnitValidationChange(hasEmptyUnits);
 		}
-	}, [products, unitInputs, type, onUnitValidationChange]);
+	}, [products, type, onUnitValidationChange]);
 
 	const showRemoveProductConfirmation = (branchProduct, index) => {
 		const newIndex = (pageNumber - 1) * PRODUCT_LENGTH_PER_PAGE + index;

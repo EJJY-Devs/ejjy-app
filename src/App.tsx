@@ -32,13 +32,11 @@ import {
 	getAppType,
 	getBranchKey,
 	getBranchProductIds,
-	getBranchProductBalanceUpdateLogsIds,
 	getLocalApiUrl,
 	getLocalBranchId,
 	getOnlineApiUrl,
 	getOnlineBranchId,
 	getProductIds,
-	getTransactionIds,
 	isStandAlone,
 	getHeadOfficeType,
 } from 'utils';
@@ -83,9 +81,6 @@ const App = () => {
 	const [storageData, setStorageData] = useState(() => ({
 		productIds: getProductIds() || null,
 		branchProductIds: getBranchProductIds() || null,
-		branchProductBalanceUpdateLogsIds:
-			getBranchProductBalanceUpdateLogsIds() || null,
-		transactionIds: getTransactionIds() || null,
 	}));
 
 	useEffect(() => {
@@ -93,9 +88,6 @@ const App = () => {
 			setStorageData({
 				productIds: getProductIds() || null,
 				branchProductIds: getBranchProductIds() || null,
-				branchProductBalanceUpdateLogsIds:
-					getBranchProductBalanceUpdateLogsIds() || null,
-				transactionIds: getTransactionIds() || null,
 			});
 		};
 
@@ -124,26 +116,18 @@ const App = () => {
 	}, []);
 
 	const [branchId, setBranchId] = useState(null);
-	const [isAnyInitializationRunning, setIsAnyInitializationRunning] = useState(
-		false,
-	);
 
 	// Initialize products and branch products first
-	const {
-		isFetching: isInitializingProducts,
-		isSuccess: isProductsInitialized,
-	} = useInitializeData({
+	const { isSuccess: isProductsInitialized } = useInitializeData({
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
 			notMainHeadOffice: getHeadOfficeType() === headOfficeTypes.NOT_MAIN,
 			branchId:
-				getAppType() === appTypes.BACK_OFFICE ? getOnlineBranchId() : undefined,
+				getAppType() === appTypes.BACK_OFFICE ? getLocalBranchId() : undefined,
 			// Only include branchIds if there are no existing stored IDs (bulk initialize every 5 mins)
 			...(getAppType() === appTypes.HEAD_OFFICE &&
 				!storageData.productIds &&
-				!storageData.branchProductIds &&
-				!storageData.branchProductBalanceUpdateLogsIds &&
-				!storageData.transactionIds && {
+				!storageData.branchProductIds && {
 					branchIds: branches.map(({ id }) => id),
 				}),
 			...(storageData.productIds && {
@@ -155,12 +139,6 @@ const App = () => {
 					.slice(0, 100)
 					.join(','), // Limit to 100
 			}),
-			...(storageData.branchProductBalanceUpdateLogsIds && {
-				branchProductBalanceUpdateLogsIds: storageData.branchProductBalanceUpdateLogsIds
-					.split(',')
-					.slice(0, 20)
-					.join(','), // Limit to 20
-			}),
 		},
 		options: {
 			enabled:
@@ -168,49 +146,19 @@ const App = () => {
 				isFetchingBranchesSuccess &&
 				!!getOnlineApiUrl() &&
 				!isStandAlone() &&
-				!isAnyInitializationRunning,
+				// Only enable when there are IDs to process OR when doing bulk initialization
+				(!!storageData.productIds ||
+					!!storageData.branchProductIds ||
+					(!getProductIds() && !getBranchProductIds())),
+			refetchOnMount: false,
+			refetchOnWindowFocus: false,
 			// Set refetch interval to 5 minutes (300,000 ms) when doing bulk branch initialization
 			refetchInterval:
 				getAppType() === appTypes.HEAD_OFFICE &&
-				!storageData.productIds &&
-				!storageData.branchProductIds &&
-				!storageData.branchProductBalanceUpdateLogsIds &&
-				!storageData.transactionIds
-					? 300000 // 5 minutes
-					: undefined, // Use default from useInitializeData hook
-		},
-	});
-
-	// Initialize transactions AFTER products are done - only when products/branch products don't exist
-	const {
-		isFetching: isInitializingTransactions,
-		isSuccess: isTransactionsInitialized,
-	} = useInitializeData({
-		params: {
-			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
-			notMainHeadOffice: getHeadOfficeType() === headOfficeTypes.NOT_MAIN,
-			...(storageData.transactionIds &&
-				!storageData.productIds &&
-				!storageData.branchProductIds && {
-					transactionIds: storageData.transactionIds
-						.split(',')
-						.slice(0, 20)
-						.join(','),
-				}),
-		},
-		options: {
-			enabled:
-				isNetworkSuccess &&
-				isFetchingBranchesSuccess &&
-				!!getOnlineApiUrl() &&
-				!isStandAlone() &&
-				!isAnyInitializationRunning &&
-				isProductsInitialized &&
-				!storageData.productIds &&
-				!storageData.branchProductIds &&
-				!!storageData.transactionIds &&
-				getHeadOfficeType() === headOfficeTypes.NOT_MAIN &&
-				getAppType() === appTypes.HEAD_OFFICE,
+				!getProductIds() &&
+				!getBranchProductIds()
+					? 300_000 // 5 minutes
+					: 10_000, // 10 seconds
 		},
 	});
 
@@ -228,7 +176,7 @@ const App = () => {
 		}
 	}, [isFetchingBranchesSuccess, branches]);
 
-	const { isFetching: isInitializingIds } = useInitializeIds({
+	useInitializeIds({
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
 			...(getAppType() === appTypes.BACK_OFFICE && branchId && { branchId }),
@@ -241,22 +189,11 @@ const App = () => {
 				!!getOnlineApiUrl() &&
 				!isStandAlone() &&
 				(getAppType() === appTypes.HEAD_OFFICE || branchId !== null) &&
-				// Wait for products to be initialized first
 				isProductsInitialized &&
-				// If transactions are supposed to run, wait for them too
-				(!storageData.transactionIds ||
-					!!storageData.productIds ||
-					!!storageData.branchProductIds ||
-					isTransactionsInitialized),
+				!storageData.productIds &&
+				!storageData.branchProductIds,
 		},
 	});
-
-	// Track initialization status to prevent multiple concurrent calls
-	useEffect(() => {
-		setIsAnyInitializationRunning(
-			isInitializingProducts || isInitializingTransactions || isInitializingIds,
-		);
-	}, [isInitializingProducts, isInitializingTransactions, isInitializingIds]);
 
 	// METHODS
 	useEffect(() => {

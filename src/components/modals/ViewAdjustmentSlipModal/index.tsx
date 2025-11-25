@@ -4,10 +4,13 @@ import { PrinterOutlined } from '@ant-design/icons';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import { formatDateTime, formatQuantity } from 'utils';
 import { useAdjustmentSlipRetrieve } from 'hooks/useAdjustmentSlips';
+import { useSiteSettings } from 'hooks';
+import { useUserStore } from 'stores';
 import {
 	EMPTY_CELL,
 	getFullName,
 	VIEW_PRINTING_MODAL_WIDTH,
+	printAdjustmentSlip,
 } from 'ejjy-global';
 import dayjs from 'dayjs';
 
@@ -25,6 +28,8 @@ export const ViewAdjustmentSlipModal = ({
 	const { data: adjustmentSlip, isLoading } = useAdjustmentSlipRetrieve(
 		adjustmentSlipId,
 	);
+	const user = useUserStore((state) => state.user);
+	const { data: siteSettings } = useSiteSettings();
 
 	if (!adjustmentSlip) return null;
 
@@ -44,7 +49,7 @@ export const ViewAdjustmentSlipModal = ({
 	}));
 
 	const handlePrint = () => {
-		window.print();
+		printAdjustmentSlip({ adjustmentSlip, siteSettings, user });
 	};
 
 	const handleDownloadPdf = () => {

@@ -24,8 +24,6 @@ import {
 	headOfficeTypes,
 	appTypes,
 	APP_GOOGLE_API_URL_KEY,
-	APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
-	APP_TRANSACTION_IDS,
 } from 'global';
 
 export const getAppType = () => localStorage.getItem(APP_APP_TYPE_KEY);
@@ -39,12 +37,6 @@ export const getProductIds = () => localStorage.getItem(APP_PRODUCTS_IDS);
 
 export const getBranchProductIds = () =>
 	localStorage.getItem(APP_BRANCH_PRODUCT_IDS);
-
-export const getBranchProductBalanceUpdateLogsIds = () =>
-	localStorage.getItem(APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS);
-
-export const getTransactionIds = () =>
-	localStorage.getItem(APP_TRANSACTION_IDS);
 
 export const getOnlineBranchId = () =>
 	localStorage.getItem(APP_ONLINE_BRANCH_ID_KEY);

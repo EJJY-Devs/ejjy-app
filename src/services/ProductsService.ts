@@ -53,6 +53,9 @@ const service = {
 	list: async (params: List, baseURL) =>
 		axios.get('/products/', { baseURL, params }),
 
+	retrieve: async (id: number, baseURL) =>
+		axios.get(`/products/${id}/`, { baseURL }),
+
 	create: async (body: Modify, baseURL) =>
 		axios.post('/products/', body, { baseURL }),
 

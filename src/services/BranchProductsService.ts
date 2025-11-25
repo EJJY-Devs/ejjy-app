@@ -61,6 +61,10 @@ interface EditPriceCost {
 	product_id: number;
 }
 
+interface Delete {
+	acting_user_id: number;
+}
+
 const service = {
 	list: async (params: List, baseURL) =>
 		axios.get('/branches-products/', { baseURL, params }),
@@ -73,6 +77,9 @@ const service = {
 
 	editPriceCost: async (body: EditPriceCost, baseURL) =>
 		axios.patch('/branches-products/update-price-and-cost/', body, { baseURL }),
+
+	delete: async (id: number, body: Delete, baseURL) =>
+		axios.delete(`/branches-products/${id}/`, { baseURL, data: body }),
 };
 
 const serviceOffline = {

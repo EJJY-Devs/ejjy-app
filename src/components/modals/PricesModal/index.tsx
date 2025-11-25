@@ -29,10 +29,11 @@ const tabs = {
 
 interface Props {
 	product: any;
+	isBulkEdit?: boolean;
 	onClose: any;
 }
 
-export const PricesModal = ({ product, onClose }: Props) => {
+export const PricesModal = ({ product, isBulkEdit, onClose }: Props) => {
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
 	const appType = getAppType();
@@ -45,8 +46,7 @@ export const PricesModal = ({ product, onClose }: Props) => {
 		params: {
 			branchId:
 				appType === appTypes.BACK_OFFICE ? getLocalBranchId() : undefined,
-			productIds:
-				appType === appTypes.BACK_OFFICE ? product.product.id : product.id,
+			productIds: product?.product?.id || product?.id,
 			serviceType: serviceTypes.OFFLINE,
 		},
 		options: { enabled: product !== null },
@@ -78,7 +78,7 @@ export const PricesModal = ({ product, onClose }: Props) => {
 	const handleSubmit = async ({
 		branchProductFormData,
 		priceMarkdownFormData,
-		isBulkEdit,
+		isBulkEdit: isBulkEditFromForm,
 	}) => {
 		if (priceMarkdownFormData.length > 0) {
 			await createPriceMarkdown({
@@ -87,7 +87,7 @@ export const PricesModal = ({ product, onClose }: Props) => {
 			});
 		}
 
-		if (isBulkEdit) {
+		if (isBulkEditFromForm) {
 			await editProduct({
 				...branchProductFormData[0],
 				id: getId(product),
@@ -96,10 +96,7 @@ export const PricesModal = ({ product, onClose }: Props) => {
 		} else if (branchProductFormData.length > 0) {
 			await editBranchProductPriceCost({
 				actingUserId: appType === appTypes.BACK_OFFICE ? user.id : getId(user),
-				productId:
-					appType === appTypes.BACK_OFFICE
-						? product?.product?.id
-						: getId(product),
+				productId: product?.product?.id || getId(product),
 				data: branchProductFormData,
 				serverUrl:
 					appType === appTypes.BACK_OFFICE
@@ -146,7 +143,23 @@ export const PricesModal = ({ product, onClose }: Props) => {
 			/>
 
 			<Spin spinning={isLoading}>
-				{isUserFromBranch(user.user_type) ? (
+				{isBulkEdit && (
+					// Force bulk edit mode when isBulkEdit prop is true
+					<PricesForm
+						branches={branches}
+						isLoading={isLoading}
+						isSubmitting={
+							isCreatingPriceMarkdown ||
+							isEditingBranchProductPriceCost ||
+							isEditingProduct
+						}
+						product={product}
+						isBulkEdit
+						onClose={onClose}
+						onSubmit={handleSubmit}
+					/>
+				)}
+				{!isBulkEdit && isUserFromBranch(user.user_type) && (
 					<PricesForm
 						branches={branches}
 						branchProducts={branchProducts}
@@ -159,7 +172,8 @@ export const PricesModal = ({ product, onClose }: Props) => {
 						onClose={onClose}
 						onSubmit={handleSubmit}
 					/>
-				) : (
+				)}
+				{!isBulkEdit && !isUserFromBranch(user.user_type) && (
 					<Tabs
 						defaultActiveKey={
 							isUserFromOffice(user.user_type) ? tabs.ALL : tabs.BRANCHES

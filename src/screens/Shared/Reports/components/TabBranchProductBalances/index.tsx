@@ -52,6 +52,17 @@ const BranchProductBalances = () => {
 				return null;
 			})(),
 			sortDirections: ['ascend', 'descend', 'ascend'],
+			onHeaderCell: () => ({
+				onClick: () => {
+					let ordering;
+					if (!params?.ordering || params?.ordering === '-value') {
+						ordering = 'value';
+					} else if (params?.ordering === 'value') {
+						ordering = '-value';
+					}
+					setQueryParams({ ordering }, { shouldResetPage: true });
+				},
+			}),
 		},
 		...(isUserFromOffice(user.user_type)
 			? [{ title: 'Action', dataIndex: 'action' }]
@@ -66,19 +77,23 @@ const BranchProductBalances = () => {
 	} = useBranchProductBalances({
 		params: {
 			...params,
-			page: params?.page || DEFAULT_PAGE,
-			pageSize: params?.pageSize || DEFAULT_PAGE_SIZE,
+			page: Number(params?.page) || DEFAULT_PAGE,
+			pageSize: Number(params?.pageSize) || DEFAULT_PAGE_SIZE,
 		},
 	});
 
 	// EFFECTS
 	useEffect(() => {
 		const data = branchProductBalances.map((balance) => {
+			const isWeighing =
+				balance.branch_product?.product?.unit_of_measurement === 'weighing';
 			const baseData: any = {
 				key: balance.id,
 				barcode: balance.branch_product?.product?.barcode || EMPTY_CELL,
 				description: balance.branch_product?.product?.name || EMPTY_CELL,
-				value: Number(balance.value).toFixed(3),
+				value: isWeighing
+					? Number(balance.value).toFixed(3)
+					: Number(balance.value).toFixed(0),
 			};
 
 			// Only add action for head office users
@@ -150,29 +165,6 @@ const BranchProductBalances = () => {
 				}}
 				scroll={{ x: 800 }}
 				bordered
-				onChange={(pagination, filters, sorter) => {
-					// Handle sorting
-					if (sorter && !Array.isArray(sorter)) {
-						const { field, order } = sorter;
-						if (field === 'value') {
-							let ordering;
-							if (order === 'ascend') {
-								ordering = 'value';
-							} else if (order === 'descend') {
-								ordering = '-value';
-							} else {
-								ordering = undefined;
-							}
-							setQueryParams({ ordering }, { shouldResetPage: true });
-						}
-					} else if (
-						!sorter ||
-						(Array.isArray(sorter) && sorter.length === 0)
-					) {
-						// Clear sorting
-						setQueryParams({ ordering: undefined }, { shouldResetPage: true });
-					}
-				}}
 			/>
 		</Box>
 	);

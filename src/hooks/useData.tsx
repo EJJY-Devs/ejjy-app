@@ -2,20 +2,14 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useQuery } from 'react-query';
 import { DataService } from 'services';
-import {
-	APP_PRODUCTS_IDS,
-	APP_BRANCH_PRODUCT_IDS,
-	APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
-	APP_TRANSACTION_IDS,
-} from 'global';
+import { APP_PRODUCTS_IDS, APP_BRANCH_PRODUCT_IDS, appTypes } from 'global';
 
 import {
 	getLocalApiUrl,
 	isStandAlone,
 	getProductIds,
 	getBranchProductIds,
-	getBranchProductBalanceUpdateLogsIds,
-	getTransactionIds,
+	getAppType,
 } from 'utils';
 
 const REFETCH_INTERVAL_MS = 30_000;
@@ -44,8 +38,6 @@ export const useInitializeData = ({ params, options }: Query) =>
 							branch_id: params.branchId,
 							product_ids: params.productIds,
 							branch_product_ids: params.branchProductIds,
-							branch_product_balance_update_logs_ids:
-								params.branchProductBalanceUpdateLogsIds,
 							is_head_office: params.isHeadOffice,
 						},
 						baseURL,
@@ -69,19 +61,13 @@ export const useInitializeData = ({ params, options }: Query) =>
 				}
 			}
 			if (
-				params?.isHeadOffice &&
-				((params.productIds?.length ?? 0) > 0 ||
-					(params.branchProductIds?.length ?? 0) > 0 ||
-					(params.branchProductBalanceUpdateLogsIds?.length ?? 0) > 0 ||
-					(params.transactionIds?.length ?? 0) > 0)
+				(params.productIds?.length ?? 0) > 0 ||
+				(params.branchProductIds?.length ?? 0) > 0
 			) {
 				await DataService.initialize(
 					{
 						product_ids: params.productIds,
 						branch_product_ids: params.branchProductIds,
-						branch_product_balance_update_logs_ids:
-							params.branchProductBalanceUpdateLogsIds,
-						transaction_ids: params.transactionIds,
 						is_head_office: params.isHeadOffice,
 						not_main_head_office: params.notMainHeadOffice,
 					},
@@ -134,21 +120,6 @@ export const useInitializeData = ({ params, options }: Query) =>
 					initializedBranchProductIdsString,
 					params?.branchProductIds,
 				);
-
-				const initializedBranchProductBalanceUpdateLogsIdsString = getBranchProductBalanceUpdateLogsIds(); // Fetch branch product update logs IDs from local storage
-				updateRemainingIds(
-					APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
-					initializedBranchProductBalanceUpdateLogsIdsString,
-					params?.branchProductBalanceUpdateLogsIds,
-				);
-
-				// Update transaction IDs
-				const initializedTransactionIdsString = getTransactionIds(); // Fetch transaction IDs from local storage
-				updateRemainingIds(
-					APP_TRANSACTION_IDS,
-					initializedTransactionIdsString,
-					params?.transactionIds,
-				);
 			},
 			...options,
 		},
@@ -187,7 +158,7 @@ export const useInitializeIds = ({ params, options }: Query) =>
 			return response;
 		},
 		{
-			refetchInterval: 30_000,
+			refetchInterval: getAppType() === appTypes.HEAD_OFFICE ? 30_000 : 10_000,
 			refetchIntervalInBackground: true,
 			notifyOnChangeProps: ['isLoading', 'isSuccess'],
 			onSuccess: (data) => {
@@ -218,19 +189,6 @@ export const useInitializeIds = ({ params, options }: Query) =>
 				// Handle branch_product_ids
 				if (data?.data?.branch_product_ids) {
 					updateStoredIds(APP_BRANCH_PRODUCT_IDS, data.data.branch_product_ids);
-				}
-
-				// Handle branch_product_balance_update_logs_ids
-				if (data?.data?.branch_product_balance_update_logs_ids) {
-					updateStoredIds(
-						APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
-						data.data.branch_product_balance_update_logs_ids,
-					);
-				}
-
-				// Handle transaction_ids
-				if (data?.data?.transaction_ids) {
-					updateStoredIds(APP_TRANSACTION_IDS, data.data.transaction_ids);
 				}
 			},
 			...options,

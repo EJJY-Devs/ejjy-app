@@ -156,11 +156,43 @@ function createWindow() {
 			
 			document.addEventListener('keydown', function(e) {
 				// Block Ctrl+Plus, Ctrl+Minus, Ctrl+0 from web content (let Electron handle them)
-				if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+				// BUT allow them in input fields where users might need to type these characters
+				const isInputField = e.target && (
+					e.target.tagName === 'INPUT' || 
+					e.target.tagName === 'TEXTAREA' || 
+					e.target.contentEditable === 'true'
+				);
+				
+				if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0') && !isInputField) {
 					e.preventDefault();
 				}
 			});
 		`);
+	});
+
+	// Add global keyboard shortcuts for zoom that work regardless of menu
+	mainWindow.webContents.on('before-input-event', (event, input) => {
+		if (input.control && input.type === 'keyDown') {
+			if (input.key === '+' || input.key === '=') {
+				// Zoom In
+				const newZoomLevel = zoomLevel + ZOOM_CONFIG.STEP;
+				if (newZoomLevel <= ZOOM_CONFIG.MAX) {
+					updateZoom(newZoomLevel);
+				}
+				event.preventDefault();
+			} else if (input.key === '-') {
+				// Zoom Out
+				const newZoomLevel = zoomLevel - ZOOM_CONFIG.STEP;
+				if (newZoomLevel >= ZOOM_CONFIG.MIN) {
+					updateZoom(newZoomLevel);
+				}
+				event.preventDefault();
+			} else if (input.key === '0') {
+				// Reset Zoom
+				updateZoom(ZOOM_CONFIG.DEFAULT);
+				event.preventDefault();
+			}
+		}
 	});
 
 	mainWindow.on('closed', () => {
@@ -258,6 +290,40 @@ function createWindow() {
 		});
 	}
 
+	// Add zoom menu for both dev and production
+	menuItems.push({
+		label: 'Options',
+		submenu: [
+			{
+				label: 'Zoom In',
+				accelerator: 'CmdOrCtrl+Plus',
+				click() {
+					const newZoomLevel = zoomLevel + ZOOM_CONFIG.STEP;
+					if (newZoomLevel <= ZOOM_CONFIG.MAX) {
+						updateZoom(newZoomLevel);
+					}
+				},
+			},
+			{
+				label: 'Zoom Out',
+				accelerator: 'CmdOrCtrl+-',
+				click() {
+					const newZoomLevel = zoomLevel - ZOOM_CONFIG.STEP;
+					if (newZoomLevel >= ZOOM_CONFIG.MIN) {
+						updateZoom(newZoomLevel);
+					}
+				},
+			},
+			{
+				label: 'Reset Zoom',
+				accelerator: 'CmdOrCtrl+0',
+				click() {
+					updateZoom(ZOOM_CONFIG.DEFAULT);
+				},
+			},
+		],
+	});
+
 	if (!isDev) {
 		menuItems.push({
 			label: 'Database',
@@ -266,38 +332,6 @@ function createWindow() {
 					label: 'Backup Database',
 					click: () => {
 						handleBackup();
-					},
-				},
-			],
-		});
-		menuItems.push({
-			label: 'Options',
-			submenu: [
-				{
-					label: 'Zoom In',
-					accelerator: 'CmdOrCtrl+Plus',
-					click() {
-						const newZoomLevel = zoomLevel + ZOOM_CONFIG.STEP;
-						if (newZoomLevel <= ZOOM_CONFIG.MAX) {
-							updateZoom(newZoomLevel);
-						}
-					},
-				},
-				{
-					label: 'Zoom Out',
-					accelerator: 'CmdOrCtrl+-',
-					click() {
-						const newZoomLevel = zoomLevel - ZOOM_CONFIG.STEP;
-						if (newZoomLevel >= ZOOM_CONFIG.MIN) {
-							updateZoom(newZoomLevel);
-						}
-					},
-				},
-				{
-					label: 'Reset Zoom',
-					accelerator: 'CmdOrCtrl+0',
-					click() {
-						updateZoom(ZOOM_CONFIG.DEFAULT);
 					},
 				},
 			],

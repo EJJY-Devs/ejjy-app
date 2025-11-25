@@ -3,7 +3,6 @@ import { Breadcrumb, Content } from 'components';
 import { useRequisitionSlipById } from 'hooks/useRequisitionSlips';
 import React, { useCallback } from 'react';
 import { useUserStore } from 'stores';
-import { OrderSlips } from './components/OrderSlips/OrderSlips';
 import { RequestedProducts } from './components/RequestedProducts';
 import './style.scss';
 
@@ -46,7 +45,6 @@ export const ViewRequisitionSlip = ({ match }: Props) => {
 				{requisitionSlip && (
 					<>
 						<RequestedProducts requisitionSlip={requisitionSlip} />
-						<OrderSlips requisitionSlip={requisitionSlip} />
 					</>
 				)}
 			</Spin>

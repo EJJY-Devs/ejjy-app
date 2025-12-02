@@ -32,13 +32,16 @@ export const useInitializeData = ({ params, options }: Query) =>
 			let service = null;
 
 			if (params?.branchId) {
+				// For BACK_OFFICE: if there are specific IDs to sync, include them; otherwise do bulk init
 				service = wrapServiceWithCatch(
 					DataService.initialize(
 						{
 							branch_id: params.branchId,
-							product_ids: params.productIds,
-							branch_product_ids: params.branchProductIds,
 							is_head_office: params.isHeadOffice,
+							...(params.productIds && { product_ids: params.productIds }),
+							...(params.branchProductIds && {
+								branch_product_ids: params.branchProductIds,
+							}),
 						},
 						baseURL,
 					),
@@ -59,11 +62,8 @@ export const useInitializeData = ({ params, options }: Query) =>
 				} catch (e) {
 					console.error('Initialize Data', e);
 				}
-			}
-			if (
-				(params.productIds?.length ?? 0) > 0 ||
-				(params.branchProductIds?.length ?? 0) > 0
-			) {
+			} else if (params.productIds || params.branchProductIds) {
+				// Only for HEAD_OFFICE incremental sync without branchId
 				await DataService.initialize(
 					{
 						product_ids: params.productIds,
@@ -84,17 +84,18 @@ export const useInitializeData = ({ params, options }: Query) =>
 				const updateRemainingIds = (
 					key: string,
 					initializedIdsString: string | null,
-					paramIds: string[] | undefined,
+					paramIdsString: string | undefined,
 				) => {
-					if (!initializedIdsString) return;
+					if (!initializedIdsString || !paramIdsString) return;
 
-					// Convert the comma-separated string to an array
+					// Convert the comma-separated strings to arrays
 					const initializedIds = initializedIdsString.split(',');
+					const paramIds = paramIdsString.split(',');
 
 					if (initializedIds.length > 0) {
 						// Filter out the IDs that are already initialized (from the params)
 						const remainingIds = initializedIds.filter(
-							(id) => !paramIds?.includes(id), // Remove matching IDs from local storage
+							(id) => !paramIds.includes(id), // Remove matching IDs from local storage
 						);
 
 						// Update localStorage: set an empty string if no remaining IDs, otherwise store as a string

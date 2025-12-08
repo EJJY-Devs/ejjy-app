@@ -122,8 +122,12 @@ const App = () => {
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
 			notMainHeadOffice: getHeadOfficeType() === headOfficeTypes.NOT_MAIN,
-			branchId:
-				getAppType() === appTypes.BACK_OFFICE ? getLocalBranchId() : undefined,
+			// Only include branchId for Back Office when there are no queued IDs
+			...(getAppType() === appTypes.BACK_OFFICE &&
+				!storageData.productIds &&
+				!storageData.branchProductIds && {
+					branchId: getLocalBranchId(),
+				}),
 			// Only include branchIds if there are no existing stored IDs (bulk initialize every 5 mins)
 			...(getAppType() === appTypes.HEAD_OFFICE &&
 				!storageData.productIds &&

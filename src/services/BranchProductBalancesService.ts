@@ -14,6 +14,11 @@ interface Edit {
 	value: number;
 }
 
+interface Create {
+	product_id: number;
+	type: string;
+}
+
 const service = {
 	list: async (params: List, baseURL) =>
 		axios.get('/branches-product-balances/', { baseURL, params }),
@@ -21,8 +26,17 @@ const service = {
 	retrieve: async (id: number, baseURL) =>
 		axios.get(`/branches-product-balances/${id}/`, { baseURL }),
 
+	create: async (body: Create, baseURL) =>
+		axios.post('/branches-product-balances/', body, { baseURL }),
+
 	edit: async (id: number, body: Edit, baseURL) =>
 		axios.patch(`/branches-product-balances/${id}/`, body, { baseURL }),
+
+	getTypes: async (branchProductId: number, baseURL) =>
+		axios.get('/branches-product-balances/types/', {
+			baseURL,
+			params: { branch_product_id: branchProductId },
+		}),
 };
 
 export default {

@@ -1,33 +1,30 @@
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
 import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
-import { useMutation, useQuery } from 'react-query';
-import { BranchProductBalancesService } from 'services';
+import { useQuery } from 'react-query';
+import { BranchProductBalanceTypeUpdateLogsService } from 'services';
 import { getLocalApiUrl } from 'utils';
 
-export const useBranchProductBalances = ({ params, options }: Query) =>
+export const useBranchProductBalanceTypeUpdateLogs = ({
+	params,
+	options,
+}: Query) =>
 	useQuery<any>(
 		[
-			'useBranchProductBalances',
-			params?.search,
+			'useBranchProductBalanceTypeUpdateLogs',
 			params?.branchId,
 			params?.branchProductId,
-			params?.productId,
-			params?.productCategory,
-			params?.ordering,
+			params?.timeRange,
 			params?.page,
 			params?.pageSize,
 		],
 		() =>
 			wrapServiceWithCatch(
-				BranchProductBalancesService.list(
+				BranchProductBalanceTypeUpdateLogsService.list(
 					{
-						search: params?.search,
 						branch_id: params?.branchId,
 						branch_product_id: params?.branchProductId,
-						product_id: params?.productId,
-						product_category: params?.productCategory,
-						ordering: params?.ordering,
+						time_range: params?.timeRange,
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 					},
@@ -37,14 +34,9 @@ export const useBranchProductBalances = ({ params, options }: Query) =>
 		{
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => ({
-				branchProductBalances: query.data.results,
+				logs: query.data.results,
 				total: query.data.count,
 			}),
 			...options,
 		},
-	);
-
-export const useBranchProductBalanceCreate = () =>
-	useMutation<any, any, any>((data) =>
-		BranchProductBalancesService.create(data, getLocalApiUrl()),
 	);

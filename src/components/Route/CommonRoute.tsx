@@ -1,6 +1,8 @@
+import { appTypes, userTypes } from 'global';
 import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
 import { useUserStore } from 'stores';
+import { getAppType } from 'utils';
 
 interface Props {
 	forUserType: string;
@@ -14,6 +16,14 @@ export const CommonRoute = ({ forUserType, isLoading, ...rest }: Props) => {
 
 	if (isLoading) {
 		return null;
+	}
+
+	// Allow Backoffice to access branch-manager routes without authentication
+	if (
+		getAppType() === appTypes.BACK_OFFICE &&
+		forUserType === userTypes.BRANCH_MANAGER
+	) {
+		return <Route {...rest} />;
 	}
 
 	if (user?.user_type === forUserType) {

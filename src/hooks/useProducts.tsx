@@ -91,7 +91,7 @@ export const useProductCreate = () => {
 			scaleCode,
 			isMultipleInstance,
 		}: any) => {
-			const baseURL = isStandAlone() ? getLocalApiUrl() : getGoogleApiUrl();
+			const baseURL = getGoogleApiUrl();
 			const result = await ProductsService.create(
 				{
 					acting_user_id: actingUserId,
@@ -133,13 +133,9 @@ export const useProductCreate = () => {
 				baseURL,
 			);
 
-			// If using Google API (standalone), trigger background sync
-			if (isStandAlone()) {
-				// Don't wait for this - let it run in background
-				setTimeout(() => {
-					queryClient.invalidateQueries('useOfflineBulkIds');
-				}, 100);
-			}
+			setTimeout(() => {
+				queryClient.invalidateQueries('useOfflineBulkIds');
+			}, 100);
 
 			return result;
 		},

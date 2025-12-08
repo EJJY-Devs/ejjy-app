@@ -505,24 +505,20 @@ const TagPrinter = () => {
 				/>
 			</Col>
 
-			{values.printingType === printingTypes.HTML && (
-				<>
-					<Col span={24}>
-						<Label label="Tag Printer Font Family" spacing />
-						<Input
-							name="tagPrinterFontFamily"
-							value={values['tagPrinterFontFamily']}
-							onChange={(e) => {
-								setFieldValue('tagPrinterFontFamily', e.target.value);
-							}}
-						/>
-						<ErrorMessage
-							name="tagPrinterFontFamily"
-							render={(error) => <FieldError error={error} />}
-						/>
-					</Col>
-				</>
-			)}
+			<Col span={24}>
+				<Label label="Tag Printer Font Family" spacing />
+				<Input
+					name="tagPrinterFontFamily"
+					value={values['tagPrinterFontFamily']}
+					onChange={(e) => {
+						setFieldValue('tagPrinterFontFamily', e.target.value);
+					}}
+				/>
+				<ErrorMessage
+					name="tagPrinterFontFamily"
+					render={(error) => <FieldError error={error} />}
+				/>
+			</Col>
 
 			<Col span={24}>
 				<Label label="Tag Printer Font Size" spacing />

@@ -117,6 +117,12 @@ const App = () => {
 
 	const [branchId, setBranchId] = useState(null);
 
+	// Determine if we're doing bulk initialization (for HEAD_OFFICE without stored IDs)
+	const isBulkInitializing =
+		getAppType() === appTypes.HEAD_OFFICE &&
+		!storageData.productIds &&
+		!storageData.branchProductIds;
+
 	// Initialize products and branch products first
 	const { isSuccess: isProductsInitialized } = useInitializeData({
 		params: {
@@ -143,6 +149,18 @@ const App = () => {
 					.slice(0, 100)
 					.join(','), // Limit to 100
 			}),
+			// Only include individual IDs if NOT doing bulk initialization
+			...(!isBulkInitializing &&
+				storageData.productIds && {
+					productIds: storageData.productIds.split(',').slice(0, 100).join(','), // Limit to 100
+				}),
+			...(!isBulkInitializing &&
+				storageData.branchProductIds && {
+					branchProductIds: storageData.branchProductIds
+						.split(',')
+						.slice(0, 100)
+						.join(','), // Limit to 100
+				}),
 		},
 		options: {
 			enabled:

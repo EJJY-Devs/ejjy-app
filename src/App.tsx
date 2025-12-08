@@ -271,7 +271,9 @@ const App = () => {
 				tip={getLoadingMessage()}
 			>
 				<Switch>
-					<NoAuthRoute component={Login} path="/login" exact />
+					{getAppType() !== appTypes.BACK_OFFICE && (
+						<NoAuthRoute component={Login} path="/login" exact />
+					)}
 
 					<NoAuthRoute
 						component={NetworkError}
@@ -307,7 +309,14 @@ const App = () => {
 						render={(props) => <BranchPersonnel {...props} />}
 					/>
 
-					<Redirect from="/" to="/login" />
+					<Redirect
+						from="/"
+						to={
+							getAppType() === appTypes.BACK_OFFICE
+								? '/branch-manager'
+								: '/login'
+						}
+					/>
 				</Switch>
 			</Spin>
 		</>

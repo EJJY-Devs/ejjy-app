@@ -14,6 +14,7 @@ export { default as BalanceAdjustmentLogService } from './BalanceAdjustmentLogSe
 export { default as BirReportsService } from './BirReportsService';
 export { default as BranchAssignmentsService } from './BranchAssignmentsService';
 export { default as BranchProductBalancesService } from './BranchProductBalancesService';
+export { default as BranchProductBalanceTypeUpdateLogsService } from './BranchProductBalanceTypeUpdateLogsService';
 export { default as BranchDayAuthorizationsService } from './BranchDayAuthorizationsService';
 export { default as BranchDaysService } from './BranchDaysService';
 export { default as BranchesService } from './BranchesService';
@@ -36,6 +37,7 @@ export { default as PointTransactionsService } from './PointTransactionsService'
 export { default as PriceMarkdownsService } from './PriceMarkdownsService';
 export { default as ProductCategoriesService } from './ProductCategoriesService';
 export { default as ProductChecksService } from './ProductChecksService';
+export { default as ProductConversionsService } from './ProductConversionsService';
 export { default as ProductGroupsService } from './ProductGroupsService';
 export { default as ProductsService } from './ProductsService';
 export { default as ReceivingVouchersService } from './ReceivingVouchersService';

@@ -1,0 +1,219 @@
+@use 'assets/styles' as *;
+
+.ProductConversion {
+	&_buttons {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 0px;
+		gap: 15px;
+		position: relative;
+		right: 58px;
+		top: 30px;
+	}
+
+	&_tableWrapper {
+		margin: 25px;
+		margin-bottom: 10px;
+
+		// Target columns with 'children' property (Stock Out and Stock In)
+		.ant-table-thead > tr:first-child > th[colspan] {
+			background-color: #96939323 !important;
+		}
+	}
+
+	&_box {
+		padding: 10px;
+	}
+
+	&_timeRangeFilter {
+		margin: 10px;
+		position: relative;
+		left: 20px;
+		top: 10px;
+	}
+}
+
+.StockConversionCart {
+	&_content {
+		padding: 15px;
+		height: 400px;
+	}
+
+	&_searchSection {
+		margin-bottom: 30px;
+		display: flex;
+		position: relative;
+	}
+
+	&_searchWrapper {
+		position: relative;
+		flex: 1;
+	}
+
+	&_searchInput {
+		height: 100%;
+		border-radius: $border-radius;
+		padding: 20px 30px;
+		font-size: 30px;
+		background-color: $color-main-background;
+		box-shadow: inset 0px 4px 4px rgba(0, 0, 0, 0.25);
+
+		&:focus {
+			border-color: #ffae00;
+			outline: none;
+			box-shadow: 0 0 0 3px rgba(255, 174, 0, 0.8);
+			transition: all 0.2s ease-in-out;
+		}
+	}
+
+	&_btnClear {
+		font-size: 35px;
+		position: absolute;
+		top: 25px;
+		right: 30px;
+		color: $color-red !important;
+		cursor: pointer;
+	}
+
+	&_btnSearchMode {
+		margin-left: 0.75em;
+		padding-top: 1.15em;
+		padding-bottom: 1.15em;
+		width: 140px;
+		min-width: 140px;
+		max-width: 140px;
+		text-align: center;
+	}
+
+	&_suggestion {
+		max-height: 450px;
+		background-color: white;
+		border: 1px solid $color-gray;
+		box-shadow: 0px 4px 10px 4px rgba(0, 0, 0, 0.02);
+		border-radius: $border-radius;
+		position: absolute;
+		width: 100%;
+		z-index: 999;
+		margin-top: 5px;
+
+		&_wrapper {
+			padding: 1.25em;
+			@include flex(stretch, center);
+			column-gap: 1.5em;
+			outline: 1;
+			cursor: pointer;
+
+			&:not(:last-child) {
+				border-bottom: 1px solid $color-gray;
+			}
+
+			&:first-child {
+				border-top-left-radius: 10px;
+				border-top-right-radius: 10px;
+			}
+
+			&:last-child {
+				border-bottom-left-radius: 10px;
+				border-bottom-right-radius: 10px;
+			}
+
+			&___active {
+				background-color: $color-primary;
+
+				.StockConversionCart_suggestion_product_name,
+				.StockConversionCart_suggestion_product_code {
+					color: white;
+				}
+			}
+
+			p {
+				margin-bottom: 0;
+			}
+		}
+
+		&_product {
+			&_name {
+				@include font(2rem, 700);
+				color: $color-dark;
+			}
+
+			&_code {
+				margin-top: 8px;
+				@include font(1rem, 400);
+				color: $color-dark-gray;
+			}
+		}
+	}
+
+	&_tableContainer {
+		display: flex;
+		gap: 3px;
+		margin-bottom: 10px;
+		height: 200px;
+		overflow-y: auto;
+	}
+
+	&_tableSection {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+
+		.ant-table-wrapper {
+			flex: 1;
+		}
+
+		.ant-table {
+			font-size: 16px;
+
+			.ant-table-thead > tr > th {
+				font-size: 16px;
+				padding: 12px 16px;
+			}
+
+			.ant-table-tbody > tr > td {
+				padding: 12px 16px;
+			}
+		}
+
+		.ant-input-number {
+			.ant-input-number-input {
+				text-align: center;
+				font-size: 16px;
+			}
+		}
+
+		.ant-select {
+			font-size: 16px;
+
+			.ant-select-selector {
+				font-size: 16px;
+			}
+		}
+	}
+
+	&_header {
+		font-size: 18px;
+		font-weight: 600;
+		margin-bottom: 10px;
+		text-align: center;
+		padding: 10px;
+		background-color: #f0f0f0;
+		border-radius: 4px;
+	}
+
+	&_footer {
+		display: flex;
+		justify-content: flex-end;
+		gap: 10px;
+		padding-top: 10px;
+		border-top: 1px solid #e8e8e8;
+	}
+}
+
+.StockConversionCartModal {
+	.ant-modal-title {
+		font-size: 22px !important;
+		font-weight: bold;
+		margin-left: 20px;
+	}
+}

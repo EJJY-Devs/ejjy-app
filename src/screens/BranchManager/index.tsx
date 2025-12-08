@@ -18,10 +18,8 @@ import { ViewChecking } from 'screens/BranchManager/Checkings/ViewChecking';
 import { Logs } from 'screens/BranchManager/Logs';
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
-import { Stocks } from 'screens/BranchManager/Stock';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
-import { CreateStockIn } from 'screens/BranchManager/Stock/components/TabStockIn/CreateStockIn';
-import { CreateStockOut } from 'screens/BranchManager/Stock/components/TabStockOut/CreateStockOut';
+import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
 import { Cart } from 'screens/Shared/Cart';
 import { DiscountOptions } from 'screens/Shared/DiscountOptions';
@@ -180,11 +178,11 @@ const BranchManager = () => {
 				link: '/branch-manager/product-categories',
 			},
 			{
-				key: 'stocks',
-				name: 'Stocks',
+				key: 'product-conversion',
+				name: 'Product Conversion',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/branch-manager/stocks',
+				link: '/branch-manager/product-conversion',
 			},
 			{
 				key: 'inventory-transfer',
@@ -301,65 +299,44 @@ const BranchManager = () => {
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
 					<Route component={Dashboard} path="/branch-manager/dashboard" />
-
 					<Route component={Reports} path="/branch-manager/reports" />
-
 					<Route component={Sales} path="/branch-manager/sales" />
-
 					<Route
 						component={ProductCategories}
 						path="/branch-manager/product-categories"
 					/>
 					<Route component={Products} path="/branch-manager/products" />
-
 					<Route
 						component={PointSystemTags}
 						path="/branch-manager/point-system-tags"
 					/>
-
-					<Route component={Stocks} path="/branch-manager/stocks" exact />
+					<Route
+						component={ProductConversion}
+						path="/branch-manager/product-conversion"
+						exact
+					/>
 					<Route
 						component={InventoryTransfer}
 						path="/branch-manager/inventory-transfer"
 						exact
 					/>
-					{/* <Route
-						component={Cart}
-						path="/branch-manager/inventory-transfer/create"
-						exact
-					/> */}
-					<Route
-						component={CreateStockIn}
-						path="/branch-manager/stocks/stock-in/create"
-						exact
-					/>
-					<Route
-						component={CreateStockOut}
-						path="/branch-manager/stocks/stock-out/create"
-						exact
-					/>
-
 					<Route
 						component={DiscountOptions}
 						path="/branch-manager/discount-options"
-					/>
-
+					/>{' '}
 					<Route component={Accounts} path="/branch-manager/accounts" exact />
 					<Route
 						component={ViewAccount}
 						path="/branch-manager/accounts/:id"
 						exact
 					/>
-
 					<Route component={Users} path="/branch-manager/users" exact />
 					<Route
 						component={CashieringAssignment}
 						path="/branch-manager/users/assign/:id"
 						exact
 					/>
-
 					<Route component={DTR} path="/branch-manager/dtr" />
-
 					<Route
 						component={BranchMachines}
 						path="/branch-manager/branch-machines"
@@ -370,7 +347,6 @@ const BranchManager = () => {
 						path="/branch-manager/branch-machines/:id"
 						exact
 					/>
-
 					<Route
 						component={RequisitionSlips}
 						path="/branch-manager/requisition-slips"
@@ -386,19 +362,16 @@ const BranchManager = () => {
 						path="/branch-manager/requisition-slips/create/template"
 						exact
 					/>
-
 					<Route
 						component={ViewRequisitionSlip}
 						path="/branch-manager/requisition-slips/:id"
 						exact
 					/>
-
 					<Route
 						component={AdjustmentSlip}
 						path="/branch-manager/adjustment-slips"
 						exact
 					/>
-
 					<Route
 						component={ReturnItemSlips}
 						path="/branch-manager/return-item-slips"
@@ -409,39 +382,30 @@ const BranchManager = () => {
 						path="/branch-manager/return-item-slips/create"
 						exact
 					/>
-
 					<Route
 						component={BackOrders}
 						path="/branch-manager/back-orders"
 						exact
 					/>
-
 					<Route
 						component={CreateBackOrder}
 						path="/branch-manager/back-orders/create"
 						exact
 					/>
-
 					<Route component={OrderSlips} path="/branch-manager/order-slips" />
-
 					<Route component={Checkings} path="/branch-manager/checkings" exact />
 					<Route
 						component={ViewChecking}
 						path="/branch-manager/checkings/:id"
 						exact
 					/>
-
 					<Route
 						component={Notifications}
 						path="/branch-manager/notifications"
 					/>
-
 					<Route component={Logs} path="/branch-manager/logs" />
-
 					<Route component={SiteSettings} path="/branch-manager/settings" />
-
 					<Route component={Cart} path="/branch-manager/cart" />
-
 					<Redirect to="/branch-manager/branch-machines" />
 				</Switch>
 			</React.Suspense>

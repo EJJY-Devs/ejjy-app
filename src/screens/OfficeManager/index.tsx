@@ -28,6 +28,7 @@ import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment'
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
 import shallow from 'zustand/shallow';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
+import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
 import { Checkings } from './Checkings/Checkings';
 import { ViewChecking } from './Checkings/ViewChecking';
@@ -207,6 +208,13 @@ const OfficeManager = () => {
 				link: '/office-manager/product-groups',
 			},
 			{
+				key: 'product-conversion',
+				name: 'Product Conversion',
+				activeIcon: require('../../assets/images/icon-product-active.svg'),
+				defaultIcon: require('../../assets/images/icon-product.svg'),
+				link: '/office-manager/product-conversion',
+			},
+			{
 				key: 'inventory-transfer',
 				name: 'Inventory Transfer',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
@@ -294,6 +302,12 @@ const OfficeManager = () => {
 					<Route
 						component={ViewBranchMachine}
 						path="/office-manager/branch-machines/:id"
+						exact
+					/>
+
+					<Route
+						component={ProductConversion}
+						path="/office-manager/product-conversion"
 						exact
 					/>
 

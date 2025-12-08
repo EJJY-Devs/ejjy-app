@@ -3,15 +3,18 @@ import { CloseCircleFilled } from '@ant-design/icons';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ControlledInput, MainButton } from 'components/elements';
 import { useBranchProducts, useProductConversion } from 'hooks';
-import { getLocalBranchId, convertIntoArray } from 'utils';
+import { getLocalBranchId, convertIntoArray, getLocalApiUrl } from 'utils';
 import { RequestErrors } from 'components';
-import { getProductCode } from 'ejjy-global';
+import { getProductCode, User } from 'ejjy-global';
+import {
+	AuthorizationModal,
+	Props as AuthorizationModalProps,
+} from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { Scrollbars } from 'react-custom-scrollbars';
 import cn from 'classnames';
 import KeyboardEventHandler from 'react-keyboard-event-handler';
 import { debounce } from 'lodash';
 import BarcodeReader from 'react-barcode-reader';
-import { AuthorizationModal } from './AuthorizationModal';
 
 interface ProductConversionCartProps {
 	onClose: () => void;
@@ -42,9 +45,9 @@ export const ProductConversionCart = ({
 	const [scannedBarcode, setScannedBarcode] = useState(null);
 	const [selectingFor, setSelectingFor] = useState<'out' | 'in' | null>(null);
 	const [
-		isAuthorizationModalVisible,
-		setIsAuthorizationModalVisible,
-	] = useState(false);
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 
 	// Local input states to allow intermediate values like "-" or empty
 	const [stockOutQtyInput, setStockOutQtyInput] = useState<string>('');
@@ -236,20 +239,25 @@ export const ProductConversionCart = ({
 			return;
 		}
 
-		setIsAuthorizationModalVisible(true);
+		setAuthorizeConfig({
+			baseURL: getLocalApiUrl(),
+			onSuccess: handleAuthorizedSubmit,
+			onCancel: () => setAuthorizeConfig(null),
+		});
 	};
 
-	const handleAuthorizedSubmit = async (userId: number) => {
+	const handleAuthorizedSubmit = async (user: User) => {
 		try {
 			await convertProduct({
 				stock_out_branch_product_id: stockOutProduct.id,
 				stock_out_qty: stockOutProduct.qty,
 				stock_in_branch_product_id: stockInProduct.id,
 				stock_in_qty: stockInProduct.qty,
-				authorizer_id: userId,
+				authorizer_id: user.id,
 			});
 
-			message.success('Product conversion successful');
+			message.success('Product conversion successful!');
+			setAuthorizeConfig(null);
 			handleClear();
 			onClose();
 		} catch (error: any) {
@@ -611,13 +619,7 @@ export const ProductConversionCart = ({
 				</div>
 			</div>
 
-			{isAuthorizationModalVisible && (
-				<AuthorizationModal
-					isLoading={isConverting}
-					onClose={() => setIsAuthorizationModalVisible(false)}
-					onSubmit={handleAuthorizedSubmit}
-				/>
-			)}
+			{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
 		</Modal>
 	);
 };

@@ -1,12 +1,17 @@
 import { Spin, Tabs } from 'antd';
 import { Content, RequestErrors } from 'components';
 import { Box } from 'components/elements';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, userTypes } from 'global';
+import { appTypes, DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
 import { useBranches, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect } from 'react';
 import { useUserStore } from 'stores';
-import { convertIntoArray, getLocalBranchId, isUserFromOffice } from 'utils';
+import {
+	convertIntoArray,
+	getAppType,
+	getLocalBranchId,
+	isUserFromOffice,
+} from 'utils';
 import { CumulativeSales } from './components/CumulativeSales';
 import { BranchSales } from './components/BranchSales';
 
@@ -51,8 +56,8 @@ export const Sales = () => {
 					<CumulativeSales />
 				</Box>
 
-				<Box padding={user.user_type === userTypes.BRANCH_MANAGER}>
-					{isUserFromOffice(user.user_type) && (
+				<Box padding={getAppType() === appTypes.BACK_OFFICE}>
+					{getAppType() === appTypes.HEAD_OFFICE && (
 						<Spin spinning={isFetchingBranches}>
 							<RequestErrors
 								className="px-6 pt-6"
@@ -75,7 +80,7 @@ export const Sales = () => {
 						</Spin>
 					)}
 
-					{user.user_type === userTypes.BRANCH_MANAGER && (
+					{getAppType() === appTypes.BACK_OFFICE && (
 						<BranchSales branchId={getLocalBranchId()} />
 					)}
 				</Box>

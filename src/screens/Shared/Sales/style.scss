@@ -5,3 +5,33 @@
 	border: 1px solid $color-gray;
 	border-radius: $border-radius;
 }
+.ShowDataButtonContainer {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 10;
+}
+
+.ShowDataBox {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+}
+
+.LockIcon {
+	font-size: 48px;
+	color: $color-primary;
+}
+.SalesContent {
+	&.blurred {
+		filter: blur(12px);
+		pointer-events: none;
+	}
+
+	&.authorized {
+		filter: none;
+		pointer-events: auto;
+	}
+}

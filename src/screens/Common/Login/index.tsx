@@ -2,7 +2,7 @@ import { Button, Divider } from 'antd';
 import { AppSettingsModal } from 'components';
 import { Box } from 'components/elements';
 import { getKeyDownCombination } from 'ejjy-global';
-import { IS_APP_LIVE, appTypes } from 'global';
+import { IS_APP_LIVE, appTypes, userTypes } from 'global';
 import { useAuthLogin, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { useUserStore } from 'stores';
@@ -11,7 +11,6 @@ import {
 	getAppType,
 	getLocalApiUrl,
 	getOnlineApiUrl,
-	isUserFromBranch,
 } from 'utils';
 import { LoginForm } from './components/LoginForm';
 import './style.scss';
@@ -62,12 +61,20 @@ const Login = () => {
 		const appType = getAppType();
 		const userType = user.user_type;
 
-		if (appType === appTypes.HEAD_OFFICE && isUserFromBranch(userType)) {
+		if (
+			appType === appTypes.HEAD_OFFICE &&
+			(userType === userTypes.BRANCH_MANAGER ||
+				userType === userTypes.BRANCH_PERSONNEL)
+		) {
 			setError('Admin and office manager can only use this app.');
 			return;
 		}
 
-		if (appType === appTypes.BACK_OFFICE && !isUserFromBranch(userType)) {
+		if (
+			appType === appTypes.BACK_OFFICE &&
+			userType !== userTypes.BRANCH_MANAGER &&
+			userType !== userTypes.BRANCH_PERSONNEL
+		) {
 			setError('Branch managers and personnels can only use this app.');
 			return;
 		}

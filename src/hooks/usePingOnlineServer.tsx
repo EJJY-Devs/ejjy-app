@@ -1,13 +1,14 @@
+import { appTypes } from 'global';
 import { wrapServiceWithCatch } from 'hooks/helper';
 import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { SiteSettingsService } from 'services';
 import { useUserStore } from 'stores';
 import {
+	getAppType,
 	getLocalApiUrl,
 	getOnlineApiUrl,
 	isStandAlone,
-	isUserFromBranch,
 } from 'utils';
 
 const usePingOnlineServer = () => {
@@ -39,7 +40,7 @@ const usePingOnlineServer = () => {
 			localApiUrl &&
 			onlineApiUrl &&
 			!isStandAlone() &&
-			!isUserFromBranch(user.user_type)
+			getAppType() !== appTypes.BACK_OFFICE
 		) {
 			setIsEnabled(true);
 		}

@@ -9,11 +9,11 @@ import {
 	ViewZReportsModal,
 } from 'components';
 import { reportTypes } from 'ejjy-global';
-import { branchMachineTypes, MAX_PAGE_SIZE } from 'global';
+import { appTypes, branchMachineTypes, MAX_PAGE_SIZE } from 'global';
 import { useBranchMachines } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useUserStore } from 'stores';
-import { convertIntoArray, isUserFromBranch } from 'utils';
+import { convertIntoArray, getAppType } from 'utils';
 
 interface Props {
 	branchId: string | number;
@@ -115,7 +115,7 @@ export const ReportsPerMachine = ({
 			{ title: 'Actions', dataIndex: 'actions' },
 		];
 
-		if (isUserFromBranch(user.user_type)) {
+		if (getAppType() === appTypes.BACK_OFFICE) {
 			columns.splice(1, 0, {
 				title: 'Connectivity Status',
 				dataIndex: 'connectivityStatus',

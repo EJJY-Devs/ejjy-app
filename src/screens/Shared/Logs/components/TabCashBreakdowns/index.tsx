@@ -14,6 +14,7 @@ import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	MAX_PAGE_SIZE,
+	appTypes,
 	cashBreakdownCategories,
 	cashBreakdownTypes,
 	pageSizeOptions,
@@ -31,12 +32,12 @@ import React, { useEffect, useState } from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
+	getAppType,
 	formatDateTime,
 	getCashBreakdownTypeDescription,
 	getLocalApiUrl,
 	getLocalBranchId,
 	isStandAlone,
-	isUserFromBranch,
 } from 'utils';
 
 export const cashBreakdownOptions = [
@@ -86,9 +87,10 @@ export const TabCashBreakdowns = () => {
 	} = useCashBreakdowns({
 		params: {
 			...params,
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: params?.branchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? getLocalBranchId()
+					: params?.branchId,
 			timeRange: params.timeRange || timeRangeTypes.DAILY,
 		},
 	});
@@ -170,14 +172,13 @@ const Filter = () => {
 	const { params, setQueryParams } = useQueryParams();
 	const branchId = params.branchId ? Number(params.branchId) : undefined;
 
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
 		error: branchesError,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: !isUserFromBranch(user.user_type) },
+		options: { enabled: getAppType() !== appTypes.BACK_OFFICE },
 	});
 	const {
 		data: { branchMachines },
@@ -185,9 +186,10 @@ const Filter = () => {
 		error: branchMachinesError,
 	} = useBranchMachines({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: params.branchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? getLocalBranchId()
+					: params.branchId,
 			pageSize: MAX_PAGE_SIZE,
 		},
 	});
@@ -197,9 +199,10 @@ const Filter = () => {
 		error: usersError,
 	} = useUsers({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? Number(getLocalBranchId())
-				: branchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? Number(getLocalBranchId())
+					: branchId,
 			pageSize: MAX_PAGE_SIZE,
 		},
 		serviceOptions: {
@@ -220,7 +223,7 @@ const Filter = () => {
 			/>
 
 			<Row className="mb-4" gutter={[16, 16]}>
-				{!isUserFromBranch(user.user_type) && (
+				{getAppType() !== appTypes.BACK_OFFICE && (
 					<Col lg={12} span={24}>
 						<Label label="Branch" spacing />
 						<Select

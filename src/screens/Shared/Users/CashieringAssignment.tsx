@@ -10,7 +10,7 @@ import {
 import { Box } from 'components/elements';
 import dayjs from 'dayjs';
 import { getFullName, ServiceType, useUserRetrieve } from 'ejjy-global';
-import { GENERIC_ERROR_MESSAGE, MAX_PAGE_SIZE } from 'global';
+import { GENERIC_ERROR_MESSAGE, MAX_PAGE_SIZE, appTypes } from 'global';
 import {
 	useCashieringAssignmentDelete,
 	useCashieringAssignments,
@@ -24,7 +24,7 @@ import {
 	getLocalApiUrl,
 	getUrlPrefix,
 	isStandAlone,
-	isUserFromBranch,
+	getAppType,
 } from 'utils';
 
 const columns = [
@@ -189,7 +189,7 @@ export const CashieringAssignment = ({ match }: Props) => {
 			<ConnectionAlert />
 
 			<Box>
-				{isUserFromBranch(user?.user_type) && (
+				{getAppType() === appTypes.BACK_OFFICE && (
 					<>
 						<RequestErrors
 							errors={[

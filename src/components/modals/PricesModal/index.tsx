@@ -1,6 +1,10 @@
 import { message, Modal, Spin, Tabs } from 'antd';
 import { RequestErrors } from 'components';
-import { MAX_PAGE_SIZE, serviceTypes, appTypes } from 'global';
+import {
+	AuthorizationModal,
+	Props as AuthorizationModalProps,
+} from 'ejjy-global/dist/components/modals/AuthorizationModal';
+import { MAX_PAGE_SIZE, serviceTypes, appTypes, userTypes } from 'global';
 import {
 	useBranches,
 	useBranchProductEditPriceCost,
@@ -8,7 +12,7 @@ import {
 	usePriceMarkdownCreate,
 	useProductEdit,
 } from 'hooks';
-import React from 'react';
+import React, { useState } from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
@@ -17,8 +21,6 @@ import {
 	getId,
 	getLocalApiUrl,
 	getLocalBranchId,
-	isUserFromBranch,
-	isUserFromOffice,
 } from 'utils';
 import { PricesForm } from './PricesForm';
 
@@ -34,6 +36,13 @@ interface Props {
 }
 
 export const PricesModal = ({ product, isBulkEdit, onClose }: Props) => {
+	// STATES
+	const [isAuthorized, setIsAuthorized] = useState(false);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
+
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
 	const appType = getAppType();
@@ -109,7 +118,37 @@ export const PricesModal = ({ product, isBulkEdit, onClose }: Props) => {
 		onClose();
 	};
 
+	const handleShowPriceForm = () => {
+		setAuthorizeConfig({
+			baseURL: getLocalApiUrl(),
+			userTypes: [userTypes.ADMIN, userTypes.BRANCH_MANAGER],
+			onSuccess: handleAuthorizedSuccess,
+			onCancel: () => {
+				setAuthorizeConfig(null);
+				onClose();
+			},
+		});
+	};
+
+	const handleAuthorizedSuccess = () => {
+		setIsAuthorized(true);
+		setAuthorizeConfig(null);
+		message.success('Authorization successful!');
+	};
+
 	const isLoading = isFetchingBranches || isFetchingBranchProducts;
+
+	// Trigger authorization modal for back office on mount
+	if (appType === appTypes.BACK_OFFICE && !isAuthorized && !authorizeConfig) {
+		handleShowPriceForm();
+	}
+
+	// Don't render price form until authorized for back office
+	if (appType === appTypes.BACK_OFFICE && !isAuthorized) {
+		return (
+			<>{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}</>
+		);
+	}
 
 	return (
 		<Modal
@@ -123,7 +162,7 @@ export const PricesModal = ({ product, isBulkEdit, onClose }: Props) => {
 			width={600}
 			centered
 			closable
-			visible
+			open
 			onCancel={onClose}
 		>
 			<RequestErrors
@@ -159,7 +198,7 @@ export const PricesModal = ({ product, isBulkEdit, onClose }: Props) => {
 						onSubmit={handleSubmit}
 					/>
 				)}
-				{!isBulkEdit && isUserFromBranch(user.user_type) && (
+				{!isBulkEdit && getAppType() === appTypes.BACK_OFFICE && (
 					<PricesForm
 						branches={branches}
 						branchProducts={branchProducts}
@@ -173,10 +212,10 @@ export const PricesModal = ({ product, isBulkEdit, onClose }: Props) => {
 						onSubmit={handleSubmit}
 					/>
 				)}
-				{!isBulkEdit && !isUserFromBranch(user.user_type) && (
+				{!isBulkEdit && getAppType() === appTypes.HEAD_OFFICE && (
 					<Tabs
 						defaultActiveKey={
-							isUserFromOffice(user.user_type) ? tabs.ALL : tabs.BRANCHES
+							getAppType() === appTypes.HEAD_OFFICE ? tabs.ALL : tabs.BRANCHES
 						}
 						type="card"
 						destroyInactiveTabPane

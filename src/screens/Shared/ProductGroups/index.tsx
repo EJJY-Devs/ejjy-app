@@ -4,7 +4,12 @@ import Table from 'antd/lib/table';
 import cn from 'classnames';
 import { ConnectionAlert, Content, RequestErrors } from 'components';
 import { Box } from 'components/elements';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, pageSizeOptions } from 'global';
+import {
+	appTypes,
+	DEFAULT_PAGE,
+	DEFAULT_PAGE_SIZE,
+	pageSizeOptions,
+} from 'global';
 import {
 	usePingOnlineServer,
 	useProductGroupDelete,
@@ -14,7 +19,7 @@ import {
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useUserStore } from 'stores';
-import { convertIntoArray, getId, isCUDShown, isStandAlone } from 'utils';
+import { convertIntoArray, getAppType, getId, isStandAlone } from 'utils';
 
 export const ProductGroups = () => {
 	// STATES
@@ -80,7 +85,7 @@ export const ProductGroups = () => {
 	const getColumns = useCallback(() => {
 		const columns = [{ title: 'Name', dataIndex: 'name' }];
 
-		if (isCUDShown(user.user_type)) {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
 			columns.push({ title: 'Actions', dataIndex: 'actions' });
 		}
 
@@ -92,7 +97,7 @@ export const ProductGroups = () => {
 			<ConnectionAlert />
 
 			<Box>
-				{isCUDShown(user.user_type) && (
+				{getAppType() === appTypes.HEAD_OFFICE && (
 					<div className="pa-6 d-flex justify-end">
 						<Link to="product-groups/create">
 							<Button disabled={isConnected === false} type="primary">
@@ -104,7 +109,7 @@ export const ProductGroups = () => {
 
 				<RequestErrors
 					className={cn('px-6', {
-						'mt-6': !isCUDShown(user.user_type),
+						'mt-6': getAppType() !== appTypes.HEAD_OFFICE,
 					})}
 					errors={[
 						...convertIntoArray(productGroupsError),

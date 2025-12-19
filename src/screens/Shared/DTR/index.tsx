@@ -1,11 +1,11 @@
 import { Tabs } from 'antd';
 import { Content } from 'components';
 import { Box } from 'components/elements';
+import { appTypes } from 'global';
 import { useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React from 'react';
-import { useUserStore } from 'stores';
-import { isUserFromBranch } from 'utils';
+import { getAppType } from 'utils';
 import { TabDTR } from './components/TabDTR';
 import { TabDTRPrinting } from './components/TabDTRPrinting';
 
@@ -20,8 +20,6 @@ export const DTR = () => {
 		params: { tab = tabs.DTR },
 		setQueryParams,
 	} = useQueryParams();
-	const user = useUserStore((state) => state.user);
-
 	// METHODS
 	const handleTabClick = (selectedTab) => {
 		setQueryParams(
@@ -44,7 +42,7 @@ export const DTR = () => {
 						<TabDTR />
 					</Tabs.TabPane>
 
-					{!isUserFromBranch(user.user_type) && (
+					{getAppType() !== appTypes.BACK_OFFICE && (
 						<Tabs.TabPane key={tabs.DTR_PRINTING} tab={tabs.DTR_PRINTING}>
 							<TabDTRPrinting />
 						</Tabs.TabPane>

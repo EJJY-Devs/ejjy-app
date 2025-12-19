@@ -20,6 +20,7 @@ import {
 	EMPTY_CELL,
 	MAX_PAGE_SIZE,
 	accountTypes,
+	appTypes,
 	pageSizeOptions,
 } from 'global';
 import {
@@ -35,8 +36,8 @@ import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	formatDateTime,
+	getAppType,
 	getLocalBranchId,
-	isUserFromBranch,
 	isUserFromOffice,
 } from 'utils';
 
@@ -56,9 +57,10 @@ export const TabDTR = () => {
 	} = useAttendanceLogs({
 		params: {
 			...params,
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: params?.branchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? getLocalBranchId()
+					: params?.branchId,
 		},
 	});
 
@@ -158,14 +160,13 @@ export const TabDTR = () => {
 const Filter = () => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
 		error: branchErrors,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: !isUserFromBranch(user.user_type) },
+		options: { enabled: getAppType() !== appTypes.BACK_OFFICE },
 	});
 	const {
 		data: { accounts },
@@ -186,7 +187,7 @@ const Filter = () => {
 			/>
 
 			<Row gutter={[16, 16]}>
-				{!isUserFromBranch(user.user_type) && (
+				{getAppType() !== appTypes.BACK_OFFICE && (
 					<Col md={12}>
 						<Label label="Branch" spacing />
 						<Select

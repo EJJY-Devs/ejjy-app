@@ -73,8 +73,6 @@ import {
 	getAppType,
 	getId,
 	getLocalBranchId,
-	isCUDShown,
-	isUserFromBranch,
 	isUserFromOffice,
 	isStandAlone,
 } from 'utils';
@@ -181,7 +179,7 @@ export const Products = () => {
 								onClick={() => handleOpenModal(product, modals.EDIT_PRICE_COST)}
 							/>
 						</Tooltip>
-						{isCUDShown(user.user_type) && (
+						{getAppType() === appTypes.HEAD_OFFICE && (
 							<Tooltip title="Edit General Product">
 								<Button
 									disabled={isConnected === false}
@@ -233,7 +231,7 @@ export const Products = () => {
 								/>
 							</Tooltip>
 						)}
-						{isCUDShown(user.user_type) && (
+						{getAppType() === appTypes.HEAD_OFFICE && (
 							<Popconfirm
 								cancelText="No"
 								disabled={isConnected === false}
@@ -349,26 +347,6 @@ export const Products = () => {
 		return false;
 	};
 
-	// NOTE: Temporarily disable the initial deletion of data
-	// const onRemoveProduct = (product) => {
-	// 	removeProduct(
-	// 		{ id: product.id, actingUserId: user.id },
-	// 		({ status, response }) => {
-	// 			if (status === request.SUCCESS) {
-	// 				if (response?.length) {
-	// 					message.warning(
-	// 						'We found an error while deleting the product details in local branch. Please check the pending transaction table below.',
-	// 					);
-
-	// 					pendingTransactionsRef.current?.refreshList();
-	// 				}
-
-	// 				refreshList();
-	// 			}
-	// 		},
-	// 	);
-	// };
-
 	// Calculate product statistics
 	const productCount = productsTotal || 0;
 	const latestDateTime = siteSettings?.datetime_last_updated_products
@@ -378,7 +356,7 @@ export const Products = () => {
 	return (
 		<Content
 			title={`${
-				isUserFromBranch(user.user_type) ? 'Branch' : 'General'
+				getAppType() === appTypes.BACK_OFFICE ? 'Branch' : 'General'
 			} Products`}
 		>
 			<ConnectionAlert />
@@ -423,8 +401,8 @@ export const Products = () => {
 				</div>
 			)}
 
-			<Box>
-				{isCUDShown(user.user_type) && (
+			<Box padding>
+				{getAppType() === appTypes.HEAD_OFFICE && (
 					<TableHeader
 						buttonName="Create Product"
 						buttons={
@@ -451,7 +429,7 @@ export const Products = () => {
 
 				<RequestErrors
 					className={cn('px-6', {
-						'mt-6': !isCUDShown(user.user_type),
+						'mt-6': getAppType() !== appTypes.HEAD_OFFICE,
 					})}
 					errors={[
 						...convertIntoArray(productsError, 'Product'),
@@ -500,13 +478,14 @@ export const Products = () => {
 					/>
 				)}
 
-				{modalType === modals.MODIFY && (
-					<ModifyProductModal
-						product={selectedProduct}
-						onClose={() => handleOpenModal(null, null)}
-						onSuccess={handleOperationSuccess}
-					/>
-				)}
+				{modalType === modals.MODIFY &&
+					getAppType() === appTypes.HEAD_OFFICE && (
+						<ModifyProductModal
+							product={selectedProduct}
+							onClose={() => handleOpenModal(null, null)}
+							onSuccess={handleOperationSuccess}
+						/>
+					)}
 
 				{modalType === modals.EDIT_PRICE_COST && selectedProduct && (
 					<PricesModal
@@ -525,26 +504,19 @@ export const Products = () => {
 				{modalType === modals.CHART && selectedProduct && (
 					<ViewBranchProductChartModal
 						branchProduct={
-							isUserFromBranch(user.user_type) ? selectedProduct : undefined
+							getAppType() === appTypes.BACK_OFFICE
+								? selectedProduct
+								: undefined
 						}
 						product={
-							isUserFromBranch(user.user_type) ? undefined : selectedProduct
+							getAppType() === appTypes.BACK_OFFICE
+								? undefined
+								: selectedProduct
 						}
 						onClose={() => handleOpenModal(null, null)}
 					/>
 				)}
 			</Box>
-
-			{/* TODO: Temporarily hid the Pending Transactions section. Need to be revisited if this is still needed */}
-			{/* {!isUserFromBranch(user.user_type) && (
-				<PendingTransactionsSection
-					ref={pendingTransactionsRef}
-					title="Pending Product Transactions"
-					transactionType={pendingTransactionTypes.PRODUCTS}
-					setHasPendingTransactions={setHasPendingTransactions}
-					withActionColumn
-				/>
-			)} */}
 		</Content>
 	);
 };
@@ -552,7 +524,6 @@ export const Products = () => {
 const Filter = () => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { productCategories },
 		isFetching: isFetchingProductCategories,
@@ -578,7 +549,7 @@ const Filter = () => {
 
 			<Row
 				className={cn('pa-6', {
-					'pt-0': isCUDShown(user.user_type),
+					'pt-0': getAppType() === appTypes.HEAD_OFFICE,
 				})}
 				gutter={[16, 16]}
 			>

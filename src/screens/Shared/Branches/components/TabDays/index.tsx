@@ -2,18 +2,13 @@ import { Col, Descriptions, Radio, Row, Select, Table, Tag } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
-import {
-	ServiceType,
-	filterOption,
-	getFullName,
-	isUserFromBranch,
-	useUsers,
-} from 'ejjy-global';
+import { ServiceType, filterOption, getFullName, useUsers } from 'ejjy-global';
 import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
 	MAX_PAGE_SIZE,
+	appTypes,
 	closingTypes,
 	pageSizeOptions,
 	refetchOptions,
@@ -26,11 +21,11 @@ import {
 	useQueryParams,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	formatDateTimeShortMonth,
 	formatTimeRange,
+	getAppType,
 	getLocalApiUrl,
 	getLocalBranchId,
 	isStandAlone,
@@ -255,7 +250,6 @@ const Filter = ({ branchId, branchMachineId, isLoading }: FilterProps) => {
 	const { params, setQueryParams } = useQueryParams();
 	const paramBranchId = params.branchId ? Number(params.branchId) : undefined;
 
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
@@ -280,9 +274,10 @@ const Filter = ({ branchId, branchMachineId, isLoading }: FilterProps) => {
 		error: userErrors,
 	} = useUsers({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? Number(getLocalBranchId())
-				: paramBranchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? paramBranchId
+					: Number(getLocalBranchId()),
 			pageSize: MAX_PAGE_SIZE,
 		},
 		serviceOptions: {

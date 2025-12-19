@@ -4,6 +4,7 @@ import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
 import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import {
+	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	MAX_PAGE_SIZE,
@@ -16,10 +17,10 @@ import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	formatDateTime,
+	getAppType,
 	getLocalApiUrl,
 	getLocalBranchId,
 	isStandAlone,
-	isUserFromBranch,
 	isUserFromOffice,
 } from 'utils';
 
@@ -35,7 +36,6 @@ export const TabBranchAssignments = () => {
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branchAssignments, total },
 		isFetching: isFetchingBranchAssignments,
@@ -43,9 +43,10 @@ export const TabBranchAssignments = () => {
 	} = useBranchAssignments({
 		params: {
 			...params,
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: params?.branchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? getLocalBranchId()
+					: params?.branchId,
 			timeRange: params?.timeRange || timeRangeTypes.DAILY,
 		},
 		shouldFetchOfflineFirst: true,
@@ -119,9 +120,10 @@ const Filter = () => {
 		error: usersError,
 	} = useUsers({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? Number(getLocalBranchId())
-				: branchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? Number(getLocalBranchId())
+					: branchId,
 			pageSize: MAX_PAGE_SIZE,
 		},
 		serviceOptions: {

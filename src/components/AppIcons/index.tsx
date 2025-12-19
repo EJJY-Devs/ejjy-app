@@ -10,6 +10,7 @@ import {
 	getKeyDownCombination,
 	printerStatuses,
 } from 'ejjy-global';
+import { appTypes } from 'global';
 import { useConnectivity } from 'hooks';
 import qz from 'qz-tray';
 import React, { useEffect } from 'react';
@@ -17,8 +18,8 @@ import { useUserInterfaceStore, useUserStore } from 'stores';
 import {
 	getAppReceiptPrinterFontFamily,
 	getAppReceiptPrinterFontSize,
+	getAppType,
 	getAppReceiptPrinterName,
-	isUserFromBranch,
 } from 'utils';
 import { AppSettingsModal } from '../modals/AppSettingsModal';
 import './style.scss';
@@ -136,7 +137,7 @@ const Component = () => {
 
 	return (
 		<div className="AppIcons">
-			{user && isUserFromBranch(user.user_type) && (
+			{user && getAppType() === appTypes.BACK_OFFICE && (
 				<Tooltip title="Connectivity Status">
 					<WifiOutlined
 						className={cn('AppIcons_icon', {

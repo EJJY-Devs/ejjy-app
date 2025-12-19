@@ -9,15 +9,15 @@ import {
 	filterOption,
 } from 'ejjy-global';
 import { useProductCategories } from 'hooks';
-import { DEFAULT_PAGE, MAX_PAGE_SIZE } from 'global';
+import { DEFAULT_PAGE, MAX_PAGE_SIZE, appTypes } from 'global';
 import { useUserStore } from 'stores';
 import moment, { Moment } from 'moment';
 import React, { useEffect, useState } from 'react';
 import {
 	getLocalApiUrl,
 	getLocalBranchId,
-	isUserFromBranch,
 	isUserFromOffice,
+	getAppType,
 } from 'utils';
 import { TransactionProductsService } from 'services';
 
@@ -364,9 +364,10 @@ const DailyItemSoldReport = () => {
 						data.push(...results.filter((item) => item !== null));
 					} else {
 						// Branch user or head office user with specific branch selected
-						const branchId = isUserFromBranch(user.user_type)
-							? getLocalBranchId()
-							: params?.branchId;
+						const branchId =
+							getAppType() === appTypes.BACK_OFFICE
+								? getLocalBranchId()
+								: params?.branchId;
 
 						const branchName =
 							isHeadOffice && branchId
@@ -452,10 +453,7 @@ const DailyItemSoldReport = () => {
 						data.push(...results.filter((item) => item !== null));
 					} else {
 						// Branch user or head office user with specific branch selected
-						const branchId = isUserFromBranch(user.user_type)
-							? getLocalBranchId()
-							: params?.branchId;
-
+						const branchId = getAppType() === appTypes.BACK_OFFICE;
 						const branchName =
 							isHeadOffice && branchId
 								? (branchesData as any)?.list?.find(
@@ -530,9 +528,10 @@ const DailyItemSoldReport = () => {
 					data.push(...results.filter((item) => item !== null));
 				} else {
 					// Branch user or head office user with specific branch selected
-					const branchId = isUserFromBranch(user.user_type)
-						? getLocalBranchId()
-						: params?.branchId;
+					const branchId =
+						getAppType() === appTypes.BACK_OFFICE
+							? getLocalBranchId()
+							: params?.branchId;
 
 					const branchName =
 						isHeadOffice && branchId
@@ -624,7 +623,8 @@ const DailyItemSoldReport = () => {
 			if (selectedMonth && date.includes('-')) {
 				products = await fetchMonthProductsSold(
 					selectedMonth,
-					!isUserFromBranch(user.user_type) && (branchId || params?.branchId)
+					getAppType() !== appTypes.BACK_OFFICE &&
+						(branchId || params?.branchId)
 						? branchId || Number(params.branchId as string | number)
 						: undefined,
 				);
@@ -634,7 +634,8 @@ const DailyItemSoldReport = () => {
 				if (dateRanges) {
 					products = await fetchAggregatedProductsSold(
 						dateRanges.dates,
-						!isUserFromBranch(user.user_type) && (branchId || params?.branchId)
+						getAppType() !== appTypes.BACK_OFFICE &&
+							(branchId || params?.branchId)
 							? branchId || Number(params.branchId as string | number)
 							: undefined,
 					);
@@ -645,7 +646,7 @@ const DailyItemSoldReport = () => {
 					{
 						date,
 						branch_id:
-							!isUserFromBranch(user.user_type) &&
+							getAppType() !== appTypes.BACK_OFFICE &&
 							(branchId || params?.branchId)
 								? branchId || Number(params.branchId as string | number)
 								: undefined,

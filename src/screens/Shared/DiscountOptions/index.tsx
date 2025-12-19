@@ -25,6 +25,7 @@ import {
 	User,
 } from 'ejjy-global';
 import {
+	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
@@ -40,9 +41,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
+	getAppType,
 	getId,
 	getLocalApiUrl,
-	isCUDShown,
 	isStandAlone,
 } from 'utils';
 
@@ -87,8 +88,8 @@ export const DiscountOptions = () => {
 		<Content title="Discount Options">
 			<ConnectionAlert />
 
-			<Box>
-				{isCUDShown(user.user_type) && (
+			<Box padding>
+				{getAppType() === appTypes.HEAD_OFFICE && (
 					<TableHeader
 						buttonName="Create Discount Option"
 						onCreate={() => setModifyDiscountOptionModalVisible(true)}
@@ -98,7 +99,7 @@ export const DiscountOptions = () => {
 
 				<RequestErrors
 					className={cn('px-6', {
-						'mt-6': !isCUDShown(user.user_type),
+						'mt-6': getAppType() !== appTypes.HEAD_OFFICE,
 					})}
 					errors={convertIntoArray(deleteDiscountOptionError?.errors)}
 					withSpaceBottom
@@ -187,10 +188,11 @@ const DiscountOptionTable = ({
 				percentage: discountOption.percentage
 					? `${Number(discountOption.percentage)}%`
 					: EMPTY_CELL,
+				isSpecialDiscount: discountOption.is_special_discount ? 'Yes' : 'No',
 				fields: discountOption.additional_fields,
 				actions: !discountOption.is_special_discount && (
 					<Space>
-						{isCUDShown(user.user_type) && (
+						{getAppType() === appTypes.HEAD_OFFICE && (
 							<Tooltip title="Edit">
 								<Button
 									disabled={isConnected === false}
@@ -201,7 +203,7 @@ const DiscountOptionTable = ({
 								/>
 							</Tooltip>
 						)}
-						{isCUDShown(user.user_type) && (
+						{getAppType() === appTypes.HEAD_OFFICE && (
 							<Popconfirm
 								cancelText="No"
 								disabled={isConnected === false}
@@ -236,7 +238,7 @@ const DiscountOptionTable = ({
 			{ title: 'Percentage', dataIndex: 'percentage', align: 'center' },
 		];
 
-		if (isCUDShown(user.user_type) && !isSpecialDiscount) {
+		if (getAppType() === appTypes.HEAD_OFFICE && !isSpecialDiscount) {
 			columns.push({ title: 'Actions', dataIndex: 'actions' });
 		}
 

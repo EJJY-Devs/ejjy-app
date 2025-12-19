@@ -3,11 +3,11 @@ import { Spin } from 'antd';
 import { RequestErrors } from 'components';
 import { Box, Button } from 'components/elements';
 import { printCancelledTransactions } from 'ejjy-global';
-import { MAX_PAGE_SIZE } from 'global';
+import { appTypes, MAX_PAGE_SIZE } from 'global';
 import { useSiteSettings, useTransactions } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { useUserStore } from 'stores';
-import { convertIntoArray, formatInPeso, isUserFromBranch } from 'utils';
+import { convertIntoArray, formatInPeso, getAppType } from 'utils';
 
 interface Props {
 	branchId?: string;
@@ -96,7 +96,7 @@ export const TransactionsCancelled = ({
 						</span>
 					</div>
 
-					{!isUserFromBranch(user.user_type) && (
+					{getAppType() !== appTypes.BACK_OFFICE && (
 						<Button
 							disabled={transactions.length === 0}
 							loading={isPrinting}

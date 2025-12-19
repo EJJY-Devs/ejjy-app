@@ -12,6 +12,7 @@ import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	MAX_PAGE_SIZE,
+	appTypes,
 	connectivityTypes,
 	pageSizeOptions,
 	refetchOptions,
@@ -19,12 +20,11 @@ import {
 } from 'global';
 import { useBranchMachines, useConnectivityLogs, useQueryParams } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	formatDateTime,
+	getAppType,
 	getLocalBranchId,
-	isUserFromBranch,
 } from 'utils';
 
 const columns: ColumnsType = [
@@ -137,16 +137,16 @@ interface FilterProps {
 
 const Filter = ({ isLoading }: FilterProps) => {
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branchMachines },
 		isFetching: isFetchingBranchMachines,
 		error: branchMachinesError,
 	} = useBranchMachines({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: params.branchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? getLocalBranchId()
+					: params.branchId,
 			pageSize: MAX_PAGE_SIZE,
 		},
 	});

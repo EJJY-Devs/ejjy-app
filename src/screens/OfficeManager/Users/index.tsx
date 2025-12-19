@@ -281,7 +281,7 @@ export const Users = () => {
 		<Content title="Users">
 			<ConnectionAlert />
 
-			<Box>
+			<Box padding>
 				<Spin spinning={isFetchingBranches || isFetchingUserPendingApprovals}>
 					<TableHeader
 						buttonName="Create User"

@@ -24,6 +24,7 @@ import {
 import { Label } from 'components/elements';
 import { filterOption, getFullName } from 'ejjy-global';
 import {
+	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	SEARCH_DEBOUNCE_TIME,
@@ -39,7 +40,7 @@ import {
 	convertIntoArray,
 	formatDate,
 	getAccountTypeName,
-	isCUDShown,
+	getAppType,
 } from 'utils';
 
 interface Props {
@@ -137,7 +138,7 @@ export const TabAccounts = ({ disabled }: Props) => {
 			},
 		];
 
-		if (isCUDShown(user.user_type)) {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
 			columns.push({
 				title: 'Actions',
 				dataIndex: 'actions',
@@ -156,7 +157,7 @@ export const TabAccounts = ({ disabled }: Props) => {
 				title="Accounts"
 				wrapperClassName="pt-2 px-0"
 				onCreate={
-					isCUDShown(user.user_type)
+					getAppType() === appTypes.HEAD_OFFICE
 						? () => setModalVisible(modals.CREATE)
 						: null
 				}

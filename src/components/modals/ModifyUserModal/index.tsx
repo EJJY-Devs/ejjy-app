@@ -1,10 +1,6 @@
 import { message, Modal } from 'antd';
 import { RequestErrors } from 'components/RequestErrors';
-import {
-	useUserCreate,
-	useUserEdit,
-	useUserRequestUserTypeChange,
-} from 'ejjy-global';
+import { useUserCreate, useUserEdit } from 'ejjy-global';
 import { getBaseUrl } from 'hooks/helper';
 import React from 'react';
 import { useQueryClient } from 'react-query';
@@ -42,14 +38,14 @@ export const ModifyUserModal = ({
 		{ onSuccess: () => queryClient.invalidateQueries('useUsers') },
 		getBaseUrl(),
 	);
-	const {
-		mutateAsync: requestUserTypeChange,
-		isLoading: isRequestingUserTypeChange,
-		error: requestUserTypeChangeError,
-	} = useUserRequestUserTypeChange(
-		{ onSuccess: () => queryClient.invalidateQueries('useUsers') },
-		getBaseUrl(),
-	);
+	// const {
+	// 	mutateAsync: requestUserTypeChange,
+	// 	isLoading: isRequestingUserTypeChange,
+	// 	error: requestUserTypeChangeError,
+	// } = useUserRequestUserTypeChange(
+	// 	{ onSuccess: () => queryClient.invalidateQueries('useUsers') },
+	// 	getBaseUrl(),
+	// );
 
 	// METHODS
 	const handleSubmit = async (formData) => {
@@ -57,16 +53,8 @@ export const ModifyUserModal = ({
 		if (user) {
 			response = await editUser({
 				...formData,
-				userType: undefined,
 				id: getId(user),
 			});
-
-			if (formData.userType !== user.user_type) {
-				requestUserTypeChange({
-					id: getId(user),
-					newUserType: formData.userType,
-				});
-			}
 
 			message.success('User was edited successfully');
 		} else {
@@ -91,16 +79,13 @@ export const ModifyUserModal = ({
 				errors={[
 					...convertIntoArray(createUserError?.errors),
 					...convertIntoArray(editUserError?.errors),
-					...convertIntoArray(requestUserTypeChangeError?.errors),
 				]}
 				withSpaceBottom
 			/>
 
 			<ModifyUserForm
 				branchUsersOnly={branchUsersOnly}
-				isLoading={
-					isCreatingUser || isEditingUser || isRequestingUserTypeChange
-				}
+				isLoading={isCreatingUser || isEditingUser}
 				user={user}
 				onClose={onClose}
 				onSubmit={handleSubmit}

@@ -28,12 +28,11 @@ import {
 import dayjs from 'dayjs';
 import { DATE_FORMAT_API, useSiteSettingsEdit } from 'ejjy-global';
 import { ErrorMessage, Form, Formik } from 'formik';
-import { inputTypes, taxTypes } from 'global';
+import { appTypes, inputTypes } from 'global';
 import { usePingOnlineServer, useSiteSettingsNew } from 'hooks';
 import moment from 'moment';
 import React, { useCallback, useState } from 'react';
-import { useUserStore } from 'stores';
-import { convertIntoArray, getOnlineApiUrl, isCUDShown } from 'utils';
+import { convertIntoArray, getAppType, getOnlineApiUrl } from 'utils';
 import * as Yup from 'yup';
 
 const getBase64 = (img: RcFile, callback: (url: string) => void) => {
@@ -60,29 +59,9 @@ const getValidDateTest = (label) =>
 		)
 		.label(label);
 
-const getValidDateRangeTest = (label) =>
-	Yup.string()
-		.required()
-		.nullable()
-		.test(
-			'is-valid-date-range',
-			`${label} is not a valid date range`,
-			(value) => {
-				const dates = value.split(',');
-
-				return (
-					dates.length === 2 &&
-					moment(dates[0]).isValid() &&
-					moment(dates[1]).isValid()
-				);
-			},
-		)
-		.label(label);
-
 export const SiteSettings = () => {
 	// CUSTOM HOOKS
 	const { isConnected } = usePingOnlineServer();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: siteSettings,
 		isFetching: isFetchingSiteSettings,
@@ -95,7 +74,7 @@ export const SiteSettings = () => {
 	} = useSiteSettingsEdit(null, getOnlineApiUrl());
 
 	// STATES
-	const [isDisabled] = useState(!isCUDShown(user.user_type));
+	const [isDisabled] = useState(getAppType() !== appTypes.HEAD_OFFICE);
 
 	// METHODS
 	const getFormDetails = useCallback(
@@ -783,7 +762,7 @@ export const SiteSettings = () => {
 									</Col>
 								</Row>
 
-								{isCUDShown(user.user_type) && (
+								{getAppType() === appTypes.HEAD_OFFICE && (
 									<>
 										<Divider />
 

@@ -4,6 +4,7 @@ import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
 import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import {
+	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
@@ -18,14 +19,13 @@ import {
 	useUserLogs,
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	formatDateTimeExtended,
+	getAppType,
 	getLocalApiUrl,
 	getLocalBranchId,
 	isStandAlone,
-	isUserFromBranch,
 } from 'utils';
 
 const columns: ColumnsType = [
@@ -44,7 +44,6 @@ export const TabUserLogs = () => {
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { logs, total },
 		isFetching: isFetchingLogs,
@@ -52,9 +51,10 @@ export const TabUserLogs = () => {
 	} = useUserLogs({
 		params: {
 			...params,
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: params?.branchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? getLocalBranchId()
+					: params?.branchId,
 			serviceType: isStandAlone() ? undefined : serviceTypes.OFFLINE,
 		},
 	});
@@ -112,14 +112,13 @@ const Filter = () => {
 	const { params, setQueryParams } = useQueryParams();
 	const branchId = params.branchId ? Number(params.branchId) : undefined;
 
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
 		error: branchesError,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: !isUserFromBranch(user.user_type) },
+		options: { enabled: getAppType() !== appTypes.BACK_OFFICE },
 	});
 	const {
 		data: { branchMachines },
@@ -127,9 +126,10 @@ const Filter = () => {
 		error: branchMachinesError,
 	} = useBranchMachines({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: params.branchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? getLocalBranchId()
+					: params.branchId,
 			pageSize: MAX_PAGE_SIZE,
 		},
 	});
@@ -139,9 +139,10 @@ const Filter = () => {
 		error: usersError,
 	} = useUsers({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? Number(getLocalBranchId())
-				: branchId,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE
+					? Number(getLocalBranchId())
+					: branchId,
 			pageSize: MAX_PAGE_SIZE,
 		},
 		serviceOptions: {
@@ -162,7 +163,7 @@ const Filter = () => {
 			/>
 
 			<Row className="mb-4" gutter={[16, 16]}>
-				{!isUserFromBranch(user.user_type) && (
+				{getAppType() !== appTypes.BACK_OFFICE && (
 					<Col md={12}>
 						<Label label="Branch" spacing />
 						<Select

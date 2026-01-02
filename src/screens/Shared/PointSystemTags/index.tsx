@@ -10,7 +10,12 @@ import {
 	TableHeader,
 } from 'components';
 import { Box } from 'components/elements';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, pageSizeOptions } from 'global';
+import {
+	appTypes,
+	DEFAULT_PAGE,
+	DEFAULT_PAGE_SIZE,
+	pageSizeOptions,
+} from 'global';
 import {
 	usePingOnlineServer,
 	usePointSystemTagDelete,
@@ -19,7 +24,7 @@ import {
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useUserStore } from 'stores';
-import { convertIntoArray, formatInPeso, getId, isCUDShown } from 'utils';
+import { convertIntoArray, formatInPeso, getAppType, getId } from 'utils';
 
 export const PointSystemTags = () => {
 	// STATES
@@ -93,7 +98,7 @@ export const PointSystemTags = () => {
 			{ title: 'Divisor Amount', dataIndex: 'divisorAmount' },
 		];
 
-		if (isCUDShown(user.user_type)) {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
 			columns.push({ title: 'Actions', dataIndex: 'actions' });
 		}
 
@@ -104,8 +109,8 @@ export const PointSystemTags = () => {
 		<Content title="Point System Tags">
 			<ConnectionAlert />
 
-			<Box>
-				{isCUDShown(user.user_type) && (
+			<Box padding>
+				{getAppType() === appTypes.HEAD_OFFICE && (
 					<TableHeader
 						buttonName="Create Point System Tag"
 						onCreate={() => setModifyPointSystemTagModalVisible(true)}
@@ -115,7 +120,7 @@ export const PointSystemTags = () => {
 
 				<RequestErrors
 					className={cn('px-6', {
-						'mt-6': !isCUDShown(user.user_type),
+						'mt-6': getAppType() !== appTypes.HEAD_OFFICE,
 					})}
 					errors={[
 						...convertIntoArray(pointSystemTagsError),

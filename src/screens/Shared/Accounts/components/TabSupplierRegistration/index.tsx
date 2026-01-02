@@ -10,6 +10,7 @@ import {
 import { Label } from 'components/elements';
 import { getFullName } from 'ejjy-global';
 import {
+	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	SEARCH_DEBOUNCE_TIME,
@@ -24,7 +25,7 @@ import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useUserStore } from 'stores';
-import { convertIntoArray, formatDate, isCUDShown } from 'utils';
+import { convertIntoArray, formatDate, getAppType } from 'utils';
 
 const columns: ColumnsType = [
 	{ title: 'Client Code', dataIndex: 'clientCode' },
@@ -71,7 +72,7 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 				datetimeCreated: formatDate(account.datetime_created),
 				actions: (
 					<>
-						{isCUDShown(user.user_type) && (
+						{getAppType() === appTypes.HEAD_OFFICE && (
 							<Popconfirm
 								cancelText="No"
 								disabled={disabled}
@@ -107,7 +108,7 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 				title="Supplier Accounts"
 				wrapperClassName="pt-2 px-0"
 				onCreate={
-					isCUDShown(user.user_type)
+					getAppType() === appTypes.HEAD_OFFICE
 						? () => setIsCreateModalVisible(true)
 						: null
 				}

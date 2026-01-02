@@ -6,14 +6,14 @@ import iconLogout from 'assets/images/icon-logout.svg';
 import sampleAvatar from 'assets/images/sample-avatar.png';
 import cn from 'classnames';
 import { getFullName } from 'ejjy-global';
-import { userTypes } from 'global';
+import { appTypes, userTypes } from 'global';
 import { useAuthLogout, useSiteSettings } from 'hooks';
 import { useUI } from 'hooks/useUI';
 import React, { useState } from 'react';
 import { useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 import { useUserStore } from 'stores';
-import { getUserTypeName } from 'utils';
+import { getAppType, getUserTypeName } from 'utils';
 import './style.scss';
 
 interface Props {
@@ -92,31 +92,40 @@ export const Sidebar = ({ items }: Props) => {
 
 			<div
 				className={cn('bottom', { active: popupVisible })}
-				onClick={() => setPopupVisible((value) => !value)}
+				onClick={() => {
+					// Don't allow popup for backoffice
+					if (getAppType() !== appTypes.BACK_OFFICE) {
+						setPopupVisible((value) => !value);
+					}
+				}}
 			>
-				<div className="menu">
-					<div className="item">
-						<img alt="icon" className="icon" src={iconAccount} />
-						<span className="name">Account</span>
-					</div>
+				{getAppType() !== appTypes.BACK_OFFICE && (
+					<div className="menu">
+						<div className="item">
+							<img alt="icon" className="icon" src={iconAccount} />
+							<span className="name">Account</span>
+						</div>
 
-					<div className="item" onClick={() => logout(user.id)}>
-						<img alt="icon" className="icon" src={iconLogout} />
-						<span className="name">Logout</span>
+						<div className="item" onClick={() => logout(user.id)}>
+							<img alt="icon" className="icon" src={iconLogout} />
+							<span className="name">Logout</span>
+						</div>
 					</div>
-				</div>
+				)}
 
-				<div className="user-details">
-					<img alt="user avatar" className="avatar" src={sampleAvatar} />
-					<div className="user-text-info">
-						<span className="name">
-							{user?.user_type === userTypes.ADMIN
-								? 'Emman Fineza'
-								: getFullName(user)}
-						</span>
-						<span className="role">{getUserTypeName(user?.user_type)}</span>
+				{getAppType() !== appTypes.BACK_OFFICE && (
+					<div className="user-details">
+						<img alt="user avatar" className="avatar" src={sampleAvatar} />
+						<div className="user-text-info">
+							<span className="name">
+								{user?.user_type === userTypes.ADMIN
+									? 'Emman Fineza'
+									: getFullName(user)}
+							</span>
+							<span className="role">{getUserTypeName(user?.user_type)}</span>
+						</div>
 					</div>
-				</div>
+				)}
 			</div>
 		</Layout.Sider>
 	);

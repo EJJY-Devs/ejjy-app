@@ -446,7 +446,7 @@ export const useBranchProductEditPriceCost = () => {
 		({ actingUserId, productId, data, serverUrl }: any) =>
 			BranchProductsService.editPriceCost(
 				{
-					acting_user_id: actingUserId,
+					acting_user_id: actingUserId || undefined,
 					product_id: productId,
 					data:
 						data?.map((d) => ({

@@ -4,6 +4,7 @@ import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
 import { filterOption, getFullName, transactionStatuses } from 'ejjy-global';
 import {
+	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
@@ -19,12 +20,11 @@ import {
 	useTransactions,
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	formatDateTimeExtended,
+	getAppType,
 	getLocalBranchId,
-	isUserFromBranch,
 } from 'utils';
 
 const columns: ColumnsType = [
@@ -120,14 +120,13 @@ interface FilterProps {
 const Filter = ({ isLoading }: FilterProps) => {
 	const { params, setQueryParams } = useQueryParams();
 
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
 		error: branchesError,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: !isUserFromBranch(user.user_type) },
+		options: { enabled: getAppType() === appTypes.BACK_OFFICE },
 	});
 	const {
 		data: { branchMachines },
@@ -135,9 +134,10 @@ const Filter = ({ isLoading }: FilterProps) => {
 		error: branchMachinesError,
 	} = useBranchMachines({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: params.branchId,
+			branchId:
+				getAppType() !== appTypes.BACK_OFFICE
+					? getLocalBranchId()
+					: params.branchId,
 			pageSize: MAX_PAGE_SIZE,
 		},
 	});
@@ -153,7 +153,7 @@ const Filter = ({ isLoading }: FilterProps) => {
 			/>
 
 			<Row className="mb-4" gutter={[16, 16]}>
-				{!isUserFromBranch(user.user_type) && (
+				{getAppType() === appTypes.BACK_OFFICE && (
 					<Col md={12}>
 						<Label label="Branch" spacing />
 						<Select

@@ -14,6 +14,7 @@ import {
 import { Label } from 'components/elements';
 import { getFullName } from 'ejjy-global';
 import {
+	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	SEARCH_DEBOUNCE_TIME,
@@ -29,7 +30,7 @@ import {
 	convertIntoArray,
 	formatDate,
 	getAccountTypeName,
-	isCUDShown,
+	getAppType,
 } from 'utils';
 
 interface Props {
@@ -122,7 +123,7 @@ export const TabEmployees = ({ disabled }: Props) => {
 			{ title: 'Date of Registration', dataIndex: 'datetimeCreated' },
 		];
 
-		if (isCUDShown(user.user_type)) {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
 			columns.push({
 				title: 'Actions',
 				dataIndex: 'actions',

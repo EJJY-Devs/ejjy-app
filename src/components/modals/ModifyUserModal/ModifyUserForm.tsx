@@ -22,6 +22,7 @@ export const ModifyUserForm = ({
 	onClose,
 }: Props) => {
 	const [passwordFieldsVisible, setPasswordFieldsVisible] = useState(!user);
+	const [pinFieldVisible, setPinFieldVisible] = useState(false);
 
 	// METHODS
 	useEffect(() => {
@@ -36,10 +37,12 @@ export const ModifyUserForm = ({
 				firstName: user?.first_name || '',
 				lastName: user?.last_name || '',
 				email: user?.email || '',
+				username: user?.username || '',
+				pin: user?.pin || '',
+				confirmPin: '',
 
 				// NOTE: For create user only
 				userType: user?.user_type || '',
-				username: '',
 				password: '',
 				confirmPassword: '',
 			},
@@ -48,9 +51,22 @@ export const ModifyUserForm = ({
 				lastName: Yup.string().required().label('Last Name').trim(),
 				email: Yup.string().email().required().email().label('Email').trim(),
 				userType: Yup.string().required().label('User Type').trim(),
-				username: user
-					? undefined
-					: Yup.string().required().label('Username').trim(),
+				username: Yup.string().required().label('Username').trim(),
+				pin:
+					pinFieldVisible || !user
+						? Yup.string()
+								.matches(/^[0-9]+$/, 'PIN must only contain numbers')
+								.min(4, 'PIN must be at least 4 digits')
+								.max(6, 'PIN must be at most 6 digits')
+								.label('PIN')
+						: undefined,
+				confirmPin:
+					pinFieldVisible || !user
+						? Yup.string()
+								.required()
+								.oneOf([Yup.ref('pin'), null], 'PINs must match')
+								.label('Confirm PIN')
+						: undefined,
 				password:
 					user && !passwordFieldsVisible
 						? undefined
@@ -65,7 +81,7 @@ export const ModifyUserForm = ({
 								.trim(),
 			}),
 		}),
-		[passwordFieldsVisible],
+		[passwordFieldsVisible, pinFieldVisible, user],
 	);
 
 	return (
@@ -77,6 +93,7 @@ export const ModifyUserForm = ({
 				onSubmit({
 					...formData,
 					password: passwordFieldsVisible ? formData.password : undefined,
+					pin: pinFieldVisible || !user ? formData.pin : undefined,
 				});
 			}}
 		>
@@ -158,42 +175,56 @@ export const ModifyUserForm = ({
 										render={(error) => <FieldError error={error} />}
 									/>
 								</Col>
+
+								<Col span={24}>
+									<Label label="Username" spacing />
+									<Input
+										name="username"
+										value={values['username']}
+										onChange={(e) => {
+											setFieldValue('username', e.target.value);
+										}}
+									/>
+									<ErrorMessage
+										name="username"
+										render={(error) => <FieldError error={error} />}
+									/>
+								</Col>
 							</>
 						)}
 
 						{user?.user_type !== userTypes.ADMIN && (
 							<>
 								{user ? (
-									<Col span={24}>
-										<Button
-											className="d-block mx-auto"
-											danger={passwordFieldsVisible}
-											type="link"
-											onClick={() => {
-												setPasswordFieldsVisible((value) => !value);
-											}}
-										>
-											{passwordFieldsVisible ? 'Cancel Edit' : 'Edit'} Password
-										</Button>
-									</Col>
-								) : (
 									<>
-										<Divider />
 										<Col span={24}>
-											<Label label="Username" spacing />
-											<Input
-												name="username"
-												value={values['username']}
-												onChange={(e) => {
-													setFieldValue('username', e.target.value);
+											<Button
+												className="d-block mx-auto"
+												danger={passwordFieldsVisible}
+												type="link"
+												onClick={() => {
+													setPasswordFieldsVisible((value) => !value);
 												}}
-											/>
-											<ErrorMessage
-												name="username"
-												render={(error) => <FieldError error={error} />}
-											/>
+											>
+												{passwordFieldsVisible ? 'Cancel Edit' : 'Edit'}{' '}
+												Password
+											</Button>
+										</Col>
+										<Col span={24}>
+											<Button
+												className="d-block mx-auto"
+												danger={pinFieldVisible}
+												type="link"
+												onClick={() => {
+													setPinFieldVisible((value) => !value);
+												}}
+											>
+												{pinFieldVisible ? 'Cancel Edit' : 'Edit'} PIN
+											</Button>
 										</Col>
 									</>
+								) : (
+									<Divider />
 								)}
 							</>
 						)}
@@ -231,6 +262,48 @@ export const ModifyUserForm = ({
 								</Col>
 							</>
 						)}
+
+						{pinFieldVisible || !user ? (
+							<>
+								<Col lg={12} span={24}>
+									<Label label="PIN (4-6 digits)" spacing />
+									<Input.Password
+										maxLength={6}
+										name="pin"
+										placeholder="Enter PIN"
+										value={values['pin']}
+										onChange={(e) => {
+											// Only allow numbers
+											const value = e.target.value.replace(/\D/g, '');
+											setFieldValue('pin', value);
+										}}
+									/>
+									<ErrorMessage
+										name="pin"
+										render={(error) => <FieldError error={error} />}
+									/>
+								</Col>
+
+								<Col lg={12} span={24}>
+									<Label label="Confirm PIN" spacing />
+									<Input.Password
+										maxLength={6}
+										name="confirmPin"
+										placeholder="Confirm PIN"
+										value={values['confirmPin']}
+										onChange={(e) => {
+											// Only allow numbers
+											const value = e.target.value.replace(/\D/g, '');
+											setFieldValue('confirmPin', value);
+										}}
+									/>
+									<ErrorMessage
+										name="confirmPin"
+										render={(error) => <FieldError error={error} />}
+									/>
+								</Col>
+							</>
+						) : null}
 					</Row>
 
 					<div className="ModalCustomFooter">

@@ -1,6 +1,6 @@
 import { message, Modal, Tabs } from 'antd';
 import { RequestErrors } from 'components';
-import { MAX_PAGE_SIZE, serviceTypes } from 'global';
+import { appTypes, MAX_PAGE_SIZE, serviceTypes } from 'global';
 import {
 	useBranches,
 	useBranchProductEditPriceCost,
@@ -11,12 +11,11 @@ import React from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
+	getAppType,
 	getId,
 	getLocalApiUrl,
 	getLocalBranchId,
 	getOnlineApiUrl,
-	isUserFromBranch,
-	isUserFromOffice,
 } from 'utils';
 import { EditBranchProductsForm } from './EditBranchProductsForm';
 
@@ -39,12 +38,10 @@ export const EditBranchProductsModal = ({ product, onClose }: Props) => {
 		error: branchProductError,
 	} = useBranchProducts({
 		params: {
-			branchId: isUserFromBranch(user.user_type)
-				? getLocalBranchId()
-				: undefined,
-			productIds: isUserFromBranch(user.user_type)
-				? product.product.id
-				: product.id,
+			branchId:
+				getAppType() === appTypes.BACK_OFFICE ? getLocalBranchId() : undefined,
+			productIds:
+				getAppType() === appTypes.BACK_OFFICE ? product.product.id : product.id,
 			serviceType: serviceTypes.OFFLINE,
 		},
 		options: { enabled: product !== null },
@@ -80,9 +77,10 @@ export const EditBranchProductsModal = ({ product, onClose }: Props) => {
 				actingUserId: getId(user),
 				productId: getId(product),
 				data: formData,
-				serverUrl: isUserFromBranch(user.user_type)
-					? getLocalApiUrl()
-					: getOnlineApiUrl(),
+				serverUrl:
+					getAppType() === appTypes.BACK_OFFICE
+						? getLocalApiUrl()
+						: getOnlineApiUrl(),
 			});
 		}
 
@@ -102,7 +100,7 @@ export const EditBranchProductsModal = ({ product, onClose }: Props) => {
 			width={600}
 			centered
 			closable
-			visible
+			open
 			onCancel={onClose}
 		>
 			<RequestErrors
@@ -117,7 +115,7 @@ export const EditBranchProductsModal = ({ product, onClose }: Props) => {
 				withSpaceBottom
 			/>
 
-			{isUserFromBranch(user.user_type) ? (
+			{getAppType() === appTypes.BACK_OFFICE ? (
 				<EditBranchProductsForm
 					branches={branches}
 					branchProducts={branchProducts}
@@ -133,7 +131,7 @@ export const EditBranchProductsModal = ({ product, onClose }: Props) => {
 			) : (
 				<Tabs
 					defaultActiveKey={
-						isUserFromOffice(user.user_type) ? tabs.ALL : tabs.BRANCHES
+						getAppType() === appTypes.HEAD_OFFICE ? tabs.ALL : tabs.BRANCHES
 					}
 					type="card"
 					destroyInactiveTabPane

@@ -109,7 +109,7 @@ export const Branches = () => {
 		<Content title="Branches">
 			<ConnectionAlert />
 
-			<Box>
+			<Box padding>
 				<TableHeader
 					buttonName="Create Branch"
 					onCreate={() => setModifyBranchModalVisible(true)}

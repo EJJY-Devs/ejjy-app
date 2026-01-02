@@ -1,7 +1,7 @@
-import { serviceTypes } from 'global';
+import { serviceTypes, appTypes } from 'global';
 import { useBranchProducts, useProducts } from 'hooks';
 import { useEffect, useState } from 'react';
-import { getLocalBranchId, isUserFromBranch } from 'utils';
+import { getLocalBranchId, getAppType } from 'utils';
 
 export const useProductsData = ({ params, user }) => {
 	const [dataSource, setDataSource] = useState([]);
@@ -16,7 +16,7 @@ export const useProductsData = ({ params, user }) => {
 			branchId: getLocalBranchId(),
 		},
 		options: {
-			enabled: !isUserFromBranch(user.user_type),
+			enabled: getAppType() !== appTypes.BACK_OFFICE,
 		},
 	});
 	const {
@@ -31,12 +31,12 @@ export const useProductsData = ({ params, user }) => {
 			serviceType: serviceTypes.OFFLINE,
 		},
 		options: {
-			enabled: isUserFromBranch(user.user_type),
+			enabled: getAppType() === appTypes.BACK_OFFICE,
 		},
 	});
 
 	useEffect(() => {
-		if (isUserFromBranch(user.user_type)) {
+		if (getAppType() === appTypes.BACK_OFFICE) {
 			setDataSource(
 				branchProducts.map((branchProduct) => ({
 					...branchProduct.product,

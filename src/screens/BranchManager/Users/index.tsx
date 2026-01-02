@@ -10,7 +10,7 @@ import {
 } from 'components';
 import { Box } from 'components/elements';
 import { getFullName, ServiceType, useUserDelete, useUsers } from 'ejjy-global';
-import { DEV_USERNAME, MAX_PAGE_SIZE, userTypes } from 'global';
+import { appTypes, DEV_USERNAME, MAX_PAGE_SIZE, userTypes } from 'global';
 import { getBaseUrl } from 'hooks/helper';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
@@ -18,10 +18,10 @@ import { Link } from 'react-router-dom';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
+	getAppType,
 	getLocalApiUrl,
 	getLocalBranchId,
 	getUserTypeName,
-	isCUDShown,
 	isStandAlone,
 } from 'utils';
 
@@ -120,7 +120,7 @@ export const Users = () => {
 			{ title: 'Type', dataIndex: 'type' },
 		];
 
-		if (isCUDShown(user.user_type)) {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
 			columns.push({ title: 'Actions', dataIndex: 'actions' });
 		}
 
@@ -136,8 +136,8 @@ export const Users = () => {
 
 	return (
 		<Content title="Users">
-			<Box>
-				{isCUDShown(user.user_type) && (
+			<Box padding>
+				{getAppType() === appTypes.HEAD_OFFICE && (
 					<TableHeader
 						buttonName="Create User"
 						onCreate={() => setModifyUserModalVisible(true)}
@@ -146,7 +146,7 @@ export const Users = () => {
 
 				<RequestErrors
 					className={cn('px-6', {
-						'mt-6': !isCUDShown(user.user_type),
+						'mt-6': getAppType() !== appTypes.HEAD_OFFICE,
 					})}
 					errors={[
 						...convertIntoArray(usersError),

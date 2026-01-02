@@ -124,7 +124,7 @@ const App = () => {
 		!storageData.branchProductIds;
 
 	// Initialize products and branch products first
-	const { isSuccess: isProductsInitialized } = useInitializeData({
+	useInitializeData({
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
 			notMainHeadOffice: getHeadOfficeType() === headOfficeTypes.NOT_MAIN,
@@ -172,7 +172,6 @@ const App = () => {
 				(!!storageData.productIds ||
 					!!storageData.branchProductIds ||
 					(!getProductIds() && !getBranchProductIds())),
-			refetchOnMount: false,
 			refetchOnWindowFocus: false,
 			// Set refetch interval to 5 minutes (300,000 ms) when doing bulk branch initialization
 			refetchInterval:
@@ -211,7 +210,6 @@ const App = () => {
 				!!getOnlineApiUrl() &&
 				!isStandAlone() &&
 				(getAppType() === appTypes.HEAD_OFFICE || branchId !== null) &&
-				isProductsInitialized &&
 				!storageData.productIds &&
 				!storageData.branchProductIds,
 		},
@@ -271,7 +269,9 @@ const App = () => {
 				tip={getLoadingMessage()}
 			>
 				<Switch>
-					<NoAuthRoute component={Login} path="/login" exact />
+					{getAppType() !== appTypes.BACK_OFFICE && (
+						<NoAuthRoute component={Login} path="/login" exact />
+					)}
 
 					<NoAuthRoute
 						component={NetworkError}
@@ -307,7 +307,14 @@ const App = () => {
 						render={(props) => <BranchPersonnel {...props} />}
 					/>
 
-					<Redirect from="/" to="/login" />
+					<Redirect
+						from="/"
+						to={
+							getAppType() === appTypes.BACK_OFFICE
+								? '/branch-manager'
+								: '/login'
+						}
+					/>
 				</Switch>
 			</Spin>
 		</>

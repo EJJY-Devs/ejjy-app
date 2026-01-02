@@ -10,6 +10,7 @@ import {
 import { Label } from 'components/elements';
 import { getFullName } from 'ejjy-global';
 import {
+	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	SEARCH_DEBOUNCE_TIME,
@@ -20,8 +21,7 @@ import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { accountTabs } from 'screens/Shared/Accounts/data';
-import { useUserStore } from 'stores';
-import { convertIntoArray, formatDate, formatInPeso, isCUDShown } from 'utils';
+import { convertIntoArray, formatDate, formatInPeso, getAppType } from 'utils';
 
 const columns: ColumnsType = [
 	{ title: 'Client Code', dataIndex: 'clientCode' },
@@ -47,7 +47,6 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { creditRegistrations, total },
 		isFetching: isFetchingCreditRegistrations,
@@ -70,7 +69,7 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 				datetimeCreated: formatDate(account.datetime_created),
 				actions: (
 					<Space>
-						{isCUDShown(user.user_type) && (
+						{getAppType() === appTypes.HEAD_OFFICE && (
 							<Tooltip title="Edit">
 								<Button
 									disabled={disabled}
@@ -115,7 +114,7 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 				title="Credit Accounts"
 				wrapperClassName="pt-2 px-0"
 				onCreate={
-					isCUDShown(user.user_type)
+					getAppType() === appTypes.HEAD_OFFICE
 						? () => setIsCreateModalVisible(true)
 						: null
 				}

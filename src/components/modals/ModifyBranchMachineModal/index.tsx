@@ -16,18 +16,16 @@ import {
 } from 'ejjy-global';
 import moment from 'moment';
 import { ErrorMessage, Form, Formik } from 'formik';
-import { branchMachineTypes } from 'global';
+import { appTypes, branchMachineTypes } from 'global';
 import React, { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
-import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
+	getAppType,
 	getBranchMachineTypeName,
 	getGoogleApiUrl,
 	getId,
 	getLocalApiUrl,
-	isCUDShown,
-	isUserFromOffice,
 } from 'utils';
 import * as Yup from 'yup';
 import { RequestErrors } from '../..';
@@ -45,7 +43,6 @@ export const ModifyBranchMachineModal = ({
 	onClose,
 }: ModalProps) => {
 	const queryClient = useQueryClient();
-	const user = useUserStore((state) => state.user);
 
 	// CUSTOM HOOKS
 	const {
@@ -54,7 +51,7 @@ export const ModifyBranchMachineModal = ({
 		error: createBranchMachineError,
 	} = useBranchMachineCreate(
 		null,
-		isUserFromOffice(user.user_type) && isCUDShown(user.user_type)
+		getAppType() === appTypes.HEAD_OFFICE
 			? getGoogleApiUrl()
 			: getLocalApiUrl(),
 	);
@@ -64,7 +61,7 @@ export const ModifyBranchMachineModal = ({
 		error: editBranchMachineError,
 	} = useBranchMachineEdit(
 		null,
-		isUserFromOffice(user.user_type) && isCUDShown(user.user_type)
+		getAppType() === appTypes.HEAD_OFFICE
 			? getGoogleApiUrl()
 			: getLocalApiUrl(),
 	);

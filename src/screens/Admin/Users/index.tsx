@@ -191,7 +191,7 @@ const PendingUserRequests = ({
 	}, [usersData?.list]);
 
 	return (
-		<Box>
+		<Box padding>
 			<TableHeader title={title} />
 
 			<RequestErrors

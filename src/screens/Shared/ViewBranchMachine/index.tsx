@@ -1,7 +1,7 @@
 import { Alert, message, Spin, Tabs } from 'antd';
 import { Breadcrumb, Content, RequestErrors } from 'components';
 import { Box } from 'components/elements';
-import { GENERIC_ERROR_MESSAGE } from 'global';
+import { GENERIC_ERROR_MESSAGE, appTypes } from 'global';
 import { useBranchMachineRetrieve, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React, { useCallback, useEffect } from 'react';
@@ -11,8 +11,8 @@ import { viewBranchTabs } from 'screens/Shared/Branches/data';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
+	getAppType,
 	getUrlPrefix,
-	isUserFromBranch,
 	isUserFromOffice,
 } from 'utils';
 import { TabBirReport } from './components/TabBirReport';
@@ -105,7 +105,7 @@ export const ViewBranchMachine = ({ match }: Props) => {
 			title="[VIEW] Branch Machine"
 		>
 			<Spin spinning={isLoadingBranchMachine}>
-				{isUserFromBranch(user.user_type) &&
+				{getAppType() === appTypes.BACK_OFFICE &&
 					branchMachine?.is_online === false && (
 						<Alert
 							className="mb-4"

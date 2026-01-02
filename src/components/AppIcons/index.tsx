@@ -1,7 +1,16 @@
-import { PrinterOutlined, WifiOutlined } from '@ant-design/icons';
+import {
+	PrinterOutlined,
+	SettingOutlined,
+	WifiOutlined,
+} from '@ant-design/icons';
 import { Tooltip } from 'antd';
 import cn from 'classnames';
-import { configurePrinter, printerStatuses } from 'ejjy-global';
+import {
+	configurePrinter,
+	getKeyDownCombination,
+	printerStatuses,
+} from 'ejjy-global';
+import { appTypes } from 'global';
 import { useConnectivity } from 'hooks';
 import qz from 'qz-tray';
 import React, { useEffect } from 'react';
@@ -9,18 +18,36 @@ import { useUserInterfaceStore, useUserStore } from 'stores';
 import {
 	getAppReceiptPrinterFontFamily,
 	getAppReceiptPrinterFontSize,
+	getAppType,
 	getAppReceiptPrinterName,
-	isUserFromBranch,
 } from 'utils';
+import { AppSettingsModal } from '../modals/AppSettingsModal';
 import './style.scss';
 
 const Component = () => {
+	// STATE
+	const [isSettingsVisible, setIsSettingsVisible] = React.useState(false);
+	const [showAppSettingsModal, setShowAppSettingsModal] = React.useState(false);
+
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
 	const { isConnected } = useConnectivity();
 	const { userInterface, setUserInterface } = useUserInterfaceStore();
 
 	// METHODS
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			const key = getKeyDownCombination(event);
+			if (['meta+s', 'ctrl+s'].includes(key)) {
+				event.preventDefault();
+				setIsSettingsVisible((prev) => !prev);
+			}
+		};
+
+		document.addEventListener('keydown', handleKeyDown);
+		return () => document.removeEventListener('keydown', handleKeyDown);
+	}, []);
+
 	useEffect(() => {
 		window.addEventListener('focus', startPrinterConfiguration);
 		startPrinterConfiguration();
@@ -110,7 +137,7 @@ const Component = () => {
 
 	return (
 		<div className="AppIcons">
-			{user && isUserFromBranch(user.user_type) && (
+			{user && getAppType() === appTypes.BACK_OFFICE && (
 				<Tooltip title="Connectivity Status">
 					<WifiOutlined
 						className={cn('AppIcons_icon', {
@@ -133,6 +160,24 @@ const Component = () => {
 					onClick={handlePrinterClick}
 				/>
 			</Tooltip>
+
+			{isSettingsVisible && (
+				<Tooltip title="App Settings">
+					<SettingOutlined
+						className="AppIcons_icon AppIcons_icon--info"
+						onClick={() => setShowAppSettingsModal(true)}
+					/>
+				</Tooltip>
+			)}
+
+			{showAppSettingsModal && (
+				<AppSettingsModal
+					onClose={() => setShowAppSettingsModal(false)}
+					onSuccess={() => {
+						window.location.reload();
+					}}
+				/>
+			)}
 		</div>
 	);
 };

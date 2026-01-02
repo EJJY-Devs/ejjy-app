@@ -1,17 +1,16 @@
 import { Button, Descriptions, Divider, Modal, Spin, Tabs, Tag } from 'antd';
 import { RequestErrors } from 'components';
-import { MAX_PAGE_SIZE } from 'global';
+import { appTypes, MAX_PAGE_SIZE } from 'global';
 import { useBranches, useBranchProducts } from 'hooks';
 import _, { upperFirst } from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	formatInPeso,
 	formatQuantity,
+	getAppType,
 	getProductType,
 	getUnitOfMeasurement,
-	isUserFromBranch,
 } from 'utils';
 
 interface Props {
@@ -24,7 +23,6 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 	const [activeBranch, setActiveBranch] = useState(null);
 
 	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branchProducts },
 		isFetching: isFetchingBranchProducts,
@@ -32,7 +30,9 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 		error: branchProductError,
 	} = useBranchProducts({
 		params: { productIds: product?.id },
-		options: { enabled: product !== null && !isUserFromBranch(user.user_type) },
+		options: {
+			enabled: product !== null && getAppType() !== appTypes.BACK_OFFICE,
+		},
 	});
 	const {
 		data: { branches },
@@ -41,7 +41,7 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 		error: branchesErrors,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: !isUserFromBranch(user.user_type) },
+		options: { enabled: getAppType() !== appTypes.BACK_OFFICE },
 	});
 
 	useEffect(() => {
@@ -194,7 +194,7 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 				</Descriptions.Item>
 			</Descriptions>
 
-			{!isUserFromBranch(user.user_type) && (
+			{getAppType() !== appTypes.BACK_OFFICE && (
 				<>
 					<Divider orientation="left">Branch Product</Divider>
 

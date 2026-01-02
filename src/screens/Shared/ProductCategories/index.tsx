@@ -16,7 +16,7 @@ import {
 	TableHeader,
 } from 'components';
 import { Box } from 'components/elements';
-import { MAX_PAGE_SIZE } from 'global';
+import { appTypes, MAX_PAGE_SIZE } from 'global';
 import {
 	usePingOnlineServer,
 	useProductCategories,
@@ -33,7 +33,7 @@ import {
 } from 'react-sortable-hoc';
 import { useUserStore } from 'stores';
 import { useDebouncedCallback } from 'use-debounce';
-import { convertIntoArray, getId, isCUDShown } from 'utils';
+import { convertIntoArray, getAppType, getId } from 'utils';
 
 const DragHandle = SortableHandle(() => (
 	<MenuOutlined style={{ cursor: 'grab', color: '#999' }} />
@@ -142,7 +142,7 @@ export const ProductCategories = () => {
 			{ title: 'Name', dataIndex: 'name', className: 'drag-visible' },
 		];
 
-		if (isCUDShown(user.user_type)) {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
 			columns.unshift({
 				title: isEditingProductCategory && (
 					<LoadingOutlined style={{ fontSize: 16 }} spin />
@@ -195,8 +195,8 @@ export const ProductCategories = () => {
 		<Content title="Product Categories">
 			<ConnectionAlert />
 
-			<Box>
-				{isCUDShown(user.user_type) && (
+			<Box padding>
+				{getAppType() === appTypes.HEAD_OFFICE && (
 					<TableHeader
 						buttonName="Create Product Category"
 						onCreate={() => {
@@ -209,7 +209,7 @@ export const ProductCategories = () => {
 
 				<RequestErrors
 					className={cn('px-6', {
-						'mt-6': !isCUDShown(user.user_type),
+						'mt-6': getAppType() !== appTypes.HEAD_OFFICE,
 					})}
 					errors={[
 						...convertIntoArray(productCategoriesError),

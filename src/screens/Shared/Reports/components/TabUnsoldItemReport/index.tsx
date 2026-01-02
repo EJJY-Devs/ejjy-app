@@ -4,16 +4,17 @@ import { ColumnsType } from 'antd/lib/table';
 import { Box, Label } from 'components/elements';
 import { useBranches, useQueryParams, filterOption } from 'ejjy-global';
 import { useProductCategories } from 'hooks';
-import { DEFAULT_PAGE, MAX_PAGE_SIZE } from 'global';
+import { DEFAULT_PAGE, MAX_PAGE_SIZE, appTypes } from 'global';
 import { useUserStore } from 'stores';
 import moment, { Moment } from 'moment';
 import React, { useEffect, useState } from 'react';
 import {
 	getLocalApiUrl,
 	getLocalBranchId,
-	isUserFromBranch,
 	isUserFromOffice,
+	getAppType,
 } from 'utils';
+
 import { TransactionProductsService } from 'services';
 import { ViewUnsoldItemModal } from 'components/modals/ViewUnsoldItemModal';
 
@@ -356,7 +357,8 @@ const UnsoldItemReport = () => {
 			if (selectedMonth && date.includes('-')) {
 				products = await fetchMonthUnsoldProducts(
 					selectedMonth,
-					!isUserFromBranch(user.user_type) && (branchId || params?.branchId)
+					getAppType() !== appTypes.BACK_OFFICE &&
+						(branchId || params?.branchId)
 						? branchId || Number(params.branchId as string | number)
 						: undefined,
 				);
@@ -366,7 +368,8 @@ const UnsoldItemReport = () => {
 				if (dateRanges) {
 					products = await fetchAggregatedUnsoldProducts(
 						dateRanges.dates,
-						!isUserFromBranch(user.user_type) && (branchId || params?.branchId)
+						getAppType() !== appTypes.BACK_OFFICE &&
+							(branchId || params?.branchId)
 							? branchId || Number(params.branchId as string | number)
 							: undefined,
 					);
@@ -377,7 +380,7 @@ const UnsoldItemReport = () => {
 					{
 						date,
 						branch_id:
-							!isUserFromBranch(user.user_type) &&
+							getAppType() !== appTypes.BACK_OFFICE &&
 							(branchId || params?.branchId)
 								? branchId || Number(params.branchId as string | number)
 								: undefined,
@@ -473,9 +476,10 @@ const UnsoldItemReport = () => {
 						data.push(...results.filter((item) => item !== null));
 					} else {
 						// Branch user or head office user with specific branch selected
-						const branchId = isUserFromBranch(user.user_type)
-							? getLocalBranchId()
-							: params?.branchId;
+						const branchId =
+							getAppType() === appTypes.BACK_OFFICE
+								? getLocalBranchId()
+								: params?.branchId;
 
 						const branchName =
 							isHeadOffice && branchId
@@ -565,10 +569,7 @@ const UnsoldItemReport = () => {
 						data.push(...results.filter((item) => item !== null));
 					} else {
 						// Branch user or head office user with specific branch selected
-						const branchId = isUserFromBranch(user.user_type)
-							? getLocalBranchId()
-							: params?.branchId;
-
+						const branchId = getAppType() === appTypes.BACK_OFFICE;
 						const branchName =
 							isHeadOffice && branchId
 								? (branchesData as any)?.list?.find(
@@ -643,9 +644,10 @@ const UnsoldItemReport = () => {
 					data.push(...results.filter((item) => item !== null));
 				} else {
 					// Branch user or head office user with specific branch selected
-					const branchId = isUserFromBranch(user.user_type)
-						? getLocalBranchId()
-						: params?.branchId;
+					const branchId =
+						getAppType() === appTypes.BACK_OFFICE
+							? getLocalBranchId()
+							: params?.branchId;
 
 					const branchName =
 						isHeadOffice && branchId

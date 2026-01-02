@@ -124,7 +124,7 @@ const App = () => {
 		!storageData.branchProductIds;
 
 	// Initialize products and branch products first
-	const { isSuccess: isProductsInitialized } = useInitializeData({
+	useInitializeData({
 		params: {
 			isHeadOffice: getAppType() === appTypes.HEAD_OFFICE,
 			notMainHeadOffice: getHeadOfficeType() === headOfficeTypes.NOT_MAIN,
@@ -172,7 +172,6 @@ const App = () => {
 				(!!storageData.productIds ||
 					!!storageData.branchProductIds ||
 					(!getProductIds() && !getBranchProductIds())),
-			refetchOnMount: false,
 			refetchOnWindowFocus: false,
 			// Set refetch interval to 5 minutes (300,000 ms) when doing bulk branch initialization
 			refetchInterval:
@@ -211,7 +210,6 @@ const App = () => {
 				!!getOnlineApiUrl() &&
 				!isStandAlone() &&
 				(getAppType() === appTypes.HEAD_OFFICE || branchId !== null) &&
-				isProductsInitialized &&
 				!storageData.productIds &&
 				!storageData.branchProductIds,
 		},

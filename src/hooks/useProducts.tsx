@@ -238,7 +238,7 @@ export const useProductEdit = () => {
 					acting_user_id: actingUserId,
 					// allowable_spoilage: allowableSpoilage,
 					scale_code: scaleCode,
-					barcode: barcode || null,
+					barcode,
 					conversion_amount: conversionAmount,
 					cost_per_bulk: costPerBulk,
 					cost_per_piece: costPerPiece,

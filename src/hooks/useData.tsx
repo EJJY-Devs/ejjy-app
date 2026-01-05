@@ -2,13 +2,19 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useQuery } from 'react-query';
 import { DataService } from 'services';
-import { APP_PRODUCTS_IDS, APP_BRANCH_PRODUCT_IDS, appTypes } from 'global';
+import {
+	APP_PRODUCTS_IDS,
+	APP_BRANCH_PRODUCT_IDS,
+	APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
+	appTypes,
+} from 'global';
 
 import {
 	getLocalApiUrl,
 	isStandAlone,
 	getProductIds,
 	getBranchProductIds,
+	getBranchProductBalanceUpdateLogsIds,
 	getAppType,
 } from 'utils';
 
@@ -42,6 +48,10 @@ export const useInitializeData = ({ params, options }: Query) =>
 							...(params.branchProductIds && {
 								branch_product_ids: params.branchProductIds,
 							}),
+							...(params.branchProductBalanceUpdateLogsIds && {
+								branch_product_balance_update_logs_ids:
+									params.branchProductBalanceUpdateLogsIds,
+							}),
 						},
 						baseURL,
 					),
@@ -62,12 +72,18 @@ export const useInitializeData = ({ params, options }: Query) =>
 				} catch (e) {
 					console.error('Initialize Data', e);
 				}
-			} else if (params.productIds || params.branchProductIds) {
+			} else if (
+				params.productIds ||
+				params.branchProductIds ||
+				params.branchProductBalanceUpdateLogsIds
+			) {
 				// Only for HEAD_OFFICE incremental sync without branchId
 				await DataService.initialize(
 					{
 						product_ids: params.productIds,
 						branch_product_ids: params.branchProductIds,
+						branch_product_balance_update_logs_ids:
+							params.branchProductBalanceUpdateLogsIds,
 						is_head_office: params.isHeadOffice,
 						not_main_head_office: params.notMainHeadOffice,
 					},
@@ -120,6 +136,14 @@ export const useInitializeData = ({ params, options }: Query) =>
 					APP_BRANCH_PRODUCT_IDS,
 					initializedBranchProductIdsString,
 					params?.branchProductIds,
+				);
+
+				// Update branch product balance update logs IDs
+				const initializedBranchProductBalanceUpdateLogsIdsString = getBranchProductBalanceUpdateLogsIds();
+				updateRemainingIds(
+					APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
+					initializedBranchProductBalanceUpdateLogsIdsString,
+					params?.branchProductBalanceUpdateLogsIds,
 				);
 			},
 			...options,
@@ -190,6 +214,14 @@ export const useInitializeIds = ({ params, options }: Query) =>
 				// Handle branch_product_ids
 				if (data?.data?.branch_product_ids) {
 					updateStoredIds(APP_BRANCH_PRODUCT_IDS, data.data.branch_product_ids);
+				}
+
+				// Handle branch_product_balance_update_logs_ids
+				if (data?.data?.branch_product_balance_update_logs_ids) {
+					updateStoredIds(
+						APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
+						data.data.branch_product_balance_update_logs_ids,
+					);
 				}
 			},
 			...options,

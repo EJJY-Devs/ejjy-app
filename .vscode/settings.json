@@ -6,8 +6,9 @@
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
 	"search.exclude": {
-		"**/public": true,
+		// "**/public": true,
 		"**/archive": true,
+		"**/build": true,
 		"**/.git": true,
 		"**/node_modules": true
 	},

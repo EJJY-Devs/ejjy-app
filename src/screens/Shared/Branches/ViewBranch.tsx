@@ -25,7 +25,7 @@ export const ViewBranch = ({ match }: Props) => {
 	// CUSTOM HOOKS
 	const { isConnected } = usePingOnlineServer();
 	const {
-		params: { tab = viewBranchTabs.PRODUCTS },
+		params: { tab = viewBranchTabs.BRANCH_PRODUCTS },
 		setQueryParams,
 	} = useQueryParams();
 	const user = useUserStore((state) => state.user);
@@ -73,8 +73,8 @@ export const ViewBranch = ({ match }: Props) => {
 							onTabClick={handleTabClick}
 						>
 							<Tabs.TabPane
-								key={viewBranchTabs.PRODUCTS}
-								tab={viewBranchTabs.PRODUCTS}
+								key={viewBranchTabs.BRANCH_PRODUCTS}
+								tab={viewBranchTabs.BRANCH_PRODUCTS}
 							>
 								<TabBranchProducts
 									branch={branch}

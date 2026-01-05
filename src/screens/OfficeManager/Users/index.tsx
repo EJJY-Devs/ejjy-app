@@ -149,6 +149,19 @@ export const Users = () => {
 			branch = branchesData?.list.filter(({ id }) => id === branchId);
 		}
 
+		// Find the oldest admin (by datetime_created)
+		const oldestAdmin = usersData?.list
+			?.filter((user) => user.user_type === userTypes.ADMIN)
+			?.reduce(
+				(oldest, user) =>
+					!oldest ||
+					new Date(user.datetime_created) < new Date(oldest.datetime_created)
+						? user
+						: oldest,
+				null,
+			);
+		const oldestAdminId = oldestAdmin?.id;
+
 		const formattedUsers = usersData?.list
 			.filter((user) => user.username !== DEV_USERNAME)
 			.map((user) => ({
@@ -215,7 +228,7 @@ export const Users = () => {
 							/>
 						</Tooltip>
 
-						{user.user_type !== userTypes.ADMIN && (
+						{user.id !== oldestAdminId && (
 							<Popconfirm
 								cancelText="No"
 								okText="Yes"

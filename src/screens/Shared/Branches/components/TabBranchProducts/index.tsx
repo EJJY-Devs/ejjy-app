@@ -183,11 +183,23 @@ export const TabBranchProducts = ({ branch, disabled }: Props) => {
 
 	return (
 		<div>
-			<TableHeader
-				buttonName="Create Branch Product"
-				title="Products"
-				wrapperClassName="pt-2 px-0"
-			/>
+			<div
+				style={{
+					display: 'flex',
+					justifyContent: 'space-between',
+					alignItems: 'center',
+					padding: '8px 0',
+				}}
+			>
+				<TableHeader
+					buttonName="Create Branch Product"
+					title="Branch Products"
+					wrapperClassName="pt-2 px-0"
+				/>
+				<span style={{ color: '#fa8c16', fontSize: '12px' }}>
+					Branch Product Count: <strong>{total?.toLocaleString() || 0}</strong>
+				</span>
+			</div>
 
 			<Filter />
 

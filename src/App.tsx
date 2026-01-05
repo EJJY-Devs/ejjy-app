@@ -32,6 +32,7 @@ import {
 	getAppType,
 	getBranchKey,
 	getBranchProductIds,
+	getBranchProductBalanceUpdateLogsIds,
 	getLocalApiUrl,
 	getLocalBranchId,
 	getOnlineApiUrl,
@@ -81,6 +82,8 @@ const App = () => {
 	const [storageData, setStorageData] = useState(() => ({
 		productIds: getProductIds() || null,
 		branchProductIds: getBranchProductIds() || null,
+		branchProductBalanceUpdateLogsIds:
+			getBranchProductBalanceUpdateLogsIds() || null,
 	}));
 
 	useEffect(() => {
@@ -88,6 +91,8 @@ const App = () => {
 			setStorageData({
 				productIds: getProductIds() || null,
 				branchProductIds: getBranchProductIds() || null,
+				branchProductBalanceUpdateLogsIds:
+					getBranchProductBalanceUpdateLogsIds() || null,
 			});
 		};
 
@@ -149,6 +154,12 @@ const App = () => {
 					.slice(0, 100)
 					.join(','), // Limit to 100
 			}),
+			...(storageData.branchProductBalanceUpdateLogsIds && {
+				branchProductBalanceUpdateLogsIds: storageData.branchProductBalanceUpdateLogsIds
+					.split(',')
+					.slice(0, 100)
+					.join(','), // Limit to 100
+			}),
 			// Only include individual IDs if NOT doing bulk initialization
 			...(!isBulkInitializing &&
 				storageData.productIds && {
@@ -171,6 +182,7 @@ const App = () => {
 				// Only enable when there are IDs to process OR when doing bulk initialization
 				(!!storageData.productIds ||
 					!!storageData.branchProductIds ||
+					!!storageData.branchProductBalanceUpdateLogsIds ||
 					(!getProductIds() && !getBranchProductIds())),
 			refetchOnWindowFocus: false,
 			// Set refetch interval to 5 minutes (300,000 ms) when doing bulk branch initialization
@@ -211,7 +223,8 @@ const App = () => {
 				!isStandAlone() &&
 				(getAppType() === appTypes.HEAD_OFFICE || branchId !== null) &&
 				!storageData.productIds &&
-				!storageData.branchProductIds,
+				!storageData.branchProductIds &&
+				!storageData.branchProductBalanceUpdateLogsIds,
 		},
 	});
 

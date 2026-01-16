@@ -18,7 +18,6 @@ const fs = require('fs');
 // Persistent store for UI/app settings (zoomLevel, appType, headOfficeType)
 const store = new Store({ defaults: { zoomLevel: 1 } });
 
-const TUNNELING_INTERVAL_MS = 60_000;
 const SPLASH_SCREEN_SHOWN_MS = 8_000;
 
 // Zoom configuration with bounds
@@ -432,19 +431,14 @@ function initServer(store) {
 				'ngrok config add-authtoken 1n3K1Pcfqdy2WKRk60koXTY1ZrB_7QC7rqRsspNCkayebuRUN',
 			);
 
-			const startTunneling = () => {
-				exec(
-					'ngrok http --domain=headoffice.ngrok.app 8001',
-					(error, stdout, stderr) => {
-						if (error) return logStatus(`Tunneling error: ${error.message}`);
-						if (stderr) return logStatus(`Tunneling stderr: ${stderr}`);
-						logStatus(`Tunneling stdout: ${stdout}`);
-					},
-				);
-			};
-
-			startTunneling();
-			setInterval(startTunneling, TUNNELING_INTERVAL_MS);
+			exec(
+				'ngrok http --domain=headoffice.ngrok.app 8001',
+				(error, stdout, stderr) => {
+					if (error) return logStatus(`Tunneling error: ${error.message}`);
+					if (stderr) return logStatus(`Tunneling stderr: ${stderr}`);
+					logStatus(`Tunneling stdout: ${stdout}`);
+				},
+			);
 			logStatus('Server: Started Tunneling');
 		}
 

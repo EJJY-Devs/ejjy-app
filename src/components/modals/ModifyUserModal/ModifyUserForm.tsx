@@ -2,7 +2,7 @@ import { Button, Col, Divider, Input, Row, Select } from 'antd';
 import { filterOption } from 'ejjy-global';
 import { ErrorMessage, Form, Formik } from 'formik';
 import { userTypeBranchOptions, userTypeOptions, userTypes } from 'global';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import * as Yup from 'yup';
 import { FieldError, Label } from '../../elements';
 
@@ -23,13 +23,6 @@ export const ModifyUserForm = ({
 }: Props) => {
 	const [passwordFieldsVisible, setPasswordFieldsVisible] = useState(!user);
 	const [pinFieldVisible, setPinFieldVisible] = useState(false);
-
-	// METHODS
-	useEffect(() => {
-		if (user?.user_type === userTypes.ADMIN) {
-			setPasswordFieldsVisible(true);
-		}
-	}, [user]);
 
 	const getFormDetails = useCallback(
 		() => ({
@@ -193,40 +186,21 @@ export const ModifyUserForm = ({
 							</>
 						)}
 
-						{user?.user_type !== userTypes.ADMIN && (
-							<>
-								{user ? (
-									<>
-										<Col span={24}>
-											<Button
-												className="d-block mx-auto"
-												danger={passwordFieldsVisible}
-												type="link"
-												onClick={() => {
-													setPasswordFieldsVisible((value) => !value);
-												}}
-											>
-												{passwordFieldsVisible ? 'Cancel Edit' : 'Edit'}{' '}
-												Password
-											</Button>
-										</Col>
-										<Col span={24}>
-											<Button
-												className="d-block mx-auto"
-												danger={pinFieldVisible}
-												type="link"
-												onClick={() => {
-													setPinFieldVisible((value) => !value);
-												}}
-											>
-												{pinFieldVisible ? 'Cancel Edit' : 'Edit'} PIN
-											</Button>
-										</Col>
-									</>
-								) : (
-									<Divider />
-								)}
-							</>
+						{user?.user_type !== userTypes.ADMIN && <>{!user && <Divider />}</>}
+
+						{user && (
+							<Col span={24}>
+								<Button
+									className="d-block mx-auto"
+									danger={passwordFieldsVisible}
+									type="link"
+									onClick={() => {
+										setPasswordFieldsVisible((value) => !value);
+									}}
+								>
+									{passwordFieldsVisible ? 'Cancel Edit' : 'Edit'} Password
+								</Button>
+							</Col>
 						)}
 
 						{passwordFieldsVisible && (
@@ -261,6 +235,21 @@ export const ModifyUserForm = ({
 									/>
 								</Col>
 							</>
+						)}
+
+						{user && (
+							<Col span={24}>
+								<Button
+									className="d-block mx-auto"
+									danger={pinFieldVisible}
+									type="link"
+									onClick={() => {
+										setPinFieldVisible((value) => !value);
+									}}
+								>
+									{pinFieldVisible ? 'Cancel Edit' : 'Edit'} PIN
+								</Button>
+							</Col>
 						)}
 
 						{pinFieldVisible || !user ? (

@@ -4,7 +4,7 @@ import { IListRequest } from './interfaces';
 interface List extends IListRequest {
 	search?: string;
 	branch_product_id?: number;
-	branch_id?: number;
+	branch_id?: number | string;
 	product_id?: number;
 	product_category?: string;
 	ordering?: string;
@@ -22,6 +22,9 @@ interface Create {
 const service = {
 	list: async (params: List, baseURL) =>
 		axios.get('/branches-product-balances/', { baseURL, params }),
+
+	aggregated: async (params: List, baseURL) =>
+		axios.get('/branches-product-balances/aggregated/', { baseURL, params }),
 
 	retrieve: async (id: number, baseURL) =>
 		axios.get(`/branches-product-balances/${id}/`, { baseURL }),

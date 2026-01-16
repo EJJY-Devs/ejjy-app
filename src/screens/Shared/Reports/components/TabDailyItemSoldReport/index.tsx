@@ -10,15 +10,9 @@ import {
 } from 'ejjy-global';
 import { useProductCategories } from 'hooks';
 import { DEFAULT_PAGE, MAX_PAGE_SIZE, appTypes } from 'global';
-import { useUserStore } from 'stores';
 import moment, { Moment } from 'moment';
 import React, { useEffect, useState } from 'react';
-import {
-	getLocalApiUrl,
-	getLocalBranchId,
-	isUserFromOffice,
-	getAppType,
-} from 'utils';
+import { getLocalApiUrl, getLocalBranchId, getAppType } from 'utils';
 import { TransactionProductsService } from 'services';
 
 interface DailyItemSoldSummaryItem {
@@ -63,6 +57,13 @@ const DailyItemSoldReport = () => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
 
+	// Set default branch to 'all' for head office users
+	useEffect(() => {
+		if (getAppType() === appTypes.HEAD_OFFICE && !params.branchId) {
+			setQueryParams({ branchId: 'all' }, { shouldResetPage: false });
+		}
+	}, []);
+
 	// Initialize filters from URL params
 	useEffect(() => {
 		if (params.month && params.month !== selectedMonth) {
@@ -84,7 +85,6 @@ const DailyItemSoldReport = () => {
 			}
 		}
 	}, [params]);
-	const user = useUserStore((state) => state.user);
 
 	const { data: branchesData } = useBranches({
 		params: {
@@ -112,7 +112,7 @@ const DailyItemSoldReport = () => {
 		];
 
 		// Add Branch column for head office users
-		if (isUserFromOffice(user.user_type)) {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
 			columns.push({
 				title: 'Branch',
 				dataIndex: 'branchName',
@@ -322,7 +322,7 @@ const DailyItemSoldReport = () => {
 						return;
 					}
 
-					const isHeadOffice = isUserFromOffice(user.user_type);
+					const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 
 					// For head office users, wait for branches data to be loaded
 					if (isHeadOffice && !branchesData?.list) {
@@ -334,7 +334,27 @@ const DailyItemSoldReport = () => {
 
 					const data: TableRow[] = [];
 
-					if (isHeadOffice && !params?.branchId) {
+					if (isHeadOffice && params?.branchId === 'all') {
+						// Head office user with 'All' branches selected - show accumulated data
+						const monthProducts = await fetchMonthProductsSold(
+							selectedMonth,
+							undefined, // No branch ID to get all branches
+						);
+						const totalProductsCount = monthProducts.length;
+
+						if (totalProductsCount > 0) {
+							data.push({
+								key: selectedMonth,
+								date: `${monthDates.startDate}-${monthDates.endDate}`,
+								formattedDate: String(
+									`${moment(monthDates.startDate).format('MMMM YYYY')}`,
+								),
+								totalProductsSold: totalProductsCount,
+								branchName: undefined, // Will show 'All Branches'
+								branchId: undefined,
+							});
+						}
+					} else if (isHeadOffice && !params?.branchId) {
 						// Head office user without specific branch selected - show all branches
 						const branches = (branchesData as any)?.list || [];
 
@@ -409,7 +429,7 @@ const DailyItemSoldReport = () => {
 						return;
 					}
 
-					const isHeadOffice = isUserFromOffice(user.user_type);
+					const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 
 					// For head office users, wait for branches data to be loaded
 					if (isHeadOffice && !branchesData?.list) {
@@ -421,7 +441,29 @@ const DailyItemSoldReport = () => {
 
 					const data: TableRow[] = [];
 
-					if (isHeadOffice && !params?.branchId) {
+					if (isHeadOffice && params?.branchId === 'all') {
+						// Head office user with 'All' branches selected - show accumulated data
+						const aggregatedProducts = await fetchAggregatedProductsSold(
+							dateRanges.dates,
+							undefined, // No branch ID to get all branches
+						);
+						const totalProductsCount = aggregatedProducts.length;
+
+						if (totalProductsCount > 0) {
+							data.push({
+								key: selectedDateRangeFilter,
+								date: `${dateRanges.startDate}-${dateRanges.endDate}`,
+								formattedDate: String(
+									`${moment(dateRanges.startDate).format('M/D/YY')} - ${moment(
+										dateRanges.endDate,
+									).format('M/D/YY')}`,
+								),
+								totalProductsSold: totalProductsCount,
+								branchName: undefined, // Will show 'All Branches'
+								branchId: undefined,
+							});
+						}
+					} else if (isHeadOffice && !params?.branchId) {
 						// Head office user without specific branch selected - show all branches
 						const branches = (branchesData as any)?.list || [];
 
@@ -489,7 +531,7 @@ const DailyItemSoldReport = () => {
 				}
 
 				// Handle single date selection from calendar
-				const isHeadOffice = isUserFromOffice(user.user_type);
+				const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 				const selectedDateString = selectedDate.format('YYYY-MM-DD');
 
 				// For head office users, wait for branches data to be loaded
@@ -502,7 +544,24 @@ const DailyItemSoldReport = () => {
 
 				const data: TableRow[] = [];
 
-				if (isHeadOffice && !params?.branchId) {
+				if (isHeadOffice && params?.branchId === 'all') {
+					// Head office user with 'All' branches selected - show accumulated data
+					const totalProductsSold = await fetchTotalProductsSold(
+						selectedDateString,
+						undefined, // No branch ID to get all branches
+					);
+
+					if (totalProductsSold > 0) {
+						data.push({
+							key: selectedDateString,
+							date: selectedDateString,
+							formattedDate: String(selectedDate.format('MM/DD/YYYY')),
+							totalProductsSold,
+							branchName: undefined, // Will show 'All Branches'
+							branchId: undefined,
+						});
+					}
+				} else if (isHeadOffice && !params?.branchId) {
 					// Head office user without specific branch selected - show all branches
 					const branches = (branchesData as any)?.list || [];
 
@@ -570,7 +629,6 @@ const DailyItemSoldReport = () => {
 		selectedDate,
 		selectedDateRangeFilter,
 		selectedMonth,
-		user.user_type,
 		params?.branchId,
 		branchesData?.list?.length,
 		selectedProductCategory,
@@ -591,8 +649,11 @@ const DailyItemSoldReport = () => {
 		setSelectedReportDate(reportDateString);
 		try {
 			// Set the selected branch first (for immediate display)
-			if (isUserFromOffice(user.user_type)) {
-				if (record?.branchId) {
+			if (getAppType() === appTypes.HEAD_OFFICE) {
+				if (params?.branchId === 'all') {
+					// Head office user with 'All' branches selected
+					setSelectedBranch({ name: 'All Branches' });
+				} else if (record?.branchId) {
 					// Head office user clicked on a specific branch row
 					const branch = (branchesData as any)?.list?.find(
 						(b: any) => b.id === record.branchId,
@@ -624,7 +685,8 @@ const DailyItemSoldReport = () => {
 				products = await fetchMonthProductsSold(
 					selectedMonth,
 					getAppType() !== appTypes.BACK_OFFICE &&
-						(branchId || params?.branchId)
+						(branchId || params?.branchId) &&
+						params?.branchId !== 'all'
 						? branchId || Number(params.branchId as string | number)
 						: undefined,
 				);
@@ -635,7 +697,8 @@ const DailyItemSoldReport = () => {
 					products = await fetchAggregatedProductsSold(
 						dateRanges.dates,
 						getAppType() !== appTypes.BACK_OFFICE &&
-							(branchId || params?.branchId)
+							(branchId || params?.branchId) &&
+							params?.branchId !== 'all'
 							? branchId || Number(params.branchId as string | number)
 							: undefined,
 					);
@@ -647,7 +710,8 @@ const DailyItemSoldReport = () => {
 						date,
 						branch_id:
 							getAppType() !== appTypes.BACK_OFFICE &&
-							(branchId || params?.branchId)
+							(branchId || params?.branchId) &&
+							params?.branchId !== 'all'
 								? branchId || Number(params.branchId as string | number)
 								: undefined,
 						product_category: selectedProductCategory || undefined,
@@ -800,7 +864,7 @@ const DailyItemSoldReport = () => {
 				</Col>
 			</Row>
 
-			{isUserFromOffice(user.user_type) && (
+			{getAppType() === appTypes.HEAD_OFFICE && (
 				<Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
 					<Col span={24}>
 						<Label label="Branch" spacing />
@@ -810,13 +874,18 @@ const DailyItemSoldReport = () => {
 							filterOption={filterOption}
 							optionFilterProp="children"
 							placeholder="Select Branch"
-							value={params.branchId ? Number(params.branchId) : undefined}
+							value={(() => {
+								if (params.branchId === 'all') return 'all';
+								if (params.branchId) return Number(params.branchId);
+								return undefined;
+							})()}
 							allowClear
 							showSearch
 							onChange={(value) => {
 								setQueryParams({ branchId: value }, { shouldResetPage: true });
 							}}
 						>
+							<Select.Option value="all">All</Select.Option>
 							{(branchesData as any)?.list?.map(({ id, name }) => (
 								<Select.Option key={id} value={id}>
 									{name}

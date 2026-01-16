@@ -24,8 +24,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { convertIntoArray, formatInPeso, getLocalApiUrl } from 'utils';
 
 const columns: ColumnsType = [
-	{ title: 'CR #', dataIndex: 'id' },
-	{ title: 'OP #', dataIndex: 'orderOfPaymentId' },
+	{ title: 'CR #', dataIndex: 'referenceNumber' },
+	{ title: 'OP #', dataIndex: 'orderOfPaymentReferenceNumber' },
 	{ title: 'Date & Time Created', dataIndex: 'datetime' },
 	{ title: 'Payor', dataIndex: 'payor' },
 	{ title: 'Amount', dataIndex: 'amount' },
@@ -64,24 +64,30 @@ export const TabCollectionReceipts = () => {
 		const data = collectionReceiptsData?.list.map((collectionReceipt) => {
 			const {
 				id,
+				reference_number,
 				amount,
 				order_of_payment,
 				datetime_created,
 			} = collectionReceipt;
-			const { payor, id: orderOfPaymentId } = order_of_payment;
+			const {
+				payor,
+				id: orderOfPaymentId,
+				reference_number: orderOfPaymentReferenceNumber,
+			} = order_of_payment;
 
 			return {
 				key: id,
-				id: (
+				referenceNumber: (
 					<Button
 						className="pa-0"
 						type="link"
 						onClick={() => setSelectedCollectionReceipt(collectionReceipt)}
 					>
-						{id}
+						{reference_number || id}
 					</Button>
 				),
-				orderOfPaymentId,
+				orderOfPaymentReferenceNumber:
+					orderOfPaymentReferenceNumber || orderOfPaymentId,
 				datetime: formatDateTime(datetime_created),
 				payor: getFullName(payor),
 				amount: formatInPeso(amount),

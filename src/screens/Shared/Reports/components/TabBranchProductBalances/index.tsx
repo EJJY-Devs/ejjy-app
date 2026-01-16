@@ -1,5 +1,5 @@
 import { EditFilled, SearchOutlined } from '@ant-design/icons';
-import { Button, Col, Input, Row, Select, Table, Tooltip } from 'antd';
+import { Button, Col, Input, Row, Select, Spin, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors } from 'components';
 import { Box, Label } from 'components/elements';
@@ -12,6 +12,7 @@ import {
 	MAX_PAGE_SIZE,
 	pageSizeOptions,
 	SEARCH_DEBOUNCE_TIME,
+	appTypes,
 } from 'global';
 import {
 	useBranchProductBalances,
@@ -21,8 +22,7 @@ import {
 } from 'hooks';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
-import { convertIntoArray, isUserFromOffice } from 'utils';
+import { convertIntoArray, getAppType, getLocalBranchId } from 'utils';
 
 const BranchProductBalances = () => {
 	// STATES
@@ -32,7 +32,25 @@ const BranchProductBalances = () => {
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
+
+	// Set default branch: 'all' for head office users, local branch for back office
+	useEffect(() => {
+		if (!params.branchId) {
+			if (getAppType() === appTypes.HEAD_OFFICE) {
+				// Head office: default to 'all'
+				setQueryParams({ branchId: 'all' }, { shouldResetPage: false });
+			} else {
+				// Back office: default to local branch
+				const localBranchId = getLocalBranchId();
+				if (localBranchId) {
+					setQueryParams(
+						{ branchId: localBranchId },
+						{ shouldResetPage: false },
+					);
+				}
+			}
+		}
+	}, []);
 
 	// DYNAMIC COLUMNS
 	const columns: ColumnsType = [
@@ -64,10 +82,13 @@ const BranchProductBalances = () => {
 				},
 			}),
 		},
-		...(isUserFromOffice(user.user_type)
+		...(getAppType() === appTypes.HEAD_OFFICE
 			? [{ title: 'Action', dataIndex: 'action' }]
 			: []),
 	];
+
+	const isAllBranches =
+		getAppType() === appTypes.HEAD_OFFICE && params.branchId === 'all';
 
 	const {
 		data: { branchProductBalances, total },
@@ -84,37 +105,55 @@ const BranchProductBalances = () => {
 
 	// EFFECTS
 	useEffect(() => {
-		const data = branchProductBalances.map((balance) => {
-			const isWeighing =
-				balance.branch_product?.product?.unit_of_measurement === 'weighing';
-			const baseData: any = {
-				key: balance.id,
-				barcode: balance.branch_product?.product?.barcode || EMPTY_CELL,
-				description: balance.branch_product?.product?.name || EMPTY_CELL,
-				value: isWeighing
-					? Number(balance.value).toFixed(3)
-					: Number(balance.value).toFixed(0),
-			};
+		if (isAllBranches) {
+			// Backend already aggregated the data, just format it for display
+			const data = branchProductBalances.map((balance) => {
+				const isWeighing = balance.is_weighing;
+				return {
+					key: balance.id,
+					barcode: balance.barcode || EMPTY_CELL,
+					description: balance.name || EMPTY_CELL,
+					value: isWeighing
+						? Number(balance.value).toFixed(3)
+						: Number(balance.value).toFixed(0),
+				};
+			});
 
-			// Only add action for head office users
-			if (isUserFromOffice(user.user_type)) {
-				baseData.action = (
-					<Tooltip title="Create Adjustment Slip">
-						<Button
-							icon={<EditFilled />}
-							type="primary"
-							ghost
-							onClick={() => handleCreateAdjustmentSlip(balance)}
-						/>
-					</Tooltip>
-				);
-			}
+			setDataSource(data);
+		} else {
+			// Normal display for single branch
+			const data = branchProductBalances.map((balance) => {
+				const isWeighing =
+					balance.branch_product?.product?.unit_of_measurement === 'weighing';
+				const baseData: any = {
+					key: balance.id,
+					barcode: balance.branch_product?.product?.barcode || EMPTY_CELL,
+					description: balance.branch_product?.product?.name || EMPTY_CELL,
+					value: isWeighing
+						? Number(balance.value).toFixed(3)
+						: Number(balance.value).toFixed(0),
+				};
 
-			return baseData;
-		});
+				// Only add action for head office users
+				if (getAppType() === appTypes.HEAD_OFFICE) {
+					baseData.action = (
+						<Tooltip title="Create Adjustment Slip">
+							<Button
+								icon={<EditFilled />}
+								type="primary"
+								ghost
+								onClick={() => handleCreateAdjustmentSlip(balance)}
+							/>
+						</Tooltip>
+					);
+				}
 
-		setDataSource(data);
-	}, [branchProductBalances, user.user_type]);
+				return baseData;
+			});
+
+			setDataSource(data);
+		}
+	}, [branchProductBalances, params.branchId]);
 
 	// METHODS
 	const handleCreateAdjustmentSlip = (balance) => {
@@ -145,27 +184,29 @@ const BranchProductBalances = () => {
 				/>
 			)}
 
-			<Table
-				columns={columns}
-				dataSource={dataSource}
-				loading={isFetchingBranchProductBalances}
-				pagination={{
-					current: Number(params.page) || DEFAULT_PAGE,
-					total,
-					pageSize: Number(params.pageSize) || DEFAULT_PAGE_SIZE,
-					onChange: (page, newPageSize) => {
-						setQueryParams({
-							page,
-							pageSize: newPageSize,
-						});
-					},
-					disabled: !dataSource,
-					position: ['bottomCenter'],
-					pageSizeOptions,
-				}}
-				scroll={{ x: 800 }}
-				bordered
-			/>
+			<Spin spinning={isFetchingBranchProductBalances}>
+				<Table
+					columns={columns}
+					dataSource={dataSource}
+					loading={isFetchingBranchProductBalances}
+					pagination={{
+						current: Number(params.page) || DEFAULT_PAGE,
+						total,
+						pageSize: Number(params.pageSize) || DEFAULT_PAGE_SIZE,
+						onChange: (page, newPageSize) => {
+							setQueryParams({
+								page,
+								pageSize: newPageSize,
+							});
+						},
+						disabled: !dataSource,
+						position: ['bottomCenter'],
+						pageSizeOptions,
+					}}
+					scroll={{ x: 800 }}
+					bordered
+				/>
+			</Spin>
 		</Box>
 	);
 };
@@ -173,14 +214,13 @@ const BranchProductBalances = () => {
 const Filter = () => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
 		error: branchesError,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: isUserFromOffice(user.user_type) },
+		options: { enabled: getAppType() === appTypes.HEAD_OFFICE },
 	});
 	const {
 		data: { productCategories },
@@ -190,34 +230,17 @@ const Filter = () => {
 		params: { pageSize: MAX_PAGE_SIZE },
 	});
 
-	// EFFECTS
-	useEffect(() => {
-		// Set first branch as default if user is from office, branches are loaded, and no branch is currently selected
-		if (
-			isUserFromOffice(user.user_type) &&
-			branches.length > 0 &&
-			!params.branchId &&
-			!isFetchingBranches
-		) {
-			setQueryParams({ branchId: branches[0].id }, { shouldResetPage: true });
-		}
-	}, [
-		branches,
-		params.branchId,
-		user.user_type,
-		isFetchingBranches,
-		setQueryParams,
-	]);
-
 	// METHODS
 	const getBranchSelectValue = () => {
-		if (params.branchId) {
-			return Number(params.branchId);
+		if (!params.branchId && getAppType() === appTypes.HEAD_OFFICE) {
+			return 'all';
 		}
-		if (branches.length > 0) {
-			return branches[0].id;
+		if (params.branchId === 'all') {
+			return 'all';
 		}
-		return null;
+		// Parse as number to match with Option values
+		const numValue = Number(params.branchId);
+		return !Number.isNaN(numValue) ? numValue : 'all';
 	};
 	const handleSearchDebounced = useCallback(
 		_.debounce((search) => {
@@ -275,7 +298,7 @@ const Filter = () => {
 				</Col>
 			</Row>
 
-			{isUserFromOffice(user.user_type) && (
+			{getAppType() === appTypes.HEAD_OFFICE && (
 				<Row className="mt-4" gutter={[16, 16]}>
 					<Col lg={24} span={24}>
 						<Label label="Branch" spacing />
@@ -285,11 +308,16 @@ const Filter = () => {
 							loading={isFetchingBranches}
 							optionFilterProp="children"
 							value={getBranchSelectValue()}
+							allowClear
 							showSearch
 							onChange={(value) => {
-								setQueryParams({ branchId: value }, { shouldResetPage: true });
+								setQueryParams(
+									{ branchId: value || 'all' },
+									{ shouldResetPage: true },
+								);
 							}}
 						>
+							<Select.Option value="all">All</Select.Option>
 							{branches.map((branch) => (
 								<Select.Option key={branch.id} value={branch.id}>
 									{branch.name}

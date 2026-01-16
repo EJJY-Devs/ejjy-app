@@ -1,5 +1,5 @@
 export const viewBranchTabs = {
-	PRODUCTS: 'Products',
+	BRANCH_PRODUCTS: 'Branch Products',
 	MACHINES: 'Machines',
 	TRANSACTIONS: 'Transactions',
 	DISCOUNTED_TRANSACTIONS: 'Discounted Transactions',

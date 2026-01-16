@@ -76,6 +76,9 @@ const App = () => {
 			serviceType: serviceTypes.OFFLINE,
 			baseURL: getLocalApiUrl(),
 		},
+		options: {
+			enabled: isNetworkSuccess && !!getLocalApiUrl(),
+		},
 	});
 
 	// This is to get the ids in the local storage without the need to refresh the app
@@ -122,6 +125,25 @@ const App = () => {
 
 	const [branchId, setBranchId] = useState(null);
 
+	// Effect to wait for branchId to be available
+	useEffect(() => {
+		if (getAppType() === appTypes.BACK_OFFICE && isFetchingBranchesSuccess) {
+			const id = Number(getOnlineBranchId());
+			const branchExists = branches?.some(
+				(branch) => Number(branch.online_id) === id,
+			);
+
+			if (id && branchExists) {
+				setBranchId(
+					branches.find((branch) => Number(branch.online_id) === id)?.id ||
+						null,
+				);
+			} else {
+				setBranchId(null);
+			}
+		}
+	}, [isFetchingBranchesSuccess, branches]);
+
 	// Determine if we're doing bulk initialization (for HEAD_OFFICE without stored IDs)
 	const isBulkInitializing =
 		getAppType() === appTypes.HEAD_OFFICE &&
@@ -136,24 +158,17 @@ const App = () => {
 			// Only include branchId for Back Office when there are no queued IDs
 			...(getAppType() === appTypes.BACK_OFFICE &&
 				!storageData.productIds &&
-				!storageData.branchProductIds && {
-					branchId: getLocalBranchId(),
+				!storageData.branchProductIds &&
+				branchId && {
+					branchId,
 				}),
 			// Only include branchIds if there are no existing stored IDs (bulk initialize every 5 mins)
 			...(getAppType() === appTypes.HEAD_OFFICE &&
 				!storageData.productIds &&
-				!storageData.branchProductIds && {
+				!storageData.branchProductIds &&
+				branches.length > 0 && {
 					branchIds: branches.map(({ id }) => id),
 				}),
-			...(storageData.productIds && {
-				productIds: storageData.productIds.split(',').slice(0, 100).join(','), // Limit to 100
-			}),
-			...(storageData.branchProductIds && {
-				branchProductIds: storageData.branchProductIds
-					.split(',')
-					.slice(0, 100)
-					.join(','), // Limit to 100
-			}),
 			...(storageData.branchProductBalanceUpdateLogsIds && {
 				branchProductBalanceUpdateLogsIds: storageData.branchProductBalanceUpdateLogsIds
 					.split(',')
@@ -183,31 +198,20 @@ const App = () => {
 				(!!storageData.productIds ||
 					!!storageData.branchProductIds ||
 					!!storageData.branchProductBalanceUpdateLogsIds ||
-					(!getProductIds() && !getBranchProductIds())),
+					(!storageData.productIds &&
+						!storageData.branchProductIds &&
+						((getAppType() === appTypes.BACK_OFFICE && branchId !== null) ||
+							(getAppType() === appTypes.HEAD_OFFICE && branches.length > 0)))),
 			refetchOnWindowFocus: false,
 			// Set refetch interval to 5 minutes (300,000 ms) when doing bulk branch initialization
 			refetchInterval:
 				getAppType() === appTypes.HEAD_OFFICE &&
-				!getProductIds() &&
-				!getBranchProductIds()
+				!storageData.productIds &&
+				!storageData.branchProductIds
 					? 300_000 // 5 minutes
 					: 10_000, // 10 seconds
 		},
 	});
-
-	// Effect to wait for branchId to be available
-	useEffect(() => {
-		if (getAppType() === appTypes.BACK_OFFICE && isFetchingBranchesSuccess) {
-			const id = Number(getOnlineBranchId());
-			const branchExists = branches?.some((branch) => Number(branch.id) === id);
-
-			if (id && branchExists) {
-				setBranchId(id);
-			} else {
-				setBranchId(null);
-			}
-		}
-	}, [isFetchingBranchesSuccess, branches]);
 
 	useInitializeIds({
 		params: {

@@ -18,22 +18,45 @@ export const useBranchProductBalances = ({ params, options }: Query) =>
 			params?.page,
 			params?.pageSize,
 		],
-		() =>
-			wrapServiceWithCatch(
-				BranchProductBalancesService.list(
-					{
-						search: params?.search,
-						branch_id: params?.branchId,
-						branch_product_id: params?.branchProductId,
-						product_id: params?.productId,
-						product_category: params?.productCategory,
-						ordering: params?.ordering,
-						page: params?.page || DEFAULT_PAGE,
-						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
-					},
-					getLocalApiUrl(),
-				),
-			),
+		() => {
+			// Ensure branchId is properly formatted - either 'all', a valid number, or undefined
+			let branchId = params?.branchId;
+			const isAllBranches = branchId === 'all';
+
+			if (branchId !== undefined && branchId !== null && branchId !== '') {
+				// If it's 'all', keep it as string
+				if (branchId === 'all') {
+					branchId = 'all';
+				} else {
+					// Otherwise convert to number, but only if it's valid
+					const numValue = Number(branchId);
+					branchId = !Number.isNaN(numValue) ? numValue : undefined;
+				}
+			} else {
+				branchId = undefined;
+			}
+
+			const requestParams = {
+				search: params?.search,
+				branch_id: branchId,
+				branch_product_id: params?.branchProductId,
+				product_id: params?.productId,
+				product_category: params?.productCategory,
+				ordering: params?.ordering,
+				page: params?.page || DEFAULT_PAGE,
+				page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
+			};
+
+			// Use aggregated endpoint when fetching all branches
+			const serviceCall = isAllBranches
+				? BranchProductBalancesService.aggregated(
+						requestParams,
+						getLocalApiUrl(),
+				  )
+				: BranchProductBalancesService.list(requestParams, getLocalApiUrl());
+
+			return wrapServiceWithCatch(serviceCall);
+		},
 		{
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => ({

@@ -8,12 +8,7 @@ import { DEFAULT_PAGE, MAX_PAGE_SIZE, appTypes } from 'global';
 import { useUserStore } from 'stores';
 import moment, { Moment } from 'moment';
 import React, { useEffect, useState } from 'react';
-import {
-	getLocalApiUrl,
-	getLocalBranchId,
-	isUserFromOffice,
-	getAppType,
-} from 'utils';
+import { getLocalApiUrl, getLocalBranchId, getAppType } from 'utils';
 
 import { TransactionProductsService } from 'services';
 import { ViewUnsoldItemModal } from 'components/modals/ViewUnsoldItemModal';
@@ -60,6 +55,16 @@ const UnsoldItemReport = () => {
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
+	const user = useUserStore((state) => state.user);
+
+	const { data: branchesData } = useBranches({
+		params: {
+			pageSize: MAX_PAGE_SIZE,
+		},
+		serviceOptions: {
+			baseURL: getLocalApiUrl(),
+		},
+	});
 
 	// Initialize filters from URL params
 	useEffect(() => {
@@ -82,16 +87,6 @@ const UnsoldItemReport = () => {
 			}
 		}
 	}, [params]);
-	const user = useUserStore((state) => state.user);
-
-	const { data: branchesData } = useBranches({
-		params: {
-			pageSize: MAX_PAGE_SIZE,
-		},
-		serviceOptions: {
-			baseURL: getLocalApiUrl(),
-		},
-	});
 
 	const {
 		data: { productCategories },
@@ -99,6 +94,28 @@ const UnsoldItemReport = () => {
 	} = useProductCategories({
 		params: { pageSize: MAX_PAGE_SIZE },
 	});
+
+	// Set default branch for head office users, or local branch for back office users
+	useEffect(() => {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
+			if (branchesData?.list?.length > 0) {
+				const defaultBranchId = branchesData.list[0].id;
+				setQueryParams(
+					{ branchId: defaultBranchId },
+					{ shouldResetPage: false },
+				);
+			}
+		} else {
+			// Back office: default to local branch
+			const localBranchId = getLocalBranchId();
+			if (localBranchId) {
+				setQueryParams(
+					{ branchId: Number(localBranchId) },
+					{ shouldResetPage: false },
+				);
+			}
+		}
+	}, [user.user_type, branchesData?.list?.length]);
 
 	const getColumns = (): ColumnsType<TableRow> => {
 		const columns: ColumnsType<TableRow> = [
@@ -110,7 +127,7 @@ const UnsoldItemReport = () => {
 		];
 
 		// Add Branch column for head office users
-		if (isUserFromOffice(user.user_type)) {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
 			columns.push({
 				title: 'Branch',
 				dataIndex: 'branchName',
@@ -325,7 +342,7 @@ const UnsoldItemReport = () => {
 		setSelectedReportDate(reportDateString);
 		try {
 			// Set the selected branch first (for immediate display)
-			if (isUserFromOffice(user.user_type)) {
+			if (getAppType() === appTypes.HEAD_OFFICE) {
 				if (record?.branchId) {
 					// Head office user clicked on a specific branch row
 					const branch = (branchesData as any)?.list?.find(
@@ -355,35 +372,32 @@ const UnsoldItemReport = () => {
 
 			// Check if this is a month filter result
 			if (selectedMonth && date.includes('-')) {
+				const effectiveBranchId =
+					branchId || (params?.branchId ? Number(params.branchId) : undefined);
 				products = await fetchMonthUnsoldProducts(
 					selectedMonth,
-					getAppType() !== appTypes.BACK_OFFICE &&
-						(branchId || params?.branchId)
-						? branchId || Number(params.branchId as string | number)
-						: undefined,
+					effectiveBranchId,
 				);
 			} else if (selectedDateRangeFilter && date.includes('-')) {
 				// This is a date range - fetch aggregated data
 				const dateRanges = getDateRanges();
 				if (dateRanges) {
+					const effectiveBranchId =
+						branchId ||
+						(params?.branchId ? Number(params.branchId) : undefined);
 					products = await fetchAggregatedUnsoldProducts(
 						dateRanges.dates,
-						getAppType() !== appTypes.BACK_OFFICE &&
-							(branchId || params?.branchId)
-							? branchId || Number(params.branchId as string | number)
-							: undefined,
+						effectiveBranchId,
 					);
 				}
 			} else {
 				// This is a single date - use the original logic
+				const effectiveBranchId =
+					branchId || (params?.branchId ? Number(params.branchId) : undefined);
 				const response = await TransactionProductsService.getUnsoldSummary(
 					{
 						date,
-						branch_id:
-							getAppType() !== appTypes.BACK_OFFICE &&
-							(branchId || params?.branchId)
-								? branchId || Number(params.branchId as string | number)
-								: undefined,
+						branch_id: effectiveBranchId,
 						product_category: selectedProductCategory || undefined,
 						ordering: '-quantity', // Sort by quantity in descending order
 					},
@@ -431,7 +445,7 @@ const UnsoldItemReport = () => {
 						return;
 					}
 
-					const isHeadOffice = isUserFromOffice(user.user_type);
+					const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 
 					// For head office users, wait for branches data to be loaded
 					if (isHeadOffice && !branchesData?.list) {
@@ -525,7 +539,7 @@ const UnsoldItemReport = () => {
 						return;
 					}
 
-					const isHeadOffice = isUserFromOffice(user.user_type);
+					const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 
 					// For head office users, wait for branches data to be loaded
 					if (isHeadOffice && !branchesData?.list) {
@@ -605,7 +619,7 @@ const UnsoldItemReport = () => {
 				}
 
 				// Handle single date selection from calendar
-				const isHeadOffice = isUserFromOffice(user.user_type);
+				const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 				const selectedDateString = selectedDate.format('YYYY-MM-DD');
 
 				// For head office users, wait for branches data to be loaded
@@ -808,7 +822,7 @@ const UnsoldItemReport = () => {
 				</Col>
 			</Row>
 
-			{isUserFromOffice(user.user_type) && (
+			{getAppType() === appTypes.HEAD_OFFICE && (
 				<Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
 					<Col span={24}>
 						<Label label="Branch" spacing />
@@ -818,7 +832,11 @@ const UnsoldItemReport = () => {
 							filterOption={filterOption}
 							optionFilterProp="children"
 							placeholder="Select Branch"
-							value={params.branchId ? Number(params.branchId) : undefined}
+							value={
+								params.branchId && !Number.isNaN(Number(params.branchId))
+									? Number(params.branchId)
+									: undefined
+							}
 							allowClear
 							showSearch
 							onChange={(value) => {

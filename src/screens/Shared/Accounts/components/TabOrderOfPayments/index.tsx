@@ -2,13 +2,12 @@ import { Button, Col, Row, Select, Spin, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
-import { PdfButtons } from 'components/Printing';
 import {
 	getFullName,
-	printOrderOfPayment,
 	ServiceType,
 	useAccounts,
 	useOrderOfPayments,
+	ViewOrderOfPaymentModal,
 	ViewTransactionModal,
 } from 'ejjy-global';
 import {
@@ -20,7 +19,7 @@ import {
 	SEARCH_DEBOUNCE_TIME,
 	timeRangeTypes,
 } from 'global';
-import { usePdf, useQueryParams, useSiteSettingsNew } from 'hooks';
+import { useQueryParams, useSiteSettingsNew } from 'hooks';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -31,20 +30,20 @@ import {
 } from 'utils';
 
 const columns: ColumnsType = [
-	{ title: 'OP #', dataIndex: 'id' },
+	{ title: 'OP #', dataIndex: 'referenceNumber' },
 	{ title: 'Date & Time Created', dataIndex: 'datetime' },
 	{ title: 'Payor', dataIndex: 'payor' },
 	{ title: 'Address', dataIndex: 'address' },
 	{ title: 'Amount of Payment', dataIndex: 'amountOfPayment' },
 	{ title: 'Purpose', dataIndex: 'purpose' },
 	{ title: 'Charge Sales Invoice', dataIndex: 'chargeSalesInvoice' },
-	{ title: 'Actions', dataIndex: 'actions' },
 ];
 
 export const TabOrderOfPayments = () => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedTransaction, setSelectedTransaction] = useState(null);
+	const [selectedOrderOfPayment, setSelectedOrderOfPayment] = useState(null);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -63,10 +62,6 @@ export const TabOrderOfPayments = () => {
 			baseURL: getLocalApiUrl(),
 		},
 	});
-	const { isLoadingPdf, previewPdf, downloadPdf } = usePdf({
-		jsPdfSettings: { format: 'legal' },
-		print: (orderOfPayment) => printOrderOfPayment(orderOfPayment),
-	});
 
 	// METHODS
 	useEffect(() => {
@@ -74,6 +69,7 @@ export const TabOrderOfPayments = () => {
 			(orderOfPayment) => {
 				const {
 					id,
+					reference_number,
 					datetime_created,
 					amount,
 					payor,
@@ -91,7 +87,15 @@ export const TabOrderOfPayments = () => {
 
 				return {
 					key: id,
-					id,
+					referenceNumber: (
+						<Button
+							className="pa-0"
+							type="link"
+							onClick={() => setSelectedOrderOfPayment(orderOfPayment)}
+						>
+							{reference_number || id}
+						</Button>
+					),
 					datetime: formatDateTime(datetime_created),
 					payor: getFullName(payor),
 					address: payor.home_address,
@@ -117,24 +121,6 @@ export const TabOrderOfPayments = () => {
 					) : (
 						EMPTY_CELL
 					),
-					actions: (
-						<PdfButtons
-							key="pdf"
-							downloadPdf={() =>
-								downloadPdf({
-									title: `OP_${orderOfPayment.id}.pdf`,
-									printData: orderOfPayment,
-								})
-							}
-							isDisabled={isLoadingPdf}
-							previewPdf={() =>
-								previewPdf({
-									title: `OP_${orderOfPayment.id}.pdf`,
-									printData: orderOfPayment,
-								})
-							}
-						/>
-					),
 				};
 			},
 		);
@@ -156,7 +142,7 @@ export const TabOrderOfPayments = () => {
 			<Table
 				columns={columns}
 				dataSource={dataSource}
-				loading={isFetchingOrderOfPayments || isLoadingPdf}
+				loading={isFetchingOrderOfPayments}
 				pagination={{
 					current: Number(params.page) || DEFAULT_PAGE,
 					total: orderOfPaymentsData?.total || 0,
@@ -180,6 +166,13 @@ export const TabOrderOfPayments = () => {
 					siteSettings={siteSettings}
 					transaction={selectedTransaction}
 					onClose={() => setSelectedTransaction(null)}
+				/>
+			)}
+
+			{selectedOrderOfPayment && (
+				<ViewOrderOfPaymentModal
+					orderOfPayment={selectedOrderOfPayment}
+					onClose={() => setSelectedOrderOfPayment(null)}
 				/>
 			)}
 		</div>

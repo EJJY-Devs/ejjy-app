@@ -37,7 +37,7 @@ interface Modify {
 	selling_barcode?: string;
 	textcode: number;
 	scale_code?: string;
-	type: 'Wet' | 'Dry';
+	type?: 'wet' | 'dry';
 	unit_of_measurement: 'Weighing' | 'Non-Weighing';
 	wholesale_price: number;
 	credit_price: number;

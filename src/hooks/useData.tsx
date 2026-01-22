@@ -17,6 +17,7 @@ import {
 	getBranchProductBalanceUpdateLogsIds,
 	getAppType,
 } from 'utils';
+import axios from 'axios';
 
 const REFETCH_INTERVAL_MS = 30_000;
 
@@ -243,5 +244,79 @@ export const useUploadData = ({ params }: Query) =>
 			refetchInterval: REFETCH_INTERVAL_MS,
 			refetchIntervalInBackground: true,
 			notifyOnChangeProps: [],
+		},
+	);
+
+export const useTriggerProductSync = ({ params, options }: Query) =>
+	useQuery(
+		['useTriggerProductSync', params?.branchId],
+		async () => {
+			const localApiUrl = getLocalApiUrl();
+			if (!localApiUrl || !params?.branchId) {
+				return null;
+			}
+
+			try {
+				const response = await axios.post(
+					`${localApiUrl}/product-sync-trigger/trigger/`,
+					{ branch_id: params.branchId },
+				);
+				return response.data;
+			} catch (error) {
+				console.error('Failed to trigger product sync:', error);
+				throw error;
+			}
+		},
+		{
+			enabled:
+				getAppType() === appTypes.BACK_OFFICE &&
+				!!params?.branchId &&
+				!!getLocalApiUrl() &&
+				!isStandAlone(),
+			refetchInterval: 10_000,
+			refetchIntervalInBackground: true,
+			refetchOnWindowFocus: false,
+			notifyOnChangeProps: [],
+			retry: false,
+			...options,
+		},
+	);
+
+export const useCheckSyncStatus = ({ params, options }: Query) =>
+	useQuery(
+		['useCheckSyncStatus', params?.outOfSyncOnly],
+		async () => {
+			const localApiUrl = getLocalApiUrl();
+			if (!localApiUrl) {
+				return null;
+			}
+
+			try {
+				const response = await axios.get(
+					`${localApiUrl}/product-sync-status/`,
+					{
+						params: {
+							out_of_sync_only: params?.outOfSyncOnly || false,
+							page_size: 100,
+						},
+					},
+				);
+				return response.data;
+			} catch (error) {
+				console.error('Failed to check sync status:', error);
+				throw error;
+			}
+		},
+		{
+			enabled:
+				getAppType() === appTypes.HEAD_OFFICE &&
+				!!getLocalApiUrl() &&
+				!isStandAlone(),
+			refetchInterval: 20_000,
+			refetchIntervalInBackground: true,
+			refetchOnWindowFocus: false,
+			notifyOnChangeProps: [],
+			retry: false,
+			...options,
 		},
 	);

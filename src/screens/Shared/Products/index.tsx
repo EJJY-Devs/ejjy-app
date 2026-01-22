@@ -297,7 +297,7 @@ export const Products = () => {
 				// Just pass the essential fields to trigger the update
 				name: product.name,
 				description: product.description || '',
-				type: product.type,
+				type: product.type || 'dry',
 				unitOfMeasurement: product.unit_of_measurement,
 				piecesInBulk: product.pieces_in_bulk,
 				pricePerPiece: product.price_per_piece,
@@ -309,6 +309,9 @@ export const Products = () => {
 				reorderPoint: product.reorder_point,
 				maxBalance: product.max_balance,
 				productCategory: product.product_category,
+				wholeSalePrice: product.wholesale_price,
+				creditPrice: product.credit_price,
+				specialPrice: product.special_price,
 			});
 
 			message.success(

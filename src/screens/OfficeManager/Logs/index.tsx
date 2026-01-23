@@ -17,10 +17,12 @@ import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { transactionStatuses } from 'ejjy-global';
 import { TabBranchConnectivityLogs } from './components/TabBranchConnectivityLogs';
 import { TabProductLogs } from './components/TabProductLogs';
+import { TabUnsyncedBranchProducts } from './components/TabUnsyncedBranchProducts';
 
 export const tabs = {
 	PRODUCTS: 'Products',
 	BRANCH_PRODUCTS: 'Branch Products',
+	UNSYNCED_BRANCH_PRODUCTS: 'Unsynced Branch Products',
 	BRANCH_ASSIGNMENTS: 'Branch Assignments',
 	BRANCH_DAYS: 'Branch Days',
 	BRANCH_CONNECTIVITY_LOGS: 'Branch Connectivity Logs',
@@ -78,6 +80,13 @@ export const Logs = () => {
 
 					<Tabs.TabPane key={tabs.BRANCH_PRODUCTS} tab={tabs.BRANCH_PRODUCTS}>
 						<TabBranchProductLogs />
+					</Tabs.TabPane>
+
+					<Tabs.TabPane
+						key={tabs.UNSYNCED_BRANCH_PRODUCTS}
+						tab={tabs.UNSYNCED_BRANCH_PRODUCTS}
+					>
+						<TabUnsyncedBranchProducts />
 					</Tabs.TabPane>
 
 					<Tabs.TabPane

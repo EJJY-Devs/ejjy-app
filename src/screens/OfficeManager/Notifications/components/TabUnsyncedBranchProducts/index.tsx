@@ -1,4 +1,4 @@
-import { Col, Row, Select, Table, Tag } from 'antd';
+import { Col, Row, Select, Table, Tag, Button, Tooltip, message } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors, TableHeader } from 'components';
 import { Label } from 'components/elements';
@@ -9,11 +9,40 @@ import {
 	MAX_PAGE_SIZE,
 	pageSizeOptions,
 } from 'global';
-import { useBranches, useProductSyncStatus, useQueryParams } from 'hooks';
+import {
+	useBranches,
+	useProductSyncStatus,
+	useQueryParams,
+	useProductEditLocal,
+} from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { convertIntoArray } from 'utils';
+import { useQueryClient } from 'react-query';
+import { useUserStore } from 'stores';
+import { convertIntoArray, getId } from 'utils';
+import { SyncOutlined } from '@ant-design/icons';
 
 export const TabUnsyncedBranchProducts = () => {
+	// CUSTOM HOOKS
+	const user = useUserStore((state) => state.user);
+	const { mutateAsync: editProductLocal } = useProductEditLocal();
+
+	// METHODS
+	const handleManualSync = async (productId: number, productName: string) => {
+		try {
+			// Trigger update to sync the product
+			await editProductLocal({
+				id: productId,
+				actingUserId: getId(user),
+			});
+
+			message.success(`Manual sync processing for ${productName}.`);
+
+			await queryClient.invalidateQueries('useProductSyncStatus');
+		} catch (error) {
+			message.error('Failed to sync product. Please try again.');
+		}
+	};
+
 	// VARIABLES
 	const columns: ColumnsType = [
 		{
@@ -31,6 +60,13 @@ export const TabUnsyncedBranchProducts = () => {
 			dataIndex: 'mismatches',
 			key: 'mismatches',
 		},
+		{
+			title: 'Actions',
+			dataIndex: 'actions',
+			key: 'actions',
+			width: 300,
+			align: 'center',
+		},
 	];
 
 	// STATES
@@ -38,6 +74,7 @@ export const TabUnsyncedBranchProducts = () => {
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
+	const queryClient = useQueryClient();
 	const {
 		data: { productSyncStatuses, total },
 		isFetching: isFetchingProductSyncStatuses,
@@ -46,6 +83,10 @@ export const TabUnsyncedBranchProducts = () => {
 		params: {
 			...params,
 			out_of_sync_only: true,
+		},
+		options: {
+			refetchOnWindowFocus: true,
+			refetchInterval: 30000,
 		},
 	});
 
@@ -78,6 +119,19 @@ export const TabUnsyncedBranchProducts = () => {
 						<Tag color="gray">No mismatches</Tag>
 					)}
 				</div>
+			),
+			actions: (
+				<Tooltip title="Resync Product">
+					<Button
+						icon={<SyncOutlined />}
+						size="small"
+						type="primary"
+						ghost
+						onClick={() =>
+							handleManualSync(status.product_id, status.product_name)
+						}
+					/>
+				</Tooltip>
 			),
 		}));
 

@@ -1,13 +1,28 @@
 import {
 	ClockCircleFilled,
 	EditFilled,
+	EyeOutlined,
+	EyeInvisibleOutlined,
 	SearchOutlined,
+	UserOutlined,
+	UserAddOutlined,
 } from '@ant-design/icons';
-import { Button, Col, Input, Row, Space, Table, Tooltip } from 'antd';
+import {
+	Button,
+	Col,
+	Descriptions,
+	Input,
+	Row,
+	Space,
+	Table,
+	Tag,
+	Tooltip,
+} from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
 	ModifyAccountModal,
 	ModifyAttendanceScheduleModal,
+	ModifyUserModal,
 	RequestErrors,
 	TableHeader,
 } from 'components';
@@ -31,6 +46,7 @@ import {
 	formatDate,
 	getAccountTypeName,
 	getAppType,
+	getUserTypeName,
 } from 'utils';
 
 interface Props {
@@ -41,6 +57,8 @@ const modals = {
 	CREATE: 1,
 	EDIT: 2,
 	ATTENDANCE: 3,
+	CREATE_USER: 4,
+	EDIT_USER: 5,
 };
 
 export const TabEmployees = ({ disabled }: Props) => {
@@ -48,13 +66,13 @@ export const TabEmployees = ({ disabled }: Props) => {
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedAccount, setSelectedAccount] = useState(null);
 	const [modalVisible, setModalVisible] = useState(null);
+	const [showPinUserId, setShowPinUserId] = useState<number | null>(null);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
 	const user = useUserStore((state) => state.user);
 	const {
 		data: { accounts, total },
-		isFetching: isFetchingAccounts,
 		error: accountError,
 		refetch: refetchAccounts,
 	} = useAccounts({
@@ -77,6 +95,11 @@ export const TabEmployees = ({ disabled }: Props) => {
 			businessAddress: account.business_address,
 			contactNumber: account.contact_number,
 			datetimeCreated: formatDate(account.datetime_created),
+			userStatus: account.user ? (
+				<Tag color="green">Has User</Tag>
+			) : (
+				<Tag color="orange">No User</Tag>
+			),
 			actions: (
 				<Space>
 					<Tooltip title="Edit">
@@ -92,18 +115,47 @@ export const TabEmployees = ({ disabled }: Props) => {
 						/>
 					</Tooltip>
 					{account.type === accountTypes.EMPLOYEE && (
-						<Tooltip title="Set Attendance">
-							<Button
-								disabled={disabled}
-								icon={<ClockCircleFilled />}
-								type="primary"
-								ghost
-								onClick={() => {
-									setModalVisible(modals.ATTENDANCE);
-									setSelectedAccount(account);
-								}}
-							/>
-						</Tooltip>
+						<>
+							<Tooltip title="Set Attendance">
+								<Button
+									disabled={disabled}
+									icon={<ClockCircleFilled />}
+									type="primary"
+									ghost
+									onClick={() => {
+										setModalVisible(modals.ATTENDANCE);
+										setSelectedAccount(account);
+									}}
+								/>
+							</Tooltip>
+							{account.user ? (
+								<Tooltip title="Edit User Account">
+									<Button
+										disabled={disabled}
+										icon={<UserOutlined />}
+										type="primary"
+										ghost
+										onClick={() => {
+											setModalVisible(modals.EDIT_USER);
+											setSelectedAccount(account);
+										}}
+									/>
+								</Tooltip>
+							) : (
+								<Tooltip title="Create User Account">
+									<Button
+										disabled={disabled}
+										icon={<UserAddOutlined />}
+										type="primary"
+										ghost
+										onClick={() => {
+											setModalVisible(modals.CREATE_USER);
+											setSelectedAccount(account);
+										}}
+									/>
+								</Tooltip>
+							)}
+						</>
 					)}
 				</Space>
 			),
@@ -121,13 +173,14 @@ export const TabEmployees = ({ disabled }: Props) => {
 			{ title: 'Address (Business)', dataIndex: 'businessAddress' },
 			{ title: 'Contact #', dataIndex: 'contactNumber' },
 			{ title: 'Date of Registration', dataIndex: 'datetimeCreated' },
+			{ title: 'User Status', dataIndex: 'userStatus', width: 120 },
 		];
 
 		if (getAppType() === appTypes.HEAD_OFFICE) {
 			columns.push({
 				title: 'Actions',
 				dataIndex: 'actions',
-				width: 100,
+				width: 150,
 				fixed: 'right',
 			});
 		}
@@ -146,7 +199,73 @@ export const TabEmployees = ({ disabled }: Props) => {
 			<Table
 				columns={getColumns()}
 				dataSource={dataSource}
-				loading={isFetchingAccounts}
+				expandable={{
+					expandedRowRender: (record) => {
+						const account = accounts.find((a) => a.id === record.key);
+						if (!account?.user) return null;
+
+						const isPinVisible = showPinUserId === account.user.id;
+
+						return (
+							<div style={{ padding: '16px', background: '#fafafa' }}>
+								<strong style={{ fontSize: '14px' }}>User Information</strong>
+								<Descriptions
+									column={3}
+									size="small"
+									style={{ marginTop: '12px' }}
+									bordered
+								>
+									<Descriptions.Item label={<strong>Username</strong>}>
+										{account.user.username}
+									</Descriptions.Item>
+									<Descriptions.Item label={<strong>Email</strong>}>
+										{account.user.email}
+									</Descriptions.Item>
+									<Descriptions.Item label={<strong>User Type</strong>}>
+										{getUserTypeName(account.user.user_type)}
+									</Descriptions.Item>
+									<Descriptions.Item label={<strong>PIN</strong>}>
+										{account.user.pin ? (
+											<Space>
+												{isPinVisible ? account.user.pin : '••••••'}
+												<Button
+													icon={
+														isPinVisible ? (
+															<EyeInvisibleOutlined />
+														) : (
+															<EyeOutlined />
+														)
+													}
+													size="small"
+													type="link"
+													onClick={() =>
+														setShowPinUserId(
+															isPinVisible ? null : account.user.id,
+														)
+													}
+												/>
+											</Space>
+										) : (
+											'Not Set'
+										)}
+									</Descriptions.Item>
+									<Descriptions.Item label={<strong>Last Login</strong>}>
+										{account.user.last_login
+											? formatDate(account.user.last_login)
+											: 'Never'}
+									</Descriptions.Item>
+									<Descriptions.Item label={<strong>Status</strong>}>
+										<Tag color="green">Active</Tag>
+									</Descriptions.Item>
+								</Descriptions>
+							</div>
+						);
+					},
+					rowExpandable: (record) => {
+						const account = accounts.find((a) => a.id === record.key);
+						return !!account?.user;
+					},
+				}}
 				pagination={{
 					current: Number(params.page) || DEFAULT_PAGE,
 					total,
@@ -186,6 +305,20 @@ export const TabEmployees = ({ disabled }: Props) => {
 					}}
 				/>
 			)}
+
+			{(modalVisible === modals.CREATE_USER ||
+				modalVisible === modals.EDIT_USER) &&
+				selectedAccount && (
+					<ModifyUserModal
+						account={selectedAccount}
+						user={selectedAccount.user}
+						onClose={() => {
+							setModalVisible(null);
+							setSelectedAccount(null);
+						}}
+						onSuccess={refetchAccounts}
+					/>
+				)}
 		</div>
 	);
 };

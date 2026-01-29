@@ -12,6 +12,7 @@ interface Props {
 	onClose: any;
 	onSuccess?: any;
 	user?: any;
+	account?: any;
 }
 
 export const ModifyUserModal = ({
@@ -19,6 +20,7 @@ export const ModifyUserModal = ({
 	onClose,
 	onSuccess,
 	user,
+	account,
 }: Props) => {
 	// CUSTOM HOOKS
 	const queryClient = useQueryClient();
@@ -58,7 +60,10 @@ export const ModifyUserModal = ({
 
 			message.success('User was edited successfully');
 		} else {
-			response = await createUser(formData);
+			response = await createUser({
+				...formData,
+				accountId: account?.id,
+			});
 			message.success('User was created successfully');
 		}
 
@@ -84,6 +89,7 @@ export const ModifyUserModal = ({
 			/>
 
 			<ModifyUserForm
+				account={account}
 				branchUsersOnly={branchUsersOnly}
 				isLoading={isCreatingUser || isEditingUser}
 				user={user}

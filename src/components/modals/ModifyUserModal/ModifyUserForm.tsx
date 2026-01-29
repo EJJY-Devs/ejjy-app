@@ -8,6 +8,7 @@ import { FieldError, Label } from '../../elements';
 
 interface Props {
 	user?: any;
+	account?: any;
 	branchUsersOnly?: boolean;
 	isLoading: boolean;
 	onSubmit: any;
@@ -16,6 +17,7 @@ interface Props {
 
 export const ModifyUserForm = ({
 	user,
+	account,
 	branchUsersOnly,
 	isLoading,
 	onSubmit,
@@ -27,9 +29,9 @@ export const ModifyUserForm = ({
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: {
-				firstName: user?.first_name || '',
-				lastName: user?.last_name || '',
-				email: user?.email || '',
+				firstName: user?.first_name || account?.first_name || '',
+				lastName: user?.last_name || account?.last_name || '',
+				email: user?.email || account?.email_address || '',
 				username: user?.username || '',
 				pin: user?.pin || '',
 				confirmPin: '',
@@ -74,7 +76,7 @@ export const ModifyUserForm = ({
 								.trim(),
 			}),
 		}),
-		[passwordFieldsVisible, pinFieldVisible, user],
+		[passwordFieldsVisible, pinFieldVisible, user, account],
 	);
 
 	return (

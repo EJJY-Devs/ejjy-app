@@ -1,5 +1,5 @@
 import { QrcodeOutlined } from '@ant-design/icons';
-import { Avatar, Button, Descriptions, Tag } from 'antd';
+import { Avatar, Button, Descriptions, Tag, Divider, Card } from 'antd';
 import { getFullName, printEmployeeCode } from 'ejjy-global';
 import { accountTypes } from 'global';
 import JsBarcode from 'jsbarcode';
@@ -7,7 +7,7 @@ import jsPDF from 'jspdf';
 import _ from 'lodash';
 import QRCode from 'qrcode';
 import React, { useState } from 'react';
-import { formatDate, getAccountTypeName } from 'utils';
+import { formatDate, getAccountTypeName, getUserTypeName } from 'utils';
 
 interface Props {
 	account: any;
@@ -168,6 +168,53 @@ export const AccountDetails = ({ account }: Props) => {
 					</Descriptions.Item>
 				)}
 			</Descriptions>
+
+			{account.type === accountTypes.EMPLOYEE && (
+				<>
+					<Divider orientation="left">User Account Details</Divider>
+					{account.user ? (
+						<Card>
+							<Descriptions column={2} bordered>
+								<Descriptions.Item label="Username">
+									{account.user.username}
+								</Descriptions.Item>
+
+								<Descriptions.Item label="Email">
+									{account.user.email}
+								</Descriptions.Item>
+
+								<Descriptions.Item label="User Type">
+									{getUserTypeName(account.user.user_type)}
+								</Descriptions.Item>
+
+								<Descriptions.Item label="PIN">
+									{account.user.pin ? '••••••' : 'Not Set'}
+								</Descriptions.Item>
+
+								<Descriptions.Item label="Last Login">
+									{account.user.last_login
+										? formatDate(account.user.last_login)
+										: 'Never'}
+								</Descriptions.Item>
+
+								<Descriptions.Item label="Account Status">
+									<Tag color="green">Active</Tag>
+								</Descriptions.Item>
+							</Descriptions>
+						</Card>
+					) : (
+						<Card>
+							<div style={{ textAlign: 'center', padding: '20px' }}>
+								<Tag color="orange">No User Account</Tag>
+								<p style={{ marginTop: '10px', color: '#8c8c8c' }}>
+									This employee does not have a user account for system login.
+									Create one from the Employees tab.
+								</p>
+							</div>
+						</Card>
+					)}
+				</>
+			)}
 
 			<div
 				// eslint-disable-next-line react/no-danger

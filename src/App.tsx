@@ -18,6 +18,8 @@ import {
 	useInitializeData,
 	useInitializeIds,
 	useNetwork,
+	useTriggerProductSync,
+	useCheckSyncStatus,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
@@ -229,6 +231,26 @@ const App = () => {
 				!storageData.productIds &&
 				!storageData.branchProductIds &&
 				!storageData.branchProductBalanceUpdateLogsIds,
+		},
+	});
+
+	// Trigger product sync every 1 minute for backoffice
+	useTriggerProductSync({
+		params: {
+			branchId,
+		},
+		options: {
+			enabled: isNetworkSuccess && isFetchingBranchesSuccess,
+		},
+	});
+
+	// // Check sync status every 1 minute for headoffice
+	useCheckSyncStatus({
+		params: {
+			outOfSyncOnly: false,
+		},
+		options: {
+			enabled: isNetworkSuccess && isFetchingBranchesSuccess,
 		},
 	});
 

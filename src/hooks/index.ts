@@ -61,6 +61,8 @@ export * from './useProductGroups';
 export { default as useProductGroups } from './useProductGroups';
 export * from './useProducts';
 export { default as useProducts } from './useProducts';
+export * from './useProductSyncStatus';
+export { default as useProductSyncStatus } from './useProductSyncStatus';
 export { default as useQueryParams } from './useQueryParams';
 export * from './useReceivingVouchers';
 export { default as useReceivingVouchers } from './useReceivingVouchers';

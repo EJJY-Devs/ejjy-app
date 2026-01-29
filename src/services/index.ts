@@ -40,6 +40,7 @@ export { default as ProductChecksService } from './ProductChecksService';
 export { default as ProductConversionsService } from './ProductConversionsService';
 export { default as ProductGroupsService } from './ProductGroupsService';
 export { default as ProductsService } from './ProductsService';
+export { default as ProductSyncStatusService } from './ProductSyncStatusService';
 export { default as ReceivingVouchersService } from './ReceivingVouchersService';
 export { default as ReportsService } from './ReportsService';
 export { default as RequisitionSlipsService } from './RequisitionSlipsService';

@@ -1,5 +1,10 @@
 import { Container } from 'components';
-import { useUploadData, useSalesTrackerCount, useBranchProducts } from 'hooks';
+import {
+	useUploadData,
+	useSalesTrackerCount,
+	useBranchProducts,
+	useProductSyncStatus,
+} from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 import { refetchOptions } from 'global';
@@ -74,6 +79,16 @@ const OfficeManager = () => {
 		options: refetchOptions,
 	});
 
+	const {
+		data: { total: unsyncedProductsCount },
+	} = useProductSyncStatus({
+		params: {
+			out_of_sync_only: true,
+			pageSize: 1,
+		},
+		options: refetchOptions,
+	});
+
 	const salesTrackerCount = useSalesTrackerCount();
 
 	useEffect(() => {
@@ -89,7 +104,8 @@ const OfficeManager = () => {
 			(salesTrackerCount > 0 ? 1 : 0) +
 			(dtrCount > 0 ? 1 : 0) +
 			(connectivityCount > 0 ? 1 : 0) +
-			(branchProductsNegativeBalanceCount > 0 ? 1 : 0);
+			(branchProductsNegativeBalanceCount > 0 ? 1 : 0) +
+			(unsyncedProductsCount > 0 ? 1 : 0);
 		if (newNotificationsCount !== notificationsCount) {
 			setNotificationsCount(newNotificationsCount);
 		}
@@ -98,6 +114,7 @@ const OfficeManager = () => {
 		dtrCount,
 		connectivityCount,
 		branchProductsNegativeBalanceCount,
+		unsyncedProductsCount,
 	]);
 
 	const getSidebarItems = useCallback(

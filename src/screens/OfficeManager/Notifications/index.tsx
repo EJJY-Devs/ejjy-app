@@ -1,7 +1,12 @@
 import { Badge, Space, Tabs } from 'antd';
 import { Content } from 'components';
 import { Box } from 'components/elements';
-import { useBranchProducts, useQueryParams, useSalesTrackerCount } from 'hooks';
+import {
+	useBranchProducts,
+	useProductSyncStatus,
+	useQueryParams,
+	useSalesTrackerCount,
+} from 'hooks';
 import _ from 'lodash';
 import React from 'react';
 import shallow from 'zustand/shallow';
@@ -10,12 +15,14 @@ import { TabBranchProducts } from 'screens/Shared/Notifications/components/TabBr
 import { MAX_PAGE_SIZE } from 'global';
 import { TabBranchStatus } from './components/TabBranchStatus';
 import { TabDTR } from './components/TabDTR';
+import { TabProductPricesSyncing } from './components/TabProductPricesSyncing';
 import { useNotificationStore } from './stores/useNotificationStore';
 
 const tabs = {
 	DTR: 'DTR',
 	BRANCH_CONNECTIVITY: 'Branch Connectivity',
 	BRANCH_PRODUCTS: 'Branch Products',
+	PRODUCT_PRICES_SYNCING: 'Product Prices Syncing',
 	SALES_TRACKER: 'Sales Tracker',
 };
 
@@ -42,6 +49,15 @@ export const Notifications = () => {
 		options: { notifyOnChangeProps: ['data'] },
 	});
 	const salesTrackerCount = useSalesTrackerCount();
+	const {
+		data: { total: unsyncedProductsCount },
+	} = useProductSyncStatus({
+		params: {
+			out_of_sync_only: true,
+			pageSize: 1,
+		},
+		options: { notifyOnChangeProps: ['data'] },
+	});
 
 	// METHODS
 	const handleTabClick = (selectedTab) => {
@@ -99,6 +115,20 @@ export const Notifications = () => {
 						}
 					>
 						<TabBranchStatus />
+					</Tabs.TabPane>
+
+					<Tabs.TabPane
+						key={tabs.PRODUCT_PRICES_SYNCING}
+						tab={
+							<Space align="center">
+								<span>{tabs.PRODUCT_PRICES_SYNCING}</span>
+								{unsyncedProductsCount > 0 && (
+									<Badge count={unsyncedProductsCount} overflowCount={999} />
+								)}
+							</Space>
+						}
+					>
+						<TabProductPricesSyncing />
 					</Tabs.TabPane>
 
 					<Tabs.TabPane

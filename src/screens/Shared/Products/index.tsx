@@ -6,7 +6,6 @@ import {
 	HomeOutlined,
 	PrinterFilled,
 	SearchOutlined,
-	SyncOutlined,
 	UploadOutlined,
 } from '@ant-design/icons';
 import {
@@ -53,7 +52,6 @@ import {
 	usePingOnlineServer,
 	useProductCategories,
 	useProductDelete,
-	useProductEditLocal,
 	useProductReinitialize,
 	useQueryParams,
 	useSiteSettings,
@@ -135,7 +133,6 @@ export const Products = () => {
 		isLoading: isReinitializingProduct,
 		error: reinitializeProductError,
 	} = useProductReinitialize();
-	const { mutateAsync: editProductLocal } = useProductEditLocal();
 
 	// Add sync status monitoring
 	useQuery(
@@ -221,16 +218,6 @@ export const Products = () => {
 								onClick={() => handleOpenModal(product, modals.CHART)}
 							/>
 						</Tooltip>
-						{getAppType() !== appTypes.BACK_OFFICE && (
-							<Tooltip title="Sync Manually">
-								<Button
-									icon={<SyncOutlined />}
-									type="primary"
-									ghost
-									onClick={() => handleManualSync(product)}
-								/>
-							</Tooltip>
-						)}
 						{getAppType() === appTypes.HEAD_OFFICE && (
 							<Popconfirm
 								cancelText="No"
@@ -284,39 +271,6 @@ export const Products = () => {
 				localStorage.removeItem('pendingProductSync');
 				setIsSyncing(false);
 			}, 5000);
-		}
-	};
-
-	const handleManualSync = async (product) => {
-		try {
-			// Use local API edit function to ensure branch products are updated
-			// This updates both product and branch products datetime_updated fields
-			await editProductLocal({
-				id: getId(product),
-				actingUserId: getId(user),
-				// Just pass the essential fields to trigger the update
-				name: product.name,
-				description: product.description || '',
-				type: product.type,
-				unitOfMeasurement: product.unit_of_measurement,
-				piecesInBulk: product.pieces_in_bulk,
-				pricePerPiece: product.price_per_piece,
-				pricePerBulk: product.price_per_bulk,
-				costPerPiece: product.cost_per_piece,
-				costPerBulk: product.cost_per_bulk,
-				isSoldInBranch: product.is_sold_in_branch,
-				isVatExempted: product.is_vat_exempted,
-				reorderPoint: product.reorder_point,
-				maxBalance: product.max_balance,
-				productCategory: product.product_category,
-			});
-
-			message.success(
-				'Manual sync completed. Product and branch products datetime updated for syncing.',
-			);
-		} catch (error) {
-			message.error('Failed to synchronize product');
-			console.error('Manual sync error:', error);
 		}
 	};
 

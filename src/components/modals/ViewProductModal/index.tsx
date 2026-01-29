@@ -1,7 +1,16 @@
-import { Button, Descriptions, Divider, Modal, Spin, Tabs, Tag } from 'antd';
+import {
+	Button,
+	Descriptions,
+	Divider,
+	Modal,
+	Spin,
+	Table,
+	Tabs,
+	Tag,
+} from 'antd';
 import { RequestErrors } from 'components';
 import { appTypes, MAX_PAGE_SIZE } from 'global';
-import { useBranches, useBranchProducts } from 'hooks';
+import { useBranches, useBranchProducts, useProductSyncStatus } from 'hooks';
 import _, { upperFirst } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import {
@@ -43,6 +52,15 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 		params: { pageSize: MAX_PAGE_SIZE },
 		options: { enabled: getAppType() !== appTypes.BACK_OFFICE },
 	});
+	const {
+		data: { productSyncStatuses },
+		error: syncStatusError,
+	} = useProductSyncStatus({
+		params: { product_id: product?.id },
+		options: {
+			enabled: product !== null && getAppType() !== appTypes.BACK_OFFICE,
+		},
+	});
 
 	useEffect(() => {
 		if (branches.length > 0) {
@@ -65,6 +83,7 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 				errors={[
 					...convertIntoArray(branchesErrors, 'Branches'),
 					...convertIntoArray(branchProductError, 'Branch Products'),
+					...convertIntoArray(syncStatusError, 'Sync Status'),
 				]}
 			/>
 
@@ -216,6 +235,9 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 								const branchProduct = branchProducts?.find(
 									(bp) => bp.branch_id === branch.id,
 								);
+								const syncStatus = productSyncStatuses?.find(
+									(status) => status.branch_id === branch.id,
+								);
 
 								return branchProduct ? (
 									<Tabs.TabPane key={branch.id} tab={branch.name}>
@@ -226,6 +248,77 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 											size="small"
 											bordered
 										>
+											<Descriptions.Item label="Sync Status" span={2}>
+												{!syncStatus && <Tag color="default">Unknown</Tag>}
+												{syncStatus && syncStatus.is_synced && (
+													<Tag color="green">Synced</Tag>
+												)}
+												{syncStatus && !syncStatus.is_synced && (
+													<>
+														<Tag color="red">Out of Sync</Tag>
+														{syncStatus.sync_details?.mismatches &&
+															syncStatus.sync_details.mismatches.length > 0 && (
+																<div style={{ marginTop: 8 }}>
+																	<Table
+																		columns={[
+																			{
+																				title: 'Price Type',
+																				dataIndex: 'priceType',
+																				key: 'priceType',
+																			},
+																			{
+																				title: 'Expected',
+																				dataIndex: 'expected',
+																				key: 'expected',
+																			},
+																			{
+																				title: 'Current',
+																				dataIndex: 'current',
+																				key: 'current',
+																			},
+																		]}
+																		dataSource={syncStatus.sync_details.mismatches.map(
+																			(field: string) => {
+																				const fieldLabel =
+																					{
+																						price_per_piece: 'Price (Piece)',
+																						wholesale_price: 'Wholesale Price',
+																						special_price: 'Special Price',
+																						credit_price: 'Credit Price',
+																					}[field] || field;
+
+																				const expected =
+																					syncStatus.sync_details.expected?.[
+																						field.replace('_', '')
+																					] ||
+																					syncStatus.sync_details.expected?.[
+																						field
+																					];
+																				const current =
+																					syncStatus.sync_details.current?.[
+																						field.replace('_', '')
+																					] ||
+																					syncStatus.sync_details.current?.[
+																						field
+																					];
+
+																				return {
+																					key: field,
+																					priceType: fieldLabel,
+																					expected: formatInPeso(expected),
+																					current: formatInPeso(current),
+																				};
+																			},
+																		)}
+																		pagination={false}
+																		size="small"
+																		style={{ marginTop: 8 }}
+																	/>
+																</div>
+															)}
+													</>
+												)}
+											</Descriptions.Item>
 											<Descriptions.Item label="In Stock" span={2}>
 												{branchProduct.is_sold_in_branch ? (
 													<Tag color="green">Yes</Tag>

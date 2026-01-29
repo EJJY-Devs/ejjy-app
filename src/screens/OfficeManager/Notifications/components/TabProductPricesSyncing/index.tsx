@@ -21,7 +21,7 @@ import { useUserStore } from 'stores';
 import { convertIntoArray, getId } from 'utils';
 import { SyncOutlined } from '@ant-design/icons';
 
-export const TabUnsyncedBranchProducts = () => {
+export const TabProductPricesSyncing = () => {
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
 	const { mutateAsync: editProductLocal } = useProductEditLocal();
@@ -141,7 +141,7 @@ export const TabUnsyncedBranchProducts = () => {
 	return (
 		<>
 			<TableHeader
-				title="Unsynced Branch Products"
+				title="Product Prices Syncing"
 				wrapperClassName="pt-2 px-0"
 			/>
 

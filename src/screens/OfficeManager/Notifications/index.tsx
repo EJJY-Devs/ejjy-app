@@ -15,14 +15,14 @@ import { TabBranchProducts } from 'screens/Shared/Notifications/components/TabBr
 import { MAX_PAGE_SIZE } from 'global';
 import { TabBranchStatus } from './components/TabBranchStatus';
 import { TabDTR } from './components/TabDTR';
-import { TabUnsyncedBranchProducts } from './components/TabUnsyncedBranchProducts';
+import { TabProductPricesSyncing } from './components/TabProductPricesSyncing';
 import { useNotificationStore } from './stores/useNotificationStore';
 
 const tabs = {
 	DTR: 'DTR',
 	BRANCH_CONNECTIVITY: 'Branch Connectivity',
 	BRANCH_PRODUCTS: 'Branch Products',
-	UNSYNCED_BRANCH_PRODUCTS: 'Unsynced Branch Products',
+	PRODUCT_PRICES_SYNCING: 'Product Prices Syncing',
 	SALES_TRACKER: 'Sales Tracker',
 };
 
@@ -118,17 +118,17 @@ export const Notifications = () => {
 					</Tabs.TabPane>
 
 					<Tabs.TabPane
-						key={tabs.UNSYNCED_BRANCH_PRODUCTS}
+						key={tabs.PRODUCT_PRICES_SYNCING}
 						tab={
 							<Space align="center">
-								<span>{tabs.UNSYNCED_BRANCH_PRODUCTS}</span>
+								<span>{tabs.PRODUCT_PRICES_SYNCING}</span>
 								{unsyncedProductsCount > 0 && (
 									<Badge count={unsyncedProductsCount} overflowCount={999} />
 								)}
 							</Space>
 						}
 					>
-						<TabUnsyncedBranchProducts />
+						<TabProductPricesSyncing />
 					</Tabs.TabPane>
 
 					<Tabs.TabPane

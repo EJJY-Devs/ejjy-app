@@ -47,7 +47,6 @@ import { RequisitionSlips } from './RequisitionSlips';
 import { ViewRequisitionSlip } from './RequisitionSlips/ViewRequisitionSlip';
 import { CreateReturnItemSlip } from './ReturnItemSlips/CreateReturnItemSlip';
 import { ReturnItemSlips } from './ReturnItemSlips';
-import { Users } from './Users';
 
 const PING_BRANCH_INTERVAL_MS = 10_000;
 
@@ -206,13 +205,6 @@ const BranchManager = () => {
 				link: '/branch-manager/accounts',
 			},
 			{
-				key: 'users',
-				name: 'Users',
-				activeIcon: require('../../assets/images/icon-users-active.svg'),
-				defaultIcon: require('../../assets/images/icon-users.svg'),
-				link: '/branch-manager/users',
-			},
-			{
 				key: 'dtr',
 				name: 'DTR',
 				activeIcon: require('../../assets/images/icon-users-active.svg'),
@@ -330,7 +322,6 @@ const BranchManager = () => {
 						path="/branch-manager/accounts/:id"
 						exact
 					/>
-					<Route component={Users} path="/branch-manager/users" exact />
 					<Route
 						component={CashieringAssignment}
 						path="/branch-manager/users/assign/:id"

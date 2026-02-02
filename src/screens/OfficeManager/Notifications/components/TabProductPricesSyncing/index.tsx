@@ -25,6 +25,8 @@ export const TabProductPricesSyncing = () => {
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
 	const { mutateAsync: editBranchProductLocal } = useBranchProductEditLocal();
+	const { params, setQueryParams } = useQueryParams();
+	const queryClient = useQueryClient();
 
 	// METHODS
 	const handleManualSync = async (
@@ -41,9 +43,9 @@ export const TabProductPricesSyncing = () => {
 			}
 
 			await editBranchProductLocal({
-				branch_id: Number(branchId),
-				product_id: Number(productId),
-				acting_user_id: Number(actingUserId),
+				branchId: Number(branchId),
+				productId: Number(productId),
+				actingUserId: Number(actingUserId),
 			});
 
 			message.success(`Manual sync processing for ${productName}.`);
@@ -82,10 +84,6 @@ export const TabProductPricesSyncing = () => {
 
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
-
-	// CUSTOM HOOKS
-	const { params, setQueryParams } = useQueryParams();
-	const queryClient = useQueryClient();
 	const {
 		data: { productSyncStatuses, total },
 		isFetching: isFetchingProductSyncStatuses,

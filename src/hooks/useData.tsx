@@ -313,10 +313,7 @@ export const useProductSyncStatus = ({ params, options }: Query) =>
 				productSyncStatuses: query.data.results,
 				total: query.data.count,
 			}),
-			enabled:
-				getAppType() === appTypes.HEAD_OFFICE &&
-				!!getLocalApiUrl() &&
-				!isStandAlone(),
+			enabled: getAppType() === appTypes.HEAD_OFFICE && !!getLocalApiUrl(),
 			...options,
 		},
 	);

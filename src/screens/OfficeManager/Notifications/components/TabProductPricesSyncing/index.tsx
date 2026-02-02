@@ -33,10 +33,17 @@ export const TabProductPricesSyncing = () => {
 		productName: string,
 	) => {
 		try {
+			const actingUserId = getId(user);
+
+			if (!branchId || !productId || !actingUserId) {
+				message.error('Missing required information for sync.');
+				return;
+			}
+
 			await editBranchProductLocal({
-				branch_id: branchId,
-				product_id: productId,
-				acting_user_id: getId(user),
+				branch_id: Number(branchId),
+				product_id: Number(productId),
+				acting_user_id: Number(actingUserId),
 			});
 
 			message.success(`Manual sync processing for ${productName}.`);

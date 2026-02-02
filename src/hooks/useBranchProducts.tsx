@@ -522,4 +522,37 @@ export const useBranchProductDelete = () => {
 	);
 };
 
+export const useBranchProductEditLocal = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation<any, any, any>(
+		async ({
+			branchId,
+			productId,
+			actingUserId,
+		}: {
+			branchId: number;
+			productId: number;
+			actingUserId: number;
+		}) => {
+			return wrapServiceWithCatch(
+				BranchProductsService.editLocal(
+					{
+						branch_id: branchId,
+						product_id: productId,
+						acting_user_id: actingUserId,
+					},
+					getLocalApiUrl(),
+				),
+			);
+		},
+		{
+			onSuccess: () => {
+				queryClient.invalidateQueries('useBranchProducts');
+				queryClient.invalidateQueries('useProductSyncStatus');
+			},
+		},
+	);
+};
+
 export default useBranchProductsNew;

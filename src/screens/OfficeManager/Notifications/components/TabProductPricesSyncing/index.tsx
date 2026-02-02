@@ -13,7 +13,7 @@ import {
 	useBranches,
 	useProductSyncStatus,
 	useQueryParams,
-	useProductEditLocal,
+	useBranchProductEditLocal,
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
@@ -24,15 +24,19 @@ import { SyncOutlined } from '@ant-design/icons';
 export const TabProductPricesSyncing = () => {
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
-	const { mutateAsync: editProductLocal } = useProductEditLocal();
+	const { mutateAsync: editBranchProductLocal } = useBranchProductEditLocal();
 
 	// METHODS
-	const handleManualSync = async (productId: number, productName: string) => {
+	const handleManualSync = async (
+		branchId: number,
+		productId: number,
+		productName: string,
+	) => {
 		try {
-			// Trigger update to sync the product
-			await editProductLocal({
-				id: productId,
-				actingUserId: getId(user),
+			await editBranchProductLocal({
+				branch_id: branchId,
+				product_id: productId,
+				acting_user_id: getId(user),
 			});
 
 			message.success(`Manual sync processing for ${productName}.`);
@@ -128,7 +132,11 @@ export const TabProductPricesSyncing = () => {
 						type="primary"
 						ghost
 						onClick={() =>
-							handleManualSync(status.product_id, status.product_name)
+							handleManualSync(
+								status.branch_id,
+								status.product_id,
+								status.product_name,
+							)
 						}
 					/>
 				</Tooltip>

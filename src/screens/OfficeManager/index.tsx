@@ -42,7 +42,6 @@ import { Logs } from './Logs';
 import { Notifications } from './Notifications';
 import { RequisitionSlips } from './RequisitionSlips';
 import { ViewRequisitionSlip } from './RequisitionSlips/ViewRequisitionSlip';
-import { Users } from './Users';
 
 const OfficeManager = () => {
 	useNotificationConnectivity();
@@ -167,13 +166,6 @@ const OfficeManager = () => {
 				activeIcon: require('../../assets/images/icon-branches-active.svg'),
 				defaultIcon: require('../../assets/images/icon-branches.svg'),
 				link: '/office-manager/branches',
-			},
-			{
-				key: 'users',
-				name: 'Users',
-				activeIcon: require('../../assets/images/icon-users-active.svg'),
-				defaultIcon: require('../../assets/images/icon-users.svg'),
-				link: '/office-manager/users',
 			},
 			{
 				key: 'accounts',
@@ -340,7 +332,6 @@ const OfficeManager = () => {
 						exact
 					/>
 
-					<Route component={Users} path="/office-manager/users" exact />
 					<Route
 						component={CashieringAssignment}
 						path="/office-manager/users/assign/:id"

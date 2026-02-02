@@ -40,6 +40,7 @@ import {
 	MAX_PAGE_SIZE,
 	NO_BRANCH_ID,
 	SEARCH_DEBOUNCE_TIME,
+	appTypes,
 	pageSizeOptions,
 	userTypes,
 } from 'global';
@@ -51,6 +52,7 @@ import { useQueryClient } from 'react-query';
 import { Link } from 'react-router-dom';
 import {
 	convertIntoArray,
+	getAppType,
 	getId,
 	getLocalApiUrl,
 	getUserTypeName,
@@ -157,77 +159,78 @@ export const TabUsers = ({ disabled }: Props) => {
 				),
 				name: getFullName(user),
 				type: getUserTypeName(user.user_type),
-				actions: (
-					<Space>
-						{user.user_type !== userTypes.ADMIN && (
-							<>
-								<Tooltip title="Cashiering Assignment">
-									<Link to={`/office-manager/users/assign/${user.id}`}>
+				actions:
+					getAppType() === appTypes.HEAD_OFFICE ? (
+						<Space>
+							{user.user_type !== userTypes.ADMIN && (
+								<>
+									<Tooltip title="Cashiering Assignment">
+										<Link to={`/office-manager/users/assign/${user.id}`}>
+											<Button
+												disabled={disabled}
+												icon={<DesktopOutlined />}
+												type="primary"
+												ghost
+											/>
+										</Link>
+									</Tooltip>
+
+									<Tooltip title="Assign Branch">
 										<Button
 											disabled={disabled}
-											icon={<DesktopOutlined />}
+											icon={<SelectOutlined />}
 											type="primary"
 											ghost
+											onClick={() => {
+												setSelectedUser({ ...user, branchId: getId(branch) });
+											}}
 										/>
-									</Link>
-								</Tooltip>
+									</Tooltip>
+								</>
+							)}
 
-								<Tooltip title="Assign Branch">
-									<Button
-										disabled={disabled}
-										icon={<SelectOutlined />}
-										type="primary"
-										ghost
-										onClick={() => {
-											setSelectedUser({ ...user, branchId: getId(branch) });
-										}}
-									/>
-								</Tooltip>
-							</>
-						)}
+							<Tooltip title="Edit">
+								<Button
+									disabled={disabled}
+									icon={<EditFilled />}
+									type="primary"
+									ghost
+									onClick={() => {
+										setModifyUserModalVisible(true);
+										setSelectedUser({ ...user, branchId: getId(branch) });
+									}}
+								/>
+							</Tooltip>
 
-						<Tooltip title="Edit">
-							<Button
-								disabled={disabled}
-								icon={<EditFilled />}
-								type="primary"
-								ghost
-								onClick={() => {
-									setModifyUserModalVisible(true);
-									setSelectedUser({ ...user, branchId: getId(branch) });
-								}}
-							/>
-						</Tooltip>
-
-						{user.id !== oldestAdminId && (
-							<Popconfirm
-								cancelText="No"
-								okText="Yes"
-								placement="left"
-								title="Are you sure to remove this user?"
-								onConfirm={async () => {
-									try {
-										await requestUserDeletion(getId(user));
-										message.success('User deleted successfully');
-										queryClient.invalidateQueries('useUsers');
-									} catch (e) {
-										// Optionally handle error here
-									}
-								}}
-							>
-								<Tooltip title="Remove">
-									<Button
-										disabled={disabled}
-										icon={<DeleteOutlined />}
-										type="primary"
-										danger
-										ghost
-									/>
-								</Tooltip>
-							</Popconfirm>
-						)}
-					</Space>
-				),
+							{user.id !== oldestAdminId && (
+								<Popconfirm
+									cancelText="No"
+									okText="Yes"
+									placement="left"
+									title="Are you sure to remove this user?"
+									onConfirm={async () => {
+										try {
+											await requestUserDeletion(getId(user));
+											message.success('User deleted successfully');
+											queryClient.invalidateQueries('useUsers');
+										} catch (e) {
+											// Optionally handle error here
+										}
+									}}
+								>
+									<Tooltip title="Remove">
+										<Button
+											disabled={disabled}
+											icon={<DeleteOutlined />}
+											type="primary"
+											danger
+											ghost
+										/>
+									</Tooltip>
+								</Popconfirm>
+							)}
+						</Space>
+					) : null,
 			}));
 
 		setDataSource(formattedUsers);

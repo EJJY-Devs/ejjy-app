@@ -298,7 +298,7 @@ export const TabCreditTransactions = () => {
 							clientCode: payor?.account_code || '',
 							clientName: getFullName(payor) || '',
 							invoiceNumber: '',
-							referenceNumber: `00-${String(id).padStart(6, '0')}`,
+							referenceNumber: String(id).padStart(3, '0'),
 							amount: formatInPeso(amount),
 							cashier: getFullName(created_by),
 							authorizer: getFullName(created_by),

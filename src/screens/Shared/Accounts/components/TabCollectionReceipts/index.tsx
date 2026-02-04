@@ -11,6 +11,7 @@ import {
 	useAccounts,
 	useCollectionReceipts,
 	ViewCollectionReceiptModal,
+	ViewOrderOfPaymentModal,
 } from 'ejjy-global';
 import {
 	DEFAULT_PAGE,
@@ -38,6 +39,9 @@ export const TabCollectionReceipts = () => {
 		selectedCollectionReceipt,
 		setSelectedCollectionReceipt,
 	] = useState<CollectionReceipt | null>(null);
+	const [selectedOrderOfPayment, setSelectedOrderOfPayment] = useState<
+		any | null
+	>(null);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -86,8 +90,15 @@ export const TabCollectionReceipts = () => {
 						{reference_number || id}
 					</Button>
 				),
-				orderOfPaymentReferenceNumber:
-					orderOfPaymentReferenceNumber || orderOfPaymentId,
+				orderOfPaymentReferenceNumber: (
+					<Button
+						className="pa-0"
+						type="link"
+						onClick={() => setSelectedOrderOfPayment(order_of_payment)}
+					>
+						{orderOfPaymentReferenceNumber || orderOfPaymentId}
+					</Button>
+				),
 				datetime: formatDateTime(datetime_created),
 				payor: getFullName(payor),
 				amount: formatInPeso(amount),
@@ -138,6 +149,13 @@ export const TabCollectionReceipts = () => {
 					collectionReceipt={selectedCollectionReceipt}
 					siteSettings={siteSettings}
 					onClose={() => setSelectedCollectionReceipt(null)}
+				/>
+			)}
+
+			{selectedOrderOfPayment && (
+				<ViewOrderOfPaymentModal
+					orderOfPayment={selectedOrderOfPayment}
+					onClose={() => setSelectedOrderOfPayment(null)}
 				/>
 			)}
 		</>

@@ -13,7 +13,7 @@ import {
 	useBranches,
 	useProductSyncStatus,
 	useQueryParams,
-	useProductEditLocal,
+	useBranchProductEditLocal,
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
@@ -24,15 +24,28 @@ import { SyncOutlined } from '@ant-design/icons';
 export const TabProductPricesSyncing = () => {
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
-	const { mutateAsync: editProductLocal } = useProductEditLocal();
+	const { mutateAsync: editBranchProductLocal } = useBranchProductEditLocal();
+	const { params, setQueryParams } = useQueryParams();
+	const queryClient = useQueryClient();
 
 	// METHODS
-	const handleManualSync = async (productId: number, productName: string) => {
+	const handleManualSync = async (
+		branchId: number,
+		productId: number,
+		productName: string,
+	) => {
 		try {
-			// Trigger update to sync the product
-			await editProductLocal({
-				id: productId,
-				actingUserId: getId(user),
+			const actingUserId = getId(user);
+
+			if (!branchId || !productId || !actingUserId) {
+				message.error('Missing required information for sync.');
+				return;
+			}
+
+			await editBranchProductLocal({
+				branchId: Number(branchId),
+				productId: Number(productId),
+				actingUserId: Number(actingUserId),
 			});
 
 			message.success(`Manual sync processing for ${productName}.`);
@@ -71,10 +84,6 @@ export const TabProductPricesSyncing = () => {
 
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
-
-	// CUSTOM HOOKS
-	const { params, setQueryParams } = useQueryParams();
-	const queryClient = useQueryClient();
 	const {
 		data: { productSyncStatuses, total },
 		isFetching: isFetchingProductSyncStatuses,
@@ -128,7 +137,11 @@ export const TabProductPricesSyncing = () => {
 						type="primary"
 						ghost
 						onClick={() =>
-							handleManualSync(status.product_id, status.product_name)
+							handleManualSync(
+								status.branch_id,
+								status.product_id,
+								status.product_name,
+							)
 						}
 					/>
 				</Tooltip>

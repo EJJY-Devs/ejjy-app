@@ -1,8 +1,9 @@
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
-import { getBaseUrl, wrapServiceWithCatch } from 'hooks/helper';
+import { appTypes, DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
+import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useQuery } from 'react-query';
 import { ProductSyncStatusService } from 'services';
+import { getAppType, getLocalApiUrl, isStandAlone } from 'utils';
 
 const useProductSyncStatus = ({ params, options }: Query) =>
 	useQuery<any>(
@@ -24,7 +25,7 @@ const useProductSyncStatus = ({ params, options }: Query) =>
 						product_id: params?.product_id,
 						out_of_sync_only: params?.out_of_sync_only,
 					},
-					getBaseUrl(),
+					getLocalApiUrl(),
 				),
 			),
 		{
@@ -33,6 +34,10 @@ const useProductSyncStatus = ({ params, options }: Query) =>
 				productSyncStatuses: query.data.results,
 				total: query.data.count,
 			}),
+			enabled:
+				getAppType() === appTypes.HEAD_OFFICE &&
+				!!getLocalApiUrl() &&
+				!isStandAlone(),
 			...options,
 		},
 	);

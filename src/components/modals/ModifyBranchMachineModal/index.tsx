@@ -283,11 +283,7 @@ export const ModifyBranchMachineForm = ({
 								allowClear={false}
 								className="w-100"
 								format="MMMM DD, YYYY"
-								value={
-									values.ptuDateIssued
-										? moment(values.ptuDateIssued).startOf('day')
-										: null
-								}
+								value={values.ptuDateIssued || null}
 								onChange={(value) => setFieldValue('ptuDateIssued', value)}
 							/>
 							<ErrorMessage

@@ -1,12 +1,14 @@
 import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useQuery } from 'react-query';
-import { DataService } from 'services';
+import { DataService, ProductSyncStatusService } from 'services';
 import {
 	APP_PRODUCTS_IDS,
 	APP_BRANCH_PRODUCT_IDS,
 	APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
 	appTypes,
+	DEFAULT_PAGE,
+	DEFAULT_PAGE_SIZE,
 } from 'global';
 
 import {
@@ -273,7 +275,7 @@ export const useTriggerProductSync = ({ params, options }: Query) =>
 				!!params?.branchId &&
 				!!getLocalApiUrl() &&
 				!isStandAlone(),
-			refetchInterval: 10_000,
+			refetchInterval: 60_000,
 			refetchIntervalInBackground: true,
 			refetchOnWindowFocus: false,
 			notifyOnChangeProps: [],
@@ -282,41 +284,36 @@ export const useTriggerProductSync = ({ params, options }: Query) =>
 		},
 	);
 
-export const useCheckSyncStatus = ({ params, options }: Query) =>
-	useQuery(
-		['useCheckSyncStatus', params?.outOfSyncOnly],
-		async () => {
-			const localApiUrl = getLocalApiUrl();
-			if (!localApiUrl) {
-				return null;
-			}
-
-			try {
-				const response = await axios.get(
-					`${localApiUrl}/product-sync-status/`,
+export const useProductSyncStatus = ({ params, options }: Query) =>
+	useQuery<any>(
+		[
+			'useProductSyncStatus',
+			params?.page,
+			params?.pageSize,
+			params?.branch_id,
+			params?.product_id,
+			params?.out_of_sync_only,
+		],
+		() =>
+			wrapServiceWithCatch(
+				ProductSyncStatusService.list(
 					{
-						params: {
-							out_of_sync_only: params?.outOfSyncOnly || false,
-							page_size: 100,
-						},
+						page: params?.page || DEFAULT_PAGE,
+						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
+						branch_id: params?.branch_id,
+						product_id: params?.product_id,
+						out_of_sync_only: params?.out_of_sync_only,
 					},
-				);
-				return response.data;
-			} catch (error) {
-				console.error('Failed to check sync status:', error);
-				throw error;
-			}
-		},
+					getLocalApiUrl(),
+				),
+			),
 		{
-			enabled:
-				getAppType() === appTypes.HEAD_OFFICE &&
-				!!getLocalApiUrl() &&
-				!isStandAlone(),
-			refetchInterval: 20_000,
-			refetchIntervalInBackground: true,
-			refetchOnWindowFocus: false,
-			notifyOnChangeProps: [],
-			retry: false,
+			initialData: { data: { results: [], count: 0 } },
+			select: (query) => ({
+				productSyncStatuses: query.data.results,
+				total: query.data.count,
+			}),
+			enabled: getAppType() === appTypes.HEAD_OFFICE && !!getLocalApiUrl(),
 			...options,
 		},
 	);

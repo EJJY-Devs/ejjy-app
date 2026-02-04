@@ -7,6 +7,10 @@ import {
 	Label,
 } from 'components/elements';
 import { filterOption, getFullName, Transaction } from 'ejjy-global';
+import {
+	AuthorizationModal,
+	Props as AuthorizationModalProps,
+} from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { ErrorMessage, Form, Formik } from 'formik';
 import { orderOfPaymentPurposes, SEARCH_DEBOUNCE_TIME } from 'global';
 import {
@@ -16,8 +20,12 @@ import {
 } from 'hooks';
 import _, { debounce } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
-import { convertIntoArray, formatInPeso } from 'utils';
+import {
+	convertIntoArray,
+	formatInPeso,
+	getLocalBranchId,
+	getLocalApiUrl,
+} from 'utils';
 import { Payor } from 'utils/type';
 import * as Yup from 'yup';
 
@@ -36,9 +44,12 @@ export const CreateOrderOfPaymentModal = ({
 }: ModalProps) => {
 	// STATES
 	const [invoiceValidityError, setInvoiceValidityError] = useState(null);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 
 	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
 	const {
 		mutateAsync: createOrderOfPayment,
 		isLoading: isCreatingOrderOfPayment,
@@ -69,53 +80,66 @@ export const CreateOrderOfPaymentModal = ({
 			}
 		}
 
-		await createOrderOfPayment({
-			createdById: user.online_id,
-			payorId: formData.payorId,
-			amount: formData.amount,
-			purpose: formData.purpose,
-			extraDescription:
-				formData.purpose === orderOfPaymentPurposes.OTHERS
-					? formData.purposeOthers
-					: undefined,
-			chargeSalesTransactionId: formData.chargeSalesTransactionId || undefined,
+		// Prompt for authorization to select creator
+		setAuthorizeConfig({
+			baseURL: getLocalApiUrl(),
+			onSuccess: async (authorizedUser) => {
+				await createOrderOfPayment({
+					createdById: authorizedUser.id,
+					payorId: formData.payorId,
+					branchId: getLocalBranchId() ? Number(getLocalBranchId()) : undefined,
+					amount: formData.amount,
+					purpose: formData.purpose,
+					extraDescription:
+						formData.purpose === orderOfPaymentPurposes.OTHERS
+							? formData.purposeOthers
+							: undefined,
+					chargeSalesTransactionId:
+						formData.chargeSalesTransactionId || undefined,
+				});
+				setAuthorizeConfig(null);
+				onSuccess();
+				onClose();
+				message.success('Order of Payment was created successfully');
+			},
+			onCancel: () => setAuthorizeConfig(null),
 		});
-		onSuccess();
-		onClose();
-
-		message.success('Order of Payment was created successfully');
 	};
 
 	return (
-		<Modal
-			className="CreateOrderOfPaymentModal"
-			footer={null}
-			title="[Create] Order of Payment"
-			centered
-			closable
-			open
-			onCancel={onClose}
-		>
-			<RequestErrors
-				errors={[
-					...convertIntoArray(createOrderOfPaymentError?.errors, 'Create'),
-					...convertIntoArray(
-						checkInvoiceValidityError?.errors,
-						'Invoice Validity',
-					),
-					invoiceValidityError,
-				]}
-				withSpaceBottom
-			/>
+		<>
+			<Modal
+				className="CreateOrderOfPaymentModal"
+				footer={null}
+				title="[Create] Order of Payment"
+				centered
+				closable
+				open
+				onCancel={onClose}
+			>
+				<RequestErrors
+					errors={[
+						...convertIntoArray(createOrderOfPaymentError?.errors, 'Create'),
+						...convertIntoArray(
+							checkInvoiceValidityError?.errors,
+							'Invoice Validity',
+						),
+						invoiceValidityError,
+					]}
+					withSpaceBottom
+				/>
 
-			<CreateOrderOfPaymentForm
-				isLoading={isCreatingOrderOfPayment || isCheckingInvoiceValidity}
-				payor={payor}
-				transaction={transaction}
-				onClose={onClose}
-				onSubmit={handleCreate}
-			/>
-		</Modal>
+				<CreateOrderOfPaymentForm
+					isLoading={isCreatingOrderOfPayment || isCheckingInvoiceValidity}
+					payor={payor}
+					transaction={transaction}
+					onClose={onClose}
+					onSubmit={handleCreate}
+				/>
+			</Modal>
+
+			{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
+		</>
 	);
 };
 

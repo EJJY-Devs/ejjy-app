@@ -28,6 +28,7 @@ interface Modify {
 	religion?: string;
 	tin: string;
 	type: string;
+	pin?: string;
 }
 
 interface RedeemPoints {

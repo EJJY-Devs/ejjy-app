@@ -33,8 +33,8 @@ export const ModifyUserForm = ({
 				lastName: user?.last_name || account?.last_name || '',
 				email: user?.email || account?.email_address || '',
 				username: user?.username || '',
-				pin: user?.pin || '',
-				confirmPin: '',
+				pin: user ? user?.pin || '' : account?.pin || '',
+				confirmPin: user ? '' : account?.pin || '',
 
 				// NOTE: For create user only
 				userType: user?.user_type || '',
@@ -262,8 +262,10 @@ export const ModifyUserForm = ({
 										maxLength={6}
 										name="pin"
 										placeholder="Enter PIN"
+										readOnly={!user}
 										value={values['pin']}
 										onChange={(e) => {
+											if (!user) return;
 											// Only allow numbers
 											const value = e.target.value.replace(/\D/g, '');
 											setFieldValue('pin', value);
@@ -281,8 +283,10 @@ export const ModifyUserForm = ({
 										maxLength={6}
 										name="confirmPin"
 										placeholder="Confirm PIN"
+										readOnly={!user}
 										value={values['confirmPin']}
 										onChange={(e) => {
+											if (!user) return;
 											// Only allow numbers
 											const value = e.target.value.replace(/\D/g, '');
 											setFieldValue('confirmPin', value);

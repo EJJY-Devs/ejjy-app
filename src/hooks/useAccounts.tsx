@@ -78,6 +78,7 @@ export const useAccountCreate = () =>
 			religion,
 			tin,
 			type,
+			pin,
 		}: any) =>
 			AccountsService.create(
 				{
@@ -101,6 +102,7 @@ export const useAccountCreate = () =>
 					religion,
 					tin,
 					type,
+					pin,
 				},
 				getOnlineApiUrl(),
 			),
@@ -130,6 +132,7 @@ export const useAccountEdit = () =>
 			religion,
 			tin,
 			type,
+			pin,
 		}: any) =>
 			AccountsService.edit(
 				id,
@@ -154,6 +157,7 @@ export const useAccountEdit = () =>
 					religion,
 					tin,
 					type,
+					pin,
 				},
 				getOnlineApiUrl(),
 			),

@@ -1,4 +1,9 @@
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+	EyeInvisibleOutlined,
+	EyeOutlined,
+	LoadingOutlined,
+	PlusOutlined,
+} from '@ant-design/icons';
 import {
 	Button,
 	Col,
@@ -74,6 +79,7 @@ export const ModifyAccountForm = ({
 				religion: account?.religion || undefined,
 				emailAddress: account?.email_address || undefined,
 				biodataImage: account?.biodata_image || undefined,
+				pin: account?.pin || '',
 			},
 			schema: Yup.object().shape({
 				type: Yup.string().required().label('Type'),
@@ -100,6 +106,18 @@ export const ModifyAccountForm = ({
 				religion: getEmployeeSchema('Religion'),
 				emailAddress: getEmployeeSchema('Email Address').email(),
 				biodataImage: getEmployeeSchema('Biodata Image'),
+				pin: Yup.string()
+					.trim()
+					.when('type', {
+						is: accountTypes.EMPLOYEE,
+						then: Yup.string()
+							.trim()
+							.required()
+							.min(4, 'PIN must be at least 4 digits')
+							.max(6, 'PIN must not exceed 6 digits')
+							.matches(/^[0-9]+$/, 'PIN must contain only numbers')
+							.label('PIN'),
+					}),
 			}),
 		}),
 		[account],
@@ -119,6 +137,12 @@ export const ModifyAccountForm = ({
 					birthday: formData.birthday
 						? formData.birthday.format('YYYY-MM-DD')
 						: undefined,
+					isPointSystemEligible:
+						formData.type === accountTypes.EMPLOYEE
+							? false
+							: formData.isPointSystemEligible,
+					pin:
+						formData.type === accountTypes.EMPLOYEE ? formData.pin : undefined,
 				});
 			}}
 		>
@@ -352,6 +376,24 @@ export const ModifyAccountForm = ({
 										render={(error) => <FieldError error={error} />}
 									/>
 								</Col>
+								<Col span={24}>
+									<Label label="PIN" spacing />
+									<Input.Password
+										iconRender={(visible) =>
+											visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+										}
+										maxLength={6}
+										placeholder="Enter 4-6 digit PIN"
+										value={values.pin}
+										onChange={(e) => {
+											setFieldValue('pin', e.target.value);
+										}}
+									/>
+									<ErrorMessage
+										name="pin"
+										render={(error) => <FieldError error={error} />}
+									/>
+								</Col>
 								<Col lg={12} span={24}>
 									<Label label="Biodata Image" spacing />
 									<ImageUploadField />
@@ -449,20 +491,22 @@ export const ModifyAccountForm = ({
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>
-						<Col span={24}>
-							<Label label="Loyalty Membership" spacing />
-							<Radio.Group
-								options={[
-									{ label: 'Yes', value: true },
-									{ label: 'No', value: false },
-								]}
-								optionType="button"
-								value={values.isPointSystemEligible}
-								onChange={(e) => {
-									setFieldValue('isPointSystemEligible', e.target.value);
-								}}
-							/>
-						</Col>
+						{values.type !== accountTypes.EMPLOYEE && (
+							<Col span={24}>
+								<Label label="Loyalty Membership" spacing />
+								<Radio.Group
+									options={[
+										{ label: 'Yes', value: true },
+										{ label: 'No', value: false },
+									]}
+									optionType="button"
+									value={values.isPointSystemEligible}
+									onChange={(e) => {
+										setFieldValue('isPointSystemEligible', e.target.value);
+									}}
+								/>
+							</Col>
+						)}
 					</Row>
 
 					<div className="ModalCustomFooter">

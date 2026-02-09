@@ -17,6 +17,7 @@ import {
 	useTransactions,
 	invoiceTypes,
 	getInvoiceType,
+	EMPTY_CELL,
 } from 'ejjy-global';
 
 import { pageSizeOptions, refetchOptions } from 'global';
@@ -126,7 +127,7 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 						type="link"
 						onClick={() => setSelectedCollectionReceipt(receipt)}
 					>
-						{receipt.order_of_payment.id}
+						{receipt.order_of_payment.reference_number || EMPTY_CELL}
 					</Button>
 				) : (
 					''
@@ -134,7 +135,9 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 				payment: formatInPeso(receipt.amount),
 				cashier: getFullName(receipt.created_by),
 				modeOfPayment: getModeOfPaymentDescription(receipt.mode as PaymentType),
-				remarks: `OP: ${receipt.order_of_payment.id}`,
+				remarks: `OP: ${
+					receipt.order_of_payment.reference_number || EMPTY_CELL
+				}`,
 			}));
 
 			const mergedData = [...transactions, ...receiptsData];

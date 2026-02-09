@@ -8,6 +8,7 @@ import {
 } from 'components';
 import {
 	CollectionReceipt,
+	EMPTY_CELL,
 	formatDateTime,
 	getFullName,
 	timeRangeTypes,
@@ -291,6 +292,7 @@ export const TabCreditTransactions = () => {
 					(orderOfPayment) => {
 						const {
 							id,
+							reference_number,
 							datetime_created,
 							amount,
 							payor,
@@ -304,7 +306,7 @@ export const TabCreditTransactions = () => {
 							clientCode: payor?.account_code || '',
 							clientName: getFullName(payor) || '',
 							invoiceNumber: '',
-							referenceNumber: String(id).padStart(3, '0'),
+							referenceNumber: reference_number || EMPTY_CELL,
 							amount: formatInPeso(amount),
 							cashier: getFullName(created_by),
 							authorizer: getFullName(created_by),
@@ -323,6 +325,7 @@ export const TabCreditTransactions = () => {
 					(collectionReceipt) => {
 						const {
 							id,
+							reference_number,
 							amount,
 							order_of_payment,
 							datetime_created,
@@ -336,7 +339,7 @@ export const TabCreditTransactions = () => {
 							clientCode: order_of_payment?.payor?.account_code || '',
 							clientName: getFullName(order_of_payment?.payor) || '',
 							invoiceNumber: '',
-							referenceNumber: String(id).padStart(3, '0'),
+							referenceNumber: reference_number || EMPTY_CELL,
 							referenceData: collectionReceipt,
 							amount: formatInPeso(amount),
 							cashier: getFullName(created_by),

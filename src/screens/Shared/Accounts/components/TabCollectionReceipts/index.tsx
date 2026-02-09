@@ -4,6 +4,7 @@ import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
 import {
 	CollectionReceipt,
+	EMPTY_CELL,
 	formatDateTime,
 	getFullName,
 	SEARCH_DEBOUNCE_TIME,
@@ -75,7 +76,6 @@ export const TabCollectionReceipts = () => {
 			} = collectionReceipt;
 			const {
 				payor,
-				id: orderOfPaymentId,
 				reference_number: orderOfPaymentReferenceNumber,
 			} = order_of_payment;
 
@@ -96,7 +96,7 @@ export const TabCollectionReceipts = () => {
 						type="link"
 						onClick={() => setSelectedOrderOfPayment(order_of_payment)}
 					>
-						{orderOfPaymentReferenceNumber || orderOfPaymentId}
+						{orderOfPaymentReferenceNumber || EMPTY_CELL}
 					</Button>
 				),
 				datetime: formatDateTime(datetime_created),

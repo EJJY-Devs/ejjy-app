@@ -18,6 +18,7 @@ import {
 	pageSizeOptions,
 	SEARCH_DEBOUNCE_TIME,
 	timeRangeTypes,
+	appTypes,
 } from 'global';
 import { useQueryParams, useSiteSettingsNew } from 'hooks';
 import _ from 'lodash';
@@ -26,10 +27,11 @@ import {
 	convertIntoArray,
 	formatDateTime,
 	formatInPeso,
+	getAppType,
 	getLocalApiUrl,
 } from 'utils';
 
-const columns: ColumnsType = [
+const getColumns = (isHeadOffice: boolean): ColumnsType => [
 	{ title: 'OP #', dataIndex: 'referenceNumber' },
 	{ title: 'Date & Time Created', dataIndex: 'datetime' },
 	{ title: 'Payor', dataIndex: 'payor' },
@@ -37,6 +39,7 @@ const columns: ColumnsType = [
 	{ title: 'Amount of Payment', dataIndex: 'amountOfPayment' },
 	{ title: 'Purpose', dataIndex: 'purpose' },
 	{ title: 'Charge Sales Invoice', dataIndex: 'chargeSalesInvoice' },
+	...(isHeadOffice ? [{ title: 'Branch', dataIndex: 'branch' }] : []),
 ];
 
 export const TabOrderOfPayments = () => {
@@ -44,6 +47,8 @@ export const TabOrderOfPayments = () => {
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedTransaction, setSelectedTransaction] = useState(null);
 	const [selectedOrderOfPayment, setSelectedOrderOfPayment] = useState(null);
+	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
+	const columns = React.useMemo(() => getColumns(isHeadOffice), [isHeadOffice]);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -76,6 +81,7 @@ export const TabOrderOfPayments = () => {
 					purpose,
 					extra_description,
 					charge_sales_transaction,
+					branch,
 				} = orderOfPayment;
 
 				let purposeDescription = extra_description;
@@ -121,6 +127,7 @@ export const TabOrderOfPayments = () => {
 					) : (
 						EMPTY_CELL
 					),
+					branch: branch?.name || EMPTY_CELL,
 				};
 			},
 		);

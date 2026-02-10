@@ -4,7 +4,6 @@ import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
 import {
 	CollectionReceipt,
-	EMPTY_CELL,
 	formatDateTime,
 	getFullName,
 	SEARCH_DEBOUNCE_TIME,
@@ -17,6 +16,7 @@ import {
 import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
+	EMPTY_CELL,
 	pageSizeOptions,
 	refetchOptions,
 } from 'global';
@@ -31,6 +31,7 @@ const columns: ColumnsType = [
 	{ title: 'Date & Time Created', dataIndex: 'datetime' },
 	{ title: 'Payor', dataIndex: 'payor' },
 	{ title: 'Amount', dataIndex: 'amount' },
+	{ title: 'Branch Machine', dataIndex: 'branchMachine' },
 ];
 
 export const TabCollectionReceipts = () => {
@@ -73,6 +74,7 @@ export const TabCollectionReceipts = () => {
 				amount,
 				order_of_payment,
 				datetime_created,
+				branch_machine,
 			} = collectionReceipt;
 			const {
 				payor,
@@ -102,6 +104,7 @@ export const TabCollectionReceipts = () => {
 				datetime: formatDateTime(datetime_created),
 				payor: getFullName(payor),
 				amount: formatInPeso(amount),
+				branchMachine: branch_machine?.name || EMPTY_CELL,
 			};
 		});
 

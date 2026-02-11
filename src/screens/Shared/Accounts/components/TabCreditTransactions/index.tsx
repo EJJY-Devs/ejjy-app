@@ -17,6 +17,7 @@ import {
 	useOrderOfPayments,
 	useTransactions,
 	ViewCollectionReceiptModal,
+	ViewOrderOfPaymentModal,
 	ViewTransactionModal,
 } from 'ejjy-global';
 import {
@@ -46,6 +47,9 @@ export const TabCreditTransactions = () => {
 		selectedCollectionReceipt,
 		setSelectedCollectionReceipt,
 	] = useState<CollectionReceipt | null>(null);
+	const [selectedOrderOfPayment, setSelectedOrderOfPayment] = useState<
+		any | null
+	>(null);
 	const [selectedAccount, setSelectedAccount] = useState(null);
 	const [
 		isCreateOrderOfPaymentModalVisible,
@@ -135,6 +139,20 @@ export const TabCreditTransactions = () => {
 								onClick={() =>
 									record.referenceData &&
 									setSelectedCollectionReceipt(record.referenceData)
+								}
+							>
+								{text}
+							</Button>
+						);
+					}
+					if (record.type === 'order_of_payment') {
+						return (
+							<Button
+								className="pa-0"
+								type="link"
+								onClick={() =>
+									record.referenceData &&
+									setSelectedOrderOfPayment(record.referenceData)
 								}
 							>
 								{text}
@@ -307,6 +325,7 @@ export const TabCreditTransactions = () => {
 							clientName: getFullName(payor) || '',
 							invoiceNumber: '',
 							referenceNumber: reference_number || EMPTY_CELL,
+							referenceData: orderOfPayment,
 							amount: formatInPeso(amount),
 							cashier: getFullName(created_by),
 							authorizer: getFullName(created_by),
@@ -515,6 +534,13 @@ export const TabCreditTransactions = () => {
 					collectionReceipt={selectedCollectionReceipt}
 					siteSettings={siteSettings}
 					onClose={() => setSelectedCollectionReceipt(null)}
+				/>
+			)}
+
+			{selectedOrderOfPayment && (
+				<ViewOrderOfPaymentModal
+					orderOfPayment={selectedOrderOfPayment}
+					onClose={() => setSelectedOrderOfPayment(null)}
 				/>
 			)}
 

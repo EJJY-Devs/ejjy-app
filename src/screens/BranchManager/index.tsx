@@ -26,6 +26,8 @@ import { DiscountOptions } from 'screens/Shared/DiscountOptions';
 import { DTR } from 'screens/Shared/DTR';
 import { PointSystemTags } from 'screens/Shared/PointSystemTags';
 import { ProductCategories } from 'screens/Shared/ProductCategories';
+import { ProductGroups } from 'screens/Shared/ProductGroups';
+import { ModifyProductGroup } from 'screens/Shared/ProductGroups/ModifyProductGroup';
 import { Products } from 'screens/Shared/Products';
 import { Sales } from 'screens/Shared/Sales';
 import { SiteSettings } from 'screens/Shared/SiteSettings';
@@ -36,6 +38,7 @@ import useInterval from 'use-interval';
 import { getBranchKey, getLocalBranchId } from 'utils';
 import { Reports } from 'screens/Shared/Reports';
 import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
+import { Tags } from 'screens/Shared/Tags';
 import { Accounts } from '../Shared/Accounts';
 import { BackOrders } from './BackOrders';
 import { CreateBackOrder } from './BackOrders/CreateBackOrder';
@@ -163,18 +166,11 @@ const BranchManager = () => {
 				link: '/branch-manager/products',
 			},
 			{
-				key: 'point-system-tags',
-				name: 'Point System Tags',
+				key: 'tags',
+				name: 'Tags',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/branch-manager/point-system-tags',
-			},
-			{
-				key: 'product-categories',
-				name: 'Product Categories',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/branch-manager/product-categories',
+				link: '/branch-manager/tags',
 			},
 			{
 				key: 'product-conversion',
@@ -294,6 +290,10 @@ const BranchManager = () => {
 					<Route component={Reports} path="/branch-manager/reports" />
 					<Route component={Sales} path="/branch-manager/sales" />
 					<Route
+						path="/branch-manager/tags"
+						render={() => <Tags basePath="/branch-manager" />}
+					/>
+					<Route
 						component={ProductCategories}
 						path="/branch-manager/product-categories"
 					/>
@@ -301,6 +301,21 @@ const BranchManager = () => {
 					<Route
 						component={PointSystemTags}
 						path="/branch-manager/point-system-tags"
+					/>
+					<Route
+						component={ProductGroups}
+						path="/branch-manager/product-groups"
+						exact
+					/>
+					<Route
+						component={ModifyProductGroup}
+						path="/branch-manager/product-groups/create"
+						exact
+					/>
+					<Route
+						component={ModifyProductGroup}
+						path="/branch-manager/product-groups/edit/:id"
+						exact
 					/>
 					<Route
 						component={ProductConversion}

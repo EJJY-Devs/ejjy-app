@@ -20,6 +20,7 @@ import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
 import { ReportsPerMachine } from 'screens/Shared/Dashboard/components/ReportsPerMachine';
+import { FastMovingProductsTile } from 'screens/Shared/Dashboard/components/FastMovingProductsTile';
 import { useUserStore } from 'stores';
 import { convertIntoArray, getId } from 'utils';
 import './style.scss';
@@ -292,6 +293,11 @@ export const Dashboard = () => {
 										branchId={branch.id}
 										tableHeaderClassName="pt-2 px-0"
 									/>
+
+									<Divider />
+									<div className="px-6 pb-6">
+										<FastMovingProductsTile branchId={branch.id} />
+									</div>
 								</Tabs.TabPane>
 							);
 						})}

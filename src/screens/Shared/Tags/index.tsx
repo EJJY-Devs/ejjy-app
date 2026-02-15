@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
-import { Button, Form, Input, Modal, Table, Tabs } from 'antd';
+import { Button, Form, Input, message, Modal, Table, Tabs } from 'antd';
 import _ from 'lodash';
 import { Content, TableHeader } from 'components';
 import { Box } from 'components/elements';
+import { MAX_PAGE_SIZE } from 'global';
+import {
+	useBrandNameCreate,
+	useBrandNames,
+	usePingOnlineServer,
+	useProductLocationCreate,
+	useProductLocations,
+	useProductTypeCreate,
+	useProductTypes,
+	useStorageTypeCreate,
+	useStorageTypes,
+} from 'hooks';
 import { ProductCategoriesTab } from './components/ProductCategoriesTab';
 import { PointSystemTagsTab } from './components/PointSystemTagsTab';
 import { ProductGroupsTab } from './components/ProductGroupsTab';
@@ -24,16 +36,41 @@ const tabs = {
 export const Tags = ({ basePath }: Props) => {
 	const [tab, setTab] = useState(tabs.PRODUCT_CATEGORIES);
 	const allowCreate = basePath === '/office-manager';
+	const { isConnected } = usePingOnlineServer();
 
-	type NameRow = {
-		key: string;
-		name: string;
-	};
+	const {
+		data: { productTypes } = { productTypes: [] },
+		isFetching: isFetchingProductTypes,
+	} = useProductTypes({ params: { pageSize: MAX_PAGE_SIZE } });
+	const {
+		data: { storageTypes } = { storageTypes: [] },
+		isFetching: isFetchingStorageTypes,
+	} = useStorageTypes({ params: { pageSize: MAX_PAGE_SIZE } });
+	const {
+		data: { productLocations } = { productLocations: [] },
+		isFetching: isFetchingProductLocations,
+	} = useProductLocations({ params: { pageSize: MAX_PAGE_SIZE } });
+	const {
+		data: { brandNames } = { brandNames: [] },
+		isFetching: isFetchingBrandNames,
+	} = useBrandNames({ params: { pageSize: MAX_PAGE_SIZE } });
 
-	const [productTypeRows, setProductTypeRows] = useState<NameRow[]>([]);
-	const [storageTypeRows, setStorageTypeRows] = useState<NameRow[]>([]);
-	const [productLocationRows, setProductLocationRows] = useState<NameRow[]>([]);
-	const [brandNameRows, setBrandNameRows] = useState<NameRow[]>([]);
+	const {
+		mutate: createProductType,
+		isLoading: isCreatingProductType,
+	} = useProductTypeCreate();
+	const {
+		mutate: createStorageType,
+		isLoading: isCreatingStorageType,
+	} = useStorageTypeCreate();
+	const {
+		mutate: createProductLocation,
+		isLoading: isCreatingProductLocation,
+	} = useProductLocationCreate();
+	const {
+		mutate: createBrandName,
+		isLoading: isCreatingBrandName,
+	} = useBrandNameCreate();
 
 	const [productTypeVisible, setProductTypeVisible] = useState(false);
 	const [storageTypeVisible, setStorageTypeVisible] = useState(false);
@@ -66,7 +103,6 @@ export const Tags = ({ basePath }: Props) => {
 
 					<Tabs.TabPane key={tabs.PATRONAGE_SYSTEM} tab={tabs.PATRONAGE_SYSTEM}>
 						<PointSystemTagsTab />
-						<PointSystemTagsTab />
 					</Tabs.TabPane>
 
 					<Tabs.TabPane key={tabs.PRODUCT_GROUPS} tab={tabs.PRODUCT_GROUPS}>
@@ -79,13 +115,16 @@ export const Tags = ({ basePath }: Props) => {
 								<TableHeader
 									buttonName="Create Product Type"
 									onCreate={() => setProductTypeVisible(true)}
+									onCreateDisabled={isConnected === false}
 								/>
 							)}
 
 							<Table
 								columns={nameColumns}
-								dataSource={productTypeRows}
+								dataSource={productTypes}
+								loading={isFetchingProductTypes}
 								pagination={false}
+								rowKey="id"
 								bordered
 							/>
 
@@ -107,12 +146,18 @@ export const Tags = ({ basePath }: Props) => {
 											const name = String(values?.name || '').trim();
 											if (!name) return;
 
-											setProductTypeRows((prev) => [
-												...prev,
-												{ key: `${Date.now()}-${Math.random()}`, name },
-											]);
-											setProductTypeVisible(false);
-											productTypeForm.resetFields();
+											createProductType(
+												{ name },
+												{
+													onSuccess: () => {
+														message.success(
+															'Product type was created successfully',
+														);
+														setProductTypeVisible(false);
+														productTypeForm.resetFields();
+													},
+												},
+											);
 										}}
 									>
 										<Form.Item
@@ -125,6 +170,8 @@ export const Tags = ({ basePath }: Props) => {
 
 										<div className="d-flex justify-end">
 											<Button
+												disabled={isConnected === false}
+												loading={isCreatingProductType}
 												type="primary"
 												onClick={() => productTypeForm.submit()}
 											>
@@ -143,13 +190,16 @@ export const Tags = ({ basePath }: Props) => {
 								<TableHeader
 									buttonName="Create Storage Type"
 									onCreate={() => setStorageTypeVisible(true)}
+									onCreateDisabled={isConnected === false}
 								/>
 							)}
 
 							<Table
 								columns={nameColumns}
-								dataSource={storageTypeRows}
+								dataSource={storageTypes}
+								loading={isFetchingStorageTypes}
 								pagination={false}
+								rowKey="id"
 								bordered
 							/>
 
@@ -171,12 +221,18 @@ export const Tags = ({ basePath }: Props) => {
 											const name = String(values?.name || '').trim();
 											if (!name) return;
 
-											setStorageTypeRows((prev) => [
-												...prev,
-												{ key: `${Date.now()}-${Math.random()}`, name },
-											]);
-											setStorageTypeVisible(false);
-											storageTypeForm.resetFields();
+											createStorageType(
+												{ name },
+												{
+													onSuccess: () => {
+														message.success(
+															'Storage type was created successfully',
+														);
+														setStorageTypeVisible(false);
+														storageTypeForm.resetFields();
+													},
+												},
+											);
 										}}
 									>
 										<Form.Item
@@ -189,6 +245,8 @@ export const Tags = ({ basePath }: Props) => {
 
 										<div className="d-flex justify-end">
 											<Button
+												disabled={isConnected === false}
+												loading={isCreatingStorageType}
 												type="primary"
 												onClick={() => storageTypeForm.submit()}
 											>
@@ -207,13 +265,16 @@ export const Tags = ({ basePath }: Props) => {
 								<TableHeader
 									buttonName="Create Product Location"
 									onCreate={() => setProductLocationVisible(true)}
+									onCreateDisabled={isConnected === false}
 								/>
 							)}
 
 							<Table
 								columns={nameColumns}
-								dataSource={productLocationRows}
+								dataSource={productLocations}
+								loading={isFetchingProductLocations}
 								pagination={false}
+								rowKey="id"
 								bordered
 							/>
 
@@ -235,12 +296,18 @@ export const Tags = ({ basePath }: Props) => {
 											const name = String(values?.name || '').trim();
 											if (!name) return;
 
-											setProductLocationRows((prev) => [
-												...prev,
-												{ key: `${Date.now()}-${Math.random()}`, name },
-											]);
-											setProductLocationVisible(false);
-											productLocationForm.resetFields();
+											createProductLocation(
+												{ name },
+												{
+													onSuccess: () => {
+														message.success(
+															'Product location was created successfully',
+														);
+														setProductLocationVisible(false);
+														productLocationForm.resetFields();
+													},
+												},
+											);
 										}}
 									>
 										<Form.Item
@@ -253,6 +320,8 @@ export const Tags = ({ basePath }: Props) => {
 
 										<div className="d-flex justify-end">
 											<Button
+												disabled={isConnected === false}
+												loading={isCreatingProductLocation}
 												type="primary"
 												onClick={() => productLocationForm.submit()}
 											>
@@ -271,13 +340,16 @@ export const Tags = ({ basePath }: Props) => {
 								<TableHeader
 									buttonName="Create Brand Name"
 									onCreate={() => setBrandNameVisible(true)}
+									onCreateDisabled={isConnected === false}
 								/>
 							)}
 
 							<Table
 								columns={nameColumns}
-								dataSource={brandNameRows}
+								dataSource={brandNames}
+								loading={isFetchingBrandNames}
 								pagination={false}
+								rowKey="id"
 								bordered
 							/>
 
@@ -299,12 +371,18 @@ export const Tags = ({ basePath }: Props) => {
 											const name = String(values?.name || '').trim();
 											if (!name) return;
 
-											setBrandNameRows((prev) => [
-												...prev,
-												{ key: `${Date.now()}-${Math.random()}`, name },
-											]);
-											setBrandNameVisible(false);
-											brandNameForm.resetFields();
+											createBrandName(
+												{ name },
+												{
+													onSuccess: () => {
+														message.success(
+															'Brand name was created successfully',
+														);
+														setBrandNameVisible(false);
+														brandNameForm.resetFields();
+													},
+												},
+											);
 										}}
 									>
 										<Form.Item
@@ -317,6 +395,8 @@ export const Tags = ({ basePath }: Props) => {
 
 										<div className="d-flex justify-end">
 											<Button
+												disabled={isConnected === false}
+												loading={isCreatingBrandName}
 												type="primary"
 												onClick={() => brandNameForm.submit()}
 											>

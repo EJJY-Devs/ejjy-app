@@ -1,7 +1,21 @@
 import { Descriptions, Modal } from 'antd';
+import { PdfButtons } from 'components/Printing';
 import { EMPTY_CELL } from 'global';
-import React from 'react';
+import jsPDF from 'jspdf';
+import React, { useState } from 'react';
 import { formatInPeso, getProductType } from 'utils';
+
+import { printBranchInventoryReport } from './printBranchInventoryReport';
+
+const TIMEOUT_MS = 2000;
+const PDF_WRAPPER_WIDTH_PX = 1120;
+const PDF_WRAPPER_PADDING_PX = 24;
+const PDF_PAGE_WIDTH_PX = 1225;
+const PDF_PAGE_HEIGHT_PX = 420;
+const PDF_RENDER_X_PX = Math.max(
+	0,
+	Math.floor((PDF_PAGE_WIDTH_PX - PDF_WRAPPER_WIDTH_PX) / 2),
+);
 
 type Props = {
 	balance: any;
@@ -9,6 +23,9 @@ type Props = {
 };
 
 export const ViewBranchInventoryReportModal = ({ balance, onClose }: Props) => {
+	const [htmlPdf, setHtmlPdf] = useState('');
+	const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+
 	const branchProduct = balance?.branch_product;
 	const product = branchProduct?.product;
 
@@ -47,10 +64,83 @@ export const ViewBranchInventoryReportModal = ({ balance, onClose }: Props) => {
 	const productCategory =
 		product?.product_category?.name || product?.product_category || EMPTY_CELL;
 
+	const buildPdfHtml = () => {
+		const dataHtml = printBranchInventoryReport(balance);
+		return `<div style="width: ${PDF_WRAPPER_WIDTH_PX}px; padding: ${PDF_WRAPPER_PADDING_PX}px; box-sizing: border-box;">${dataHtml}</div>`;
+	};
+
+	const previewPdf = () => {
+		setIsLoadingPdf(true);
+
+		const pdfTitle = `BranchInventory_${barcode}.pdf`;
+		const wrappedHtml = buildPdfHtml();
+		setHtmlPdf(wrappedHtml);
+
+		// eslint-disable-next-line new-cap
+		const pdf = new jsPDF({
+			orientation: 'l',
+			unit: 'px',
+			format: [PDF_PAGE_WIDTH_PX, PDF_PAGE_HEIGHT_PX],
+			putOnlyUsedFonts: true,
+		});
+		pdf.setProperties({ title: pdfTitle });
+
+		setTimeout(() => {
+			pdf.html(wrappedHtml, {
+				x: PDF_RENDER_X_PX,
+				y: 10,
+				margin: 0,
+				callback: (instance) => {
+					window.open(instance.output('bloburl').toString());
+					setIsLoadingPdf(false);
+					setHtmlPdf('');
+				},
+			});
+		}, TIMEOUT_MS);
+	};
+
+	const downloadPdf = () => {
+		setIsLoadingPdf(true);
+
+		const pdfTitle = `BranchInventory_${barcode}.pdf`;
+		const wrappedHtml = buildPdfHtml();
+		setHtmlPdf(wrappedHtml);
+
+		// eslint-disable-next-line new-cap
+		const pdf = new jsPDF({
+			orientation: 'l',
+			unit: 'px',
+			format: [PDF_PAGE_WIDTH_PX, PDF_PAGE_HEIGHT_PX],
+			putOnlyUsedFonts: true,
+		});
+		pdf.setProperties({ title: pdfTitle });
+
+		setTimeout(() => {
+			pdf.html(wrappedHtml, {
+				x: PDF_RENDER_X_PX,
+				y: 10,
+				margin: 0,
+				callback: (instance) => {
+					instance.save(pdfTitle);
+					setIsLoadingPdf(false);
+					setHtmlPdf('');
+				},
+			});
+		}, TIMEOUT_MS);
+	};
+
 	return (
 		<Modal
 			className="Modal__large Modal__hasFooter"
-			footer={null}
+			footer={[
+				<PdfButtons
+					key="pdf"
+					downloadPdf={downloadPdf}
+					isDisabled={isLoadingPdf}
+					isLoading={isLoadingPdf}
+					previewPdf={previewPdf}
+				/>,
+			]}
 			title={`${barcode} - ${productName}`}
 			centered
 			closable
@@ -124,6 +214,12 @@ export const ViewBranchInventoryReportModal = ({ balance, onClose }: Props) => {
 						EMPTY_CELL}
 				</Descriptions.Item>
 			</Descriptions>
+
+			<div
+				// eslint-disable-next-line react/no-danger
+				dangerouslySetInnerHTML={{ __html: htmlPdf }}
+				style={{ display: 'none' }}
+			/>
 		</Modal>
 	);
 };

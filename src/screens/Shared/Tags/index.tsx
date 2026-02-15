@@ -13,7 +13,7 @@ type Props = {
 
 const tabs = {
 	PRODUCT_CATEGORIES: 'Product Categories',
-	POINT_SYSTEM_TAGS: 'Point System Tags',
+	PATRONAGE_SYSTEM: 'Patronage System',
 	PRODUCT_GROUPS: 'Product Groups',
 	PRODUCT_TYPE: 'Product Type',
 	STORAGE_TYPE: 'Storage Type',
@@ -64,10 +64,8 @@ export const Tags = ({ basePath }: Props) => {
 						<ProductCategoriesTab />
 					</Tabs.TabPane>
 
-					<Tabs.TabPane
-						key={tabs.POINT_SYSTEM_TAGS}
-						tab={tabs.POINT_SYSTEM_TAGS}
-					>
+					<Tabs.TabPane key={tabs.PATRONAGE_SYSTEM} tab={tabs.PATRONAGE_SYSTEM}>
+						<PointSystemTagsTab />
 						<PointSystemTagsTab />
 					</Tabs.TabPane>
 

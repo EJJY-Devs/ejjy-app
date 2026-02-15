@@ -35,10 +35,10 @@ export const ModifyPointSystemTagModal = ({
 				...formData,
 				id: getId(pointSystemTag),
 			});
-			message.success('Point system tag was edited successfully');
+			message.success('Patronage system tag was edited successfully');
 		} else {
 			await createPointSystemTag(formData);
-			message.success('Point system tag was created successfully');
+			message.success('Patronage system tag was created successfully');
 		}
 
 		onClose();
@@ -47,7 +47,7 @@ export const ModifyPointSystemTagModal = ({
 	return (
 		<Modal
 			footer={null}
-			title={`${pointSystemTag ? '[Edit]' : '[Create]'} Point System Tag`}
+			title={`${pointSystemTag ? '[Edit]' : '[Create]'} Patronage System Tag`}
 			centered
 			closable
 			visible

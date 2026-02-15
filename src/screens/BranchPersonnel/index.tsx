@@ -4,20 +4,11 @@ import { IS_APP_LIVE } from 'global';
 import { useBranches } from 'hooks';
 import React from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
-import { Dashboard } from './Dashboard/Dashboard';
 import { Notifications } from './Notifications/Notifications';
 import { FulfillPreparationSlips } from './PreparationSlips/FulfillPreparationSlip';
 import { PreparationSlips } from './PreparationSlips/PreparationSlips';
 
 const sidebarItems = [
-	{
-		key: 'dashboard',
-		name: 'Dashboard',
-		activeIcon: require('../../assets/images/icon-dashboard-active.svg'),
-		defaultIcon: require('../../assets/images/icon-dashboard.svg'),
-		link: '/branch-personnel/dashboard',
-	},
-
 	{
 		key: 'preparation-slips',
 		name: 'Preparation Slips',
@@ -48,8 +39,6 @@ const BranchPersonnel = () => {
 		<Container sidebarItems={sidebarItems}>
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
-					<Route component={Dashboard} path="/branch-personnel/dashboard" />
-
 					<Route
 						component={PreparationSlips}
 						path="/branch-personnel/preparation-slips"
@@ -66,7 +55,7 @@ const BranchPersonnel = () => {
 						path="/branch-personnel/notifications"
 					/>
 
-					<Redirect to="/branch-personnel/dashboard" />
+					<Redirect to="/branch-personnel/preparation-slips" />
 				</Switch>
 			</React.Suspense>
 		</Container>

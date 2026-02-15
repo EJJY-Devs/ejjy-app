@@ -7,10 +7,14 @@ import { Notifications } from 'screens/Admin/Notifications';
 import { Logs } from 'screens/OfficeManager/Logs';
 import { Branches } from 'screens/Shared/Branches';
 import { ViewBranch } from 'screens/Shared/Branches/ViewBranch';
+import { PointSystemTags } from 'screens/Shared/PointSystemTags';
 import { ProductCategories } from 'screens/Shared/ProductCategories';
+import { ProductGroups } from 'screens/Shared/ProductGroups';
+import { ModifyProductGroup } from 'screens/Shared/ProductGroups/ModifyProductGroup';
 import { Products } from 'screens/Shared/Products';
 import { Sales } from 'screens/Shared/Sales';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
+import { Tags } from 'screens/Shared/Tags';
 import { Dashboard } from './Dashboard';
 import { useFailedTransfers } from './hooks/useFailedTransfers';
 import { PendingTransactions } from './PendingTransactions/PendingTransactions';
@@ -105,10 +109,10 @@ const Admin = () => {
 			},
 			{
 				key: 'product-categories',
-				name: 'Product Categories',
+				name: 'Tags',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/admin/product-categories',
+				link: '/admin/tags',
 			},
 			{
 				key: 'sales',
@@ -162,9 +166,22 @@ const Admin = () => {
 						exact
 					/>
 					<Route component={Products} path="/admin/products" />
+					<Route path="/admin/tags" render={() => <Tags basePath="/admin" />} />
 					<Route
 						component={ProductCategories}
 						path="/admin/product-categories"
+					/>
+					<Route component={PointSystemTags} path="/admin/point-system-tags" />
+					<Route component={ProductGroups} path="/admin/product-groups" exact />
+					<Route
+						component={ModifyProductGroup}
+						path="/admin/product-groups/create"
+						exact
+					/>
+					<Route
+						component={ModifyProductGroup}
+						path="/admin/product-groups/edit/:id"
+						exact
 					/>
 					<Route component={Logs} path="/admin/logs" />
 					<Route component={Sales} path="/admin/sales" />

@@ -78,7 +78,7 @@ export const PointSystemTags = () => {
 						title="Are you sure to remove this?"
 						onConfirm={async () => {
 							await deletePointSystemTag(getId(pointSystemTag));
-							message.success('Point system tag was deleted successfully');
+							message.success('Patronage system tag was deleted successfully');
 						}}
 					>
 						<Tooltip title="Remove">
@@ -106,13 +106,13 @@ export const PointSystemTags = () => {
 	}, [user]);
 
 	return (
-		<Content title="Point System Tags">
+		<Content title="Patronage System">
 			<ConnectionAlert />
 
 			<Box padding>
 				{getAppType() === appTypes.HEAD_OFFICE && (
 					<TableHeader
-						buttonName="Create Point System Tag"
+						buttonName="Create Patronage System Tag"
 						onCreate={() => setModifyPointSystemTagModalVisible(true)}
 						onCreateDisabled={isConnected === false}
 					/>

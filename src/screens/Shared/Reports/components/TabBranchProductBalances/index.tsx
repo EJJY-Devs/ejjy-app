@@ -1,7 +1,7 @@
 import { EditFilled, SearchOutlined } from '@ant-design/icons';
 import { Button, Col, Input, Row, Select, Spin, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import { RequestErrors } from 'components';
+import { RequestErrors, ViewBranchInventoryReportModal } from 'components';
 import { Box, Label } from 'components/elements';
 import { Cart } from 'screens/Shared/Cart';
 import { filterOption } from 'ejjy-global';
@@ -29,6 +29,7 @@ const BranchProductBalances = () => {
 	const [dataSource, setDataSource] = useState([]);
 	const [isCartModalVisible, setIsCartModalVisible] = useState(false);
 	const [selectedBalance, setSelectedBalance] = useState(null);
+	const [viewedBalance, setViewedBalance] = useState<any | null>(null);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -60,9 +61,9 @@ const BranchProductBalances = () => {
 			dataIndex: 'description',
 		},
 		{
-			title: 'Value',
+			title: 'Balance',
 			dataIndex: 'value',
-			align: 'right',
+			align: 'left',
 			sorter: true,
 			sortOrder: (() => {
 				if (params?.ordering === 'value') return 'ascend';
@@ -82,6 +83,7 @@ const BranchProductBalances = () => {
 				},
 			}),
 		},
+		{ title: 'Status', dataIndex: 'status', align: 'left' },
 		...(getAppType() === appTypes.HEAD_OFFICE
 			? [{ title: 'Action', dataIndex: 'action' }]
 			: []),
@@ -109,13 +111,23 @@ const BranchProductBalances = () => {
 			// Backend already aggregated the data, just format it for display
 			const data = branchProductBalances.map((balance) => {
 				const isWeighing = balance.is_weighing;
+				const barcodeText = balance.barcode || EMPTY_CELL;
 				return {
 					key: balance.id,
-					barcode: balance.barcode || EMPTY_CELL,
+					barcode: (
+						<Button
+							className="pa-0"
+							type="link"
+							onClick={() => setViewedBalance(balance)}
+						>
+							{barcodeText}
+						</Button>
+					),
 					description: balance.name || EMPTY_CELL,
 					value: isWeighing
 						? Number(balance.value).toFixed(3)
 						: Number(balance.value).toFixed(0),
+					status: '',
 				};
 			});
 
@@ -125,13 +137,24 @@ const BranchProductBalances = () => {
 			const data = branchProductBalances.map((balance) => {
 				const isWeighing =
 					balance.branch_product?.product?.unit_of_measurement === 'weighing';
+				const barcodeText =
+					balance.branch_product?.product?.barcode || EMPTY_CELL;
 				const baseData: any = {
 					key: balance.id,
-					barcode: balance.branch_product?.product?.barcode || EMPTY_CELL,
+					barcode: (
+						<Button
+							className="pa-0"
+							type="link"
+							onClick={() => setViewedBalance(balance)}
+						>
+							{barcodeText}
+						</Button>
+					),
 					description: balance.branch_product?.product?.name || EMPTY_CELL,
 					value: isWeighing
 						? Number(balance.value).toFixed(3)
 						: Number(balance.value).toFixed(0),
+					status: '',
 				};
 
 				// Only add action for head office users
@@ -181,6 +204,13 @@ const BranchProductBalances = () => {
 					type="Adjustment Slip"
 					onClose={handleModalClose}
 					onRefetch={refetchBranchProductBalances}
+				/>
+			)}
+
+			{viewedBalance && (
+				<ViewBranchInventoryReportModal
+					balance={viewedBalance}
+					onClose={() => setViewedBalance(null)}
 				/>
 			)}
 
@@ -261,9 +291,10 @@ const Filter = () => {
 
 			<Row gutter={[16, 16]}>
 				<Col lg={12} span={24}>
-					<Label label="Search" spacing />
+					<Label label="Product" spacing />
 					<Input
 						defaultValue={params.search}
+						placeholder="Search product name or barcode"
 						prefix={<SearchOutlined />}
 						allowClear
 						onChange={(event) =>

@@ -154,7 +154,7 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 				</Descriptions.Item>
 
 				{product.point_system_tag && (
-					<Descriptions.Item label="Point System Tag">
+					<Descriptions.Item label="Patronage System Tag">
 						{product.point_system_tag.name}
 					</Descriptions.Item>
 				)}

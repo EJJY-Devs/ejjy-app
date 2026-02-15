@@ -2,7 +2,7 @@ import { DeleteOutlined, EditFilled } from '@ant-design/icons';
 import { Button, message, Popconfirm, Space, Tooltip } from 'antd';
 import Table from 'antd/lib/table';
 import cn from 'classnames';
-import { ConnectionAlert, Content, RequestErrors } from 'components';
+import { ConnectionAlert, RequestErrors } from 'components';
 import { Box } from 'components/elements';
 import {
 	appTypes,
@@ -21,11 +21,13 @@ import { Link } from 'react-router-dom';
 import { useUserStore } from 'stores';
 import { convertIntoArray, getAppType, getId, isStandAlone } from 'utils';
 
-export const ProductGroups = () => {
-	// STATES
+type Props = {
+	basePath: string;
+};
+
+export const ProductGroupsTab = ({ basePath }: Props) => {
 	const [dataSource, setDataSource] = useState([]);
 
-	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
 	const { isConnected } = usePingOnlineServer();
 	const user = useUserStore((state) => state.user);
@@ -50,7 +52,7 @@ export const ProductGroups = () => {
 			actions: (
 				<Space>
 					<Tooltip title="Edit">
-						<Link to={`product-groups/edit/${productGroup.id}`}>
+						<Link to={`${basePath}/product-groups/edit/${productGroup.id}`}>
 							<Button
 								disabled={isConnected === false}
 								icon={<EditFilled />}
@@ -79,7 +81,7 @@ export const ProductGroups = () => {
 		}));
 
 		setDataSource(data);
-	}, [productGroups, isConnected]);
+	}, [productGroups, isConnected, basePath, deleteProductGroup]);
 
 	const getColumns = useCallback(() => {
 		const columns = [{ title: 'Name', dataIndex: 'name' }];
@@ -92,13 +94,13 @@ export const ProductGroups = () => {
 	}, [user]);
 
 	return (
-		<Content title="Product Groups">
+		<>
 			<ConnectionAlert />
 
 			<Box>
 				{getAppType() === appTypes.HEAD_OFFICE && (
 					<div className="pa-6 d-flex justify-end">
-						<Link to="product-groups/create">
+						<Link to={`${basePath}/product-groups/create`}>
 							<Button disabled={isConnected === false} type="primary">
 								Create Product Group
 							</Button>
@@ -138,6 +140,6 @@ export const ProductGroups = () => {
 					bordered
 				/>
 			</Box>
-		</Content>
+		</>
 	);
 };

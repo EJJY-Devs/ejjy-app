@@ -28,6 +28,24 @@ const ZOOM_CONFIG = {
 	STEP: 0.1,
 };
 
+// Prevent accidental zoom via OS/trackpad gestures and common Chromium shortcuts.
+// Zoom should only change through our explicit menu actions.
+const DISABLE_USER_ZOOM_SHORTCUTS = true;
+
+const ZOOM_SHORTCUT_KEYS = new Set([
+	'+',
+	'=',
+	'-',
+	'0',
+	'Plus',
+	'Add',
+	'NumpadAdd',
+	'Minus',
+	'Subtract',
+	'NumpadSubtract',
+	'Numpad0',
+]);
+
 // Validate and sanitize zoom level
 function validateZoomLevel(level) {
 	const numLevel = parseFloat(level);
@@ -120,6 +138,20 @@ function createWindow() {
 		},
 	});
 
+	// Lock Chromium's built-in visual/layout zoom to avoid random zoom-outs.
+	// We still allow our explicit zoomFactor changes via menu actions.
+	try {
+		if (typeof mainWindow.webContents.setVisualZoomLevelLimits === 'function') {
+			mainWindow.webContents.setVisualZoomLevelLimits(1, 1);
+		}
+		if (typeof mainWindow.webContents.setLayoutZoomLevelLimits === 'function') {
+			mainWindow.webContents.setLayoutZoomLevelLimits(0, 0);
+		}
+	} catch (e) {
+		// Best-effort only; different Electron versions expose different APIs.
+		logStatus(`Zoom lock not applied: ${e?.message || e}`);
+	}
+
 	const allowedLinks = ['blob:', 'https://gamy-mayonnaise-e86.notion.site'];
 	mainWindow.webContents.setWindowOpenHandler(({ url }) => ({
 		action: allowedLinks.some((link) => url.startsWith(link))
@@ -143,54 +175,22 @@ function createWindow() {
 		updateZoom(zoomLevel);
 	});
 
-	// Prevent unintended zoom changes from system gestures or shortcuts
-	mainWindow.webContents.once('dom-ready', () => {
-		// Disable zoom via Ctrl+MouseWheel and other zoom gestures
-		mainWindow.webContents.executeJavaScript(`
-			document.addEventListener('wheel', function(e) {
-				if (e.ctrlKey) {
-					e.preventDefault();
-				}
-			}, { passive: false });
-			
-			document.addEventListener('keydown', function(e) {
-				// Block Ctrl+Plus, Ctrl+Minus, Ctrl+0 from web content (let Electron handle them)
-				// BUT allow them in input fields where users might need to type these characters
-				const isInputField = e.target && (
-					e.target.tagName === 'INPUT' || 
-					e.target.tagName === 'TEXTAREA' || 
-					e.target.contentEditable === 'true'
-				);
-				
-				if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0') && !isInputField) {
-					e.preventDefault();
-				}
-			});
-		`);
-	});
-
-	// Add global keyboard shortcuts for zoom that work regardless of menu
+	// Prevent unintended zoom changes from system gestures or Chromium shortcuts.
 	mainWindow.webContents.on('before-input-event', (event, input) => {
-		if (input.control && input.type === 'keyDown') {
-			if (input.key === '+' || input.key === '=') {
-				// Zoom In
-				const newZoomLevel = zoomLevel + ZOOM_CONFIG.STEP;
-				if (newZoomLevel <= ZOOM_CONFIG.MAX) {
-					updateZoom(newZoomLevel);
-				}
-				event.preventDefault();
-			} else if (input.key === '-') {
-				// Zoom Out
-				const newZoomLevel = zoomLevel - ZOOM_CONFIG.STEP;
-				if (newZoomLevel >= ZOOM_CONFIG.MIN) {
-					updateZoom(newZoomLevel);
-				}
-				event.preventDefault();
-			} else if (input.key === '0') {
-				// Reset Zoom
-				updateZoom(ZOOM_CONFIG.DEFAULT);
-				event.preventDefault();
-			}
+		if (!DISABLE_USER_ZOOM_SHORTCUTS) return;
+
+		const isCtrlZoomKey =
+			input.control &&
+			input.type === 'keyDown' &&
+			ZOOM_SHORTCUT_KEYS.has(input.key);
+		const isCtrlWheelZoom = input.control && input.type === 'mouseWheel';
+		const isGestureZoom =
+			typeof input.type === 'string' &&
+			(input.type.toLowerCase().includes('pinch') ||
+				input.type.toLowerCase().includes('zoom'));
+
+		if (isCtrlZoomKey || isCtrlWheelZoom || isGestureZoom) {
+			event.preventDefault();
 		}
 	});
 
@@ -295,7 +295,6 @@ function createWindow() {
 		submenu: [
 			{
 				label: 'Zoom In',
-				accelerator: 'CmdOrCtrl+Plus',
 				click() {
 					const newZoomLevel = zoomLevel + ZOOM_CONFIG.STEP;
 					if (newZoomLevel <= ZOOM_CONFIG.MAX) {
@@ -305,7 +304,6 @@ function createWindow() {
 			},
 			{
 				label: 'Zoom Out',
-				accelerator: 'CmdOrCtrl+-',
 				click() {
 					const newZoomLevel = zoomLevel - ZOOM_CONFIG.STEP;
 					if (newZoomLevel >= ZOOM_CONFIG.MIN) {
@@ -315,7 +313,6 @@ function createWindow() {
 			},
 			{
 				label: 'Reset Zoom',
-				accelerator: 'CmdOrCtrl+0',
 				click() {
 					updateZoom(ZOOM_CONFIG.DEFAULT);
 				},

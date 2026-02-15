@@ -1,6 +1,6 @@
 import { blue, green, grey, red } from '@ant-design/colors';
 import { LockOutlined, UnlockOutlined, WifiOutlined } from '@ant-design/icons';
-import { Spin, Tabs, Tooltip } from 'antd';
+import { Divider, Spin, Tabs, Tooltip } from 'antd';
 import { Content, RequestErrors } from 'components';
 import { Box } from 'components/elements';
 import {
@@ -14,6 +14,7 @@ import { useBranches, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { ReportsPerMachine } from 'screens/Shared/Dashboard/components/ReportsPerMachine';
+import { FastMovingProductsTile } from 'screens/Shared/Dashboard/components/FastMovingProductsTile';
 import { convertIntoArray, getId } from 'utils';
 
 const LIST_QUERY_KEY = 'HeadOfficeDashboardBranch';
@@ -151,6 +152,11 @@ export const Dashboard = () => {
 										branchId={branch.id}
 										tableHeaderClassName="pt-2 px-0"
 									/>
+
+									<Divider />
+									<div className="px-6 pb-6">
+										<FastMovingProductsTile branchId={branch.id} />
+									</div>
 								</Tabs.TabPane>
 							);
 						})}

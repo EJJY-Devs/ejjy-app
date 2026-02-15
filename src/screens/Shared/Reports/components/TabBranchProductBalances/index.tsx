@@ -291,9 +291,10 @@ const Filter = () => {
 
 			<Row gutter={[16, 16]}>
 				<Col lg={12} span={24}>
-					<Label label="Search" spacing />
+					<Label label="Product" spacing />
 					<Input
 						defaultValue={params.search}
+						placeholder="Search product name or barcode"
 						prefix={<SearchOutlined />}
 						allowClear
 						onChange={(event) =>

@@ -23,7 +23,7 @@ import {
 	LineChart,
 	CartesianGrid,
 	Line,
-	LabelList,
+	Tooltip,
 } from 'recharts';
 import { MAX_PAGE_SIZE } from 'global';
 import { BranchProductsService, TransactionProductsService } from 'services';
@@ -50,28 +50,6 @@ const getTruncatedName = (name: string, maxLength = 22) => {
 	return `${name.slice(0, maxLength)}…`;
 };
 
-const createEndOfLineLabel = (
-	seriesName: string,
-	color: string,
-	lastIndex: number,
-) => {
-	return (props: any) => {
-		const { index, x, y } = props || {};
-		if (index !== lastIndex) return null;
-
-		const xValue = Number(x) || 0;
-		const yValue = Number(y) || 0;
-		const label = getTruncatedName(seriesName);
-		if (!label) return null;
-
-		return (
-			<text dy={4} fill={color} fontSize={12} x={xValue + 8} y={yValue}>
-				{label}
-			</text>
-		);
-	};
-};
-
 interface Props {
 	branchId?: string | number;
 }
@@ -83,7 +61,6 @@ export const FastMovingProductsTile = ({ branchId }: Props) => {
 	const [rows, setRows] = useState<FastMovingRow[]>([]);
 	const [chartData, setChartData] = useState<ChartPoint[]>([]);
 	const [chartKeys, setChartKeys] = useState<string[]>([]);
-	const lastChartPointIndex = chartData.length - 1;
 
 	const getLast7Days = () => {
 		const endDate = dayjs();
@@ -330,8 +307,8 @@ export const FastMovingProductsTile = ({ branchId }: Props) => {
 			<Modal
 				className="Modal__hasFooter Modal__large"
 				footer={<Button onClick={() => setVisible(false)}>Close</Button>}
+				open={visible}
 				title="Top 10 Fast Moving Products"
-				visible={visible}
 				destroyOnClose
 				onCancel={() => setVisible(false)}
 			>
@@ -342,30 +319,29 @@ export const FastMovingProductsTile = ({ branchId }: Props) => {
 						<ResponsiveContainer height="100%" width="100%">
 							<LineChart
 								data={chartData}
-								margin={{ top: 5, right: 160, left: 20, bottom: 5 }}
+								margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
 							>
 								<CartesianGrid strokeDasharray="3 3" />
 								<XAxis dataKey="date" />
 								<YAxis />
+								<Tooltip
+									formatter={(value: any, name: any) => {
+										const seriesName = getTruncatedName(String(name || ''), 40);
+										return [value, seriesName];
+									}}
+								/>
 
 								{chartKeys.map((key, index) => {
 									const color = lineColors[index % lineColors.length];
 									return (
 										<Line
 											key={key}
+											activeDot={{ r: 4 }}
 											dataKey={key}
 											dot={false}
 											stroke={color}
 											type="monotone"
-										>
-											<LabelList
-												content={createEndOfLineLabel(
-													key,
-													color,
-													lastChartPointIndex,
-												)}
-											/>
-										</Line>
+										/>
 									);
 								})}
 							</LineChart>

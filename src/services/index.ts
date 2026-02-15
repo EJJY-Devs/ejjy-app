@@ -39,6 +39,10 @@ export { default as ProductCategoriesService } from './ProductCategoriesService'
 export { default as ProductChecksService } from './ProductChecksService';
 export { default as ProductConversionsService } from './ProductConversionsService';
 export { default as ProductGroupsService } from './ProductGroupsService';
+export { default as ProductTypesService } from './ProductTypesService';
+export { default as StorageTypesService } from './StorageTypesService';
+export { default as ProductLocationsService } from './ProductLocationsService';
+export { default as BrandNamesService } from './BrandNamesService';
 export { default as ProductsService } from './ProductsService';
 export { default as ProductSyncStatusService } from './ProductSyncStatusService';
 export { default as ReceivingVouchersService } from './ReceivingVouchersService';

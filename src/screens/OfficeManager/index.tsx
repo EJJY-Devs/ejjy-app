@@ -204,13 +204,6 @@ const OfficeManager = () => {
 			// 	link: '/office-manager/checkings',
 			// },
 			{
-				key: 'product-groups',
-				name: 'Product Groups',
-				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
-				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
-				link: '/office-manager/product-groups',
-			},
-			{
 				key: 'product-conversion',
 				name: 'Product Conversion',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),

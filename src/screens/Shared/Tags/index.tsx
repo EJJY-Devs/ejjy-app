@@ -66,7 +66,6 @@ export const Tags = ({ basePath }: Props) => {
 
 					<Tabs.TabPane key={tabs.PATRONAGE_SYSTEM} tab={tabs.PATRONAGE_SYSTEM}>
 						<PointSystemTagsTab />
-						<PointSystemTagsTab />
 					</Tabs.TabPane>
 
 					<Tabs.TabPane key={tabs.PRODUCT_GROUPS} tab={tabs.PRODUCT_GROUPS}>

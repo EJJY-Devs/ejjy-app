@@ -54,6 +54,29 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Patch dmgbuild for Python 3 (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('node_modules/dmg-builder/vendor/dmgbuild/core.py')
+          if not path.exists():
+            print(f'Skip: {path} not found')
+            raise SystemExit(0)
+
+          text = path.read_text(encoding='utf-8')
+          text2 = re.sub(r'(?m)^reload\(sys\)\s*#.*\n', '', text)
+          text2 = re.sub(r'(?m)^sys\.setdefaultencoding\([^\n]*\)\s*\n', '', text2)
+
+          if text2 != text:
+            path.write_text(text2, encoding='utf-8')
+            print(f'Patched: {path}')
+          else:
+            print(f'No patch needed: {path}')
+          PY
+
       - name: Build & publish Electron app (${{ matrix.app }})
         run: npm run ${{ matrix.build_script }}
         env:

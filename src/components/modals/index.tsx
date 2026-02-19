@@ -32,6 +32,7 @@ export * from './ViewBackOrderModal';
 export * from './ViewBranchProductChartModal';
 export * from './ViewBranchProductModal';
 export * from './ViewBranchInventoryReportModal';
+export * from './ViewConsolidatedBranchInventoryReportModal';
 export * from './ViewDailySalesReportsModal';
 export * from './ViewProductModal';
 export * from './ViewReceivingVoucherModal';

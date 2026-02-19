@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { Content } from 'components';
 import { Box } from 'components/elements';
 import TabDailyItemSoldReport from './components/TabDailyItemSoldReport';
-import TabProductBalances from './components/TabBranchProductBalances';
+import TabBranchInventoryReport from './components/TabBranchInventoryReport';
 import TabUnsoldItemReport from './components/TabUnsoldItemReport';
 
 const tabs = {
@@ -50,7 +50,7 @@ export const Reports = () => {
 						key={tabs.BRANCH_INVENTORY_REPORT}
 						tab={tabs.BRANCH_INVENTORY_REPORT}
 					>
-						<TabProductBalances />
+						<TabBranchInventoryReport />
 					</Tabs.TabPane>
 				</Tabs>
 			</Box>

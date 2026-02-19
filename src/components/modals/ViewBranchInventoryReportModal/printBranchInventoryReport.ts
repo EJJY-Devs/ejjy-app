@@ -96,7 +96,7 @@ export const printBranchInventoryReport = (balance: any) => {
 		product?.product_category?.name || product?.product_category || EMPTY_CELL;
 
 	return `
-		<div style="font-family: Arial, sans-serif; color: #000;">
+		<div style="font-family: Roboto, Arial, sans-serif; color: #000;">
 			<div style="text-align: center; font-weight: 700; font-size: 14px; margin-bottom: 4px;">
 				BRANCH INVENTORY ITEM
 			</div>

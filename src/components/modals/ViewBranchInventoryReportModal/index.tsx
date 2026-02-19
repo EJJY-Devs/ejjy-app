@@ -5,6 +5,8 @@ import jsPDF from 'jspdf';
 import React, { useState } from 'react';
 import { formatInPeso, getProductType } from 'utils';
 
+import robotoRegularTtf from 'assets/fonts/Roboto-Regular.ttf';
+
 import { printBranchInventoryReport } from './printBranchInventoryReport';
 
 const TIMEOUT_MS = 2000;
@@ -16,6 +18,41 @@ const PDF_RENDER_X_PX = Math.max(
 	0,
 	Math.floor((PDF_PAGE_WIDTH_PX - PDF_WRAPPER_WIDTH_PX) / 2),
 );
+
+let robotoRegularBase64: string | null = null;
+
+const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+	let binary = '';
+	const bytes = new Uint8Array(buffer);
+	const chunkSize = 0x8000;
+	for (let i = 0; i < bytes.length; i += chunkSize) {
+		const end = Math.min(i + chunkSize, bytes.length);
+		let chunk = '';
+		for (let j = i; j < end; j += 1) {
+			chunk += String.fromCharCode(bytes[j]);
+		}
+		binary += chunk;
+	}
+	return window.btoa(binary);
+};
+
+const ensureRobotoFont = async (pdf: jsPDF) => {
+	try {
+		if (!robotoRegularBase64) {
+			const response = await fetch(robotoRegularTtf);
+			const buffer = await response.arrayBuffer();
+			robotoRegularBase64 = arrayBufferToBase64(buffer);
+		}
+
+		if (robotoRegularBase64) {
+			pdf.addFileToVFS('Roboto-Regular.ttf', robotoRegularBase64);
+			pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+			pdf.setFont('Roboto', 'normal');
+		}
+	} catch (error) {
+		// If font loading fails, fall back to default jsPDF font.
+	}
+};
 
 type Props = {
 	balance: any;
@@ -66,7 +103,7 @@ export const ViewBranchInventoryReportModal = ({ balance, onClose }: Props) => {
 
 	const buildPdfHtml = () => {
 		const dataHtml = printBranchInventoryReport(balance);
-		return `<div style="width: ${PDF_WRAPPER_WIDTH_PX}px; padding: ${PDF_WRAPPER_PADDING_PX}px; box-sizing: border-box;">${dataHtml}</div>`;
+		return `<div style="width: ${PDF_WRAPPER_WIDTH_PX}px; padding: ${PDF_WRAPPER_PADDING_PX}px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif;">${dataHtml}</div>`;
 	};
 
 	const previewPdf = () => {
@@ -86,15 +123,22 @@ export const ViewBranchInventoryReportModal = ({ balance, onClose }: Props) => {
 		pdf.setProperties({ title: pdfTitle });
 
 		setTimeout(() => {
-			pdf.html(wrappedHtml, {
-				x: PDF_RENDER_X_PX,
-				y: 10,
-				margin: 0,
-				callback: (instance) => {
-					window.open(instance.output('bloburl').toString());
-					setIsLoadingPdf(false);
-					setHtmlPdf('');
-				},
+			(async () => {
+				await ensureRobotoFont(pdf);
+
+				pdf.html(wrappedHtml, {
+					x: PDF_RENDER_X_PX,
+					y: 10,
+					margin: 0,
+					callback: (instance) => {
+						window.open(instance.output('bloburl').toString());
+						setIsLoadingPdf(false);
+						setHtmlPdf('');
+					},
+				});
+			})().catch(() => {
+				setIsLoadingPdf(false);
+				setHtmlPdf('');
 			});
 		}, TIMEOUT_MS);
 	};
@@ -116,15 +160,22 @@ export const ViewBranchInventoryReportModal = ({ balance, onClose }: Props) => {
 		pdf.setProperties({ title: pdfTitle });
 
 		setTimeout(() => {
-			pdf.html(wrappedHtml, {
-				x: PDF_RENDER_X_PX,
-				y: 10,
-				margin: 0,
-				callback: (instance) => {
-					instance.save(pdfTitle);
-					setIsLoadingPdf(false);
-					setHtmlPdf('');
-				},
+			(async () => {
+				await ensureRobotoFont(pdf);
+
+				pdf.html(wrappedHtml, {
+					x: PDF_RENDER_X_PX,
+					y: 10,
+					margin: 0,
+					callback: (instance) => {
+						instance.save(pdfTitle);
+						setIsLoadingPdf(false);
+						setHtmlPdf('');
+					},
+				});
+			})().catch(() => {
+				setIsLoadingPdf(false);
+				setHtmlPdf('');
 			});
 		}, TIMEOUT_MS);
 	};

@@ -25,6 +25,7 @@ interface ModalProps {
 	onClose: () => void;
 	type: string;
 	prePopulatedProduct?: any;
+	initialSearchText?: string;
 	onRefetch?: () => void;
 }
 
@@ -32,6 +33,7 @@ export const Cart = ({
 	onClose,
 	type,
 	prePopulatedProduct,
+	initialSearchText,
 	onRefetch,
 }: ModalProps) => {
 	// STATES
@@ -89,6 +91,12 @@ export const Cart = ({
 		}),
 		shallow,
 	);
+
+	useEffect(() => {
+		if (initialSearchText) {
+			setSearchedText(String(initialSearchText));
+		}
+	}, [initialSearchText, setSearchedText]);
 
 	const { mutateAsync: createReceivingVoucher } = useReceivingVoucherCreate();
 	const { mutateAsync: createBackOrder } = useBackOrderCreate();

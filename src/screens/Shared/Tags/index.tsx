@@ -1,18 +1,39 @@
+import { DeleteOutlined, EditFilled } from '@ant-design/icons';
 import React, { useState } from 'react';
-import { Button, Form, Input, message, Modal, Table, Tabs } from 'antd';
+import {
+	Button,
+	Form,
+	Input,
+	message,
+	Modal,
+	Popconfirm,
+	Space,
+	Table,
+	Tabs,
+	Tooltip,
+} from 'antd';
 import _ from 'lodash';
 import { Content, TableHeader } from 'components';
 import { Box } from 'components/elements';
 import { MAX_PAGE_SIZE } from 'global';
+import { getId } from 'utils';
 import {
 	useBrandNameCreate,
+	useBrandNameDelete,
+	useBrandNameEdit,
 	useBrandNames,
 	usePingOnlineServer,
 	useProductLocationCreate,
+	useProductLocationDelete,
+	useProductLocationEdit,
 	useProductLocations,
 	useProductTypeCreate,
+	useProductTypeDelete,
+	useProductTypeEdit,
 	useProductTypes,
 	useStorageTypeCreate,
+	useStorageTypeDelete,
+	useStorageTypeEdit,
 	useStorageTypes,
 } from 'hooks';
 import { ProductCategoriesTab } from './components/ProductCategoriesTab';
@@ -31,6 +52,18 @@ const tabs = {
 	STORAGE_TYPE: 'Storage Type',
 	PRODUCT_LOCATION: 'Product Location',
 	BRAND_NAME: 'Brand Name',
+};
+
+type TagKind = 'productType' | 'storageType' | 'productLocation' | 'brandName';
+
+const tagKindLabels: Record<TagKind, { singular: string; plural: string }> = {
+	productType: { singular: 'Product type', plural: 'Product types' },
+	storageType: { singular: 'Storage type', plural: 'Storage types' },
+	productLocation: {
+		singular: 'Product location',
+		plural: 'Product locations',
+	},
+	brandName: { singular: 'Brand name', plural: 'Brand names' },
 };
 
 export const Tags = ({ basePath }: Props) => {
@@ -72,6 +105,42 @@ export const Tags = ({ basePath }: Props) => {
 		isLoading: isCreatingBrandName,
 	} = useBrandNameCreate();
 
+	const {
+		mutateAsync: editProductType,
+		isLoading: isEditingProductType,
+	} = useProductTypeEdit();
+	const {
+		mutateAsync: deleteProductType,
+		isLoading: isDeletingProductType,
+	} = useProductTypeDelete();
+
+	const {
+		mutateAsync: editStorageType,
+		isLoading: isEditingStorageType,
+	} = useStorageTypeEdit();
+	const {
+		mutateAsync: deleteStorageType,
+		isLoading: isDeletingStorageType,
+	} = useStorageTypeDelete();
+
+	const {
+		mutateAsync: editProductLocation,
+		isLoading: isEditingProductLocation,
+	} = useProductLocationEdit();
+	const {
+		mutateAsync: deleteProductLocation,
+		isLoading: isDeletingProductLocation,
+	} = useProductLocationDelete();
+
+	const {
+		mutateAsync: editBrandName,
+		isLoading: isEditingBrandName,
+	} = useBrandNameEdit();
+	const {
+		mutateAsync: deleteBrandName,
+		isLoading: isDeletingBrandName,
+	} = useBrandNameDelete();
+
 	const [productTypeVisible, setProductTypeVisible] = useState(false);
 	const [storageTypeVisible, setStorageTypeVisible] = useState(false);
 	const [productLocationVisible, setProductLocationVisible] = useState(false);
@@ -81,12 +150,180 @@ export const Tags = ({ basePath }: Props) => {
 	const [storageTypeForm] = Form.useForm();
 	const [productLocationForm] = Form.useForm();
 	const [brandNameForm] = Form.useForm();
+	const [editTagForm] = Form.useForm();
 
-	const nameColumns = [{ title: 'Name', dataIndex: 'name' }];
+	const [editTagVisible, setEditTagVisible] = useState(false);
+	const [editTagKind, setEditTagKind] = useState<TagKind | null>(null);
+	const [editTagRecord, setEditTagRecord] = useState<any>(null);
 
+	const isAnyEditingTag =
+		isEditingProductType ||
+		isEditingStorageType ||
+		isEditingProductLocation ||
+		isEditingBrandName;
+	const isAnyDeletingTag =
+		isDeletingProductType ||
+		isDeletingStorageType ||
+		isDeletingProductLocation ||
+		isDeletingBrandName;
+
+	const openEditModal = (kind: TagKind, record: any) => {
+		setEditTagKind(kind);
+		setEditTagRecord(record);
+		editTagForm.setFieldsValue({ name: record?.name });
+		setEditTagVisible(true);
+	};
+
+	const closeEditModal = () => {
+		setEditTagVisible(false);
+		setEditTagKind(null);
+		setEditTagRecord(null);
+		editTagForm.resetFields();
+	};
+
+	const deleteTag = async (kind: TagKind, record: any) => {
+		const label = tagKindLabels[kind].singular;
+		const id = Number(getId(record));
+		if (!id) return;
+
+		try {
+			if (kind === 'productType') {
+				await deleteProductType({ id });
+			} else if (kind === 'storageType') {
+				await deleteStorageType({ id });
+			} else if (kind === 'productLocation') {
+				await deleteProductLocation({ id });
+			} else if (kind === 'brandName') {
+				await deleteBrandName({ id });
+			}
+
+			message.success(`${label} was deleted successfully`);
+		} catch (e: any) {
+			message.error(`Failed to delete ${label.toLowerCase()}`);
+		}
+	};
+
+	const getColumnsWithActions = (kind: TagKind) => {
+		if (!allowCreate)
+			return [{ title: 'Name', dataIndex: 'name', width: '100%' }];
+
+		return [
+			{ title: 'Name', dataIndex: 'name', width: '70%' },
+			{
+				title: 'Actions',
+				key: 'actions',
+				width: '30%',
+				render: (_value: any, record: any) => (
+					<Space>
+						<Tooltip title="Edit">
+							<Button
+								disabled={
+									isConnected === false || isAnyEditingTag || isAnyDeletingTag
+								}
+								icon={<EditFilled />}
+								type="primary"
+								ghost
+								onClick={() => openEditModal(kind, record)}
+							/>
+						</Tooltip>
+						<Popconfirm
+							cancelText="No"
+							disabled={
+								isConnected === false || isAnyEditingTag || isAnyDeletingTag
+							}
+							okText="Yes"
+							placement="left"
+							title="Are you sure to remove this?"
+							onConfirm={() => deleteTag(kind, record)}
+						>
+							<Tooltip title="Remove">
+								<Button
+									disabled={
+										isConnected === false || isAnyEditingTag || isAnyDeletingTag
+									}
+									icon={<DeleteOutlined />}
+									type="primary"
+									danger
+									ghost
+								/>
+							</Tooltip>
+						</Popconfirm>
+					</Space>
+				),
+			},
+		];
+	};
 	return (
 		<Content title="Tags">
 			<Box>
+				{allowCreate && (
+					<Modal
+						footer={null}
+						title={
+							editTagKind
+								? `Edit ${tagKindLabels[editTagKind].singular}`
+								: 'Edit'
+						}
+						visible={editTagVisible}
+						destroyOnClose
+						onCancel={() => {
+							if (isAnyEditingTag) return;
+							closeEditModal();
+						}}
+					>
+						<Form
+							form={editTagForm}
+							layout="vertical"
+							onFinish={async (values) => {
+								if (!editTagKind || !editTagRecord) return;
+
+								const name = String(values?.name || '').trim();
+								if (!name) return;
+
+								const id = Number(getId(editTagRecord));
+								if (!id) return;
+
+								const label = tagKindLabels[editTagKind].singular;
+								try {
+									if (editTagKind === 'productType') {
+										await editProductType({ id, name });
+									} else if (editTagKind === 'storageType') {
+										await editStorageType({ id, name });
+									} else if (editTagKind === 'productLocation') {
+										await editProductLocation({ id, name });
+									} else if (editTagKind === 'brandName') {
+										await editBrandName({ id, name });
+									}
+
+									message.success(`${label} was updated successfully`);
+									closeEditModal();
+								} catch (e: any) {
+									message.error(`Failed to update ${label.toLowerCase()}`);
+								}
+							}}
+						>
+							<Form.Item
+								label="Name"
+								name="name"
+								rules={[{ required: true, message: 'Name is required' }]}
+							>
+								<Input disabled={isAnyEditingTag} />
+							</Form.Item>
+
+							<div className="d-flex justify-end">
+								<Button
+									disabled={isConnected === false}
+									loading={isAnyEditingTag}
+									type="primary"
+									onClick={() => editTagForm.submit()}
+								>
+									Save
+								</Button>
+							</div>
+						</Form>
+					</Modal>
+				)}
+
 				<Tabs
 					activeKey={_.toString(tab)}
 					className="pa-6"
@@ -120,7 +357,7 @@ export const Tags = ({ basePath }: Props) => {
 							)}
 
 							<Table
-								columns={nameColumns}
+								columns={getColumnsWithActions('productType')}
 								dataSource={productTypes}
 								loading={isFetchingProductTypes}
 								pagination={false}
@@ -195,7 +432,7 @@ export const Tags = ({ basePath }: Props) => {
 							)}
 
 							<Table
-								columns={nameColumns}
+								columns={getColumnsWithActions('storageType')}
 								dataSource={storageTypes}
 								loading={isFetchingStorageTypes}
 								pagination={false}
@@ -270,7 +507,7 @@ export const Tags = ({ basePath }: Props) => {
 							)}
 
 							<Table
-								columns={nameColumns}
+								columns={getColumnsWithActions('productLocation')}
 								dataSource={productLocations}
 								loading={isFetchingProductLocations}
 								pagination={false}
@@ -345,7 +582,7 @@ export const Tags = ({ basePath }: Props) => {
 							)}
 
 							<Table
-								columns={nameColumns}
+								columns={getColumnsWithActions('brandName')}
 								dataSource={brandNames}
 								loading={isFetchingBrandNames}
 								pagination={false}

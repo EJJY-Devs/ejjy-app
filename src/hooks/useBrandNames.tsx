@@ -1,9 +1,9 @@
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
-import { getBaseUrl, wrapServiceWithCatch } from 'hooks/helper';
+import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { BrandNamesService } from 'services';
-import { getLocalApiUrl, isStandAlone } from 'utils';
+import { getLocalApiUrl, getOnlineApiUrl, isStandAlone } from 'utils';
 
 const useBrandNames = ({ params }: Query) =>
 	useQuery<any>(
@@ -41,8 +41,41 @@ export const useBrandNameCreate = () => {
 				{
 					name,
 				},
-				getBaseUrl(),
+				getOnlineApiUrl(),
 			),
+		{
+			onSuccess: () => {
+				queryClient.invalidateQueries('useBrandNames');
+			},
+		},
+	);
+};
+
+export const useBrandNameEdit = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation<any, any, any>(
+		({ id, name }: { id: number; name: string }) =>
+			BrandNamesService.edit(
+				id,
+				{
+					name,
+				},
+				getOnlineApiUrl(),
+			),
+		{
+			onSuccess: () => {
+				queryClient.invalidateQueries('useBrandNames');
+			},
+		},
+	);
+};
+
+export const useBrandNameDelete = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation<any, any, any>(
+		({ id }: { id: number }) => BrandNamesService.delete(id, getOnlineApiUrl()),
 		{
 			onSuccess: () => {
 				queryClient.invalidateQueries('useBrandNames');

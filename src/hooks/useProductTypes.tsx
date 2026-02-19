@@ -1,9 +1,9 @@
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
-import { getBaseUrl, wrapServiceWithCatch } from 'hooks/helper';
+import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { ProductTypesService } from 'services';
-import { getLocalApiUrl, isStandAlone } from 'utils';
+import { getLocalApiUrl, getOnlineApiUrl, isStandAlone } from 'utils';
 
 const useProductTypes = ({ params }: Query) =>
 	useQuery<any>(
@@ -37,12 +37,47 @@ export const useProductTypeCreate = () => {
 
 	return useMutation<any, any, any>(
 		({ name }: { name: string }) =>
+			// Tags CRUD should always hit the online API.
 			ProductTypesService.create(
 				{
 					name,
 				},
-				getBaseUrl(),
+				getOnlineApiUrl(),
 			),
+		{
+			onSuccess: () => {
+				queryClient.invalidateQueries('useProductTypes');
+			},
+		},
+	);
+};
+
+export const useProductTypeEdit = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation<any, any, any>(
+		({ id, name }: { id: number; name: string }) =>
+			ProductTypesService.edit(
+				id,
+				{
+					name,
+				},
+				getOnlineApiUrl(),
+			),
+		{
+			onSuccess: () => {
+				queryClient.invalidateQueries('useProductTypes');
+			},
+		},
+	);
+};
+
+export const useProductTypeDelete = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation<any, any, any>(
+		({ id }: { id: number }) =>
+			ProductTypesService.delete(id, getOnlineApiUrl()),
 		{
 			onSuccess: () => {
 				queryClient.invalidateQueries('useProductTypes');

@@ -59,7 +59,7 @@ const DailyItemSoldReport = () => {
 
 	// Set default branch to 'all' for head office users
 	useEffect(() => {
-		if (getAppType() === appTypes.HEAD_OFFICE && !params.branchId) {
+		if (getAppType() === appTypes.HEAD_OFFICE && params.branchId !== 'all') {
 			setQueryParams({ branchId: 'all' }, { shouldResetPage: false });
 		}
 	}, []);

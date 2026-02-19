@@ -1,6 +1,6 @@
 {
 	"name": "ejjy-inventory-app",
-	"version": "0.1.852",
+	"version": "0.1.935",
 	"private": true,
 	"homepage": "./",
 	"scripts": {
@@ -23,7 +23,7 @@
 		"postinstall": "electron-builder install-app-deps",
 		"build:online": "env-cmd -f .env.online react-scripts build",
 		"build:local": "env-cmd -f .env.local react-scripts build",
-		"build:local:ci": "env-cmd -f .env.local cross-env CI=false react-scripts build",
+		"build:local:ci": "env-cmd -f .env.local react-scripts build",
 		"build:electron": "electron-builder -w --x64 -p never --config electron-builder.json",
 		"build:electron:mac": "electron-builder -m --x64 --arm64 -p never --config electron-builder.json",
 		"build:electron:headoffice": "electron-builder -w --x64 -p never --config electron-builder-headoffice.json",
@@ -36,12 +36,15 @@
 		"publish:backoffice:mac": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:mac:ci",
 		"publish:headoffice": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:headoffice:ci",
 		"publish:headoffice:mac": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:headoffice:mac:ci",
-		"publish": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:ci && npm run build:electron:headoffice:ci",
+		"publish:mac": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:mac:ci && npm run build:electron:headoffice:mac:ci",
+		"dispatch:mac": "node ./scripts/dispatch-macos-build.mjs",
+		"publish": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:ci && npm run build:electron:headoffice:ci && npm run dispatch:mac",
 		"tsc": "tsc --noEmit --skipLibCheck"
 	},
 	"dependencies": {
 		"@ant-design/colors": "7.0.0",
 		"@ant-design/icons": "4.2.2",
+		"@ant-design/plots": "^2.6.8",
 		"@imjs/electron-differential-updater": "^5.1.7",
 		"antd": "4.24.8",
 		"antd-css-utilities": "1.0.3",
@@ -129,7 +132,6 @@
 		"@typescript-eslint/eslint-plugin": "5.30.6",
 		"babel-plugin-import": "1.13.3",
 		"concurrently": "5.3.0",
-		"cross-env": "^10.1.0",
 		"electron": "17.4.7",
 		"electron-builder": "22.14.5",
 		"env-cmd": "10.1.0",

@@ -52,20 +52,14 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Create Python symlink (macOS only)
-        if: runner.os == 'macOS'
-        run: |
-          echo "Python3 location: $(which python3)"
-          echo "Python location: $(which python || echo 'not found')"
-          sudo ln -sf $(which python3) /usr/bin/python || true
-          echo "After symlink - Python location: $(which python || echo 'not found')"
-
       - name: Build & publish Electron app (${{ matrix.app }})
         run: npm run ${{ matrix.build_script }}
         env:
           # Use a PAT in Actions secret GH_TOKEN when publishing to other repos
           # (e.g. headoffice publishes to a different repo).
           GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          # dmg-builder uses PYTHON_PATH if set; otherwise it tries /usr/bin/python (missing on modern macOS runners)
+          PYTHON_PATH: ${{ runner.os == 'macOS' && 'python3' || '' }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

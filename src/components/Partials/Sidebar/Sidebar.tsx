@@ -2,7 +2,9 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { Badge, Layout } from 'antd';
 import iconAccount from 'assets/images/icon-account.svg';
+import iconDashboard from 'assets/images/icon-dashboard.svg';
 import iconLogout from 'assets/images/icon-logout.svg';
+import iconReport from 'assets/images/icon-report.svg';
 import sampleAvatar from 'assets/images/sample-avatar.png';
 import cn from 'classnames';
 import { getFullName } from 'ejjy-global';
@@ -27,6 +29,41 @@ export const Sidebar = ({ items }: Props) => {
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
 	const { pathname } = useLocation();
+	const isBackOffice = getAppType() === appTypes.BACK_OFFICE;
+	let displayName = getFullName(user);
+	if (user?.user_type === userTypes.ADMIN) {
+		displayName = 'Emman Fineza';
+	}
+	const displayRole = getUserTypeName(user?.user_type);
+	const {
+		accountingLink,
+		wetMarketLink,
+		isInAccounting,
+	} = React.useMemo(() => {
+		const officeManagerBase = pathname.startsWith('/office-manager/')
+			? '/office-manager'
+			: null;
+		const branchManagerBase = pathname.startsWith('/branch-manager/')
+			? '/branch-manager'
+			: null;
+
+		const basePath = officeManagerBase || branchManagerBase;
+		const inAccounting = pathname.includes('/accounting');
+		const accounting = basePath ? `${basePath}/accounting` : null;
+		let wetMarket: string | null = null;
+		if (officeManagerBase) {
+			wetMarket = '/office-manager/products';
+		} else if (branchManagerBase) {
+			wetMarket = '/branch-manager/branch-machines';
+		}
+
+		return {
+			accountingLink: accounting,
+			wetMarketLink: wetMarket,
+			isInAccounting: inAccounting,
+		};
+	}, [pathname]);
+	const hasAppSwitchLinks = !!(accountingLink || wetMarketLink);
 	const { mutateAsync: logout } = useAuthLogout();
 	const { data: siteSettings } = useSiteSettings();
 	// TODO: Create a reducer for this which will be updated everytime network check is done
@@ -93,39 +130,58 @@ export const Sidebar = ({ items }: Props) => {
 			<div
 				className={cn('bottom', { active: popupVisible })}
 				onClick={() => {
-					// Don't allow popup for backoffice
-					if (getAppType() !== appTypes.BACK_OFFICE) {
-						setPopupVisible((value) => !value);
+					if (isBackOffice && !hasAppSwitchLinks) {
+						return;
 					}
+					setPopupVisible((value) => !value);
 				}}
 			>
-				{getAppType() !== appTypes.BACK_OFFICE && (
-					<div className="menu">
-						<div className="item">
-							<img alt="icon" className="icon" src={iconAccount} />
-							<span className="name">Account</span>
-						</div>
+				<div className="menu">
+					{accountingLink && !isInAccounting && (
+						<Link className="item" tabIndex={-1} to={accountingLink}>
+							<img alt="icon" className="icon" src={iconReport} />
+							<span className="name">Accounting</span>
+						</Link>
+					)}
+					{wetMarketLink && isInAccounting && (
+						<Link className="item" tabIndex={-1} to={wetMarketLink}>
+							<img alt="icon" className="icon" src={iconDashboard} />
+							<span className="name">Wet Market</span>
+						</Link>
+					)}
 
-						<div className="item" onClick={() => logout(user.id)}>
-							<img alt="icon" className="icon" src={iconLogout} />
-							<span className="name">Logout</span>
-						</div>
-					</div>
-				)}
+					{!isBackOffice && (
+						<>
+							<div className="item">
+								<img alt="icon" className="icon" src={iconAccount} />
+								<span className="name">Account</span>
+							</div>
 
-				{getAppType() !== appTypes.BACK_OFFICE && (
-					<div className="user-details">
-						<img alt="user avatar" className="avatar" src={sampleAvatar} />
-						<div className="user-text-info">
-							<span className="name">
-								{user?.user_type === userTypes.ADMIN
-									? 'Emman Fineza'
-									: getFullName(user)}
-							</span>
-							<span className="role">{getUserTypeName(user?.user_type)}</span>
-						</div>
+							<div className="item" onClick={() => logout(user.id)}>
+								<img alt="icon" className="icon" src={iconLogout} />
+								<span className="name">Logout</span>
+							</div>
+						</>
+					)}
+				</div>
+
+				<div className="user-details">
+					<img alt="user avatar" className="avatar" src={sampleAvatar} />
+					<div className="user-text-info">
+						{isBackOffice && (
+							<>
+								<span className="name">Menu</span>
+								<span className="role">Switch App</span>
+							</>
+						)}
+						{!isBackOffice && (
+							<>
+								<span className="name">{displayName}</span>
+								<span className="role">{displayRole}</span>
+							</>
+						)}
 					</div>
-				)}
+				</div>
 			</div>
 		</Layout.Sider>
 	);

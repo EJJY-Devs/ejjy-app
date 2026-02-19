@@ -6,7 +6,7 @@ import {
 	useProductSyncStatus,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Redirect, Route, Switch } from 'react-router-dom';
+import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
 import { refetchOptions } from 'global';
 import {
 	useNotificationConnectivity,
@@ -30,6 +30,10 @@ import { Tags } from 'screens/Shared/Tags';
 import { Reports } from 'screens/Shared/Reports';
 import { Sales } from 'screens/Shared/Sales';
 import { SiteSettings } from 'screens/Shared/SiteSettings';
+import {
+	getAccountingRootSidebarItem,
+	getAccountingSidebarItems,
+} from 'screens/Shared/Accounting/navigation';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
 import shallow from 'zustand/shallow';
@@ -45,6 +49,9 @@ import { RequisitionSlips } from './RequisitionSlips';
 import { ViewRequisitionSlip } from './RequisitionSlips/ViewRequisitionSlip';
 
 const OfficeManager = () => {
+	const { pathname } = useLocation();
+	const isAccounting = pathname.startsWith('/office-manager/accounting');
+
 	useNotificationConnectivity();
 	useNotificationDtr();
 	useUploadData({
@@ -117,8 +124,12 @@ const OfficeManager = () => {
 		unsyncedProductsCount,
 	]);
 
-	const getSidebarItems = useCallback(
-		() => [
+	const getSidebarItems = useCallback(() => {
+		if (isAccounting) {
+			return getAccountingSidebarItems('/office-manager');
+		}
+
+		return [
 			{
 				key: 'dashboard',
 				name: 'Dashboard',
@@ -140,6 +151,7 @@ const OfficeManager = () => {
 				defaultIcon: require('../../assets/images/icon-report.svg'),
 				link: '/office-manager/reports',
 			},
+			getAccountingRootSidebarItem('/office-manager'),
 			{
 				key: 'products',
 				name: 'Products',
@@ -268,14 +280,23 @@ const OfficeManager = () => {
 				link: '/office-manager/notifications',
 				count: notificationsCount,
 			},
-		],
-		[notificationsCount, logsCount],
-	);
+		];
+	}, [isAccounting, notificationsCount, logsCount]);
 
 	return (
 		<Container sidebarItems={getSidebarItems()}>
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
+					<Route
+						component={Products}
+						path="/office-manager/accounting/products"
+					/>
+					<Redirect
+						from="/office-manager/accounting"
+						to="/office-manager/accounting/products"
+						exact
+					/>
+
 					<Route component={Products} path="/office-manager/products" />
 
 					<Route

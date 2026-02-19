@@ -12,12 +12,16 @@ import {
 	useSalesTrackerCount,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Redirect, Route, Switch } from 'react-router-dom';
+import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
 import { Checkings } from 'screens/BranchManager/Checkings';
 import { ViewChecking } from 'screens/BranchManager/Checkings/ViewChecking';
 import { Logs } from 'screens/BranchManager/Logs';
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
+import {
+	getAccountingRootSidebarItem,
+	getAccountingSidebarItems,
+} from 'screens/Shared/Accounting/navigation';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
@@ -54,6 +58,9 @@ import { ReturnItemSlips } from './ReturnItemSlips';
 const PING_BRANCH_INTERVAL_MS = 10_000;
 
 const BranchManager = () => {
+	const { pathname } = useLocation();
+	const isAccounting = pathname.startsWith('/branch-manager/accounting');
+
 	// VARIABLES
 	const branchKey = getBranchKey();
 
@@ -128,8 +135,12 @@ const BranchManager = () => {
 		}
 	}, [salesTrackerCount, branchProductsNegativeBalanceCount, dtrCount]);
 
-	const getSidebarItems = useCallback(
-		() => [
+	const getSidebarItems = useCallback(() => {
+		if (isAccounting) {
+			return getAccountingSidebarItems('/branch-manager');
+		}
+
+		return [
 			{
 				key: 'branch-machines',
 				name: 'Branch Machines',
@@ -144,6 +155,7 @@ const BranchManager = () => {
 				defaultIcon: require('../../assets/images/icon-report.svg'),
 				link: '/branch-manager/reports',
 			},
+			getAccountingRootSidebarItem('/branch-manager'),
 			{
 				key: 'sales',
 				name: 'Sales',
@@ -272,9 +284,8 @@ const BranchManager = () => {
 				link: '/branch-manager/notifications',
 				count: notificationsCount,
 			},
-		],
-		[notificationsCount, logsCount],
-	);
+		];
+	}, [isAccounting, notificationsCount, logsCount]);
 
 	if (isFetchingBranches) {
 		return <Spin className="GlobalSpinner" tip="Fetching data..." />;
@@ -286,6 +297,15 @@ const BranchManager = () => {
 
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
+					<Route
+						component={Products}
+						path="/branch-manager/accounting/products"
+					/>
+					<Redirect
+						from="/branch-manager/accounting"
+						to="/branch-manager/accounting/products"
+						exact
+					/>
 					<Route component={Dashboard} path="/branch-manager/dashboard" />
 					<Route component={Reports} path="/branch-manager/reports" />
 					<Route component={Sales} path="/branch-manager/sales" />

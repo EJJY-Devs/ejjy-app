@@ -21,6 +21,14 @@ jobs:
             app: headoffice
             build_script: build:electron:headoffice:ci
             artifact_name: headoffice-windows
+          - os: macos-latest
+            app: backoffice
+            build_script: build:electron:ci
+            artifact_name: backoffice-macos
+          - os: macos-latest
+            app: headoffice
+            build_script: build:electron:headoffice:ci
+            artifact_name: headoffice-macos
 
     steps:
       - name: Checkout repository
@@ -39,6 +47,44 @@ jobs:
         run: npm run build:local:ci
         env:
           CI: false
+
+      - name: Preflight GH_TOKEN access (headoffice only)
+        if: matrix.app == 'headoffice'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          if (-not $env:GH_TOKEN) {
+            throw 'Missing Actions secret GH_TOKEN. Add a classic PAT (repo scope) as GH_TOKEN in this repo.'
+          }
+
+          $headers = @{
+            Authorization = "token $env:GH_TOKEN"
+            'User-Agent'  = 'ejjy-actions-preflight'
+            Accept        = 'application/vnd.github+json'
+          }
+
+          try {
+            $me = Invoke-RestMethod -Uri 'https://api.github.com/user' -Headers $headers -Method Get
+            Write-Host ("GH_TOKEN user: {0}" -f $me.login)
+          } catch {
+            throw "GH_TOKEN is invalid (cannot call /user). Underlying error: $($_.Exception.Message)"
+          }
+
+          try {
+            $repo = Invoke-RestMethod -Uri 'https://api.github.com/repos/EJJY-Devs/ejjy-app-headoffice-release' -Headers $headers -Method Get
+            $push = $false
+            if ($null -ne $repo.permissions) {
+              $push = [bool]$repo.permissions.push
+            }
+
+            if (-not $push) {
+              throw 'Token can read the repo but does NOT have push/write permission (permissions.push=false). Creating a GitHub Release requires write access.'
+            }
+
+            Write-Host 'GH_TOKEN has push/write permission to ejjy-app-headoffice-release.'
+          } catch {
+            throw "GH_TOKEN cannot create releases in ejjy-app-headoffice-release. Fixes: (1) ensure the token owner has Write/Maintain/Admin on that repo, (2) if org SSO is enabled, authorize the PAT for SSO, (3) ensure this repo's Actions secret GH_TOKEN is the correct token. Underlying error: $($_.Exception.Message)"
+          }
 
       - name: Setup Python (macOS only)
         if: runner.os == 'macOS'
@@ -74,7 +120,7 @@ jobs:
         env:
           # Use a PAT in Actions secret GH_TOKEN when publishing to other repos
           # (e.g. headoffice publishes to a different repo).
-          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           # dmg-builder uses PYTHON_PATH if set; otherwise it tries /usr/bin/python (missing on modern macOS runners)
           PYTHON_PATH: ${{ runner.os == 'macOS' && 'python3' || '' }}
 

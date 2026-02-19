@@ -1,18 +1,34 @@
-name: Build Electron Apps (macOS Only)
+name: Build & Release Electron Apps
 
 on:
-  workflow_dispatch:  # 👈 manually triggered only
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    runs-on: macos-latest
+  release:
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - app: backoffice
+          - os: windows-latest
+            app: backoffice
+            build_script: build:electron:ci
+            artifact_name: backoffice-windows
+          - os: windows-latest
+            app: headoffice
+            build_script: build:electron:headoffice:ci
+            artifact_name: headoffice-windows
+          - os: macos-latest
+            app: backoffice
             build_script: build:electron:mac:ci
-          - app: headoffice
+            artifact_name: backoffice-macos
+          - os: macos-latest
+            app: headoffice
             build_script: build:electron:headoffice:mac:ci
+            artifact_name: headoffice-macos
 
     steps:
       - name: Checkout repository
@@ -22,7 +38,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 16.13.2
-          cache: 'npm'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -30,25 +46,29 @@ jobs:
       - name: Build React app
         run: npm run build:local:ci
 
-      - name: Setup Python (needed for macOS DMG cleanup)
+      - name: Setup Python (macOS only)
+        if: runner.os == 'macOS'
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
-      - name: Create Python symlink for macOS
+      - name: Create Python symlink (macOS only)
+        if: runner.os == 'macOS'
         run: |
           echo "Python3 location: $(which python3)"
           echo "Python location: $(which python || echo 'not found')"
           sudo ln -sf $(which python3) /usr/bin/python || true
           echo "After symlink - Python location: $(which python || echo 'not found')"
 
-      - name: Build Electron app (${{ matrix.app }})
+      - name: Build & publish Electron app (${{ matrix.app }})
         run: npm run ${{ matrix.build_script }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use a PAT in Actions secret GH_TOKEN when publishing to other repos
+          # (e.g. headoffice publishes to a different repo).
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-${{ matrix.app }}
+          name: ${{ matrix.artifact_name }}
           path: dist/**

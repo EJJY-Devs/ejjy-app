@@ -13,22 +13,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
-            app: backoffice
-            build_script: build:electron:ci
-            artifact_name: backoffice-windows
-          - os: windows-latest
-            app: headoffice
-            build_script: build:electron:headoffice:ci
-            artifact_name: headoffice-windows
           - os: macos-latest
             app: backoffice
-            build_script: build:electron:ci
+            build_script: build:electron:mac:ci
             artifact_name: backoffice-macos
+            publish_owner: EJJY-Devs
+            publish_repo: ejjy-app
           - os: macos-latest
             app: headoffice
-            build_script: build:electron:headoffice:ci
+            build_script: build:electron:headoffice:mac:ci
             artifact_name: headoffice-macos
+            publish_owner: EJJY-Devs
+            publish_repo: ejjy-app-headoffice-release
 
     steps:
       - name: Checkout repository
@@ -48,8 +44,7 @@ jobs:
         env:
           CI: false
 
-      - name: Preflight GH_TOKEN access (headoffice only)
-        if: matrix.app == 'headoffice'
+      - name: Preflight GH_TOKEN access (publish target)
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -72,7 +67,12 @@ jobs:
           }
 
           try {
-            $repo = Invoke-RestMethod -Uri 'https://api.github.com/repos/EJJY-Devs/ejjy-app-headoffice-release' -Headers $headers -Method Get
+            $owner = '${{ matrix.publish_owner }}'
+            $repoName = '${{ matrix.publish_repo }}'
+            $repoUrl = "https://api.github.com/repos/$owner/$repoName"
+
+            Write-Host ("Checking GH_TOKEN permissions for {0}/{1}..." -f $owner, $repoName)
+            $repo = Invoke-RestMethod -Uri $repoUrl -Headers $headers -Method Get
             $push = $false
             if ($null -ne $repo.permissions) {
               $push = [bool]$repo.permissions.push
@@ -82,9 +82,11 @@ jobs:
               throw 'Token can read the repo but does NOT have push/write permission (permissions.push=false). Creating a GitHub Release requires write access.'
             }
 
-            Write-Host 'GH_TOKEN has push/write permission to ejjy-app-headoffice-release.'
+            Write-Host ("GH_TOKEN has push/write permission to {0}/{1}." -f $owner, $repoName)
           } catch {
-            throw "GH_TOKEN cannot create releases in ejjy-app-headoffice-release. Fixes: (1) ensure the token owner has Write/Maintain/Admin on that repo, (2) if org SSO is enabled, authorize the PAT for SSO, (3) ensure this repo's Actions secret GH_TOKEN is the correct token. Underlying error: $($_.Exception.Message)"
+            $owner = '${{ matrix.publish_owner }}'
+            $repoName = '${{ matrix.publish_repo }}'
+            throw "GH_TOKEN cannot access $owner/$repoName with write permission. Fixes: (1) ensure the token owner has Write/Maintain/Admin on that repo, (2) if using a fine-grained PAT, grant repository access to $owner/$repoName and set Repository permissions -> Contents: Read and write, (3) if org SSO is enabled, authorize the PAT for SSO, (4) ensure this workflow repo's Actions secret GH_TOKEN is the correct token. Underlying error: $($_.Exception.Message)"
           }
 
       - name: Setup Python (macOS only)
@@ -92,6 +94,63 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+
+      - name: Cleanup existing release assets (rerun safety)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          if (-not $env:GH_TOKEN) {
+            Write-Host 'Skip cleanup: GH_TOKEN not set.'
+            exit 0
+          }
+
+          $owner = '${{ matrix.publish_owner }}'
+          $repoName = '${{ matrix.publish_repo }}'
+          $repo = "$owner/$repoName"
+
+          $version = node -p "require('./package.json').version"
+          $tag = "v$version"
+
+          $app = '${{ matrix.app }}'
+          $appPrefix = if ($app -eq 'headoffice') { 'Head-Office' } else { 'Back-Office' }
+
+          Write-Host "Checking for existing assets on release $tag in $repo..."
+
+          try {
+            $assetNamesRaw = gh release view $tag -R $repo --json assets --jq '.assets[].name'
+          } catch {
+            Write-Host "No existing release $tag found (or not readable). Nothing to clean."
+            exit 0
+          }
+
+          $assetNames = @()
+          if ($assetNamesRaw) {
+            $assetNames = $assetNamesRaw -split "`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+          }
+
+          if ($assetNames.Count -eq 0) {
+            Write-Host 'No assets found to clean.'
+            exit 0
+          }
+
+          $toDelete = $assetNames | Where-Object {
+            ($_ -like "$appPrefix*$version*") -or ($_ -like 'latest*.yml')
+          }
+
+          if ($toDelete.Count -eq 0) {
+            Write-Host 'No matching assets to delete.'
+            exit 0
+          }
+
+          foreach ($name in $toDelete) {
+            Write-Host "Deleting asset: $name"
+            try {
+              gh release delete-asset $tag $name -R $repo -y | Out-Null
+            } catch {
+              Write-Host "Warning: failed to delete asset '$name' (continuing)."
+            }
+          }
 
       - name: Patch dmgbuild for Python 3 (macOS only)
         if: runner.os == 'macOS'

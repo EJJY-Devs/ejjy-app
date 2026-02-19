@@ -50,6 +50,7 @@ jobs:
 
       - name: Preflight GH_TOKEN access (headoffice only)
         if: matrix.app == 'headoffice'
+        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |

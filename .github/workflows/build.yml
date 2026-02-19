@@ -45,6 +45,8 @@ jobs:
 
       - name: Build React app
         run: npm run build:local:ci
+        env:
+          CI: false
 
       - name: Setup Python (macOS only)
         if: runner.os == 'macOS'

@@ -11,10 +11,12 @@ import {
 	useAccounts,
 	useCollectionReceipts,
 	ViewCollectionReceiptModal,
+	ViewOrderOfPaymentModal,
 } from 'ejjy-global';
 import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
+	EMPTY_CELL,
 	pageSizeOptions,
 	refetchOptions,
 } from 'global';
@@ -29,6 +31,7 @@ const columns: ColumnsType = [
 	{ title: 'Date & Time Created', dataIndex: 'datetime' },
 	{ title: 'Payor', dataIndex: 'payor' },
 	{ title: 'Amount', dataIndex: 'amount' },
+	{ title: 'Branch Machine', dataIndex: 'branchMachine' },
 ];
 
 export const TabCollectionReceipts = () => {
@@ -38,6 +41,9 @@ export const TabCollectionReceipts = () => {
 		selectedCollectionReceipt,
 		setSelectedCollectionReceipt,
 	] = useState<CollectionReceipt | null>(null);
+	const [selectedOrderOfPayment, setSelectedOrderOfPayment] = useState<
+		any | null
+	>(null);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -68,10 +74,10 @@ export const TabCollectionReceipts = () => {
 				amount,
 				order_of_payment,
 				datetime_created,
+				branch_machine,
 			} = collectionReceipt;
 			const {
 				payor,
-				id: orderOfPaymentId,
 				reference_number: orderOfPaymentReferenceNumber,
 			} = order_of_payment;
 
@@ -86,11 +92,19 @@ export const TabCollectionReceipts = () => {
 						{reference_number || id}
 					</Button>
 				),
-				orderOfPaymentReferenceNumber:
-					orderOfPaymentReferenceNumber || orderOfPaymentId,
+				orderOfPaymentReferenceNumber: (
+					<Button
+						className="pa-0"
+						type="link"
+						onClick={() => setSelectedOrderOfPayment(order_of_payment)}
+					>
+						{orderOfPaymentReferenceNumber || EMPTY_CELL}
+					</Button>
+				),
 				datetime: formatDateTime(datetime_created),
 				payor: getFullName(payor),
 				amount: formatInPeso(amount),
+				branchMachine: branch_machine?.name || EMPTY_CELL,
 			};
 		});
 
@@ -138,6 +152,13 @@ export const TabCollectionReceipts = () => {
 					collectionReceipt={selectedCollectionReceipt}
 					siteSettings={siteSettings}
 					onClose={() => setSelectedCollectionReceipt(null)}
+				/>
+			)}
+
+			{selectedOrderOfPayment && (
+				<ViewOrderOfPaymentModal
+					orderOfPayment={selectedOrderOfPayment}
+					onClose={() => setSelectedOrderOfPayment(null)}
 				/>
 			)}
 		</>

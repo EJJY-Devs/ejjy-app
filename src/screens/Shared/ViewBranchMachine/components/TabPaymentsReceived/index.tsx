@@ -8,6 +8,7 @@ import {
 	useCollectionReceipts,
 	CollectionReceipt,
 	ViewCollectionReceiptModal,
+	ViewOrderOfPaymentModal,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	timeRangeTypes,
@@ -17,6 +18,7 @@ import {
 	useTransactions,
 	invoiceTypes,
 	getInvoiceType,
+	EMPTY_CELL,
 } from 'ejjy-global';
 
 import { pageSizeOptions, refetchOptions } from 'global';
@@ -54,6 +56,9 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 		selectedCollectionReceipt,
 		setSelectedCollectionReceipt,
 	] = useState<CollectionReceipt | null>(null);
+	const [selectedOrderOfPayment, setSelectedOrderOfPayment] = useState<
+		any | null
+	>(null);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -120,21 +125,29 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 				key: `receipt-${receipt.id}`,
 				datetime: formatDateTime(receipt.datetime_created),
 				invoiceType: 'Collection Receipt',
-				invoice: receipt.order_of_payment ? (
+				invoice: (
 					<Button
 						className="pa-0"
 						type="link"
 						onClick={() => setSelectedCollectionReceipt(receipt)}
 					>
-						{receipt.order_of_payment.id}
+						{receipt.reference_number || EMPTY_CELL}
 					</Button>
-				) : (
-					''
 				),
 				payment: formatInPeso(receipt.amount),
 				cashier: getFullName(receipt.created_by),
 				modeOfPayment: getModeOfPaymentDescription(receipt.mode as PaymentType),
-				remarks: `OP: ${receipt.order_of_payment.id}`,
+				remarks: receipt.order_of_payment ? (
+					<Button
+						className="pa-0"
+						type="link"
+						onClick={() => setSelectedOrderOfPayment(receipt.order_of_payment)}
+					>
+						OP: {receipt.order_of_payment.reference_number || EMPTY_CELL}
+					</Button>
+				) : (
+					EMPTY_CELL
+				),
 			}));
 
 			const mergedData = [...transactions, ...receiptsData];
@@ -207,6 +220,12 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 					collectionReceipt={selectedCollectionReceipt}
 					siteSettings={siteSettings}
 					onClose={() => setSelectedCollectionReceipt(null)}
+				/>
+			)}
+			{selectedOrderOfPayment && (
+				<ViewOrderOfPaymentModal
+					orderOfPayment={selectedOrderOfPayment}
+					onClose={() => setSelectedOrderOfPayment(null)}
 				/>
 			)}
 		</>

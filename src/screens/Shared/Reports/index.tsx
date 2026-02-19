@@ -4,13 +4,13 @@ import _ from 'lodash';
 import { Content } from 'components';
 import { Box } from 'components/elements';
 import TabDailyItemSoldReport from './components/TabDailyItemSoldReport';
-import TabProductBalances from './components/TabBranchProductBalances';
+import TabBranchInventoryReport from './components/TabBranchInventoryReport';
 import TabUnsoldItemReport from './components/TabUnsoldItemReport';
 
 const tabs = {
 	DAILY_ITEM_SOLD_REPORT: 'Daily Item Sold Report',
 	UNSOLD_ITEM_REPORT: 'Unsold Item Report',
-	BRANCH_PRODUCT_BALANCES: 'Branch Product Balances',
+	BRANCH_INVENTORY_REPORT: 'Branch Inventory Report',
 };
 
 export const Reports = () => {
@@ -47,10 +47,10 @@ export const Reports = () => {
 					</Tabs.TabPane>
 
 					<Tabs.TabPane
-						key={tabs.BRANCH_PRODUCT_BALANCES}
-						tab={tabs.BRANCH_PRODUCT_BALANCES}
+						key={tabs.BRANCH_INVENTORY_REPORT}
+						tab={tabs.BRANCH_INVENTORY_REPORT}
 					>
-						<TabProductBalances />
+						<TabBranchInventoryReport />
 					</Tabs.TabPane>
 				</Tabs>
 			</Box>

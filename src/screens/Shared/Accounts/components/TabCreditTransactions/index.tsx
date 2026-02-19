@@ -8,6 +8,7 @@ import {
 } from 'components';
 import {
 	CollectionReceipt,
+	EMPTY_CELL,
 	formatDateTime,
 	getFullName,
 	timeRangeTypes,
@@ -16,6 +17,7 @@ import {
 	useOrderOfPayments,
 	useTransactions,
 	ViewCollectionReceiptModal,
+	ViewOrderOfPaymentModal,
 	ViewTransactionModal,
 } from 'ejjy-global';
 import {
@@ -23,10 +25,16 @@ import {
 	DEFAULT_PAGE_SIZE,
 	pageSizeOptions,
 	paymentTypes,
+	appTypes,
 } from 'global';
 import { useQueryParams, useSiteSettingsNew } from 'hooks';
 import React, { useEffect, useState, useMemo } from 'react';
-import { convertIntoArray, formatInPeso, getLocalApiUrl } from 'utils';
+import {
+	convertIntoArray,
+	formatInPeso,
+	getLocalApiUrl,
+	getAppType,
+} from 'utils';
 import { Payor } from 'utils/type';
 import { AccountTotalBalance } from './components/AccountTotalBalance';
 import { accountTabs } from '../../data';
@@ -39,6 +47,9 @@ export const TabCreditTransactions = () => {
 		selectedCollectionReceipt,
 		setSelectedCollectionReceipt,
 	] = useState<CollectionReceipt | null>(null);
+	const [selectedOrderOfPayment, setSelectedOrderOfPayment] = useState<
+		any | null
+	>(null);
 	const [selectedAccount, setSelectedAccount] = useState(null);
 	const [
 		isCreateOrderOfPaymentModalVisible,
@@ -128,6 +139,20 @@ export const TabCreditTransactions = () => {
 								onClick={() =>
 									record.referenceData &&
 									setSelectedCollectionReceipt(record.referenceData)
+								}
+							>
+								{text}
+							</Button>
+						);
+					}
+					if (record.type === 'order_of_payment') {
+						return (
+							<Button
+								className="pa-0"
+								type="link"
+								onClick={() =>
+									record.referenceData &&
+									setSelectedOrderOfPayment(record.referenceData)
 								}
 							>
 								{text}
@@ -285,6 +310,7 @@ export const TabCreditTransactions = () => {
 					(orderOfPayment) => {
 						const {
 							id,
+							reference_number,
 							datetime_created,
 							amount,
 							payor,
@@ -298,7 +324,8 @@ export const TabCreditTransactions = () => {
 							clientCode: payor?.account_code || '',
 							clientName: getFullName(payor) || '',
 							invoiceNumber: '',
-							referenceNumber: `00-${String(id).padStart(6, '0')}`,
+							referenceNumber: reference_number || EMPTY_CELL,
+							referenceData: orderOfPayment,
 							amount: formatInPeso(amount),
 							cashier: getFullName(created_by),
 							authorizer: getFullName(created_by),
@@ -317,6 +344,7 @@ export const TabCreditTransactions = () => {
 					(collectionReceipt) => {
 						const {
 							id,
+							reference_number,
 							amount,
 							order_of_payment,
 							datetime_created,
@@ -330,7 +358,7 @@ export const TabCreditTransactions = () => {
 							clientCode: order_of_payment?.payor?.account_code || '',
 							clientName: getFullName(order_of_payment?.payor) || '',
 							invoiceNumber: '',
-							referenceNumber: String(id).padStart(3, '0'),
+							referenceNumber: reference_number || EMPTY_CELL,
 							referenceData: collectionReceipt,
 							amount: formatInPeso(amount),
 							cashier: getFullName(created_by),
@@ -509,23 +537,32 @@ export const TabCreditTransactions = () => {
 				/>
 			)}
 
-			{isCreateOrderOfPaymentModalVisible && selectedAccount && (
-				<CreateOrderOfPaymentModal
-					payor={
-						{
-							account: selectedAccount,
-							credit_limit:
-								selectedAccount.credit_registration?.credit_limit || '0',
-							id: selectedAccount.id,
-							online_id: selectedAccount.online_id || selectedAccount.id,
-							total_balance:
-								selectedAccount.credit_registration?.total_balance || '0',
-						} as Payor
-					}
-					onClose={() => setIsCreateOrderOfPaymentModalVisible(false)}
-					onSuccess={handleCreateOrderOfPaymentsSuccess}
+			{selectedOrderOfPayment && (
+				<ViewOrderOfPaymentModal
+					orderOfPayment={selectedOrderOfPayment}
+					onClose={() => setSelectedOrderOfPayment(null)}
 				/>
 			)}
+
+			{getAppType() === appTypes.BACK_OFFICE &&
+				isCreateOrderOfPaymentModalVisible &&
+				selectedAccount && (
+					<CreateOrderOfPaymentModal
+						payor={
+							{
+								account: selectedAccount,
+								credit_limit:
+									selectedAccount.credit_registration?.credit_limit || '0',
+								id: selectedAccount.id,
+								online_id: selectedAccount.online_id || selectedAccount.id,
+								total_balance:
+									selectedAccount.credit_registration?.total_balance || '0',
+							} as Payor
+						}
+						onClose={() => setIsCreateOrderOfPaymentModalVisible(false)}
+						onSuccess={handleCreateOrderOfPaymentsSuccess}
+					/>
+				)}
 		</div>
 	);
 };

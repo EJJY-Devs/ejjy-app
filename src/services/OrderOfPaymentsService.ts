@@ -10,6 +10,7 @@ interface IList extends IListRequest {
 interface Modify {
 	created_by_id: number;
 	payor_id: number;
+	branch_id?: number;
 	amount: string;
 	purpose: string;
 	extra_description?: string;

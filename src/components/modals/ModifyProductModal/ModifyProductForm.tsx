@@ -279,7 +279,9 @@ export const ModifyProductForm = ({
 						.moreThan(0)
 						.nullable()
 						.label('PO Price'),
-					pointSystemTagId: Yup.string().nullable().label('Point System Tag'),
+					pointSystemTagId: Yup.string()
+						.nullable()
+						.label('Patronage System Tag'),
 				},
 				[['barcode', 'textcode']],
 			),

@@ -26,6 +26,7 @@ import { ProductCategories } from 'screens/Shared/ProductCategories';
 import { ProductGroups } from 'screens/Shared/ProductGroups';
 import { ModifyProductGroup } from 'screens/Shared/ProductGroups/ModifyProductGroup';
 import { Products } from 'screens/Shared/Products';
+import { Tags } from 'screens/Shared/Tags';
 import { Reports } from 'screens/Shared/Reports';
 import { Sales } from 'screens/Shared/Sales';
 import { SiteSettings } from 'screens/Shared/SiteSettings';
@@ -147,18 +148,11 @@ const OfficeManager = () => {
 				link: '/office-manager/products',
 			},
 			{
-				key: 'product-categories',
-				name: 'Product Categories',
+				key: 'tags',
+				name: 'Tags',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/office-manager/product-categories',
-			},
-			{
-				key: 'point-system-tags',
-				name: 'Point System Tags',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/office-manager/point-system-tags',
+				link: '/office-manager/tags',
 			},
 			{
 				key: 'branches',
@@ -209,13 +203,6 @@ const OfficeManager = () => {
 			// 	defaultIcon: require('../../assets/images/icon-checking.svg'),
 			// 	link: '/office-manager/checkings',
 			// },
-			{
-				key: 'product-groups',
-				name: 'Product Groups',
-				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
-				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
-				link: '/office-manager/product-groups',
-			},
 			{
 				key: 'product-conversion',
 				name: 'Product Conversion',
@@ -290,6 +277,11 @@ const OfficeManager = () => {
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
 					<Route component={Products} path="/office-manager/products" />
+
+					<Route
+						path="/office-manager/tags"
+						render={() => <Tags basePath="/office-manager" />}
+					/>
 
 					<Route
 						component={ProductCategories}

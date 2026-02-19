@@ -1,6 +1,6 @@
 import { useMutation } from 'react-query';
 import { OrderOfPaymentsService } from 'services';
-import { getOnlineApiUrl } from 'utils';
+import { getLocalApiUrl, getLocalBranchId } from 'utils';
 
 export const useOrderOfPaymentsCreate = (options = {}) =>
 	useMutation<any, any, any>(
@@ -16,12 +16,15 @@ export const useOrderOfPaymentsCreate = (options = {}) =>
 				{
 					created_by_id: createdById,
 					payor_id: payorId,
+					branch_id: getLocalBranchId()
+						? Number(getLocalBranchId())
+						: undefined,
 					amount,
 					purpose,
 					extra_description: extraDescription,
 					charge_sales_transaction_id: chargeSalesTransactionId,
 				},
-				getOnlineApiUrl(),
+				getLocalApiUrl(),
 			),
 		options,
 	);

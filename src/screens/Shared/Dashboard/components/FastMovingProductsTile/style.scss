@@ -1,0 +1,55 @@
+.FastMovingProductsTile {
+	width: 320px;
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.FastMovingProductsTile_inner {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.FastMovingProductsTile_iconWrap {
+	width: 72px;
+	height: 72px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	flex: 0 0 auto;
+}
+
+.FastMovingProductsTile_icon {
+	font-size: 34px;
+}
+
+.FastMovingProductsTile_topTag {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	margin: 0;
+}
+
+.FastMovingProductsTile_text {
+	display: flex;
+	flex-direction: column;
+}
+
+.FastMovingProductsTile_title {
+	font-weight: 600;
+	text-transform: uppercase;
+	line-height: 1.2;
+}
+
+.FastMovingProductsTile_subtitle {
+	font-size: 12px;
+	line-height: 1.2;
+}
+
+.FastMovingProductsModal_chart {
+	width: 100%;
+	height: 360px;
+	padding: 8px 0;
+	overflow: visible;
+}

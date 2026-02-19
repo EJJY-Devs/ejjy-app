@@ -1,7 +1,8 @@
 import { Button, Col, Row, Statistic } from 'antd';
 import { Account, getFullName } from 'ejjy-global';
+import { appTypes } from 'global';
 import React from 'react';
-import { formatInPeso } from 'utils';
+import { formatInPeso, getAppType } from 'utils';
 import './style.scss';
 
 type Props = {
@@ -27,14 +28,16 @@ export const AccountTotalBalance = ({
 					title="Outstanding Balance"
 					value={formatInPeso(totalBalance)}
 				/>
-				<Button
-					className="mt-3"
-					disabled={disabled}
-					type="primary"
-					onClick={onClick}
-				>
-					Create Order of Payment
-				</Button>
+				{getAppType() === appTypes.BACK_OFFICE && (
+					<Button
+						className="mt-3"
+						disabled={disabled}
+						type="primary"
+						onClick={onClick}
+					>
+						Create Order of Payment
+					</Button>
+				)}
 			</Col>
 		</Row>
 	</div>

@@ -77,7 +77,7 @@ export const ModifyUserModal = ({
 			title={`${user ? '[Edit]' : '[Create]'} User`}
 			centered
 			closable
-			visible
+			open
 			onCancel={onClose}
 		>
 			<RequestErrors

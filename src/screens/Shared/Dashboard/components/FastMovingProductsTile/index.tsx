@@ -27,7 +27,12 @@ import {
 } from 'recharts';
 import { MAX_PAGE_SIZE } from 'global';
 import { BranchProductsService, TransactionProductsService } from 'services';
-import { convertIntoArray, getLocalApiUrl } from 'utils';
+import {
+	convertIntoArray,
+	formatNumberWithCommas,
+	formatQuantity,
+	getLocalApiUrl,
+} from 'utils';
 import './style.scss';
 
 type FastMovingRow = {
@@ -35,7 +40,7 @@ type FastMovingRow = {
 	barcode: string;
 	rank: number;
 	name: string;
-	quantity: number;
+	quantity: number | string;
 	status: React.ReactNode;
 };
 
@@ -154,6 +159,7 @@ export const FastMovingProductsTile = ({ branchId }: Props) => {
 						productKey: string | number;
 						name: string;
 						barcode: string;
+						unitOfMeasurement: string;
 						quantity: number;
 					}
 				> = {};
@@ -169,6 +175,7 @@ export const FastMovingProductsTile = ({ branchId }: Props) => {
 						const name = item.print_details || item.code || 'Unknown';
 						const barcode = String(item.code || '');
 						const quantity = Number(item.quantity) || 0;
+						const unitOfMeasurement = String(item.unit_of_measurement || '');
 
 						perDateQty[date][productKey] =
 							(perDateQty[date][productKey] || 0) + quantity;
@@ -178,6 +185,7 @@ export const FastMovingProductsTile = ({ branchId }: Props) => {
 								productKey,
 								name,
 								barcode,
+								unitOfMeasurement,
 								quantity: 0,
 							};
 						}
@@ -237,12 +245,19 @@ export const FastMovingProductsTile = ({ branchId }: Props) => {
 							);
 					}
 
+					const formattedQuantity = formatNumberWithCommas(
+						formatQuantity({
+							unitOfMeasurement: p.unitOfMeasurement,
+							quantity: p.quantity,
+						}),
+					);
+
 					return {
 						key: p.productKey,
 						rank: index + 1,
 						barcode: p.barcode,
 						name: p.name,
-						quantity: p.quantity,
+						quantity: formattedQuantity,
 						status,
 					};
 				});

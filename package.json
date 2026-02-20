@@ -1,6 +1,6 @@
 {
 	"name": "ejjy-inventory-app",
-	"version": "0.1.935",
+	"version": "0.1.942",
 	"private": true,
 	"homepage": "./",
 	"scripts": {
@@ -37,8 +37,7 @@
 		"publish:headoffice": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:headoffice:ci",
 		"publish:headoffice:mac": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:headoffice:mac:ci",
 		"publish:mac": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:mac:ci && npm run build:electron:headoffice:mac:ci",
-		"dispatch:mac": "node ./scripts/dispatch-macos-build.mjs",
-		"publish": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:ci && npm run build:electron:headoffice:ci && npm run dispatch:mac",
+		"publish": "npm version patch --no-git-tag-version && npm run build:local:ci && npm run build:electron:ci && npm run build:electron:headoffice:ci",
 		"tsc": "tsc --noEmit --skipLibCheck"
 	},
 	"dependencies": {

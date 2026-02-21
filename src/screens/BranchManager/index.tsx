@@ -18,10 +18,7 @@ import { ViewChecking } from 'screens/BranchManager/Checkings/ViewChecking';
 import { Logs } from 'screens/BranchManager/Logs';
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
-import {
-	getAccountingRootSidebarItem,
-	getAccountingSidebarItems,
-} from 'screens/Shared/Accounting/navigation';
+import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
@@ -155,7 +152,6 @@ const BranchManager = () => {
 				defaultIcon: require('../../assets/images/icon-report.svg'),
 				link: '/branch-manager/reports',
 			},
-			getAccountingRootSidebarItem('/branch-manager'),
 			{
 				key: 'sales',
 				name: 'Sales',

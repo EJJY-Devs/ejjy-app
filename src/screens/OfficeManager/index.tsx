@@ -30,10 +30,7 @@ import { Tags } from 'screens/Shared/Tags';
 import { Reports } from 'screens/Shared/Reports';
 import { Sales } from 'screens/Shared/Sales';
 import { SiteSettings } from 'screens/Shared/SiteSettings';
-import {
-	getAccountingRootSidebarItem,
-	getAccountingSidebarItems,
-} from 'screens/Shared/Accounting/navigation';
+import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
 import shallow from 'zustand/shallow';
@@ -151,7 +148,6 @@ const OfficeManager = () => {
 				defaultIcon: require('../../assets/images/icon-report.svg'),
 				link: '/office-manager/reports',
 			},
-			getAccountingRootSidebarItem('/office-manager'),
 			{
 				key: 'products',
 				name: 'Products',

@@ -9,12 +9,10 @@ import '../style.scss';
 
 const FormDetails = {
 	DefaultValues: {
-		username: '',
-		password: '',
+		pin: '',
 	},
 	Schema: Yup.object().shape({
-		username: Yup.string().required().label('Username').trim(),
-		password: Yup.string().required().label('Password').trim(),
+		pin: Yup.string().required().label('PIN').trim().max(6),
 	}),
 };
 
@@ -39,30 +37,17 @@ export const LoginForm = ({ errors, loading, onSubmit }: Props) => (
 				<Form className="w-100">
 					<Row gutter={[16, 16]}>
 						<Col span={24}>
-							<Label label="Username" spacing />
-							<Input
-								value={values['username']}
-								onChange={(e) => {
-									setFieldValue('username', e.target.value);
-								}}
-							/>
-							<ErrorMessage
-								name="username"
-								render={(error) => <FieldError error={error} withSpaceTop />}
-							/>
-						</Col>
-
-						<Col span={24}>
-							<Label label="Password" spacing />
+							<Label label="PIN" spacing />
 							<Input.Password
-								type="password"
-								value={values['password']}
+								inputMode="numeric"
+								maxLength={6}
+								value={values['pin']}
 								onChange={(e) => {
-									setFieldValue('password', e.target.value);
+									setFieldValue('pin', e.target.value);
 								}}
 							/>
 							<ErrorMessage
-								name="password"
+								name="pin"
 								render={(error) => <FieldError error={error} withSpaceTop />}
 							/>
 						</Col>

@@ -2,8 +2,9 @@ import axios from 'axios';
 import { NO_VERIFICATION_CONFIG } from '.';
 
 interface Login {
-	login: string;
-	password: string;
+	login?: string;
+	password?: string;
+	pin?: string;
 }
 
 interface AcquireToken {

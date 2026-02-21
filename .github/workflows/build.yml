@@ -1,18 +1,30 @@
-name: Build Electron Apps (macOS Only)
+name: Build & Release Electron Apps
 
 on:
-  workflow_dispatch:  # 👈 manually triggered only
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    runs-on: macos-latest
+  release:
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - app: backoffice
+          - os: macos-latest
+            app: backoffice
             build_script: build:electron:mac:ci
-          - app: headoffice
+            artifact_name: backoffice-macos
+            publish_owner: EJJY-Devs
+            publish_repo: ejjy-app
+          - os: macos-latest
+            app: headoffice
             build_script: build:electron:headoffice:mac:ci
+            artifact_name: headoffice-macos
+            publish_owner: EJJY-Devs
+            publish_repo: ejjy-app-headoffice-release
 
     steps:
       - name: Checkout repository
@@ -22,33 +34,158 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 16.13.2
-          cache: 'npm'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build React app
         run: npm run build:local:ci
+        env:
+          CI: false
 
-      - name: Setup Python (needed for macOS DMG cleanup)
+      - name: Preflight GH_TOKEN access (publish target)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          if (-not $env:GH_TOKEN) {
+            throw 'Missing Actions secret GH_TOKEN. Add a classic PAT (repo scope) as GH_TOKEN in this repo.'
+          }
+
+          $headers = @{
+            Authorization = "token $env:GH_TOKEN"
+            'User-Agent'  = 'ejjy-actions-preflight'
+            Accept        = 'application/vnd.github+json'
+          }
+
+          try {
+            $me = Invoke-RestMethod -Uri 'https://api.github.com/user' -Headers $headers -Method Get
+            Write-Host ("GH_TOKEN user: {0}" -f $me.login)
+          } catch {
+            throw "GH_TOKEN is invalid (cannot call /user). Underlying error: $($_.Exception.Message)"
+          }
+
+          try {
+            $owner = '${{ matrix.publish_owner }}'
+            $repoName = '${{ matrix.publish_repo }}'
+            $repoUrl = "https://api.github.com/repos/$owner/$repoName"
+
+            Write-Host ("Checking GH_TOKEN permissions for {0}/{1}..." -f $owner, $repoName)
+            $repo = Invoke-RestMethod -Uri $repoUrl -Headers $headers -Method Get
+            $push = $false
+            if ($null -ne $repo.permissions) {
+              $push = [bool]$repo.permissions.push
+            }
+
+            if (-not $push) {
+              throw 'Token can read the repo but does NOT have push/write permission (permissions.push=false). Creating a GitHub Release requires write access.'
+            }
+
+            Write-Host ("GH_TOKEN has push/write permission to {0}/{1}." -f $owner, $repoName)
+          } catch {
+            $owner = '${{ matrix.publish_owner }}'
+            $repoName = '${{ matrix.publish_repo }}'
+            throw "GH_TOKEN cannot access $owner/$repoName with write permission. Fixes: (1) ensure the token owner has Write/Maintain/Admin on that repo, (2) if using a fine-grained PAT, grant repository access to $owner/$repoName and set Repository permissions -> Contents: Read and write, (3) if org SSO is enabled, authorize the PAT for SSO, (4) ensure this workflow repo's Actions secret GH_TOKEN is the correct token. Underlying error: $($_.Exception.Message)"
+          }
+
+      - name: Setup Python (macOS only)
+        if: runner.os == 'macOS'
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
-      - name: Create Python symlink for macOS
+      - name: Cleanup existing release assets (rerun safety)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          echo "Python3 location: $(which python3)"
-          echo "Python location: $(which python || echo 'not found')"
-          sudo ln -sf $(which python3) /usr/bin/python || true
-          echo "After symlink - Python location: $(which python || echo 'not found')"
+          if (-not $env:GH_TOKEN) {
+            Write-Host 'Skip cleanup: GH_TOKEN not set.'
+            exit 0
+          }
 
-      - name: Build Electron app (${{ matrix.app }})
+          $owner = '${{ matrix.publish_owner }}'
+          $repoName = '${{ matrix.publish_repo }}'
+          $repo = "$owner/$repoName"
+
+          $version = node -p "require('./package.json').version"
+          $tag = "v$version"
+
+          $app = '${{ matrix.app }}'
+          $appPrefix = if ($app -eq 'headoffice') { 'Head-Office' } else { 'Back-Office' }
+
+          Write-Host "Checking for existing assets on release $tag in $repo..."
+
+          try {
+            $assetNamesRaw = gh release view $tag -R $repo --json assets --jq '.assets[].name'
+          } catch {
+            Write-Host "No existing release $tag found (or not readable). Nothing to clean."
+            exit 0
+          }
+
+          $assetNames = @()
+          if ($assetNamesRaw) {
+            $assetNames = $assetNamesRaw -split "`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+          }
+
+          if ($assetNames.Count -eq 0) {
+            Write-Host 'No assets found to clean.'
+            exit 0
+          }
+
+          $toDelete = $assetNames | Where-Object {
+            ($_ -like "$appPrefix*$version*") -or ($_ -like 'latest*.yml')
+          }
+
+          if ($toDelete.Count -eq 0) {
+            Write-Host 'No matching assets to delete.'
+            exit 0
+          }
+
+          foreach ($name in $toDelete) {
+            Write-Host "Deleting asset: $name"
+            try {
+              gh release delete-asset $tag $name -R $repo -y | Out-Null
+            } catch {
+              Write-Host "Warning: failed to delete asset '$name' (continuing)."
+            }
+          }
+
+      - name: Patch dmgbuild for Python 3 (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('node_modules/dmg-builder/vendor/dmgbuild/core.py')
+          if not path.exists():
+            print(f'Skip: {path} not found')
+            raise SystemExit(0)
+
+          text = path.read_text(encoding='utf-8')
+          text2 = re.sub(r'(?m)^reload\(sys\)\s*#.*\n', '', text)
+          text2 = re.sub(r'(?m)^sys\.setdefaultencoding\([^\n]*\)\s*\n', '', text2)
+
+          if text2 != text:
+            path.write_text(text2, encoding='utf-8')
+            print(f'Patched: {path}')
+          else:
+            print(f'No patch needed: {path}')
+          PY
+
+      - name: Build & publish Electron app (${{ matrix.app }})
         run: npm run ${{ matrix.build_script }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use a PAT in Actions secret GH_TOKEN when publishing to other repos
+          # (e.g. headoffice publishes to a different repo).
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          # dmg-builder uses PYTHON_PATH if set; otherwise it tries /usr/bin/python (missing on modern macOS runners)
+          PYTHON_PATH: ${{ runner.os == 'macOS' && 'python3' || '' }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-${{ matrix.app }}
+          name: ${{ matrix.artifact_name }}
           path: dist/**

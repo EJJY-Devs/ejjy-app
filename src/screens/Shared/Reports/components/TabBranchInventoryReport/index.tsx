@@ -36,7 +36,14 @@ import {
 import _ from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import robotoRegularTtf from 'assets/fonts/Roboto-Regular.ttf';
-import { convertIntoArray, getAppType, getLocalBranchId } from 'utils';
+import { BranchProductBalancesService } from 'services';
+import {
+	convertIntoArray,
+	getAppType,
+	getBranchProductStatus,
+	getLocalApiUrl,
+	getLocalBranchId,
+} from 'utils';
 
 import { printConsolidatedBranchInventoryReport } from 'components/modals/ViewConsolidatedBranchInventoryReportModal/printConsolidatedBranchInventoryReport';
 
@@ -203,12 +210,103 @@ const TabBranchInventoryReport = () => {
 		},
 	});
 
-	// EFFECTS
+	const getQueryParamValue = (value: unknown) =>
+		Array.isArray(value) ? value[0] : value;
+
+	const getQueryParamNumber = (value: unknown) => {
+		const rawValue = getQueryParamValue(value);
+		if (rawValue === undefined || rawValue === null || rawValue === '') {
+			return undefined;
+		}
+		const numValue = Number(rawValue);
+		return Number.isNaN(numValue) ? undefined : numValue;
+	};
+
+	const fetchAllBalancesForPdf = useCallback(async () => {
+		let normalizedBranchId: number | string | undefined = effectiveBranchId;
+		if (
+			normalizedBranchId !== undefined &&
+			normalizedBranchId !== null &&
+			normalizedBranchId !== ''
+		) {
+			if (normalizedBranchId === 'all') {
+				normalizedBranchId = 'all';
+			} else {
+				const numValue = Number(normalizedBranchId);
+				normalizedBranchId = !Number.isNaN(numValue) ? numValue : undefined;
+			}
+		} else {
+			normalizedBranchId = undefined;
+		}
+
+		if (!normalizedBranchId) {
+			return [];
+		}
+
+		const baseURL = getLocalApiUrl();
+		const pageSize = MAX_PAGE_SIZE;
+		const requestParams = {
+			search: getQueryParamValue(params?.search) as string | undefined,
+			branch_id: normalizedBranchId,
+			branch_product_id: getQueryParamNumber(params?.branchProductId),
+			product_id: getQueryParamNumber(params?.productId),
+			product_category: getQueryParamValue(params?.productCategory) as
+				| string
+				| undefined,
+			ordering: getQueryParamValue(params?.ordering) as string | undefined,
+			page_size: pageSize,
+		};
+
+		const fetchPage = isAllBranches
+			? BranchProductBalancesService.aggregated
+			: BranchProductBalancesService.list;
+
+		const firstResponse = await fetchPage(
+			{ ...requestParams, page: DEFAULT_PAGE },
+			baseURL,
+		);
+
+		const count = Number(firstResponse?.data?.count || 0);
+		const firstResults: any[] = firstResponse?.data?.results || [];
+		const totalPages = Math.max(1, Math.ceil(count / pageSize));
+
+		const remainingPagePromises = Array.from(
+			{ length: Math.max(0, totalPages - 1) },
+			(_unused, idx) => {
+				const page = DEFAULT_PAGE + idx + 1;
+				const pageParams = { ...requestParams, page };
+
+				return fetchPage(pageParams, baseURL);
+			},
+		);
+
+		const remainingResponses = await Promise.all(remainingPagePromises);
+		const remainingResults = remainingResponses.flatMap(
+			(r) => (r?.data?.results || []) as any[],
+		);
+
+		return [...firstResults, ...remainingResults];
+	}, [
+		effectiveBranchId,
+		isAllBranches,
+		params?.branchProductId,
+		params?.ordering,
+		params?.productCategory,
+		params?.productId,
+		params?.search,
+	]);
+
 	useEffect(() => {
 		if (isAllBranches) {
 			const data = branchProductBalances.map((balance) => {
-				const isWeighing = balance.is_weighing;
-				const barcodeText = balance.barcode || EMPTY_CELL;
+				const isWeighing =
+					balance.branch_product?.product?.unit_of_measurement === 'weighing' ||
+					balance.is_weighing;
+				const barcodeText =
+					balance.branch_product?.product?.barcode || EMPTY_CELL;
+				const statusValue = balance.branch_product?.product_status;
+				const status = getBranchProductStatus(statusValue);
+
 				return {
 					key: balance.id,
 					barcode: (
@@ -220,21 +318,11 @@ const TabBranchInventoryReport = () => {
 							{barcodeText}
 						</Button>
 					),
-					description: balance.name || EMPTY_CELL,
+					description: balance.branch_product?.product?.name || EMPTY_CELL,
 					value: isWeighing
 						? Number(balance.value).toFixed(3)
 						: Number(balance.value).toFixed(0),
-					status: '',
-					actions: (
-						<Tooltip title="View Branch Breakdown">
-							<Button
-								icon={<SearchOutlined />}
-								type="primary"
-								ghost
-								onClick={() => setViewedBalance(balance)}
-							/>
-						</Tooltip>
-					),
+					status: status || EMPTY_CELL,
 				};
 			});
 
@@ -245,6 +333,10 @@ const TabBranchInventoryReport = () => {
 					balance.branch_product?.product?.unit_of_measurement === 'weighing';
 				const barcodeText =
 					balance.branch_product?.product?.barcode || EMPTY_CELL;
+				const status = getBranchProductStatus(
+					balance.branch_product?.product_status,
+				);
+
 				const baseData: any = {
 					key: balance.id,
 					barcode: (
@@ -260,20 +352,12 @@ const TabBranchInventoryReport = () => {
 					value: isWeighing
 						? Number(balance.value).toFixed(3)
 						: Number(balance.value).toFixed(0),
-					status: '',
+					status: status || EMPTY_CELL,
 				};
 
 				if (isHeadOffice) {
 					baseData.actions = (
 						<Space>
-							<Tooltip title="View Branch Breakdown">
-								<Button
-									icon={<SearchOutlined />}
-									type="primary"
-									ghost
-									onClick={() => setViewedBalance(balance)}
-								/>
-							</Tooltip>
 							<Tooltip title="Create Adjustment Slip">
 								<Button
 									icon={<EditFilled />}
@@ -314,39 +398,43 @@ const TabBranchInventoryReport = () => {
 		setIsCartModalVisible(false);
 	};
 
-	const buildPdfHtml = useCallback(() => {
-		const dataHtml = printConsolidatedBranchInventoryReport({
-			balances: branchProductBalances,
-			companyName,
-		});
+	const buildPdfHtml = useCallback(
+		(balances: any[]) => {
+			const dataHtml = printConsolidatedBranchInventoryReport({
+				balances,
+				companyName,
+			});
 
-		return `
+			return `
 			<div style="width: ${PDF_PAGE_WIDTH_PX}px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif;">
 				<div style="width: ${PDF_WRAPPER_WIDTH_PX}px; padding: ${PDF_WRAPPER_PADDING_PX}px; box-sizing: border-box; margin: 0 auto;">
 					${dataHtml}
 				</div>
 			</div>
 		`;
-	}, [branchProductBalances, companyName]);
+		},
+		[companyName],
+	);
 
-	const previewPdf = useCallback(() => {
+	const previewPdf = useCallback(async () => {
 		setIsLoadingPdf(true);
 
-		const pdfTitle = 'ConsolidatedBranchInventoryReport.pdf';
-		const wrappedHtml = buildPdfHtml();
-		const measuredHeight = measureHtmlHeightPx(wrappedHtml);
-		const pageHeightPx = Math.max(300, measuredHeight + 40);
+		try {
+			const balances = await fetchAllBalancesForPdf();
+			const pdfTitle = 'ConsolidatedBranchInventoryReport.pdf';
+			const wrappedHtml = buildPdfHtml(balances);
+			const measuredHeight = measureHtmlHeightPx(wrappedHtml);
+			const pageHeightPx = Math.max(300, measuredHeight + 40);
 
-		// eslint-disable-next-line new-cap
-		const pdf = new jsPDF({
-			orientation: 'l',
-			unit: 'px',
-			format: [PDF_PAGE_WIDTH_PX, pageHeightPx],
-			putOnlyUsedFonts: true,
-		});
-		pdf.setProperties({ title: pdfTitle });
+			// eslint-disable-next-line new-cap
+			const pdf = new jsPDF({
+				orientation: 'l',
+				unit: 'px',
+				format: [PDF_PAGE_WIDTH_PX, pageHeightPx],
+				putOnlyUsedFonts: true,
+			});
+			pdf.setProperties({ title: pdfTitle });
 
-		(async () => {
 			await ensureRobotoFont(pdf);
 
 			pdf.html(wrappedHtml, {
@@ -356,29 +444,30 @@ const TabBranchInventoryReport = () => {
 					setIsLoadingPdf(false);
 				},
 			});
-		})().catch(() => {
+		} catch (error) {
 			setIsLoadingPdf(false);
-		});
-	}, [buildPdfHtml]);
+		}
+	}, [buildPdfHtml, fetchAllBalancesForPdf]);
 
-	const downloadPdf = useCallback(() => {
+	const downloadPdf = useCallback(async () => {
 		setIsLoadingPdf(true);
 
-		const pdfTitle = 'ConsolidatedBranchInventoryReport.pdf';
-		const wrappedHtml = buildPdfHtml();
-		const measuredHeight = measureHtmlHeightPx(wrappedHtml);
-		const pageHeightPx = Math.max(300, measuredHeight + 40);
+		try {
+			const balances = await fetchAllBalancesForPdf();
+			const pdfTitle = 'ConsolidatedBranchInventoryReport.pdf';
+			const wrappedHtml = buildPdfHtml(balances);
+			const measuredHeight = measureHtmlHeightPx(wrappedHtml);
+			const pageHeightPx = Math.max(300, measuredHeight + 40);
 
-		// eslint-disable-next-line new-cap
-		const pdf = new jsPDF({
-			orientation: 'l',
-			unit: 'px',
-			format: [PDF_PAGE_WIDTH_PX, pageHeightPx],
-			putOnlyUsedFonts: true,
-		});
-		pdf.setProperties({ title: pdfTitle });
+			// eslint-disable-next-line new-cap
+			const pdf = new jsPDF({
+				orientation: 'l',
+				unit: 'px',
+				format: [PDF_PAGE_WIDTH_PX, pageHeightPx],
+				putOnlyUsedFonts: true,
+			});
+			pdf.setProperties({ title: pdfTitle });
 
-		(async () => {
 			await ensureRobotoFont(pdf);
 
 			pdf.html(wrappedHtml, {
@@ -388,10 +477,10 @@ const TabBranchInventoryReport = () => {
 					setIsLoadingPdf(false);
 				},
 			});
-		})().catch(() => {
+		} catch (error) {
 			setIsLoadingPdf(false);
-		});
-	}, [buildPdfHtml]);
+		}
+	}, [buildPdfHtml, fetchAllBalancesForPdf]);
 
 	return (
 		<Box>

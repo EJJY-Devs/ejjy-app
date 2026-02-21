@@ -11,11 +11,10 @@ import { getLocalApiUrl } from 'utils';
 const AUTH_CHECKING_INTERVAL_MS = 10_000;
 
 export const useAuthLogin = () =>
-	useMutation<any, any, any>(({ username, password }) =>
+	useMutation<any, any, any>(({ pin }) =>
 		AuthService.login(
 			{
-				login: username,
-				password,
+				pin,
 			},
 			getLocalApiUrl(),
 		),

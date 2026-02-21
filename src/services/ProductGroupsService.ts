@@ -16,24 +16,24 @@ interface Edit {
 
 const service = {
 	list: async (params: IListRequest, baseURL) =>
-		axios.get('/product-groups/', { baseURL, params }),
+		axios.get('/tags/product-groups/', { baseURL, params }),
 
 	retrieve: async (id: number, baseURL) =>
-		axios.get(`/product-groups/${id}/`, { baseURL }),
+		axios.get(`/tags/product-groups/${id}/`, { baseURL }),
 
 	create: async (body: Create, baseURL) =>
-		axios.post('/product-groups/', body, { baseURL }),
+		axios.post('/tags/product-groups/', body, { baseURL }),
 
 	edit: async (id: number, body: Edit, baseURL) =>
-		axios.patch(`/product-groups/${id}/`, body, { baseURL }),
+		axios.patch(`/tags/product-groups/${id}/`, body, { baseURL }),
 
 	delete: async (id: number, baseURL) =>
-		axios.delete(`/product-groups/${id}/`, { baseURL }),
+		axios.delete(`/tags/product-groups/${id}/`, { baseURL }),
 };
 
 const serviceOffline = {
 	listOffline: async (baseURL) =>
-		axios.get('/offline-product-groups/', { baseURL }),
+		axios.get('/offline-tags-product-groups/', { baseURL }),
 };
 
 export default {

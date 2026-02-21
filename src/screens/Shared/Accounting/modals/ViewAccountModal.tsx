@@ -1,5 +1,7 @@
 import { Descriptions, Modal } from 'antd';
 import React from 'react';
+import { MAX_PAGE_SIZE } from 'global';
+import { useAccountSubTypes, useAccountTypes, useNormalBalances } from 'hooks';
 
 interface Props {
 	account: any;
@@ -8,27 +10,37 @@ interface Props {
 }
 
 export const ViewAccountModal = ({ account, open, onClose }: Props) => {
-	const accountTypeOptions = [
-		{ label: 'Asset', value: 'asset' },
-		{ label: 'Liability', value: 'liability' },
-		{ label: 'Equity', value: 'equity' },
-		{ label: 'Income', value: 'income' },
-		{ label: 'Expense', value: 'expense' },
-	];
+	const { data: { accountTypes } = { accountTypes: [] } } = useAccountTypes({
+		params: { pageSize: MAX_PAGE_SIZE },
+	});
+	const {
+		data: { accountSubTypes } = { accountSubTypes: [] },
+	} = useAccountSubTypes({
+		params: { pageSize: MAX_PAGE_SIZE },
+	});
+	const {
+		data: { normalBalances } = { normalBalances: [] },
+	} = useNormalBalances({
+		params: { pageSize: MAX_PAGE_SIZE },
+	});
 
-	const subTypeOptions = [
-		{ label: 'Current', value: 'current' },
-		{ label: 'Non-current', value: 'non-current' },
-		{ label: 'Contra', value: 'contra' },
-	];
-
-	const normalBalanceOptions = [
-		{ label: 'Debit', value: 'debit' },
-		{ label: 'Credit', value: 'credit' },
-	];
+	const accountTypeOptions = (accountTypes || []).map((accountType: any) => ({
+		label: accountType.name,
+		value: accountType.name,
+	}));
+	const subTypeOptions = (accountSubTypes || []).map((accountSubType: any) => ({
+		label: accountSubType.name,
+		value: accountSubType.name,
+	}));
+	const normalBalanceOptions = (normalBalances || []).map(
+		(normalBalance: any) => ({
+			label: normalBalance.name,
+			value: normalBalance.name,
+		}),
+	);
 
 	const getOptionLabel = (value: string, options: any[]) =>
-		options.find((option) => option.value === value)?.label || '-';
+		options.find((option) => option.value === value)?.label || '';
 
 	return (
 		<Modal

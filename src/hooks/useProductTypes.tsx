@@ -37,7 +37,6 @@ export const useProductTypeCreate = () => {
 
 	return useMutation<any, any, any>(
 		({ name }: { name: string }) =>
-			// Tags CRUD should always hit the online API.
 			ProductTypesService.create(
 				{
 					name,

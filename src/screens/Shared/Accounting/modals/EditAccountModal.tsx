@@ -1,41 +1,78 @@
 import { Button, Form, Input, Modal, Select } from 'antd';
 import React, { useEffect } from 'react';
+import { MAX_PAGE_SIZE } from 'global';
+import { useAccountSubTypes, useAccountTypes, useNormalBalances } from 'hooks';
+
+type Option = { label: string; value: string };
 
 interface Props {
 	account: any;
+	accountTypeOptions?: Option[];
+	isOptionsLoading?: boolean;
+	normalBalanceOptions?: Option[];
 	isSubmitting: boolean;
 	open: boolean;
+	subTypeOptions?: Option[];
 	onClose: () => void;
 	onUpdate: (values: any) => Promise<void>;
 }
 
 export const EditAccountModal = ({
 	account,
+	accountTypeOptions: accountTypeOptionsProp,
+	isOptionsLoading: isOptionsLoadingProp,
+	normalBalanceOptions: normalBalanceOptionsProp,
 	isSubmitting,
 	open,
+	subTypeOptions: subTypeOptionsProp,
 	onClose,
 	onUpdate,
 }: Props) => {
 	const [form] = Form.useForm();
 
-	const accountTypeOptions = [
-		{ label: 'Asset', value: 'asset' },
-		{ label: 'Liability', value: 'liability' },
-		{ label: 'Equity', value: 'equity' },
-		{ label: 'Income', value: 'income' },
-		{ label: 'Expense', value: 'expense' },
-	];
+	const {
+		data: { accountTypes } = { accountTypes: [] },
+		isFetching: isFetchingAccountTypes,
+	} = useAccountTypes({ params: { pageSize: MAX_PAGE_SIZE } });
+	const {
+		data: { accountSubTypes } = { accountSubTypes: [] },
+		isFetching: isFetchingAccountSubTypes,
+	} = useAccountSubTypes({ params: { pageSize: MAX_PAGE_SIZE } });
+	const {
+		data: { normalBalances } = { normalBalances: [] },
+		isFetching: isFetchingNormalBalances,
+	} = useNormalBalances({ params: { pageSize: MAX_PAGE_SIZE } });
 
-	const subTypeOptions = [
-		{ label: 'Current', value: 'current' },
-		{ label: 'Non-current', value: 'non-current' },
-		{ label: 'Contra', value: 'contra' },
-	];
+	const fetchedAccountTypeOptions: Option[] = (accountTypes || []).map(
+		(accountType: any) => ({
+			label: accountType.name,
+			value: accountType.name,
+		}),
+	);
+	const fetchedSubTypeOptions: Option[] = (accountSubTypes || []).map(
+		(accountSubType: any) => ({
+			label: accountSubType.name,
+			value: accountSubType.name,
+		}),
+	);
+	const fetchedNormalBalanceOptions: Option[] = (normalBalances || []).map(
+		(normalBalance: any) => ({
+			label: normalBalance.name,
+			value: normalBalance.name,
+		}),
+	);
 
-	const normalBalanceOptions = [
-		{ label: 'Debit', value: 'debit' },
-		{ label: 'Credit', value: 'credit' },
-	];
+	const accountTypeOptions =
+		accountTypeOptionsProp ?? fetchedAccountTypeOptions;
+	const subTypeOptions = subTypeOptionsProp ?? fetchedSubTypeOptions;
+	const normalBalanceOptions =
+		normalBalanceOptionsProp ?? fetchedNormalBalanceOptions;
+
+	const isOptionsLoading =
+		Boolean(isOptionsLoadingProp) ||
+		isFetchingAccountTypes ||
+		isFetchingAccountSubTypes ||
+		isFetchingNormalBalances;
 
 	useEffect(() => {
 		if (open && account) {
@@ -94,6 +131,7 @@ export const EditAccountModal = ({
 					rules={[{ required: true, message: 'Account type is required' }]}
 				>
 					<Select
+						loading={isOptionsLoading}
 						optionFilterProp="label"
 						options={accountTypeOptions}
 						showSearch
@@ -106,6 +144,7 @@ export const EditAccountModal = ({
 					rules={[{ required: true, message: 'Sub-type is required' }]}
 				>
 					<Select
+						loading={isOptionsLoading}
 						optionFilterProp="label"
 						options={subTypeOptions}
 						showSearch
@@ -118,6 +157,7 @@ export const EditAccountModal = ({
 					rules={[{ required: true, message: 'Normal balance is required' }]}
 				>
 					<Select
+						loading={isOptionsLoading}
 						optionFilterProp="label"
 						options={normalBalanceOptions}
 						showSearch

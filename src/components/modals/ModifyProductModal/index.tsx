@@ -1,7 +1,11 @@
 import { message, Modal } from 'antd';
 import { RequestErrors } from 'components/RequestErrors';
 import { MAX_PAGE_SIZE } from 'global';
-import { usePointSystemTags, useProductCreate, useProductEdit } from 'hooks';
+import {
+	usePatronageSystemTags,
+	useProductCreate,
+	useProductEdit,
+} from 'hooks';
 import React from 'react';
 import { useUserStore } from 'stores';
 import { convertIntoArray, getId } from 'utils';
@@ -16,9 +20,9 @@ interface Props {
 export const ModifyProductModal = ({ product, onClose, onSuccess }: Props) => {
 	// CUSTOM HOOKS
 	const {
-		data: { pointSystemTags },
-		isFetching: isFetchingPointSystemTags,
-	} = usePointSystemTags({
+		data: { patronageSystemTags },
+		isFetching: isFetchingPatronageSystemTags,
+	} = usePatronageSystemTags({
 		params: { pageSize: MAX_PAGE_SIZE },
 	});
 	const user = useUserStore((state) => state.user);
@@ -86,9 +90,9 @@ export const ModifyProductModal = ({ product, onClose, onSuccess }: Props) => {
 
 			<ModifyProductForm
 				isLoading={
-					isCreatingProduct || isEditingProduct || isFetchingPointSystemTags
+					isCreatingProduct || isEditingProduct || isFetchingPatronageSystemTags
 				}
-				pointSystemTags={pointSystemTags}
+				patronageSystemTags={patronageSystemTags}
 				product={product}
 				onClose={onClose}
 				onSubmit={handleSubmit}

@@ -21,7 +21,7 @@ import { Branches } from 'screens/Shared/Branches';
 import { ViewBranch } from 'screens/Shared/Branches/ViewBranch';
 import { DTR } from 'screens/Shared/DTR';
 import { DiscountOptions } from 'screens/Shared/DiscountOptions';
-import { PointSystemTags } from 'screens/Shared/PointSystemTags';
+import { PatronageSystemTags } from 'screens/Shared/PatronageSystemTags/PatronageSystemTagsView';
 import { ProductCategories } from 'screens/Shared/ProductCategories';
 import { ProductGroups } from 'screens/Shared/ProductGroups';
 import { ModifyProductGroup } from 'screens/Shared/ProductGroups/ModifyProductGroup';
@@ -311,8 +311,8 @@ const OfficeManager = () => {
 					/>
 
 					<Route
-						component={PointSystemTags}
-						path="/office-manager/point-system-tags"
+						component={PatronageSystemTags}
+						path="/office-manager/patronage-system-tags"
 					/>
 
 					<Route component={Branches} path="/office-manager/branches" exact />

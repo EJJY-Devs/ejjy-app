@@ -16,7 +16,6 @@ import _ from 'lodash';
 import { Content, TableHeader } from 'components';
 import { Box } from 'components/elements';
 import { MAX_PAGE_SIZE } from 'global';
-import { getId } from 'utils';
 import {
 	useBrandNameCreate,
 	useBrandNameDelete,
@@ -49,7 +48,7 @@ import {
 	useStorageTypes,
 } from 'hooks';
 import { ProductCategoriesTab } from './components/ProductCategoriesTab';
-import { PointSystemTagsTab } from './components/PointSystemTagsTab';
+import { PatronageTagsTab } from './components/PatronageTagsTab';
 import { ProductGroupsTab } from './components/ProductGroupsTab';
 
 type Props = {
@@ -57,9 +56,9 @@ type Props = {
 };
 
 const tabs = {
-	PRODUCT_CATEGORIES: 'Product Categories',
+	PRODUCT_CATEGORIES: 'Product Category',
 	PATRONAGE_SYSTEM: 'Patronage System',
-	PRODUCT_GROUPS: 'Product Groups',
+	PRODUCT_GROUPS: 'Product Group',
 	PRODUCT_TYPE: 'Product Type',
 	STORAGE_TYPE: 'Storage Type',
 	PRODUCT_LOCATION: 'Product Location',
@@ -271,8 +270,8 @@ export const Tags = ({ basePath }: Props) => {
 
 	const deleteTag = async (kind: TagKind, record: any) => {
 		const label = tagKindLabels[kind].singular;
-		const id = Number(getId(record));
-		if (!id) return;
+		const id = Number(record?.id);
+		if (!Number.isFinite(id) || id <= 0) return;
 
 		try {
 			if (kind === 'productType') {
@@ -353,12 +352,12 @@ export const Tags = ({ basePath }: Props) => {
 				{allowCreate && (
 					<Modal
 						footer={null}
+						open={editTagVisible}
 						title={
 							editTagKind
 								? `Edit ${tagKindLabels[editTagKind].singular}`
 								: 'Edit'
 						}
-						visible={editTagVisible}
 						destroyOnClose
 						onCancel={() => {
 							if (isAnyEditingTag) return;
@@ -374,8 +373,8 @@ export const Tags = ({ basePath }: Props) => {
 								const name = String(values?.name || '').trim();
 								if (!name) return;
 
-								const id = Number(getId(editTagRecord));
-								if (!id) return;
+								const id = Number(editTagRecord?.id);
+								if (!Number.isFinite(id) || id <= 0) return;
 
 								const label = tagKindLabels[editTagKind].singular;
 								try {
@@ -439,7 +438,7 @@ export const Tags = ({ basePath }: Props) => {
 					</Tabs.TabPane>
 
 					<Tabs.TabPane key={tabs.PATRONAGE_SYSTEM} tab={tabs.PATRONAGE_SYSTEM}>
-						<PointSystemTagsTab />
+						<PatronageTagsTab />
 					</Tabs.TabPane>
 
 					<Tabs.TabPane key={tabs.PRODUCT_GROUPS} tab={tabs.PRODUCT_GROUPS}>

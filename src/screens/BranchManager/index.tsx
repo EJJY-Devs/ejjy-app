@@ -26,7 +26,7 @@ import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
 import { Cart } from 'screens/Shared/Cart';
 import { DiscountOptions } from 'screens/Shared/DiscountOptions';
 import { DTR } from 'screens/Shared/DTR';
-import { PointSystemTags } from 'screens/Shared/PointSystemTags';
+import { PatronageSystemTags } from 'screens/Shared/PatronageSystemTags/PatronageSystemTagsView';
 import { ProductCategories } from 'screens/Shared/ProductCategories';
 import { ProductGroups } from 'screens/Shared/ProductGroups';
 import { ModifyProductGroup } from 'screens/Shared/ProductGroups/ModifyProductGroup';
@@ -320,8 +320,8 @@ const BranchManager = () => {
 					/>
 					<Route component={Products} path="/branch-manager/products" />
 					<Route
-						component={PointSystemTags}
-						path="/branch-manager/point-system-tags"
+						component={PatronageSystemTags}
+						path="/branch-manager/patronage-system-tags"
 					/>
 					<Route
 						component={ProductGroups}

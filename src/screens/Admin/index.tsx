@@ -7,7 +7,7 @@ import { Notifications } from 'screens/Admin/Notifications';
 import { Logs } from 'screens/OfficeManager/Logs';
 import { Branches } from 'screens/Shared/Branches';
 import { ViewBranch } from 'screens/Shared/Branches/ViewBranch';
-import { PointSystemTags } from 'screens/Shared/PointSystemTags';
+import { PatronageSystemTags } from 'screens/Shared/PatronageSystemTags/PatronageSystemTagsView';
 import { ProductCategories } from 'screens/Shared/ProductCategories';
 import { ProductGroups } from 'screens/Shared/ProductGroups';
 import { ModifyProductGroup } from 'screens/Shared/ProductGroups/ModifyProductGroup';
@@ -171,7 +171,10 @@ const Admin = () => {
 						component={ProductCategories}
 						path="/admin/product-categories"
 					/>
-					<Route component={PointSystemTags} path="/admin/point-system-tags" />
+					<Route
+						component={PatronageSystemTags}
+						path="/admin/patronage-system-tags"
+					/>
 					<Route component={ProductGroups} path="/admin/product-groups" exact />
 					<Route
 						component={ModifyProductGroup}

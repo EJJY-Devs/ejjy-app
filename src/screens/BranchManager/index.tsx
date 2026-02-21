@@ -19,6 +19,7 @@ import { Logs } from 'screens/BranchManager/Logs';
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
 import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
+import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
@@ -293,6 +294,10 @@ const BranchManager = () => {
 
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
+					<Route
+						component={ChartOfAccounts}
+						path="/branch-manager/accounting/chart-of-accounts"
+					/>
 					<Route
 						component={Products}
 						path="/branch-manager/accounting/products"

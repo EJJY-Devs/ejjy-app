@@ -19,10 +19,10 @@ export const getAccountingRootSidebarItem = (
 
 export const getAccountingSidebarItems = (basePath: string): SidebarItem[] => [
 	{
-		key: 'products',
-		name: 'Products',
-		activeIcon: require('../../../assets/images/icon-product-active.svg'),
-		defaultIcon: require('../../../assets/images/icon-product.svg'),
-		link: `${basePath}/accounting/products`,
+		key: 'chart-of-accounts',
+		name: 'Chart of Accounts',
+		activeIcon: require('../../../assets/images/icon-report-active.svg'),
+		defaultIcon: require('../../../assets/images/icon-report.svg'),
+		link: `${basePath}/accounting/chart-of-accounts`,
 	},
 ];

@@ -37,6 +37,7 @@ import shallow from 'zustand/shallow';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
+import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { Checkings } from './Checkings/Checkings';
 import { ViewChecking } from './Checkings/ViewChecking';
 import { Dashboard } from './Dashboard';
@@ -286,6 +287,10 @@ const OfficeManager = () => {
 					<Route
 						component={Products}
 						path="/office-manager/accounting/products"
+					/>
+					<Route
+						component={ChartOfAccounts}
+						path="/office-manager/accounting/chart-of-accounts"
 					/>
 					<Redirect
 						from="/office-manager/accounting"

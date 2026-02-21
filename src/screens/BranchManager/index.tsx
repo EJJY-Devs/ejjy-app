@@ -304,7 +304,7 @@ const BranchManager = () => {
 					/>
 					<Redirect
 						from="/branch-manager/accounting"
-						to="/branch-manager/accounting/products"
+						to="/branch-manager/accounting/chart-of-accounts"
 						exact
 					/>
 					<Route component={Dashboard} path="/branch-manager/dashboard" />

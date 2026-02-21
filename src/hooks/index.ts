@@ -38,6 +38,8 @@ export { default as useCreditRegistrations } from './useCreditRegistrations';
 export * from './useData';
 export * from './useDiscountOptions';
 export { default as useDiscountOptions } from './useDiscountOptions';
+export * from './useChartOfAccounts';
+export { default as useChartOfAccounts } from './useChartOfAccounts';
 export * from './useDtrNotificationCount';
 export { default as useDtrNotificationCount } from './useDtrNotificationCount';
 export { default as useLogs } from './useLogs';

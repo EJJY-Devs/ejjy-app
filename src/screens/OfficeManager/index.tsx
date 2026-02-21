@@ -294,7 +294,7 @@ const OfficeManager = () => {
 					/>
 					<Redirect
 						from="/office-manager/accounting"
-						to="/office-manager/accounting/products"
+						to="/office-manager/accounting/chart-of-accounts"
 						exact
 					/>
 

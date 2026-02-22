@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { MAX_PAGE_SIZE } from 'global';
 import { useAccountSubTypes, useAccountTypes, useNormalBalances } from 'hooks';
 
-type Option = { label: string; value: string };
+type Option = { label: string; value: number };
 
 interface Props {
 	account: any;
@@ -46,19 +46,19 @@ export const EditAccountModal = ({
 	const fetchedAccountTypeOptions: Option[] = (accountTypes || []).map(
 		(accountType: any) => ({
 			label: accountType.name,
-			value: accountType.name,
+			value: accountType.id,
 		}),
 	);
 	const fetchedSubTypeOptions: Option[] = (accountSubTypes || []).map(
 		(accountSubType: any) => ({
 			label: accountSubType.name,
-			value: accountSubType.name,
+			value: accountSubType.id,
 		}),
 	);
 	const fetchedNormalBalanceOptions: Option[] = (normalBalances || []).map(
 		(normalBalance: any) => ({
 			label: normalBalance.name,
-			value: normalBalance.name,
+			value: normalBalance.id,
 		}),
 	);
 

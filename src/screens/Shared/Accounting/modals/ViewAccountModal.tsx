@@ -26,20 +26,20 @@ export const ViewAccountModal = ({ account, open, onClose }: Props) => {
 
 	const accountTypeOptions = (accountTypes || []).map((accountType: any) => ({
 		label: accountType.name,
-		value: accountType.name,
+		value: accountType.id,
 	}));
 	const subTypeOptions = (accountSubTypes || []).map((accountSubType: any) => ({
 		label: accountSubType.name,
-		value: accountSubType.name,
+		value: accountSubType.id,
 	}));
 	const normalBalanceOptions = (normalBalances || []).map(
 		(normalBalance: any) => ({
 			label: normalBalance.name,
-			value: normalBalance.name,
+			value: normalBalance.id,
 		}),
 	);
 
-	const getOptionLabel = (value: string, options: any[]) =>
+	const getOptionLabel = (value: number, options: any[]) =>
 		options.find((option) => option.value === value)?.label || '';
 
 	return (

@@ -20,8 +20,8 @@ const service = {
 };
 
 const serviceOffline = {
-	listOffline: async (baseURL) =>
-		axios.get('/offline-tags-normal-balances/', { baseURL }),
+	listOffline: async (params: IListRequest, baseURL) =>
+		axios.get('/offline-tags-normal-balances/', { baseURL, params }),
 };
 
 export default {

@@ -20,8 +20,8 @@ const service = {
 };
 
 const serviceOffline = {
-	listOffline: async (baseURL) =>
-		axios.get('/offline-tags-account-sub-types/', { baseURL }),
+	listOffline: async (params: IListRequest, baseURL) =>
+		axios.get('/offline-tags-account-sub-types/', { baseURL, params }),
 };
 
 export default {

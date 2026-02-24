@@ -146,7 +146,7 @@ export const Sidebar = ({ items }: Props) => {
 					{wetMarketLink && isInAccounting && (
 						<Link className="item" tabIndex={-1} to={wetMarketLink}>
 							<img alt="icon" className="icon" src={iconDashboard} />
-							<span className="name">Wet Market</span>
+							<span className="name">Operations</span>
 						</Link>
 					)}
 

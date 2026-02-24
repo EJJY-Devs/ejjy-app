@@ -124,7 +124,9 @@ const OfficeManager = () => {
 
 	const getSidebarItems = useCallback(() => {
 		if (isAccounting) {
-			return getAccountingSidebarItems('/office-manager');
+			return getAccountingSidebarItems('/office-manager', {
+				includeBranches: true,
+			});
 		}
 
 		return [
@@ -134,13 +136,6 @@ const OfficeManager = () => {
 				activeIcon: require('../../assets/images/icon-dashboard-active.svg'),
 				defaultIcon: require('../../assets/images/icon-dashboard.svg'),
 				link: '/office-manager/dashboard',
-			},
-			{
-				key: 'sales',
-				name: 'Sales',
-				activeIcon: require('../../assets/images/icon-sales-active.svg'),
-				defaultIcon: require('../../assets/images/icon-sales.svg'),
-				link: '/office-manager/sales',
 			},
 			{
 				key: 'reports',
@@ -157,27 +152,6 @@ const OfficeManager = () => {
 				link: '/office-manager/products',
 			},
 			{
-				key: 'tags',
-				name: 'Tags',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/office-manager/tags',
-			},
-			{
-				key: 'branches',
-				name: 'Branches',
-				activeIcon: require('../../assets/images/icon-branches-active.svg'),
-				defaultIcon: require('../../assets/images/icon-branches.svg'),
-				link: '/office-manager/branches',
-			},
-			{
-				key: 'accounts',
-				name: 'Accounts',
-				activeIcon: require('../../assets/images/icon-users-active.svg'),
-				defaultIcon: require('../../assets/images/icon-users.svg'),
-				link: '/office-manager/accounts',
-			},
-			{
 				key: 'assignments',
 				name: 'Assignments',
 				activeIcon: require('../../assets/images/icon-users-active.svg'),
@@ -190,13 +164,6 @@ const OfficeManager = () => {
 				activeIcon: require('../../assets/images/icon-users-active.svg'),
 				defaultIcon: require('../../assets/images/icon-users.svg'),
 				link: '/office-manager/dtr',
-			},
-			{
-				key: 'discount-options',
-				name: 'Discount Options',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/office-manager/discount-options',
 			},
 			{
 				key: 'settings',
@@ -291,6 +258,35 @@ const OfficeManager = () => {
 					<Route
 						component={ChartOfAccounts}
 						path="/office-manager/accounting/chart-of-accounts"
+					/>
+					<Route component={Sales} path="/office-manager/accounting/sales" />
+					<Route
+						path="/office-manager/accounting/tags"
+						render={() => <Tags basePath="/office-manager" />}
+					/>
+					<Route
+						component={Accounts}
+						path="/office-manager/accounting/accounts"
+						exact
+					/>
+					<Route
+						component={ViewAccount}
+						path="/office-manager/accounting/accounts/:id"
+						exact
+					/>
+					<Route
+						component={Branches}
+						path="/office-manager/accounting/branches"
+						exact
+					/>
+					<Route
+						component={ViewBranch}
+						path="/office-manager/accounting/branches/:id"
+						exact
+					/>
+					<Route
+						component={DiscountOptions}
+						path="/office-manager/accounting/discount-options"
 					/>
 					<Redirect
 						from="/office-manager/accounting"

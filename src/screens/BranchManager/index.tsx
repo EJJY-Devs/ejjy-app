@@ -154,13 +154,6 @@ const BranchManager = () => {
 				link: '/branch-manager/reports',
 			},
 			{
-				key: 'sales',
-				name: 'Sales',
-				activeIcon: require('../../assets/images/icon-sales-active.svg'),
-				defaultIcon: require('../../assets/images/icon-sales.svg'),
-				link: '/branch-manager/sales',
-			},
-			{
 				key: 'dashboard',
 				name: 'Dashboard',
 				activeIcon: require('../../assets/images/icon-dashboard-active.svg'),
@@ -175,13 +168,6 @@ const BranchManager = () => {
 				link: '/branch-manager/products',
 			},
 			{
-				key: 'tags',
-				name: 'Tags',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/branch-manager/tags',
-			},
-			{
 				key: 'product-conversion',
 				name: 'Product Conversion',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
@@ -194,20 +180,6 @@ const BranchManager = () => {
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
 				link: '/branch-manager/inventory-transfer',
-			},
-			{
-				key: 'discount-options',
-				name: 'Discount Options',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/branch-manager/discount-options',
-			},
-			{
-				key: 'accounts',
-				name: 'Accounts',
-				activeIcon: require('../../assets/images/icon-users-active.svg'),
-				defaultIcon: require('../../assets/images/icon-users.svg'),
-				link: '/branch-manager/accounts',
 			},
 			{
 				key: 'dtr',
@@ -301,6 +273,25 @@ const BranchManager = () => {
 					<Route
 						component={Products}
 						path="/branch-manager/accounting/products"
+					/>
+					<Route component={Sales} path="/branch-manager/accounting/sales" />
+					<Route
+						path="/branch-manager/accounting/tags"
+						render={() => <Tags basePath="/branch-manager" />}
+					/>
+					<Route
+						component={Accounts}
+						path="/branch-manager/accounting/accounts"
+						exact
+					/>
+					<Route
+						component={ViewAccount}
+						path="/branch-manager/accounting/accounts/:id"
+						exact
+					/>
+					<Route
+						component={DiscountOptions}
+						path="/branch-manager/accounting/discount-options"
 					/>
 					<Redirect
 						from="/branch-manager/accounting"

@@ -62,7 +62,7 @@ export const ModifyUserModal = ({
 		} else {
 			response = await createUser({
 				...formData,
-				accountId: account?.id,
+				accountId: getId(account),
 			});
 			message.success('User was created successfully');
 		}

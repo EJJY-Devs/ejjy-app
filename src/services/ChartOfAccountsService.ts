@@ -2,8 +2,7 @@ import axios from 'axios';
 import { IListRequest } from './interfaces';
 
 interface List extends IListRequest {
-	account_code?: string;
-	account_name?: string;
+	search?: string;
 	account_type?: number;
 	sub_type?: number;
 	normal_balance?: number;

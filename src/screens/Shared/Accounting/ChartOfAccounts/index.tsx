@@ -25,6 +25,7 @@ import useChartOfAccounts, {
 } from 'hooks/useChartOfAccounts';
 import { useQueryParams } from 'hooks';
 import { getAppType } from 'utils/localStorage';
+import { showErrorMessages } from 'utils';
 import { CreateAccountModal } from '../modals/CreateAccountModal';
 import { EditAccountModal } from '../modals/EditAccountModal';
 import { ViewAccountModal } from '../modals/ViewAccountModal';
@@ -41,8 +42,7 @@ export const ChartOfAccounts = () => {
 	const { params, setQueryParams } = useQueryParams();
 	const { data, isFetching } = useChartOfAccounts({
 		params: {
-			accountCode: searchText || undefined,
-			accountName: searchText || undefined,
+			search: searchText || undefined,
 			page: params.page,
 			pageSize: params.pageSize,
 		},
@@ -147,6 +147,20 @@ export const ChartOfAccounts = () => {
 			message.success('Account was created successfully');
 			setIsCreateOpen(false);
 		} catch (error) {
+			const errorData = error?.response?.data || error?.data;
+			if (errorData) {
+				if (Array.isArray(errorData) || typeof errorData === 'string') {
+					showErrorMessages(errorData);
+					return;
+				}
+
+				if (typeof errorData === 'object') {
+					const flattenedErrors = Object.values(errorData).flat();
+					showErrorMessages(flattenedErrors);
+					return;
+				}
+			}
+
 			message.error('Failed to create account');
 		}
 	};

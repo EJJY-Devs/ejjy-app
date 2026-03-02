@@ -27,6 +27,13 @@ export const getAccountingSidebarItems = (
 
 	const sidebarItems: SidebarItem[] = [
 		{
+			key: 'books-of-accounts',
+			name: 'Books of Accounts',
+			activeIcon: require('../../../assets/images/icon-report-active.svg'),
+			defaultIcon: require('../../../assets/images/icon-report.svg'),
+			link: `${basePath}/accounting/books-of-accounts`,
+		},
+		{
 			key: 'chart-of-accounts',
 			name: 'Chart of Accounts',
 			activeIcon: require('../../../assets/images/icon-report-active.svg'),

@@ -31,6 +31,7 @@ export { default as AccountTypesService } from './AccountTypesService';
 export { default as AccountSubTypesService } from './AccountSubTypesService';
 export { default as NormalBalancesService } from './NormalBalancesService';
 export { default as ChartOfAccountsService } from './ChartOfAccountsService';
+export { default as JournalEntriesService } from './JournalEntriesService';
 export { default as InvoiceService } from './InvoiceService';
 export { default as LogsService } from './LogsService';
 export { default as NetworkService } from './NetworkService';

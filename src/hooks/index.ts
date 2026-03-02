@@ -40,6 +40,8 @@ export * from './useDiscountOptions';
 export { default as useDiscountOptions } from './useDiscountOptions';
 export * from './useChartOfAccounts';
 export { default as useChartOfAccounts } from './useChartOfAccounts';
+export * from './useJournalEntries';
+export { default as useJournalEntries } from './useJournalEntries';
 export * from './useDtrNotificationCount';
 export { default as useDtrNotificationCount } from './useDtrNotificationCount';
 export { default as useLogs } from './useLogs';

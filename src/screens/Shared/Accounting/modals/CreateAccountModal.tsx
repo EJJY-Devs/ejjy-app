@@ -42,8 +42,12 @@ export const CreateAccountModal = ({
 	} = useNormalBalances({ params: { pageSize: MAX_PAGE_SIZE } });
 
 	const handleFinish = async (values: any) => {
-		await onCreate(values);
-		form.resetFields();
+		try {
+			await onCreate(values);
+			form.resetFields();
+		} catch (error) {
+			// Keep user input on error so they can correct and retry.
+		}
 	};
 
 	const fetchedAccountTypeOptions: Option[] = (accountTypes || []).map(

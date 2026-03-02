@@ -20,6 +20,7 @@ import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
 import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
 import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
+import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
@@ -269,6 +270,10 @@ const BranchManager = () => {
 					<Route
 						component={ChartOfAccounts}
 						path="/branch-manager/accounting/chart-of-accounts"
+					/>
+					<Route
+						component={BooksOfAccounts}
+						path="/branch-manager/accounting/books-of-accounts"
 					/>
 					<Route
 						component={Products}

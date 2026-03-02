@@ -1,0 +1,115 @@
+.BooksOfAccounts_header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.BooksOfAccounts_filters {
+	flex: 1;
+}
+
+.BooksOfAccounts_timeRangeFilter {
+	margin: 10px 0;
+	position: relative;
+	left: 0;
+	top: 10px;
+}
+
+.BooksOfAccounts_table {
+	.ant-table-thead > tr > th {
+		background: #f5f6fa;
+		font-weight: 600;
+	}
+
+	.ant-table-tbody > tr > td {
+		font-size: 14px;
+	}
+}
+
+.CreateJournalEntryModal {
+	.ant-modal-content {
+		border-radius: 20px;
+	}
+
+	.ant-modal-body {
+		padding-top: 12px;
+	}
+
+	.ant-modal-title {
+		font-weight: 600;
+	}
+}
+
+.CreateJournalEntryModal_form {
+	.ant-form-item {
+		margin-bottom: 14px;
+	}
+}
+
+.CreateJournalEntryModal_searchItem {
+	margin-bottom: 18px;
+
+	.ant-select-selector {
+		height: 56px !important;
+		border-radius: 8px !important;
+	}
+
+	.ant-select-selection-search-input,
+	.ant-select-selection-placeholder,
+	.ant-select-selection-item {
+		height: 56px !important;
+		line-height: 56px !important;
+		font-size: 16px;
+	}
+}
+
+.CreateJournalEntryModal_gridLabels {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+	margin-bottom: 6px;
+
+	span {
+		font-size: 24px;
+		font-weight: 600;
+		line-height: 1;
+		text-align: center;
+	}
+}
+
+.CreateJournalEntryModal_gridInputs {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+	margin-bottom: 8px;
+
+	.ant-input,
+	.ant-input-number,
+	.ant-input-number-input {
+		height: 56px;
+	}
+
+	.ant-input,
+	.ant-input-number-input {
+		font-size: 18px;
+		font-weight: 500;
+		text-align: center;
+	}
+
+	.ant-input {
+		background: #f6f7fb;
+	}
+}
+
+.CreateJournalEntryModal_activeInput {
+	border-color: #40a9ff !important;
+	box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.CreateJournalEntryModal_remarksLabel {
+	font-size: 18px;
+	font-weight: 600;
+	margin-bottom: 6px;
+}

@@ -151,17 +151,18 @@ export const ChartOfAccounts = () => {
 			if (errorData) {
 				if (Array.isArray(errorData) || typeof errorData === 'string') {
 					showErrorMessages(errorData);
-					return;
+					throw error;
 				}
 
 				if (typeof errorData === 'object') {
 					const flattenedErrors = Object.values(errorData).flat();
 					showErrorMessages(flattenedErrors);
-					return;
+					throw error;
 				}
 			}
 
 			message.error('Failed to create account');
+			throw error;
 		}
 	};
 

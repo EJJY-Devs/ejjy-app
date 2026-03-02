@@ -13,6 +13,8 @@ interface Props {
 	fields?: any;
 	queryName?: string;
 	onChange?: any;
+	useSingleDateForDateRange?: boolean;
+	dateRangeLabel?: string;
 }
 
 export const TimeRangeFilter = ({
@@ -24,6 +26,8 @@ export const TimeRangeFilter = ({
 	],
 	queryName = 'timeRange',
 	onChange,
+	useSingleDateForDateRange = false,
+	dateRangeLabel = 'Select Date Range',
 }: Props) => {
 	// STATES
 	const [timeRangeType, setTimeRangeType] = useState(timeRangeTypes.DAILY);
@@ -42,6 +46,13 @@ export const TimeRangeFilter = ({
 
 			if (_.toString(currentParams[queryName])) {
 				const validatedTimeRange = validateTimeRange(currentParams[queryName]);
+				const validatedSingleDate = validateSingleDate(
+					currentParams[queryName],
+				);
+
+				if (useSingleDateForDateRange && validatedSingleDate?.isValid) {
+					setTimeRangeType(timeRangeTypes.DATE_RANGE);
+				}
 
 				if (validatedTimeRange) {
 					const {
@@ -108,6 +119,25 @@ export const TimeRangeFilter = ({
 	}, [params[queryName]]);
 
 	const renderRangePicker = useCallback(() => {
+		if (useSingleDateForDateRange) {
+			const validatedSingleDate = validateSingleDate(params[queryName]);
+
+			return (
+				<DatePicker
+					className="w-100"
+					defaultPickerValue={validatedSingleDate?.defaultValue}
+					defaultValue={validatedSingleDate?.defaultValue}
+					disabled={disabled}
+					format={DATE_FORMAT}
+					onChange={(date) => {
+						if (date) {
+							handleChange(date.format(DATE_FORMAT));
+						}
+					}}
+				/>
+			);
+		}
+
 		const timeRangeValues = _.toString(params[queryName])?.split(',') || [];
 		const startDate = moment(timeRangeValues[0]);
 		const endDate = moment(timeRangeValues[1]);
@@ -130,7 +160,7 @@ export const TimeRangeFilter = ({
 				}}
 			/>
 		);
-	}, [params[queryName], disabled]);
+	}, [params[queryName], disabled, useSingleDateForDateRange]);
 
 	const getOptions = useCallback(() => {
 		const options = [];
@@ -145,13 +175,13 @@ export const TimeRangeFilter = ({
 
 		if (fields?.includes(timeRangeTypes.DATE_RANGE)) {
 			options.push({
-				label: 'Select Date Range',
+				label: dateRangeLabel,
 				value: timeRangeTypes.DATE_RANGE,
 			});
 		}
 
 		return options;
-	}, [fields]);
+	}, [fields, dateRangeLabel]);
 
 	const validateTimeRange = (timeRange) => {
 		const timeRangeValues = _.toString(timeRange)?.split(',') || [];
@@ -189,6 +219,19 @@ export const TimeRangeFilter = ({
 		}
 
 		return null;
+	};
+
+	const validateSingleDate = (timeRange) => {
+		const date = moment(_.toString(timeRange), DATE_FORMAT, true);
+
+		if (!date.isValid()) {
+			return null;
+		}
+
+		return {
+			defaultValue: date,
+			isValid: true,
+		};
 	};
 
 	return (

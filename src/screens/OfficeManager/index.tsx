@@ -38,6 +38,7 @@ import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
 import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
+import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { Checkings } from './Checkings/Checkings';
 import { ViewChecking } from './Checkings/ViewChecking';
 import { Dashboard } from './Dashboard';
@@ -258,6 +259,10 @@ const OfficeManager = () => {
 					<Route
 						component={ChartOfAccounts}
 						path="/office-manager/accounting/chart-of-accounts"
+					/>
+					<Route
+						component={BooksOfAccounts}
+						path="/office-manager/accounting/books-of-accounts"
 					/>
 					<Route component={Sales} path="/office-manager/accounting/sales" />
 					<Route

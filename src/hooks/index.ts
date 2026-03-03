@@ -44,6 +44,8 @@ export * from './useJournalEntries';
 export { default as useJournalEntries } from './useJournalEntries';
 export * from './useGeneralLedger';
 export { default as useGeneralLedger } from './useGeneralLedger';
+export * from './useTrialBalance';
+export { default as useTrialBalance } from './useTrialBalance';
 export * from './useDtrNotificationCount';
 export { default as useDtrNotificationCount } from './useDtrNotificationCount';
 export { default as useLogs } from './useLogs';

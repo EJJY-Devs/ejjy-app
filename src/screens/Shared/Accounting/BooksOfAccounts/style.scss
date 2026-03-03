@@ -176,3 +176,40 @@
 .BooksOfAccounts_ledgerAsOfFilter {
 	min-width: 220px;
 }
+
+.TrialBalanceModal_header {
+	text-align: center;
+	font-size: 14px;
+	line-height: 1.35;
+	margin-bottom: 14px;
+
+	div + div {
+		margin-top: 2px;
+	}
+}
+
+.TrialBalanceModal_titleBlock {
+	text-align: center;
+	margin-bottom: 12px;
+}
+
+.TrialBalanceModal_title {
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.TrialBalanceModal_asOf {
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.2;
+	margin-top: 4px;
+}
+
+.TrialBalanceModal_table {
+	.ant-table-thead > tr > th,
+	.ant-table-tbody > tr > td {
+		font-size: 14px;
+		padding: 8px 12px;
+	}
+}

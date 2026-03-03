@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { getLocalBranchId } from 'utils';
 import { getAppType } from 'utils/localStorage';
 import { GeneralLedgerTab } from './components/GeneralLedgerTab';
+import { TrialBalanceTab } from './components/TrialBalanceTab';
 import {
 	GeneralJournalEntry,
 	GeneralJournalTab,
@@ -31,8 +32,19 @@ export const BooksOfAccounts = () => {
 		isLoading: isCreatingJournalEntry,
 	} = useJournalEntryCreate();
 
-	const rightTitle =
-		activeTab === 'general-ledger' ? 'General Ledger' : 'General Journal';
+	const getRightTitle = () => {
+		if (activeTab === 'general-ledger') {
+			return 'General Ledger';
+		}
+
+		if (activeTab === 'trial-balance') {
+			return 'Trial Balance';
+		}
+
+		return 'General Journal';
+	};
+
+	const rightTitle = getRightTitle();
 
 	return (
 		<Content rightTitle={rightTitle} title="Books of Accounts">
@@ -62,6 +74,12 @@ export const BooksOfAccounts = () => {
 								setSelectedEntry(entry);
 								setIsViewOpen(true);
 							}}
+						/>
+					</Tabs.TabPane>
+					<Tabs.TabPane key="trial-balance" tab="Trial Balance">
+						<TrialBalanceTab
+							isHeadOffice={isHeadOffice}
+							localBranchId={localBranchId}
 						/>
 					</Tabs.TabPane>
 				</Tabs>

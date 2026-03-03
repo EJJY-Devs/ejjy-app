@@ -15,6 +15,7 @@ interface Props {
 	onChange?: any;
 	useSingleDateForDateRange?: boolean;
 	dateRangeLabel?: string;
+	dailyLabel?: string;
 }
 
 export const TimeRangeFilter = ({
@@ -28,6 +29,7 @@ export const TimeRangeFilter = ({
 	onChange,
 	useSingleDateForDateRange = false,
 	dateRangeLabel = 'Select Date Range',
+	dailyLabel = 'Daily',
 }: Props) => {
 	// STATES
 	const [timeRangeType, setTimeRangeType] = useState(timeRangeTypes.DAILY);
@@ -166,7 +168,7 @@ export const TimeRangeFilter = ({
 		const options = [];
 
 		if (fields?.includes(timeRangeTypes.DAILY)) {
-			options.push({ label: 'Daily', value: timeRangeTypes.DAILY });
+			options.push({ label: dailyLabel, value: timeRangeTypes.DAILY });
 		}
 
 		if (fields?.includes(timeRangeTypes.MONTHLY)) {
@@ -181,7 +183,7 @@ export const TimeRangeFilter = ({
 		}
 
 		return options;
-	}, [fields, dateRangeLabel]);
+	}, [dailyLabel, fields, dateRangeLabel]);
 
 	const validateTimeRange = (timeRange) => {
 		const timeRangeValues = _.toString(timeRange)?.split(',') || [];

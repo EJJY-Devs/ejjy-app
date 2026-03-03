@@ -42,6 +42,8 @@ export * from './useChartOfAccounts';
 export { default as useChartOfAccounts } from './useChartOfAccounts';
 export * from './useJournalEntries';
 export { default as useJournalEntries } from './useJournalEntries';
+export * from './useGeneralLedger';
+export { default as useGeneralLedger } from './useGeneralLedger';
 export * from './useDtrNotificationCount';
 export { default as useDtrNotificationCount } from './useDtrNotificationCount';
 export { default as useLogs } from './useLogs';

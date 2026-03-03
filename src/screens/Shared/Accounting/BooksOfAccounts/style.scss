@@ -113,3 +113,66 @@
 	font-weight: 600;
 	margin-bottom: 6px;
 }
+
+.BooksOfAccounts_tAccountTitle {
+	text-align: center;
+	font-size: 34px;
+	font-weight: 700;
+	margin: 0 0 16px;
+	text-transform: uppercase;
+}
+
+.BooksOfAccounts_tAccountSummary {
+	text-align: center;
+	font-size: 36px;
+	font-weight: 700;
+	margin-top: 24px;
+}
+
+.BooksOfAccounts_ledgerHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
+	margin-bottom: 16px;
+	gap: 12px;
+}
+
+.BooksOfAccounts_ledgerAsOf {
+	font-size: 24px;
+	font-weight: 700;
+	line-height: 1;
+	padding: 8px 0;
+	text-align: right;
+}
+
+.BooksOfAccounts_ledgerTimeRange {
+	margin-top: 6px;
+}
+
+.BooksOfAccounts_ledgerTimeRange .ant-space {
+	display: flex;
+}
+
+.BooksOfAccounts_ledgerControls {
+	display: flex;
+	align-items: flex-end;
+	gap: 16px;
+}
+
+.BooksOfAccounts_ledgerBranchFilter {
+	min-width: 220px;
+}
+
+.BooksOfAccounts_ledgerMonthFilter {
+	min-width: 320px;
+}
+
+.BooksOfAccounts_ledgerFilters {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.BooksOfAccounts_ledgerAsOfFilter {
+	min-width: 220px;
+}

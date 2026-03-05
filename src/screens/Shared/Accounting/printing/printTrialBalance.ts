@@ -35,8 +35,8 @@ export const printTrialBalance = ({
 			(detail) => `
 			<tr class="${detail.accountName === 'BALANCES' ? 'balances-row' : ''}">
 				<td>${escapeHtml(detail.accountName || '-')}</td>
-				<td>${escapeHtml(detail.debitAmount || '₱ 0.00')}</td>
-				<td>${escapeHtml(detail.creditAmount || '₱ 0.00')}</td>
+				<td>${escapeHtml(detail.debitAmount || '')}</td>
+				<td>${escapeHtml(detail.creditAmount || '')}</td>
 			</tr>
 		`,
 		)

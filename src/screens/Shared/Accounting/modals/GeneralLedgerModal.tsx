@@ -57,10 +57,11 @@ const ensureRobotoFont = async (pdf: jsPDF) => {
 
 interface GeneralLedgerDetail {
 	id: number;
-	date: string;
+	debitDate: string;
 	debitAmount: string;
 	debitRefNum: string;
 	debitJournalEntryId?: number;
+	creditDate: string;
 	creditAmount: string;
 	creditRefNum: string;
 	creditJournalEntryId?: number;

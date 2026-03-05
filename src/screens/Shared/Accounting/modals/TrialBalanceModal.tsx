@@ -2,7 +2,6 @@ import { Modal, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import robotoRegularTtf from 'assets/fonts/Roboto-Regular.ttf';
 import { PdfButtons } from 'components/Printing';
-import { EMPTY_CELL } from 'global';
 import jsPDF from 'jspdf';
 import React, { useMemo, useState } from 'react';
 import { printTrialBalance } from '../printing/printTrialBalance';
@@ -87,7 +86,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 
 	const formatAmountOrEmpty = (value: number) => {
 		if (value === 0) {
-			return EMPTY_CELL;
+			return '';
 		}
 
 		return `₱ ${value.toFixed(2)}`;

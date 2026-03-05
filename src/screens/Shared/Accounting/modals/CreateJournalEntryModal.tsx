@@ -23,12 +23,14 @@ export const CreateJournalEntryModal = ({
 }: Props) => {
 	const [form] = Form.useForm();
 	const amountRef = useRef<any>(null);
+	const remarksRef = useRef<any>(null);
 	const searchSelectRef = useRef<any>(null);
 	const debitAccountValue = Form.useWatch('debitAccount', form);
 	const creditAccountValue = Form.useWatch('creditAccount', form);
 	const [activeField, setActiveField] = useState<
 		'debitAccount' | 'creditAccount' | null
 	>('debitAccount');
+	const [isAmountLocked, setIsAmountLocked] = useState(false);
 	const [searchText, setSearchText] = useState('');
 	const [selectedSearchValue, setSelectedSearchValue] = useState<string | null>(
 		null,
@@ -48,6 +50,7 @@ export const CreateJournalEntryModal = ({
 	const resetModalState = () => {
 		form.resetFields();
 		setActiveField('debitAccount');
+		setIsAmountLocked(false);
 		setSearchText('');
 		setSelectedSearchValue(null);
 	};
@@ -105,16 +108,26 @@ export const CreateJournalEntryModal = ({
 		setSearchText('');
 	};
 
+	const lockAmountAndFocusRemarks = () => {
+		const amountValue = form.getFieldValue('amount');
+		if (!isAmountLocked && typeof amountValue === 'number' && amountValue > 0) {
+			setIsAmountLocked(true);
+			setTimeout(() => {
+				remarksRef.current?.focus?.();
+			}, 0);
+		}
+	};
+
 	return (
 		<Modal
 			className="CreateJournalEntryModal"
-			closable={false}
 			footer={null}
 			maskClosable={false}
 			open={open}
 			title="Create Journal Entry"
 			width={760}
 			centered
+			closable
 			destroyOnClose
 			keyboard
 			onCancel={handleClose}
@@ -174,12 +187,8 @@ export const CreateJournalEntryModal = ({
 									: ''
 							}
 							placeholder="Select from search"
+							disabled
 							readOnly
-							onFocus={() => {
-								if (!isAccountSelectionComplete) {
-									setActiveField('debitAccount');
-								}
-							}}
 						/>
 					</Form.Item>
 
@@ -194,12 +203,8 @@ export const CreateJournalEntryModal = ({
 									: ''
 							}
 							placeholder="Select from search"
+							disabled
 							readOnly
-							onFocus={() => {
-								if (!isAccountSelectionComplete) {
-									setActiveField('creditAccount');
-								}
-							}}
 						/>
 					</Form.Item>
 
@@ -210,23 +215,34 @@ export const CreateJournalEntryModal = ({
 						<InputNumber
 							ref={amountRef}
 							className="w-100"
+							disabled={!isAccountSelectionComplete || isAmountLocked}
 							formatter={(value) => `₱ ${value || ''}`}
 							min={0}
 							parser={(value) =>
 								Number((value || '').replace(/₱\s?|,/g, '')) as any
 							}
 							precision={2}
+							onBlur={lockAmountAndFocusRemarks}
+							onPressEnter={lockAmountAndFocusRemarks}
 						/>
 					</Form.Item>
 				</div>
 
 				<div className="CreateJournalEntryModal_remarksLabel">Remarks</div>
 				<Form.Item name="remarks">
-					<Input />
+					<Input ref={remarksRef} />
 				</Form.Item>
 
 				<div className="ModalCustomFooter">
-					<Button htmlType="button" onClick={handleClose}>
+					<Button
+						htmlType="button"
+						onClick={() => {
+							resetModalState();
+							setTimeout(() => {
+								searchSelectRef.current?.focus?.();
+							}, 0);
+						}}
+					>
 						Clear
 					</Button>
 					<Button htmlType="submit" loading={isSubmitting} type="primary">

@@ -73,7 +73,7 @@ export const GeneralJournalTab = ({
 	const entries: GeneralJournalEntry[] = (journalEntries || []).map(
 		(entry: any) => ({
 			id: entry.id,
-			datetime: formatDateTime(entry.datetime_created, false),
+			datetime: formatDateTime(entry.datetime_created, true),
 			branch: entry.branch_name,
 			referenceNumber: entry.reference_number,
 			debitAccount: entry.debit_account,

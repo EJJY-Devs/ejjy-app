@@ -1,4 +1,5 @@
-import { Button, Select, Table } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+import { Button, Input, Select, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
@@ -27,10 +28,11 @@ interface GeneralJournalEntry {
 
 interface GeneralLedgerDetail {
 	id: number;
-	date: string;
+	debitDate: string;
 	debitAmount: string;
 	debitRefNum: string;
 	debitJournalEntryId?: number;
+	creditDate: string;
 	creditAmount: string;
 	creditRefNum: string;
 	creditJournalEntryId?: number;
@@ -118,6 +120,7 @@ export const GeneralLedgerTab = ({
 
 	const [currentPage, setCurrentPage] = useState(1);
 	const [currentPageSize, setCurrentPageSize] = useState(10);
+	const [searchText, setSearchText] = useState('');
 	const [isLedgerViewOpen, setIsLedgerViewOpen] = useState(false);
 	const [
 		selectedLedgerMeta,
@@ -126,7 +129,7 @@ export const GeneralLedgerTab = ({
 
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [selectedBranchId, selectedTimeRange]);
+	}, [searchText, selectedBranchId, selectedTimeRange]);
 
 	const branchFilter = selectedBranchId;
 
@@ -140,6 +143,7 @@ export const GeneralLedgerTab = ({
 		params: {
 			branchId: branchFilter,
 			timeRange: selectedTimeRange,
+			search: searchText || undefined,
 			page: currentPage,
 			pageSize: currentPageSize,
 		},
@@ -250,18 +254,33 @@ export const GeneralLedgerTab = ({
 			return null;
 		}
 
-		const mappedDetails = (detailRows || []).map(
-			(detail: GeneralLedgerDetailRow, index: number) => ({
-				id: index + 1,
-				date: detail.datetime,
-				debitAmount: formatPeso(detail.debit_amount),
-				debitRefNum: detail.debit_reference_number || '-',
-				debitJournalEntryId: detail.debit_journal_entry_id || undefined,
-				creditAmount: formatPeso(detail.credit_amount),
-				creditRefNum: detail.credit_reference_number || '-',
-				creditJournalEntryId: detail.credit_journal_entry_id || undefined,
-			}),
+		const debitDetails = (detailRows || []).filter(
+			(detail: GeneralLedgerDetailRow) => Number(detail.debit_amount || 0) > 0,
 		);
+		const creditDetails = (detailRows || []).filter(
+			(detail: GeneralLedgerDetailRow) => Number(detail.credit_amount || 0) > 0,
+		);
+
+		const rowCount = Math.max(debitDetails.length, creditDetails.length);
+		const mappedDetails = Array.from({ length: rowCount }, (_, index) => {
+			const debitDetail = debitDetails[index];
+			const creditDetail = creditDetails[index];
+
+			return {
+				id: index + 1,
+				debitDate: debitDetail?.datetime || '',
+				debitAmount: debitDetail ? formatPeso(debitDetail.debit_amount) : '',
+				debitRefNum: debitDetail?.debit_reference_number || '',
+				debitJournalEntryId: debitDetail?.debit_journal_entry_id || undefined,
+				creditDate: creditDetail?.datetime || '',
+				creditAmount: creditDetail
+					? formatPeso(creditDetail.credit_amount)
+					: '',
+				creditRefNum: creditDetail?.credit_reference_number || '',
+				creditJournalEntryId:
+					creditDetail?.credit_journal_entry_id || undefined,
+			};
+		});
 
 		return {
 			id: 1,
@@ -310,14 +329,14 @@ export const GeneralLedgerTab = ({
 
 	const generalLedgerDetailColumns = useMemo(() => {
 		const tableColumns: ColumnsType<GeneralLedgerDetail> = [
-			{ title: 'Datetime', dataIndex: 'date', key: 'date' },
+			{ title: 'Datetime', dataIndex: 'debitDate', key: 'debitDate' },
 			{ title: 'Debit Amount', dataIndex: 'debitAmount', key: 'debitAmount' },
 			{
 				title: 'Reference Number',
 				dataIndex: 'debitRefNum',
 				key: 'debitRefNum',
 				render: (value: string, record: GeneralLedgerDetail) => {
-					if (!record.debitJournalEntryId || value === '-') return value;
+					if (!record.debitJournalEntryId || !value) return value;
 
 					return (
 						<Button
@@ -338,6 +357,13 @@ export const GeneralLedgerTab = ({
 				},
 			},
 			{
+				title: '',
+				key: 'separator',
+				render: () => '',
+				width: 24,
+			},
+			{ title: 'Datetime', dataIndex: 'creditDate', key: 'creditDate' },
+			{
 				title: 'Credit Amount',
 				dataIndex: 'creditAmount',
 				key: 'creditAmount',
@@ -347,7 +373,7 @@ export const GeneralLedgerTab = ({
 				dataIndex: 'creditRefNum',
 				key: 'creditRefNum',
 				render: (value: string, record: GeneralLedgerDetail) => {
-					if (!record.creditJournalEntryId || value === '-') return value;
+					if (!record.creditJournalEntryId || !value) return value;
 
 					return (
 						<Button
@@ -403,6 +429,18 @@ export const GeneralLedgerTab = ({
 							dateRangeLabel="Select Date"
 							queryName="generalLedgerTimeRange"
 							useSingleDateForDateRange
+						/>
+					</div>
+					<div className="BooksOfAccounts_ledgerSearch">
+						<Input
+							className="BooksOfAccounts_ledgerSearchInput"
+							placeholder="Search account"
+							prefix={<SearchOutlined />}
+							value={searchText}
+							allowClear
+							onChange={(event) => {
+								setSearchText(event.target.value);
+							}}
 						/>
 					</div>
 					{isHeadOffice && (

@@ -40,6 +40,34 @@
 	.ant-modal-title {
 		font-weight: 600;
 	}
+
+	.ant-input[disabled],
+	.ant-input-number-disabled,
+	.ant-input-number-disabled .ant-input-number-input,
+	.ant-select-disabled,
+	.ant-select-disabled *,
+	.ant-select-disabled .ant-select-selector,
+	.ant-select-disabled .ant-select-selection-search,
+	.ant-select-disabled .ant-select-selection-search-input,
+	.ant-select-disabled .ant-select-selection-item,
+	.ant-select-disabled .ant-select-selection-placeholder,
+	.ant-select-disabled .ant-select-arrow {
+		cursor: default !important;
+	}
+
+	.CreateJournalEntryModal_gridInputs .ant-input[disabled],
+	.CreateJournalEntryModal_gridInputs
+		.ant-input-number-disabled
+		.ant-input-number-input,
+	.CreateJournalEntryModal_gridInputs .ant-input-number-input[disabled] {
+		color: #222 !important;
+		-webkit-text-fill-color: #222 !important;
+		opacity: 1 !important;
+	}
+
+	.CreateJournalEntryModal_gridInputs .ant-input-number-disabled {
+		background: #f6f7fb;
+	}
 }
 
 .CreateJournalEntryModal_form {
@@ -157,6 +185,14 @@
 	display: flex;
 	align-items: flex-end;
 	gap: 16px;
+}
+
+.BooksOfAccounts_ledgerSearch {
+	min-width: 280px;
+}
+
+.BooksOfAccounts_ledgerSearchInput {
+	max-width: 280px;
 }
 
 .BooksOfAccounts_ledgerBranchFilter {

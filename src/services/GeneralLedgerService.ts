@@ -6,6 +6,7 @@ interface List extends IListRequest {
 	time_range?: string;
 	as_of_date?: string;
 	month?: string;
+	search?: string;
 }
 
 interface DetailList extends IListRequest {

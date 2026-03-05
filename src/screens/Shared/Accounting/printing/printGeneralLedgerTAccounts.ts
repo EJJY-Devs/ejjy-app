@@ -1,7 +1,8 @@
 interface GeneralLedgerDetailForPrint {
-	date: string;
+	debitDate: string;
 	debitAmount: string;
 	debitRefNum: string;
+	creditDate: string;
 	creditAmount: string;
 	creditRefNum: string;
 }
@@ -40,11 +41,13 @@ export const printGeneralLedgerTAccounts = ({
 		.map(
 			(detail) => `
 			<tr>
-				<td>${escapeHtml(detail.date || '-')}</td>
-				<td>${escapeHtml(detail.debitAmount || '₱ 0.00')}</td>
-				<td>${escapeHtml(detail.debitRefNum || '-')}</td>
-				<td>${escapeHtml(detail.creditAmount || '₱ 0.00')}</td>
-				<td>${escapeHtml(detail.creditRefNum || '-')}</td>
+				<td>${escapeHtml(detail.debitDate || '')}</td>
+				<td>${escapeHtml(detail.debitAmount || '')}</td>
+				<td>${escapeHtml(detail.debitRefNum || '')}</td>
+				<td></td>
+				<td>${escapeHtml(detail.creditDate || '')}</td>
+				<td>${escapeHtml(detail.creditAmount || '')}</td>
+				<td>${escapeHtml(detail.creditRefNum || '')}</td>
 			</tr>
 		`,
 		)
@@ -79,6 +82,8 @@ export const printGeneralLedgerTAccounts = ({
 						<th>Datetime</th>
 						<th>Debit Amount</th>
 						<th>Reference Number</th>
+						<th></th>
+						<th>Datetime</th>
 						<th>Credit Amount</th>
 						<th>Reference Number</th>
 					</tr>

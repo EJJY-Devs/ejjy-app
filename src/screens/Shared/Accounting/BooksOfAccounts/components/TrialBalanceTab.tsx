@@ -2,7 +2,7 @@ import { Button, Select, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
-import { EMPTY_CELL, MAX_PAGE_SIZE, timeRangeTypes } from 'global';
+import { MAX_PAGE_SIZE, timeRangeTypes } from 'global';
 import {
 	useBranches,
 	useQueryParams,
@@ -124,7 +124,7 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 		const parsedValue = Number(value || 0);
 
 		if (parsedValue === 0) {
-			return EMPTY_CELL;
+			return '';
 		}
 
 		return `₱ ${parsedValue.toFixed(2)}`;

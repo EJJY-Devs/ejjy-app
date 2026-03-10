@@ -69,7 +69,7 @@ interface GeneralLedgerDetail {
 
 interface GeneralLedgerEntry {
 	id: number;
-	accountCode: string;
+	accountCode: number;
 	accountName: string;
 	debitAmount: string;
 	creditAmount: string;

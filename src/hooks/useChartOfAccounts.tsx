@@ -45,7 +45,7 @@ export const useChartOfAccountCreate = () => {
 		({ accountCode, accountName, accountType, subType, normalBalance }: any) =>
 			ChartOfAccountsService.create(
 				{
-					account_code: accountCode,
+					account_code: Number(accountCode),
 					account_name: accountName,
 					account_type: accountType,
 					sub_type: subType,
@@ -76,7 +76,7 @@ export const useChartOfAccountEdit = () => {
 			ChartOfAccountsService.edit(
 				id,
 				{
-					account_code: accountCode,
+					account_code: Number(accountCode),
 					account_name: accountName,
 					account_type: accountType,
 					sub_type: subType,

@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditFilled } from '@ant-design/icons';
-import { Button, message, Popconfirm, Space, Tooltip } from 'antd';
+import { Button, message, Popconfirm, Space, Tag, Tooltip } from 'antd';
 import Table, { ColumnsType } from 'antd/lib/table';
 import {
 	ConnectionAlert,
@@ -55,12 +55,18 @@ export const Branches = () => {
 		isLoading: isDeletingBranch,
 		error: deleteBranchError,
 	} = useBranchDelete();
+	const mainBranchId = branches.find((branch) => branch.is_main)?.id ?? null;
 
 	// METHODS
 	useEffect(() => {
 		const formattedBranches = branches.map((branch) => ({
 			key: branch.id,
-			name: <Link to={`branches/${branch.id}`}>{branch.name}</Link>,
+			name: (
+				<Space size="small">
+					<Link to={`branches/${branch.id}`}>{branch.name}</Link>
+					{branch.is_main ? <Tag color="gold">Main</Tag> : null}
+				</Space>
+			),
 			url: branch.server_url,
 			storeName: branch.store_name,
 			storeAddress: branch.store_address,
@@ -137,6 +143,7 @@ export const Branches = () => {
 				{modifyBranchModalVisible && (
 					<ModifyBranchModal
 						branch={selectedBranch}
+						mainBranchId={mainBranchId}
 						onClose={() => {
 							setSelectedBranch(null);
 							setModifyBranchModalVisible(false);

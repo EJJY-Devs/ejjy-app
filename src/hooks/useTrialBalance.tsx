@@ -58,4 +58,27 @@ export const useTrialBalanceDetails = ({ params, options }: Query) =>
 		},
 	);
 
+export const useMultipleTrialBalanceDetails = ({ params, options }: Query) =>
+	useQuery<any>(
+		['useMultipleTrialBalanceDetails', params?.referenceNumbers],
+		() =>
+			wrapServiceWithCatch(
+				Promise.all(
+					(params?.referenceNumbers || []).map((referenceNumber: string) =>
+						TrialBalanceService.detail(
+							{
+								reference_number: referenceNumber,
+							},
+							getLocalApiUrl(),
+						).then((response) => response.data),
+					),
+				),
+			),
+		{
+			enabled: !!params?.referenceNumbers?.length,
+			initialData: [],
+			...(options || {}),
+		},
+	);
+
 export default useTrialBalance;

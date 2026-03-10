@@ -77,7 +77,7 @@ export const EditAccountModal = ({
 	useEffect(() => {
 		if (open && account) {
 			form.setFieldsValue({
-				accountCode: account.account_code,
+				accountCode: String(account.account_code ?? ''),
 				accountName: account.account_name,
 				accountType: account.account_type,
 				subType: account.sub_type,
@@ -110,11 +110,14 @@ export const EditAccountModal = ({
 				onFinish={handleFinish}
 			>
 				<Form.Item
+					getValueFromEvent={(event) =>
+						event?.target?.value?.replace(/\D/g, '') || ''
+					}
 					label="Account Code"
 					name="accountCode"
 					rules={[{ required: true, message: 'Account code is required' }]}
 				>
-					<Input />
+					<Input inputMode="numeric" pattern="[0-9]*" />
 				</Form.Item>
 
 				<Form.Item

@@ -9,6 +9,7 @@ interface TrialBalanceEntryForPrint {
 	snapshotDate: string;
 	storeName: string;
 	storeAddress: string;
+	branchName: string;
 	storeTin: string;
 	entries: TrialBalanceDetailForPrint[];
 }
@@ -65,6 +66,7 @@ export const printTrialBalance = ({
 			<div class="header">
 				<div>${escapeHtml(entry.storeName || '-')}</div>
 				<div>${escapeHtml(entry.storeAddress || '-')}</div>
+				<div>${escapeHtml(entry.branchName || '-')}</div>
 				<div>${escapeHtml(entry.storeTin || '-')}</div>
 			</div>
 			<div class="title">

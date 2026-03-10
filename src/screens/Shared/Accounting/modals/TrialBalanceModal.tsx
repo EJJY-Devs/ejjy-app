@@ -68,6 +68,7 @@ interface TrialBalanceEntry {
 	snapshotDate: string;
 	storeName: string;
 	storeAddress: string;
+	branchName: string;
 	storeTin: string;
 	entries: TrialBalanceDetail[];
 }
@@ -84,11 +85,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 	const parseAmount = (value: string) =>
 		Number(String(value || '').replace(/[^0-9.-]+/g, '')) || 0;
 
-	const formatAmountOrEmpty = (value: number) => {
-		if (value === 0) {
-			return '';
-		}
-
+	const formatAmount = (value: number) => {
 		return `₱ ${value.toFixed(2)}`;
 	};
 
@@ -113,8 +110,8 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 			{
 				id: 999999,
 				accountName: 'BALANCES',
-				debitAmount: formatAmountOrEmpty(totals.debit),
-				creditAmount: formatAmountOrEmpty(totals.credit),
+				debitAmount: formatAmount(totals.debit),
+				creditAmount: formatAmount(totals.credit),
 				isBalanceRow: true,
 			},
 		];
@@ -152,6 +149,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 			snapshotDate: entry?.snapshotDate || '',
 			storeName: entry?.storeName || '',
 			storeAddress: entry?.storeAddress || '',
+			branchName: entry?.branchName || '',
 			storeTin: entry?.storeTin || '',
 			entries: tableRows.map((row) => ({
 				accountName: row.accountName,
@@ -164,6 +162,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 			entry?.snapshotDate,
 			entry?.storeAddress,
 			entry?.storeName,
+			entry?.branchName,
 			entry?.storeTin,
 			tableRows,
 		],
@@ -251,6 +250,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 			<div className="TrialBalanceModal_header">
 				<div>{entry?.storeName || '-'}</div>
 				<div>{entry?.storeAddress || '-'}</div>
+				<div>{entry?.branchName || '-'}</div>
 				<div>{entry?.storeTin || '-'}</div>
 			</div>
 			<div className="TrialBalanceModal_titleBlock">

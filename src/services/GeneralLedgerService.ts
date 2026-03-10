@@ -10,7 +10,7 @@ interface List extends IListRequest {
 }
 
 interface DetailList extends IListRequest {
-	account_code: string;
+	account_code: number;
 	branch_id?: number;
 	time_range?: string;
 	as_of_date?: string;

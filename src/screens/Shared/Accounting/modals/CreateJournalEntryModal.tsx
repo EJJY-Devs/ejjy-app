@@ -1,5 +1,5 @@
 import { Button, Form, Input, InputNumber, Modal, Select } from 'antd';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
+import { DEFAULT_PAGE } from 'global';
 import useChartOfAccounts from 'hooks/useChartOfAccounts';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -37,9 +37,8 @@ export const CreateJournalEntryModal = ({
 	);
 	const { data, isFetching } = useChartOfAccounts({
 		params: {
-			search: searchText || undefined,
 			page: DEFAULT_PAGE,
-			pageSize: DEFAULT_PAGE_SIZE,
+			pageSize: 500,
 		},
 	});
 	const { chartOfAccounts } = data || { chartOfAccounts: [] };
@@ -78,6 +77,7 @@ export const CreateJournalEntryModal = ({
 			debitAccountValue,
 			creditAccountValue,
 		].filter((value): value is string => Boolean(value));
+		const normalizedSearchText = searchText.trim().toLowerCase();
 
 		return chartOfAccounts
 			.map((account: any) => {
@@ -87,8 +87,13 @@ export const CreateJournalEntryModal = ({
 					value: label,
 				};
 			})
-			.filter((option: any) => !blockedValues.includes(option.value));
-	}, [chartOfAccounts, creditAccountValue, debitAccountValue]);
+			.filter((option: any) => !blockedValues.includes(option.value))
+			.filter(
+				(option: any) =>
+					!normalizedSearchText ||
+					option.label.toLowerCase().includes(normalizedSearchText),
+			);
+	}, [chartOfAccounts, creditAccountValue, debitAccountValue, searchText]);
 
 	const handleAccountSelect = (value: string) => {
 		form.setFieldsValue({

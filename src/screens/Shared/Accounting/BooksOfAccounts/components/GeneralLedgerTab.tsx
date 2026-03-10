@@ -40,7 +40,7 @@ interface GeneralLedgerDetail {
 
 interface GeneralLedgerEntry {
 	id: number;
-	accountCode: string;
+	accountCode: number;
 	accountName: string;
 	debitAmount: string;
 	creditAmount: string;
@@ -48,7 +48,7 @@ interface GeneralLedgerEntry {
 }
 
 interface GeneralLedgerSummaryRow {
-	account_code: string;
+	account_code: number;
 	account_name: string;
 	debit_amount: number | string;
 	credit_amount: number | string;
@@ -67,7 +67,7 @@ interface GeneralLedgerDetailRow {
 }
 
 interface SelectedLedgerMeta {
-	accountCode: string;
+	accountCode: number;
 	accountName: string;
 	debitAmount: string;
 	creditAmount: string;
@@ -298,7 +298,7 @@ export const GeneralLedgerTab = ({
 				title: 'Account Code',
 				dataIndex: 'accountCode',
 				key: 'accountCode',
-				render: (value: string, record: GeneralLedgerEntry) => (
+				render: (value: number, record: GeneralLedgerEntry) => (
 					<Button
 						type="link"
 						onClick={() => {

@@ -8,7 +8,7 @@ interface GeneralLedgerDetailForPrint {
 }
 
 interface GeneralLedgerEntryForPrint {
-	accountCode: string;
+	accountCode: number;
 	accountName: string;
 	entries: GeneralLedgerDetailForPrint[];
 }

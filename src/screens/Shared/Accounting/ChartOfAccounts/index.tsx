@@ -70,7 +70,7 @@ export const ChartOfAccounts = () => {
 				title: 'Account Code',
 				dataIndex: 'account_code',
 				key: 'code',
-				render: (value: string, record: any) => (
+				render: (value: number, record: any) => (
 					<Button
 						type="link"
 						onClick={() => {

@@ -57,7 +57,7 @@ export const ViewAccountModal = ({ account, open, onClose }: Props) => {
 				bordered
 			>
 				<Descriptions.Item label="Account Code">
-					{account?.account_code || '-'}
+					{account?.account_code ?? '-'}
 				</Descriptions.Item>
 				<Descriptions.Item label="Account Name">
 					{account?.account_name || '-'}

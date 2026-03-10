@@ -3,6 +3,7 @@ import { IListRequest } from './interfaces';
 
 interface Modify {
 	name: string;
+	is_main: boolean;
 	server_url: string;
 	store_name: string;
 	store_address: string;

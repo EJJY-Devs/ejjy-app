@@ -70,6 +70,7 @@ export const useBranchCreate = () =>
 	useMutation<any, any, any>(
 		({
 			name,
+			isMain,
 			serverUrl,
 			storeName,
 			storeAddress,
@@ -81,6 +82,7 @@ export const useBranchCreate = () =>
 			BranchesService.create(
 				{
 					name,
+					is_main: Boolean(isMain),
 					server_url: serverUrl,
 					store_name: storeName,
 					store_address: storeAddress,
@@ -103,6 +105,7 @@ export const useBranchEdit = () =>
 		({
 			id,
 			name,
+			isMain,
 			serverUrl,
 			storeName,
 			storeAddress,
@@ -115,6 +118,7 @@ export const useBranchEdit = () =>
 				id,
 				{
 					name,
+					is_main: Boolean(isMain),
 					server_url: serverUrl,
 					store_name: storeName,
 					store_address: storeAddress,

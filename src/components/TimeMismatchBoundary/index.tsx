@@ -12,7 +12,7 @@ export const TimeMismatchBoundary = () => {
 	// VARIABLES
 	const MINUTES_DIFFERENCE = 2;
 	const REFETCH_INTERVAL_MS = 5000;
-	const TIME_API_BASE_URL = 'http://worldtimeapi.org/';
+	const TIME_API_BASE_URL = 'https://worldtimeapi.org/';
 
 	// STATES
 	const [isCheckingAgain, setIsCheckingAgain] = useState(false);
@@ -31,26 +31,41 @@ export const TimeMismatchBoundary = () => {
 	});
 
 	// METHODS
+	const tryServerTime = async (baseURL: string) => {
+		if (!baseURL) return null;
+
+		const endpoints = ['/server/time/', '/v1/server/time/'];
+
+		for (const endpoint of endpoints) {
+			try {
+				const response = await axios.get(endpoint, {
+					baseURL,
+					timeout: 4000,
+				});
+				return response;
+			} catch (e) {
+				// Try next endpoint variant.
+			}
+		}
+
+		return null;
+	};
+
 	const serviceFn = async () => {
 		try {
-			// NOTE: Get time from timeapi.io
-			const response = await axios.get('/api/timezone/Asia/Manila/', {
-				baseURL: TIME_API_BASE_URL,
-			});
-
-			return response;
-		} catch (e) {
-			// NOTE: Retry to get time from back office
+			// Use branch machine URLs as the primary source.
 			for (const branchMachine of branchMachines) {
-				try {
-					const response = await axios.get('/server/time/', {
-						baseURL: branchMachine.server_url,
-					});
-					return response;
-				} catch (error) {
-					// Do nothing
-				}
+				const response = await tryServerTime(branchMachine.server_url);
+				if (response) return response;
 			}
+
+			// Last fallback: public timezone API.
+			return await axios.get('/api/timezone/Asia/Manila/', {
+				baseURL: TIME_API_BASE_URL,
+				timeout: 4000,
+			});
+		} catch (e) {
+			return null;
 		}
 	};
 
@@ -81,6 +96,7 @@ export const TimeMismatchBoundary = () => {
 				!hasMismatch &&
 				isSiteSettingsFetched &&
 				isBranchMachinesFetched,
+			retry: false,
 			refetchInterval: REFETCH_INTERVAL_MS,
 			refetchIntervalInBackground: true,
 			notifyOnChangeProps: ['data'],

@@ -98,9 +98,15 @@ export const CreateAccountModal = ({
 				<Form.Item
 					label="Account Code"
 					name="accountCode"
-					rules={[{ required: true, message: 'Account code is required' }]}
+					normalize={(value) => value?.replace(/\D/g, '') || ''}
+					rules={[
+						{
+							required: true,
+							message: 'Account code must contain only numbers',
+						},
+					]}
 				>
-					<Input />
+					<Input inputMode="numeric" pattern="[0-9]*" />
 				</Form.Item>
 
 				<Form.Item

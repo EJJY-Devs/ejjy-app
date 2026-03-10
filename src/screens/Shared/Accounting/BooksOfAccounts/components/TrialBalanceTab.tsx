@@ -5,6 +5,7 @@ import { Label } from 'components/elements';
 import { MAX_PAGE_SIZE, timeRangeTypes } from 'global';
 import {
 	useBranches,
+	useMultipleTrialBalanceDetails,
 	useQueryParams,
 	useTrialBalance,
 	useTrialBalanceDetails,
@@ -40,6 +41,7 @@ interface TrialBalanceDetailApi {
 interface TrialBalanceListEntry {
 	id: number;
 	referenceNumber: string;
+	snapshotDateKey: string;
 	date: string;
 	branchName: string;
 	balanceAmount: string;
@@ -85,10 +87,17 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 		return undefined;
 	}, [isHeadOffice, localBranchId, params.trialBalanceBranchId]);
 
+	const isAllBranches = isHeadOffice && params.trialBalanceBranchId === 'all';
+	const mainBranch = useMemo(
+		() => branches.find((branch: any) => branch.is_main),
+		[branches],
+	);
+
 	const [currentPage, setCurrentPage] = useState(1);
 	const [currentPageSize, setCurrentPageSize] = useState(10);
 	const [isDetailOpen, setIsDetailOpen] = useState(false);
 	const [selectedReferenceNumber, setSelectedReferenceNumber] = useState('');
+	const [selectedAllDateKey, setSelectedAllDateKey] = useState('');
 
 	useEffect(() => {
 		setCurrentPage(1);
@@ -104,8 +113,8 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 		params: {
 			branchId: selectedBranchId,
 			timeRange: selectedTimeRange,
-			page: currentPage,
-			pageSize: currentPageSize,
+			page: isAllBranches ? 1 : currentPage,
+			pageSize: isAllBranches ? MAX_PAGE_SIZE : currentPageSize,
 		},
 	});
 
@@ -119,8 +128,36 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 	});
 
 	const detailData = detailDataRaw as TrialBalanceDetailApi | null;
+	const allBranchReferenceNumbers = useMemo(() => {
+		if (!isAllBranches || !selectedAllDateKey) {
+			return [];
+		}
 
-	const formatPeso = (value: number | string | undefined | null) => {
+		return (summaryRows || [])
+			.filter(
+				(row: TrialBalanceSummaryRow) =>
+					row.snapshot_date === selectedAllDateKey,
+			)
+			.map((row: TrialBalanceSummaryRow) => row.reference_number);
+	}, [isAllBranches, selectedAllDateKey, summaryRows]);
+
+	const { data: allBranchDetailData = [] } = useMultipleTrialBalanceDetails({
+		params: {
+			referenceNumbers: allBranchReferenceNumbers,
+		},
+		options: {
+			enabled:
+				isDetailOpen && isAllBranches && allBranchReferenceNumbers.length > 0,
+		},
+	});
+
+	const formatBalancePeso = (value: number | string | undefined | null) => {
+		const parsedValue = Number(value || 0);
+
+		return `₱ ${parsedValue.toFixed(2)}`;
+	};
+
+	const formatEntryPeso = (value: number | string | undefined | null) => {
 		const parsedValue = Number(value || 0);
 
 		if (parsedValue === 0) {
@@ -169,6 +206,24 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 		return parsed;
 	};
 
+	const resolveDisplayedEndDate = (value: string) => {
+		const parsedEndDate = parseDate(value);
+		if (!parsedEndDate) {
+			return null;
+		}
+
+		const today = new Date();
+		const isCurrentMonthSelection =
+			parsedEndDate.getFullYear() === today.getFullYear() &&
+			parsedEndDate.getMonth() === today.getMonth();
+
+		if (isCurrentMonthSelection && parsedEndDate > today) {
+			return today;
+		}
+
+		return parsedEndDate;
+	};
+
 	const asOfDateLabel = useMemo(() => {
 		const today = new Date();
 
@@ -178,7 +233,7 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 
 		if (selectedTimeRange.includes(',')) {
 			const [, endDate] = selectedTimeRange.split(',');
-			const parsedEndDate = parseDate((endDate || '').trim());
+			const parsedEndDate = resolveDisplayedEndDate((endDate || '').trim());
 
 			return `As of ${formatLongDate(parsedEndDate || today)}`;
 		}
@@ -187,40 +242,79 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 		return `As of ${formatLongDate(parsedSelectedDate || today)}`;
 	}, [selectedTimeRange]);
 
-	const tableData: TrialBalanceListEntry[] = useMemo(
-		() =>
-			(summaryRows || []).map((row: TrialBalanceSummaryRow, index: number) => ({
+	const tableData: TrialBalanceListEntry[] = useMemo(() => {
+		if (isAllBranches) {
+			const grouped = new Map<string, { date: string; totalBalance: number }>();
+			(summaryRows || []).forEach((row: TrialBalanceSummaryRow) => {
+				const key = row.snapshot_date;
+				const amount = Number(row.balance_amount || 0);
+				const existing = grouped.get(key);
+				if (existing) {
+					existing.totalBalance += amount;
+				} else {
+					grouped.set(key, {
+						date: formatShortDate(row.snapshot_date),
+						totalBalance: amount,
+					});
+				}
+			});
+
+			return Array.from(grouped.entries()).map(([key, group], index) => {
+				const mainBranchRow = (summaryRows || []).find(
+					(row: TrialBalanceSummaryRow) =>
+						row.snapshot_date === key && row.branch_id === mainBranch?.id,
+				);
+
+				return {
+					id: index + 1,
+					referenceNumber: mainBranchRow?.reference_number || `tb-all-${key}`,
+					snapshotDateKey: key,
+					date: group.date,
+					branchName: 'All',
+					balanceAmount: formatBalancePeso(group.totalBalance),
+				};
+			});
+		}
+
+		return (summaryRows || []).map(
+			(row: TrialBalanceSummaryRow, index: number) => ({
 				id: index + 1,
 				referenceNumber: row.reference_number,
+				snapshotDateKey: row.snapshot_date,
 				date: formatShortDate(row.snapshot_date),
 				branchName: row.branch_name,
-				balanceAmount: formatPeso(row.balance_amount),
-			})),
-		[summaryRows],
-	);
+				balanceAmount: formatBalancePeso(row.balance_amount),
+			}),
+		);
+	}, [summaryRows, isAllBranches, mainBranch]);
 
 	const columns = useMemo(() => {
-		const tableColumns: ColumnsType<TrialBalanceListEntry> = [
-			{
-				title: 'Reference Number',
-				dataIndex: 'referenceNumber',
-				key: 'referenceNumber',
-				render: (value: string) => (
-					<Button
-						type="link"
-						onClick={() => {
-							setSelectedReferenceNumber(value);
-							setIsDetailOpen(true);
-						}}
-					>
-						{value}
-					</Button>
-				),
-			},
-			{ title: 'Date', dataIndex: 'date', key: 'date' },
-		];
+		const tableColumns: ColumnsType<TrialBalanceListEntry> = [];
 
-		if (isHeadOffice) {
+		tableColumns.push({
+			title: 'Reference Number',
+			dataIndex: 'referenceNumber',
+			key: 'referenceNumber',
+			render: (value: string, record: TrialBalanceListEntry) => (
+				<Button
+					type="link"
+					onClick={() => {
+						if (isAllBranches) {
+							setSelectedAllDateKey(record.snapshotDateKey);
+						} else {
+							setSelectedReferenceNumber(value);
+						}
+						setIsDetailOpen(true);
+					}}
+				>
+					{value}
+				</Button>
+			),
+		});
+
+		tableColumns.push({ title: 'Date', dataIndex: 'date', key: 'date' });
+
+		if (isHeadOffice && !isAllBranches) {
 			tableColumns.push({
 				title: 'Branch',
 				dataIndex: 'branchName',
@@ -235,7 +329,7 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 		});
 
 		return tableColumns;
-	}, [isHeadOffice]);
+	}, [isHeadOffice, isAllBranches]);
 
 	const modalEntry = useMemo(() => {
 		if (!detailData) {
@@ -249,17 +343,90 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 			),
 			storeName: detailData.store_name || '',
 			storeAddress: detailData.store_address || '',
+			branchName: detailData.branch_name || '',
 			storeTin: detailData.store_tin || '',
 			entries: (detailData.entries || []).map(
 				(detail: TrialBalanceDetailApiRow, index: number) => ({
 					id: index + 1,
 					accountName: detail.account_name,
-					debitAmount: formatPeso(detail.debit_amount),
-					creditAmount: formatPeso(detail.credit_amount),
+					debitAmount: formatEntryPeso(detail.debit_amount),
+					creditAmount: formatEntryPeso(detail.credit_amount),
 				}),
 			),
 		};
 	}, [detailData]);
+
+	const allBranchesModalEntry = useMemo(() => {
+		if (!isAllBranches || !selectedAllDateKey) {
+			return null;
+		}
+
+		const rowsForDate = (summaryRows || []).filter(
+			(row: TrialBalanceSummaryRow) => row.snapshot_date === selectedAllDateKey,
+		);
+
+		if (rowsForDate.length === 0) {
+			return null;
+		}
+
+		const headerReferenceNumber =
+			rowsForDate.find(
+				(row: TrialBalanceSummaryRow) => row.branch_id === mainBranch?.id,
+			)?.reference_number || `tb-all-${selectedAllDateKey}`;
+
+		const aggregatedEntriesMap = new Map<
+			string,
+			{ accountName: string; debitAmount: number; creditAmount: number }
+		>();
+
+		(allBranchDetailData as TrialBalanceDetailApi[]).forEach(
+			(detail: TrialBalanceDetailApi) => {
+				(detail.entries || []).forEach((entry: TrialBalanceDetailApiRow) => {
+					const accountName = entry.account_name || '-';
+					const existing = aggregatedEntriesMap.get(accountName);
+					const debitAmount = Number(entry.debit_amount || 0);
+					const creditAmount = Number(entry.credit_amount || 0);
+
+					if (existing) {
+						existing.debitAmount += debitAmount;
+						existing.creditAmount += creditAmount;
+						return;
+					}
+
+					aggregatedEntriesMap.set(accountName, {
+						accountName,
+						debitAmount,
+						creditAmount,
+					});
+				});
+			},
+		);
+
+		return {
+			referenceNumber: headerReferenceNumber,
+			snapshotDate: capitalizeMonth(
+				formatLongDate(parseDate(selectedAllDateKey) || new Date()),
+			),
+			storeName: mainBranch?.store_name || '',
+			storeAddress: mainBranch?.store_address || '',
+			branchName: mainBranch?.name || 'All Branches',
+			storeTin: mainBranch?.tin || '',
+			entries: Array.from(aggregatedEntriesMap.values()).map(
+				(entry, index: number) => ({
+					id: index + 1,
+					accountName: entry.accountName,
+					debitAmount: formatEntryPeso(entry.debitAmount),
+					creditAmount: formatEntryPeso(entry.creditAmount),
+				}),
+			),
+		};
+	}, [
+		allBranchDetailData,
+		isAllBranches,
+		mainBranch,
+		selectedAllDateKey,
+		summaryRows,
+	]);
 
 	return (
 		<>
@@ -318,28 +485,33 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 				columns={columns}
 				dataSource={tableData}
 				loading={isFetching}
-				pagination={{
-					current: currentPage,
-					pageSize: currentPageSize,
-					total,
-					hideOnSinglePage: true,
-					position: ['bottomCenter'],
-					showSizeChanger: true,
-					onChange: (page, pageSize) => {
-						setCurrentPage(page);
-						setCurrentPageSize(pageSize);
-					},
-				}}
+				pagination={
+					isAllBranches
+						? false
+						: {
+								current: currentPage,
+								pageSize: currentPageSize,
+								total,
+								hideOnSinglePage: true,
+								position: ['bottomCenter'],
+								showSizeChanger: true,
+								onChange: (page, pageSize) => {
+									setCurrentPage(page);
+									setCurrentPageSize(pageSize);
+								},
+						  }
+				}
 				rowKey="id"
 				bordered
 			/>
 
 			<TrialBalanceModal
-				entry={modalEntry}
+				entry={isAllBranches ? allBranchesModalEntry : modalEntry}
 				open={isDetailOpen}
 				onClose={() => {
 					setIsDetailOpen(false);
 					setSelectedReferenceNumber('');
+					setSelectedAllDateKey('');
 				}}
 			/>
 		</>

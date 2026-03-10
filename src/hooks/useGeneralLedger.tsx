@@ -36,6 +36,7 @@ const useGeneralLedger = ({ params, options }: Query) =>
 			),
 		{
 			initialData: { data: { results: [], count: 0 } },
+			refetchOnMount: 'always',
 			select: (query) => ({
 				generalLedgerEntries: query.data.results,
 				total: query.data.count,
@@ -72,7 +73,8 @@ export const useGeneralLedgerDetails = ({ params, options }: Query) =>
 				),
 			),
 		{
-			enabled: !!params?.accountCode,
+			enabled:
+				params?.accountCode !== undefined && params?.accountCode !== null,
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => ({
 				generalLedgerDetails: query.data.results,

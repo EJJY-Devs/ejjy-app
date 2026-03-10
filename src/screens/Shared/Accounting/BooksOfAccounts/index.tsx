@@ -4,6 +4,7 @@ import { Box } from 'components/elements';
 import { appTypes } from 'global';
 import { useJournalEntryCreate } from 'hooks';
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { getLocalBranchId } from 'utils';
 import { getAppType } from 'utils/localStorage';
 import { GeneralLedgerTab } from './components/GeneralLedgerTab';
@@ -17,6 +18,7 @@ import { ViewJournalEntryModal } from '../modals/ViewJournalEntryModal';
 import './style.scss';
 
 export const BooksOfAccounts = () => {
+	const history = useHistory();
 	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 	const localBranchId = Number(getLocalBranchId());
 	const [activeTab, setActiveTab] = useState('general-journal');
@@ -53,7 +55,11 @@ export const BooksOfAccounts = () => {
 					className="BooksOfAccounts_tabs"
 					defaultActiveKey="general-journal"
 					type="card"
-					onChange={setActiveTab}
+					destroyInactiveTabPane
+					onChange={(key) => {
+						setActiveTab(key);
+						history.replace({ search: '' });
+					}}
 				>
 					<Tabs.TabPane key="general-journal" tab="General Journal">
 						<GeneralJournalTab

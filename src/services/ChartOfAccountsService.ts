@@ -9,7 +9,7 @@ interface List extends IListRequest {
 }
 
 interface Modify {
-	account_code: string;
+	account_code: number;
 	account_name: string;
 	account_type: number;
 	sub_type: number;

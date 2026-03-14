@@ -1,7 +1,14 @@
 import { Button, Form, Input, InputNumber, Modal, Select } from 'antd';
 import { DEFAULT_PAGE } from 'global';
 import useChartOfAccounts from 'hooks/useChartOfAccounts';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { formatNumberWithCommas } from 'utils';
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 
 interface Props {
 	isSubmitting?: boolean;
@@ -42,6 +49,15 @@ export const CreateJournalEntryModal = ({
 		},
 	});
 	const { chartOfAccounts } = data || { chartOfAccounts: [] };
+
+	const getAccountFontSize = useCallback((text: string | undefined) => {
+		if (!text) return 18;
+		const len = text.length;
+		if (len <= 20) return 18;
+		if (len <= 30) return 15;
+		if (len <= 40) return 13;
+		return 11;
+	}, []);
 	const isAccountSelectionComplete = Boolean(
 		debitAccountValue && creditAccountValue,
 	);
@@ -192,6 +208,8 @@ export const CreateJournalEntryModal = ({
 									: ''
 							}
 							placeholder="Select from search"
+							style={{ fontSize: getAccountFontSize(debitAccountValue) }}
+							title={debitAccountValue}
 							disabled
 							readOnly
 						/>
@@ -208,6 +226,8 @@ export const CreateJournalEntryModal = ({
 									: ''
 							}
 							placeholder="Select from search"
+							style={{ fontSize: getAccountFontSize(creditAccountValue) }}
+							title={creditAccountValue}
 							disabled
 							readOnly
 						/>
@@ -220,14 +240,33 @@ export const CreateJournalEntryModal = ({
 						<InputNumber
 							ref={amountRef}
 							className="w-100"
+							controls={false}
 							disabled={!isAccountSelectionComplete || isAmountLocked}
-							formatter={(value) => `₱ ${value || ''}`}
+							formatter={(value) => {
+								if (!value) return '₱ ';
+								return `₱ ${formatNumberWithCommas(value)}`;
+							}}
 							min={0}
 							parser={(value) =>
 								Number((value || '').replace(/₱\s?|,/g, '')) as any
 							}
 							precision={2}
 							onBlur={lockAmountAndFocusRemarks}
+							onKeyDown={(e) => {
+								const allowedKeys = [
+									'Backspace',
+									'Delete',
+									'Tab',
+									'ArrowLeft',
+									'ArrowRight',
+									'Home',
+									'End',
+								];
+								if (allowedKeys.includes(e.key) || /^[0-9.]$/.test(e.key)) {
+									return;
+								}
+								e.preventDefault();
+							}}
 							onPressEnter={lockAmountAndFocusRemarks}
 						/>
 					</Form.Item>

@@ -21,11 +21,21 @@ export const getAccountingSidebarItems = (
 	basePath: string,
 	options?: {
 		includeBranches?: boolean;
+		includeFinancialStatements?: boolean;
 	},
 ): SidebarItem[] => {
 	const includeBranches = options?.includeBranches ?? false;
+	const includeFinancialStatements =
+		options?.includeFinancialStatements ?? false;
 
 	const sidebarItems: SidebarItem[] = [
+		{
+			key: 'financial-statements',
+			name: 'Financial Statements',
+			activeIcon: require('../../../assets/images/icon-report-active.svg'),
+			defaultIcon: require('../../../assets/images/icon-report.svg'),
+			link: `${basePath}/accounting/financial-statements`,
+		},
 		{
 			key: 'books-of-accounts',
 			name: 'Books of Accounts',
@@ -69,6 +79,10 @@ export const getAccountingSidebarItems = (
 			link: `${basePath}/accounting/discount-options`,
 		},
 	];
+
+	if (!includeFinancialStatements) {
+		sidebarItems.shift();
+	}
 
 	if (includeBranches) {
 		sidebarItems.splice(4, 0, {

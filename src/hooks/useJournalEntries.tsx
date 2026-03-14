@@ -59,6 +59,7 @@ export const useJournalEntryCreate = () => {
 				queryClient.invalidateQueries('useJournalEntries');
 				queryClient.invalidateQueries('useTrialBalance');
 				queryClient.invalidateQueries('useTrialBalanceDetails');
+				queryClient.invalidateQueries('useStatementOfFinancialPerformance');
 				queryClient.invalidateQueries('useGeneralLedger');
 				queryClient.invalidateQueries('useGeneralLedgerDetails');
 			},

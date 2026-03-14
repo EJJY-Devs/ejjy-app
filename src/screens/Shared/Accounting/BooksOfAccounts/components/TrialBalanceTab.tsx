@@ -11,6 +11,7 @@ import {
 	useTrialBalanceDetails,
 } from 'hooks';
 import React, { useEffect, useMemo, useState } from 'react';
+import { formatInPeso } from 'utils';
 import { TrialBalanceModal } from '../../modals/TrialBalanceModal';
 
 interface TrialBalanceSummaryRow {
@@ -151,11 +152,8 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 		},
 	});
 
-	const formatBalancePeso = (value: number | string | undefined | null) => {
-		const parsedValue = Number(value || 0);
-
-		return `₱ ${parsedValue.toFixed(2)}`;
-	};
+	const formatBalancePeso = (value: number | string | undefined | null) =>
+		formatInPeso(value, '₱ ');
 
 	const formatEntryPeso = (value: number | string | undefined | null) => {
 		const parsedValue = Number(value || 0);
@@ -164,7 +162,7 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 			return '';
 		}
 
-		return `₱ ${parsedValue.toFixed(2)}`;
+		return formatInPeso(parsedValue, '₱ ');
 	};
 
 	const formatShortDate = (value: string) => {
@@ -326,6 +324,7 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 			title: 'Balances',
 			dataIndex: 'balanceAmount',
 			key: 'balanceAmount',
+			align: 'right',
 		});
 
 		return tableColumns;

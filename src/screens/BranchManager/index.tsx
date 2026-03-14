@@ -21,6 +21,7 @@ import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/Cr
 import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
 import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
+import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
@@ -136,7 +137,9 @@ const BranchManager = () => {
 
 	const getSidebarItems = useCallback(() => {
 		if (isAccounting) {
-			return getAccountingSidebarItems('/branch-manager');
+			return getAccountingSidebarItems('/branch-manager', {
+				includeFinancialStatements: true,
+			});
 		}
 
 		return [
@@ -267,6 +270,10 @@ const BranchManager = () => {
 
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
+					<Route
+						component={FinancialStatements}
+						path="/branch-manager/accounting/financial-statements"
+					/>
 					<Route
 						component={ChartOfAccounts}
 						path="/branch-manager/accounting/chart-of-accounts"

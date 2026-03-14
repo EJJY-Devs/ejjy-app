@@ -12,7 +12,7 @@ import {
 } from 'global';
 import { useBranches, useJournalEntries, useQueryParams } from 'hooks';
 import React, { useEffect, useMemo } from 'react';
-import { formatDateTime } from 'utils';
+import { formatDateTime, formatInPeso } from 'utils';
 
 export interface GeneralJournalEntry {
 	id: number;
@@ -78,7 +78,7 @@ export const GeneralJournalTab = ({
 			referenceNumber: entry.reference_number,
 			debitAccount: entry.debit_account,
 			creditAccount: entry.credit_account,
-			amount: `₱ ${Number(entry.amount || 0).toFixed(2)}`,
+			amount: formatInPeso(entry.amount, '₱ '),
 			remarks: entry.remarks || EMPTY_CELL,
 		}),
 	);

@@ -39,6 +39,7 @@ import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
 import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
+import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
 import { Checkings } from './Checkings/Checkings';
 import { ViewChecking } from './Checkings/ViewChecking';
 import { Dashboard } from './Dashboard';
@@ -127,6 +128,7 @@ const OfficeManager = () => {
 		if (isAccounting) {
 			return getAccountingSidebarItems('/office-manager', {
 				includeBranches: true,
+				includeFinancialStatements: true,
 			});
 		}
 
@@ -252,6 +254,10 @@ const OfficeManager = () => {
 		<Container sidebarItems={getSidebarItems()}>
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
+					<Route
+						component={FinancialStatements}
+						path="/office-manager/accounting/financial-statements"
+					/>
 					<Route
 						component={Products}
 						path="/office-manager/accounting/products"

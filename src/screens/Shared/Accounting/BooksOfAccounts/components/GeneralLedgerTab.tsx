@@ -12,7 +12,7 @@ import {
 	useQueryParams,
 } from 'hooks';
 import React, { useEffect, useMemo, useState } from 'react';
-import { formatDateTime } from 'utils';
+import { formatDateTime, formatInPeso } from 'utils';
 import { GeneralLedgerModal } from '../../modals/GeneralLedgerModal';
 
 interface GeneralJournalEntry {
@@ -183,7 +183,7 @@ export const GeneralLedgerTab = ({
 		referenceNumber: entry.reference_number,
 		debitAccount: entry.debit_account,
 		creditAccount: entry.credit_account,
-		amount: `₱ ${Number(entry.amount || 0).toFixed(2)}`,
+		amount: formatInPeso(entry.amount, '₱ '),
 		remarks: entry.remarks || EMPTY_CELL,
 	});
 
@@ -198,7 +198,7 @@ export const GeneralLedgerTab = ({
 	}, [allJournalEntries]);
 
 	const formatPeso = (value: number | string | undefined | null) =>
-		`₱ ${Number(value || 0).toFixed(2)}`;
+		formatInPeso(value, '₱ ');
 
 	const formatLongDate = (value: Date) =>
 		new Intl.DateTimeFormat('en-US', {
@@ -316,11 +316,17 @@ export const GeneralLedgerTab = ({
 				),
 			},
 			{ title: 'Account Name', dataIndex: 'accountName', key: 'accountName' },
-			{ title: 'Debit Amount', dataIndex: 'debitAmount', key: 'debitAmount' },
+			{
+				title: 'Debit Amount',
+				dataIndex: 'debitAmount',
+				key: 'debitAmount',
+				align: 'right',
+			},
 			{
 				title: 'Credit Amount',
 				dataIndex: 'creditAmount',
 				key: 'creditAmount',
+				align: 'right',
 			},
 		];
 
@@ -330,7 +336,12 @@ export const GeneralLedgerTab = ({
 	const generalLedgerDetailColumns = useMemo(() => {
 		const tableColumns: ColumnsType<GeneralLedgerDetail> = [
 			{ title: 'Datetime', dataIndex: 'debitDate', key: 'debitDate' },
-			{ title: 'Debit Amount', dataIndex: 'debitAmount', key: 'debitAmount' },
+			{
+				title: 'Debit Amount',
+				dataIndex: 'debitAmount',
+				key: 'debitAmount',
+				align: 'right',
+			},
 			{
 				title: 'Reference Number',
 				dataIndex: 'debitRefNum',
@@ -367,6 +378,7 @@ export const GeneralLedgerTab = ({
 				title: 'Credit Amount',
 				dataIndex: 'creditAmount',
 				key: 'creditAmount',
+				align: 'right',
 			},
 			{
 				title: 'Reference Number',
@@ -416,7 +428,7 @@ export const GeneralLedgerTab = ({
 
 		return {
 			label: balanceType,
-			value: `₱ ${balanceValue.toFixed(2)}`,
+			value: formatInPeso(balanceValue, '₱ '),
 		};
 	}, [selectedLedgerEntry]);
 

@@ -4,6 +4,7 @@ import robotoRegularTtf from 'assets/fonts/Roboto-Regular.ttf';
 import { PdfButtons } from 'components/Printing';
 import jsPDF from 'jspdf';
 import React, { useMemo, useState } from 'react';
+import { formatInPeso } from 'utils';
 import { printTrialBalance } from '../printing/printTrialBalance';
 
 const TIMEOUT_MS = 2000;
@@ -85,9 +86,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 	const parseAmount = (value: string) =>
 		Number(String(value || '').replace(/[^0-9.-]+/g, '')) || 0;
 
-	const formatAmount = (value: number) => {
-		return `₱ ${value.toFixed(2)}`;
-	};
+	const formatAmount = (value: number) => formatInPeso(value, '₱ ');
 
 	const totals = useMemo(() => {
 		const sourceRows = (entry?.entries || []).filter(
@@ -130,6 +129,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 			dataIndex: 'debitAmount',
 			key: 'debitAmount',
 			align: 'right',
+			width: 120,
 			render: (value: string, record: TrialBalanceDetail) =>
 				record.isBalanceRow ? <strong>{value}</strong> : value,
 		},
@@ -138,6 +138,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 			dataIndex: 'creditAmount',
 			key: 'creditAmount',
 			align: 'right',
+			width: 120,
 			render: (value: string, record: TrialBalanceDetail) =>
 				record.isBalanceRow ? <strong>{value}</strong> : value,
 		},

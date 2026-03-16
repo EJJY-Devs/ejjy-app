@@ -13,6 +13,7 @@ const useJournalEntries = ({ params }: Query) =>
 			'useJournalEntries',
 			params?.search,
 			params?.branchId,
+			params?.entryType,
 			params?.timeRange,
 			params?.page,
 			params?.pageSize,
@@ -23,6 +24,7 @@ const useJournalEntries = ({ params }: Query) =>
 					{
 						search: params?.search,
 						branch_id: params?.branchId,
+						entry_type: params?.entryType,
 						time_range: params?.timeRange,
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
@@ -47,6 +49,7 @@ export const useJournalEntryCreate = () => {
 			JournalEntriesService.create(
 				{
 					branch_id: branchId,
+					entry_type: 'manual',
 					debit_account: debitAccount,
 					credit_account: creditAccount,
 					amount,

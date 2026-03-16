@@ -67,6 +67,7 @@ export const GeneralJournalTab = ({
 			pageSize: params.pageSize,
 			timeRange: params.timeRange,
 			...(selectedBranchId && { branchId: selectedBranchId }),
+			...(params.entryType && { entryType: params.entryType }),
 		},
 	});
 
@@ -142,6 +143,22 @@ export const GeneralJournalTab = ({
 							dateRangeLabel="Select Date"
 							useSingleDateForDateRange
 						/>
+					</Col>
+					<Col className="BooksOfAccounts_timeRangeFilter" lg={4}>
+						<Label label="Entry Type" spacing />
+						<Select
+							className="w-100"
+							placeholder="Select entry type"
+							value={params.entryType || undefined}
+							allowClear
+							onChange={(value) => {
+								setQueryParams({ entryType: value }, { shouldResetPage: true });
+							}}
+						>
+							<Select.Option value="manual">Manual</Select.Option>
+							<Select.Option value="transaction">Transaction</Select.Option>
+							<Select.Option value="automated">Automated</Select.Option>
+						</Select>
 					</Col>
 					{isHeadOffice && (
 						<Col className="BooksOfAccounts_timeRangeFilter" lg={4}>

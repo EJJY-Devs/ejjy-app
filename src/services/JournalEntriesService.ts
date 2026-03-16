@@ -5,6 +5,7 @@ interface List extends IListRequest {
 	search?: string;
 	branch_id?: number;
 	time_range?: string;
+	entry_type?: string;
 }
 
 interface Create {
@@ -13,6 +14,7 @@ interface Create {
 	credit_account: string;
 	amount: number;
 	remarks: string;
+	entry_type?: string;
 }
 
 const service = {

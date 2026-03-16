@@ -13,11 +13,13 @@ import {
 	useBranches,
 	useQueryParams,
 	useStatementOfFinancialPerformance,
+	useStatementOfFinancialPosition,
 } from 'hooks';
 import moment from 'moment';
 import React, { useMemo, useState } from 'react';
 import { formatInPeso, getLocalBranchId } from 'utils';
 import { StatementOfFinancialPerformanceModal } from 'screens/Shared/Accounting/modals/StatementOfFinancialPerformanceModal';
+import { StatementOfFinancialPositionModal } from 'screens/Shared/Accounting/modals/StatementOfFinancialPositionModal';
 import { getAppType } from 'utils/localStorage';
 import './style.scss';
 
@@ -35,6 +37,8 @@ export const FinancialStatements = () => {
 	const [activeStatement, setActiveStatement] = useState<string | null>(null);
 	const isFinancialPerformanceOpen =
 		activeStatement === 'Statement of Financial Performance';
+	const isFinancialPositionOpen =
+		activeStatement === 'Statement of Financial Position';
 	const { params, setQueryParams } = useQueryParams({
 		onParamsCheck: (currentParams) => {
 			const newParams: Record<string, string> = {};
@@ -175,6 +179,19 @@ export const FinancialStatements = () => {
 		},
 		options: {
 			enabled: isFinancialPerformanceOpen,
+		},
+	});
+
+	const {
+		data: financialPositionData = null,
+		isFetching: isFetchingFinancialPosition,
+	} = useStatementOfFinancialPosition({
+		params: {
+			branchId: selectedBranchId,
+			timeRange: params.financialStatementsTimeRange,
+		},
+		options: {
+			enabled: isFinancialPositionOpen,
 		},
 	});
 
@@ -335,7 +352,192 @@ export const FinancialStatements = () => {
 		mainBranch,
 		selectedBranchLabel,
 	]);
+	const positionModalEntry = useMemo(() => {
+		const formatAmount = (value: number | string) => formatInPeso(value, '₱ ');
 
+		const pushRow = (
+			rows: Array<any>,
+			row: {
+				code?: string;
+				label: string;
+				amount: string;
+				isSection?: boolean;
+				isTotal?: boolean;
+				isGrandTotal?: boolean;
+				isSpacer?: boolean;
+				amountBottomBold?: boolean;
+			},
+		) => {
+			rows.push({ id: rows.length + 1, ...row });
+		};
+
+		const buildAccountRows = (
+			rows: Array<any>,
+			accounts: Array<any>,
+			isLastBeforeTotal = false,
+		) => {
+			(accounts || []).forEach((acct: any, idx: number) => {
+				pushRow(rows, {
+					code: acct.account_code,
+					label: acct.account_name,
+					amount: formatAmount(acct.amount),
+					amountBottomBold: isLastBeforeTotal && idx === accounts.length - 1,
+				});
+			});
+		};
+
+		// --- Assets side ---
+		const assetsRows: Array<any> = [];
+
+		pushRow(assetsRows, {
+			label: 'ASSETS',
+			amount: '',
+			isSection: true,
+		});
+		pushRow(assetsRows, {
+			label: 'Current Assets',
+			amount: '',
+			isSection: true,
+		});
+		buildAccountRows(assetsRows, financialPositionData?.current_assets, true);
+		pushRow(assetsRows, {
+			label: 'Total Current Assets',
+			amount: formatAmount(financialPositionData?.total_current_assets),
+			isTotal: true,
+		});
+		pushRow(assetsRows, { label: '', amount: '', isSpacer: true });
+		pushRow(assetsRows, {
+			label: 'Non-Current Assets',
+			amount: '',
+			isSection: true,
+		});
+		buildAccountRows(
+			assetsRows,
+			financialPositionData?.non_current_assets,
+			true,
+		);
+		pushRow(assetsRows, {
+			label: 'Total Non-Current Assets',
+			amount: formatAmount(financialPositionData?.total_non_current_assets),
+			isTotal: true,
+			amountBottomBold: true,
+		});
+		pushRow(assetsRows, {
+			label: 'TOTAL ASSETS',
+			amount: formatAmount(financialPositionData?.total_assets),
+			isGrandTotal: true,
+			amountBottomBold: true,
+		});
+
+		// --- Liabilities & Equity side ---
+		const liabilitiesEquityRows: Array<any> = [];
+
+		pushRow(liabilitiesEquityRows, {
+			label: 'LIABILITIES AND EQUITY',
+			amount: '',
+			isSection: true,
+		});
+		pushRow(liabilitiesEquityRows, {
+			label: 'Current Liabilities',
+			amount: '',
+			isSection: true,
+		});
+		buildAccountRows(
+			liabilitiesEquityRows,
+			financialPositionData?.current_liabilities,
+			true,
+		);
+		pushRow(liabilitiesEquityRows, {
+			label: 'Total Current Liabilities',
+			amount: formatAmount(financialPositionData?.total_current_liabilities),
+			isTotal: true,
+		});
+		pushRow(liabilitiesEquityRows, { label: '', amount: '', isSpacer: true });
+		pushRow(liabilitiesEquityRows, {
+			label: 'Non-Current Liabilities',
+			amount: '',
+			isSection: true,
+		});
+		buildAccountRows(
+			liabilitiesEquityRows,
+			financialPositionData?.non_current_liabilities,
+			true,
+		);
+		pushRow(liabilitiesEquityRows, {
+			label: 'Total Non-Current Liabilities',
+			amount: formatAmount(
+				financialPositionData?.total_non_current_liabilities,
+			),
+			isTotal: true,
+			amountBottomBold: true,
+		});
+		pushRow(liabilitiesEquityRows, {
+			label: 'TOTAL LIABILITIES',
+			amount: formatAmount(financialPositionData?.total_liabilities),
+			isTotal: true,
+		});
+		pushRow(liabilitiesEquityRows, { label: '', amount: '', isSpacer: true });
+		pushRow(liabilitiesEquityRows, {
+			label: 'Equity',
+			amount: '',
+			isSection: true,
+		});
+		buildAccountRows(
+			liabilitiesEquityRows,
+			financialPositionData?.equity,
+			false,
+		);
+		pushRow(liabilitiesEquityRows, {
+			label: 'Current Year Net Income (Loss)',
+			amount: formatAmount(financialPositionData?.current_year_net_income),
+			amountBottomBold: true,
+		});
+		pushRow(liabilitiesEquityRows, {
+			label: 'Total Equity',
+			amount: formatAmount(financialPositionData?.total_equity),
+			isTotal: true,
+			amountBottomBold: true,
+		});
+		pushRow(liabilitiesEquityRows, {
+			label: 'TOTAL LIABILITIES AND EQUITY',
+			amount: formatAmount(financialPositionData?.total_liabilities_and_equity),
+			isGrandTotal: true,
+			amountBottomBold: true,
+		});
+
+		return {
+			snapshotDate: financialStatementAsOfLabel,
+			storeName:
+				financialPositionData?.store_name ||
+				mainBranch?.store_name ||
+				headerBranch?.store_name ||
+				'',
+			storeAddress:
+				financialPositionData?.store_address ||
+				mainBranch?.store_address ||
+				headerBranch?.store_address ||
+				'',
+			branchName:
+				financialPositionData?.branch_name ||
+				selectedBranchLabel ||
+				mainBranch?.name ||
+				headerBranch?.name ||
+				'',
+			storeTin:
+				financialPositionData?.store_tin ||
+				mainBranch?.tin ||
+				headerBranch?.tin ||
+				'',
+			assetsRows,
+			liabilitiesEquityRows,
+		};
+	}, [
+		financialStatementAsOfLabel,
+		financialPositionData,
+		headerBranch,
+		mainBranch,
+		selectedBranchLabel,
+	]);
 	return (
 		<Content title="Financial Statements">
 			<Box padding>
@@ -413,35 +615,48 @@ export const FinancialStatements = () => {
 				</div>
 			</Box>
 
-			{isFinancialPerformanceOpen ? (
+			{isFinancialPerformanceOpen && (
 				<StatementOfFinancialPerformanceModal
 					entry={performanceModalEntry}
 					isLoading={isFetchingFinancialPerformance}
 					open={isFinancialPerformanceOpen}
 					onClose={() => setActiveStatement(null)}
 				/>
-			) : (
-				<Modal
-					className="Modal__hasFooter"
-					footer={
-						<Button onClick={() => setActiveStatement(null)}>Close</Button>
-					}
-					open={!!activeStatement}
-					title={activeStatement || 'Financial Statement'}
-					onCancel={() => setActiveStatement(null)}
-				>
-					<div className="FinancialStatements_modalBody">
-						<div className="FinancialStatements_modalTags">
-							<Tag color="blue">{selectedBranchLabel}</Tag>
-							<Tag color="green">{selectedTimeRangeLabel}</Tag>
-						</div>
-						<p className="mb-0">
-							This statement entry point is ready. The report content or print
-							layout for {activeStatement} can be connected here next.
-						</p>
-					</div>
-				</Modal>
 			)}
+
+			{isFinancialPositionOpen && (
+				<StatementOfFinancialPositionModal
+					entry={positionModalEntry}
+					isLoading={isFetchingFinancialPosition}
+					open={isFinancialPositionOpen}
+					onClose={() => setActiveStatement(null)}
+				/>
+			)}
+
+			{activeStatement &&
+				!isFinancialPerformanceOpen &&
+				!isFinancialPositionOpen && (
+					<Modal
+						className="Modal__hasFooter"
+						footer={
+							<Button onClick={() => setActiveStatement(null)}>Close</Button>
+						}
+						open={!!activeStatement}
+						title={activeStatement || 'Financial Statement'}
+						onCancel={() => setActiveStatement(null)}
+					>
+						<div className="FinancialStatements_modalBody">
+							<div className="FinancialStatements_modalTags">
+								<Tag color="blue">{selectedBranchLabel}</Tag>
+								<Tag color="green">{selectedTimeRangeLabel}</Tag>
+							</div>
+							<p className="mb-0">
+								This statement entry point is ready. The report content or print
+								layout for {activeStatement} can be connected here next.
+							</p>
+						</div>
+					</Modal>
+				)}
 		</Content>
 	);
 };

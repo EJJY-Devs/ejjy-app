@@ -58,6 +58,7 @@ const ensureRobotoFont = async (pdf: jsPDF) => {
 
 interface TrialBalanceDetail {
 	id: number;
+	accountCode?: string;
 	accountName: string;
 	debitAmount: string;
 	creditAmount: string;
@@ -118,6 +119,14 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 
 	const columns: ColumnsType<TrialBalanceDetail> = [
 		{
+			title: '',
+			dataIndex: 'accountCode',
+			key: 'accountCode',
+			width: 60,
+			render: (value: string, record: TrialBalanceDetail) =>
+				record.isBalanceRow ? '' : value || '',
+		},
+		{
 			title: 'Account',
 			dataIndex: 'accountName',
 			key: 'accountName',
@@ -153,6 +162,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 			branchName: entry?.branchName || '',
 			storeTin: entry?.storeTin || '',
 			entries: tableRows.map((row) => ({
+				accountCode: row.accountCode || '',
 				accountName: row.accountName,
 				debitAmount: row.debitAmount,
 				creditAmount: row.creditAmount,
@@ -242,7 +252,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 			]}
 			open={open}
 			title={`View - ${entry?.referenceNumber || '-'}`}
-			width={425}
+			width={500}
 			centered
 			closable
 			destroyOnClose

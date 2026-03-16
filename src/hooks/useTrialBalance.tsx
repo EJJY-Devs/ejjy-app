@@ -104,4 +104,24 @@ export const useStatementOfFinancialPerformance = ({
 		},
 	);
 
+export const useStatementOfFinancialPosition = ({ params, options }: Query) =>
+	useQuery<any>(
+		['useStatementOfFinancialPosition', params?.branchId, params?.timeRange],
+		() =>
+			wrapServiceWithCatch(
+				TrialBalanceService.statementOfFinancialPosition(
+					{
+						branch_id: params?.branchId,
+						time_range: params?.timeRange,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: null },
+			select: (query) => query.data,
+			...(options || {}),
+		},
+	);
+
 export default useTrialBalance;

@@ -1,4 +1,5 @@
 interface TrialBalanceDetailForPrint {
+	accountCode: string;
 	accountName: string;
 	debitAmount: string;
 	creditAmount: string;
@@ -35,6 +36,7 @@ export const printTrialBalance = ({
 		.map(
 			(detail) => `
 			<tr class="${detail.accountName === 'BALANCES' ? 'balances-row' : ''}">
+				<td>${escapeHtml(detail.accountCode || '')}</td>
 				<td>${escapeHtml(detail.accountName || '-')}</td>
 				<td>${escapeHtml(detail.debitAmount || '')}</td>
 				<td>${escapeHtml(detail.creditAmount || '')}</td>
@@ -58,7 +60,7 @@ export const printTrialBalance = ({
 				table { width: 100%; border-collapse: collapse; }
 				th, td { border: 1px solid #d9d9d9; padding: 8px 10px; text-align: left; font-size: 14px; }
 				th { background: #fafafa; font-weight: 700; }
-				td:nth-child(2), td:nth-child(3), th:nth-child(2), th:nth-child(3) { text-align: right; }
+				td:nth-child(3), td:nth-child(4), th:nth-child(3), th:nth-child(4) { text-align: right; }
 				.balances-row td { font-weight: 700; }
 			</style>
 		</head>
@@ -77,6 +79,7 @@ export const printTrialBalance = ({
 				<table>
 					<thead>
 						<tr>
+						<th></th>
 							<th>Account</th>
 							<th>Debit</th>
 							<th>Credit</th>

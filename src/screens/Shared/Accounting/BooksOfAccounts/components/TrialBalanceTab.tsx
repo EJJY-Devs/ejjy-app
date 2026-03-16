@@ -23,6 +23,7 @@ interface TrialBalanceSummaryRow {
 }
 
 interface TrialBalanceDetailApiRow {
+	account_code?: string;
 	account_name: string;
 	debit_amount: number | string;
 	credit_amount: number | string;
@@ -347,6 +348,7 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 			entries: (detailData.entries || []).map(
 				(detail: TrialBalanceDetailApiRow, index: number) => ({
 					id: index + 1,
+					accountCode: detail.account_code || '',
 					accountName: detail.account_name,
 					debitAmount: formatEntryPeso(detail.debit_amount),
 					creditAmount: formatEntryPeso(detail.credit_amount),
@@ -375,7 +377,12 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 
 		const aggregatedEntriesMap = new Map<
 			string,
-			{ accountName: string; debitAmount: number; creditAmount: number }
+			{
+				accountCode: string;
+				accountName: string;
+				debitAmount: number;
+				creditAmount: number;
+			}
 		>();
 
 		(allBranchDetailData as TrialBalanceDetailApi[]).forEach(
@@ -393,6 +400,7 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 					}
 
 					aggregatedEntriesMap.set(accountName, {
+						accountCode: entry.account_code || '',
 						accountName,
 						debitAmount,
 						creditAmount,
@@ -413,6 +421,7 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 			entries: Array.from(aggregatedEntriesMap.values()).map(
 				(entry, index: number) => ({
 					id: index + 1,
+					accountCode: entry.accountCode,
 					accountName: entry.accountName,
 					debitAmount: formatEntryPeso(entry.debitAmount),
 					creditAmount: formatEntryPeso(entry.creditAmount),

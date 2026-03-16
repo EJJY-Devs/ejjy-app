@@ -15,6 +15,11 @@ interface StatementOfFinancialPerformance {
 	time_range?: string;
 }
 
+interface StatementOfFinancialPosition {
+	branch_id?: number;
+	time_range?: string;
+}
+
 const service = {
 	list: async (params: List, baseURL: string) =>
 		axios.get('/trial-balance/', { baseURL, params }),
@@ -27,6 +32,15 @@ const service = {
 		baseURL: string,
 	) =>
 		axios.get('/trial-balance/statement-of-financial-performance/', {
+			baseURL,
+			params,
+		}),
+
+	statementOfFinancialPosition: async (
+		params: StatementOfFinancialPosition,
+		baseURL: string,
+	) =>
+		axios.get('/trial-balance/statement-of-financial-position/', {
 			baseURL,
 			params,
 		}),

@@ -132,8 +132,10 @@ export const CreateJournalEntryModal = ({
 	const lockAmountAndFocusRemarks = () => {
 		const amountValue = form.getFieldValue('amount');
 		if (!isAmountLocked && typeof amountValue === 'number' && amountValue > 0) {
+			const rounded = Math.round(amountValue * 100) / 100;
 			setIsAmountLocked(true);
 			setTimeout(() => {
+				form.setFieldsValue({ amount: rounded });
 				remarksRef.current?.focus?.();
 			}, 0);
 		}
@@ -238,12 +240,18 @@ export const CreateJournalEntryModal = ({
 						rules={[{ required: true, message: 'Amount is required' }]}
 					>
 						<InputNumber
+							key={isAmountLocked ? 'locked' : 'unlocked'}
 							ref={amountRef}
 							className="w-100"
 							controls={false}
 							disabled={!isAccountSelectionComplete || isAmountLocked}
 							formatter={(value) => {
 								if (!value) return '₱ ';
+								if (isAmountLocked) {
+									return `₱ ${formatNumberWithCommas(
+										Number(value).toFixed(2),
+									)}`;
+								}
 								return `₱ ${formatNumberWithCommas(value)}`;
 							}}
 							min={0}

@@ -124,4 +124,44 @@ export const useStatementOfFinancialPosition = ({ params, options }: Query) =>
 		},
 	);
 
+export const useStatementOfChangesInEquity = ({ params, options }: Query) =>
+	useQuery<any>(
+		['useStatementOfChangesInEquity', params?.branchId, params?.timeRange],
+		() =>
+			wrapServiceWithCatch(
+				TrialBalanceService.statementOfChangesInEquity(
+					{
+						branch_id: params?.branchId,
+						time_range: params?.timeRange,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: null },
+			select: (query) => query.data,
+			...(options || {}),
+		},
+	);
+
+export const useNotesToFinancialStatements = ({ params, options }: Query) =>
+	useQuery<any>(
+		['useNotesToFinancialStatements', params?.branchId, params?.timeRange],
+		() =>
+			wrapServiceWithCatch(
+				TrialBalanceService.notesToFinancialStatements(
+					{
+						branch_id: params?.branchId,
+						time_range: params?.timeRange,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: null },
+			select: (query) => query.data,
+			...(options || {}),
+		},
+	);
+
 export default useTrialBalance;

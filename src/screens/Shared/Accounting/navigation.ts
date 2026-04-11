@@ -78,6 +78,13 @@ export const getAccountingSidebarItems = (
 			defaultIcon: require('../../../assets/images/icon-product.svg'),
 			link: `${basePath}/accounting/discount-options`,
 		},
+		{
+			key: 'transaction-list',
+			name: 'Transaction List',
+			activeIcon: require('../../../assets/images/icon-report-active.svg'),
+			defaultIcon: require('../../../assets/images/icon-report.svg'),
+			link: `${basePath}/accounting/transaction-list`,
+		},
 	];
 
 	if (!includeFinancialStatements) {

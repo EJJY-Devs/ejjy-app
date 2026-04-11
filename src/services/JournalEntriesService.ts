@@ -14,6 +14,7 @@ interface Create {
 	credit_account: string;
 	amount: number;
 	remarks: string;
+	description?: string;
 	entry_type?: string;
 }
 

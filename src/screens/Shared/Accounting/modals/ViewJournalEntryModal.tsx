@@ -1,8 +1,9 @@
-import { Descriptions, Modal } from 'antd';
+import { Button, Descriptions, Modal } from 'antd';
 import React from 'react';
 
 interface JournalEntry {
 	id: number;
+	entryType: string;
 	datetime: string;
 	branch?: string;
 	referenceNumber: string;
@@ -10,12 +11,14 @@ interface JournalEntry {
 	creditAccount: string;
 	amount: string;
 	remarks: string;
+	description: string;
 }
 
 interface Props {
 	entry: JournalEntry | null;
 	isHeadOffice: boolean;
 	onClose: () => void;
+	onViewTransaction?: (transactionId: number, description: string) => void;
 	open: boolean;
 }
 
@@ -23,6 +26,7 @@ export const ViewJournalEntryModal = ({
 	entry,
 	isHeadOffice,
 	onClose,
+	onViewTransaction,
 	open,
 }: Props) => {
 	if (!entry) {
@@ -59,7 +63,34 @@ export const ViewJournalEntryModal = ({
 					{entry.amount || '-'}
 				</Descriptions.Item>
 				<Descriptions.Item label="Remarks">
-					{entry.remarks || '-'}
+					{(() => {
+						if (entry.entryType === 'transaction') {
+							const match = entry.remarks.match(/^(.+)\s*\(TXN-(\d+)\)$/);
+							if (match) {
+								const txnName = match[1].trim();
+								const txnId = Number(match[2]);
+								return (
+									<>
+										<div>Transaction Name: {txnName}</div>
+										<div>
+											Transaction Id:{' '}
+											<Button
+												style={{ padding: 0, height: 'auto' }}
+												type="link"
+												onClick={() => {
+													onClose();
+													onViewTransaction?.(txnId, entry.description);
+												}}
+											>
+												{txnId}
+											</Button>
+										</div>
+									</>
+								);
+							}
+						}
+						return entry.remarks || '-';
+					})()}
 				</Descriptions.Item>
 				{isHeadOffice && (
 					<Descriptions.Item label="Branch">

@@ -4,8 +4,10 @@ import {
 	Input,
 	message,
 	Popconfirm,
+	Select,
 	Space,
 	Table,
+	Tag,
 	Tooltip,
 } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
@@ -31,11 +33,18 @@ import { EditAccountModal } from '../modals/EditAccountModal';
 import { ViewAccountModal } from '../modals/ViewAccountModal';
 import './style.scss';
 
+const ACCOUNT_CATEGORY_OPTIONS = [
+	{ label: 'All', value: '' },
+	{ label: 'Standard', value: 'standard' },
+	{ label: 'Special', value: 'special' },
+];
+
 export const ChartOfAccounts = () => {
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isViewOpen, setIsViewOpen] = useState(false);
 	const [searchText, setSearchText] = useState('');
+	const [categoryFilter, setCategoryFilter] = useState('');
 	const [selectedAccount, setSelectedAccount] = useState<any>(null);
 	const [viewAccount, setViewAccount] = useState<any>(null);
 	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
@@ -43,6 +52,7 @@ export const ChartOfAccounts = () => {
 	const { data, isFetching } = useChartOfAccounts({
 		params: {
 			search: searchText || undefined,
+			accountCategory: categoryFilter || undefined,
 			page: params.page,
 			pageSize: params.pageSize,
 		},
@@ -86,6 +96,16 @@ export const ChartOfAccounts = () => {
 				title: 'Account Name',
 				dataIndex: 'account_name',
 				key: 'name',
+			},
+			{
+				title: 'Category',
+				dataIndex: 'account_category',
+				key: 'category',
+				render: (value: string) => (
+					<Tag color={value === 'standard' ? 'blue' : 'orange'}>
+						{value === 'standard' ? 'Standard' : 'Special'}
+					</Tag>
+				),
 			},
 		];
 
@@ -191,20 +211,36 @@ export const ChartOfAccounts = () => {
 			</div>
 			<Box padding>
 				<div className="ChartOfAccounts_toolbar">
-					<Input
-						className="ChartOfAccounts_search"
-						placeholder="Search account"
-						prefix={<SearchOutlined />}
-						value={searchText}
-						allowClear
-						onChange={(event) => {
-							setSearchText(event.target.value);
-							setQueryParams({
-								page: DEFAULT_PAGE,
-								pageSize: params.pageSize,
-							});
-						}}
-					/>
+					<div className="ChartOfAccounts_filters">
+						<Input
+							className="ChartOfAccounts_search"
+							placeholder="Search account"
+							prefix={<SearchOutlined />}
+							value={searchText}
+							allowClear
+							onChange={(event) => {
+								setSearchText(event.target.value);
+								setQueryParams({
+									page: DEFAULT_PAGE,
+									pageSize: params.pageSize,
+								});
+							}}
+						/>
+						<Select
+							className="ChartOfAccounts_categoryFilter"
+							defaultValue=""
+							options={ACCOUNT_CATEGORY_OPTIONS}
+							placeholder="Filter by category"
+							value={categoryFilter}
+							onChange={(value) => {
+								setCategoryFilter(value);
+								setQueryParams({
+									page: DEFAULT_PAGE,
+									pageSize: params.pageSize,
+								});
+							}}
+						/>
+					</div>
 					{isHeadOffice && (
 						<Button type="primary" onClick={() => setIsCreateOpen(true)}>
 							Create Account

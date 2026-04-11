@@ -45,15 +45,24 @@ export const useJournalEntryCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ branchId, debitAccount, creditAccount, amount, remarks }: any) =>
+		({
+			branchId,
+			debitAccount,
+			creditAccount,
+			amount,
+			remarks,
+			description,
+			entryType,
+		}: any) =>
 			JournalEntriesService.create(
 				{
 					branch_id: branchId,
-					entry_type: 'manual',
+					entry_type: entryType || 'manual',
 					debit_account: debitAccount,
 					credit_account: creditAccount,
 					amount,
 					remarks,
+					description,
 				},
 				getLocalApiUrl(),
 			),

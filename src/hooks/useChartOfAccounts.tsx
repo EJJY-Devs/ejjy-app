@@ -11,6 +11,7 @@ const useChartOfAccounts = ({ params }: Query) =>
 			params?.page,
 			params?.pageSize,
 			params?.search,
+			params?.accountCategory,
 			params?.accountType,
 			params?.subType,
 			params?.normalBalance,
@@ -22,6 +23,7 @@ const useChartOfAccounts = ({ params }: Query) =>
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						search: params?.search,
+						account_category: params?.accountCategory,
 						account_type: params?.accountType,
 						sub_type: params?.subType,
 						normal_balance: params?.normalBalance,
@@ -42,11 +44,19 @@ export const useChartOfAccountCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ accountCode, accountName, accountType, subType, normalBalance }: any) =>
+		({
+			accountCode,
+			accountName,
+			accountCategory,
+			accountType,
+			subType,
+			normalBalance,
+		}: any) =>
 			ChartOfAccountsService.create(
 				{
 					account_code: Number(accountCode),
 					account_name: accountName,
+					account_category: accountCategory,
 					account_type: accountType,
 					sub_type: subType,
 					normal_balance: normalBalance,
@@ -69,6 +79,7 @@ export const useChartOfAccountEdit = () => {
 			id,
 			accountCode,
 			accountName,
+			accountCategory,
 			accountType,
 			subType,
 			normalBalance,
@@ -78,6 +89,7 @@ export const useChartOfAccountEdit = () => {
 				{
 					account_code: Number(accountCode),
 					account_name: accountName,
+					account_category: accountCategory,
 					account_type: accountType,
 					sub_type: subType,
 					normal_balance: normalBalance,

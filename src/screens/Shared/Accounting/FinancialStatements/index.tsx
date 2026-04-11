@@ -11,7 +11,9 @@ import {
 } from 'global';
 import {
 	useBranches,
+	useNotesToFinancialStatements,
 	useQueryParams,
+	useStatementOfChangesInEquity,
 	useStatementOfFinancialPerformance,
 	useStatementOfFinancialPosition,
 } from 'hooks';
@@ -20,6 +22,8 @@ import React, { useMemo, useState } from 'react';
 import { formatInPeso, getLocalBranchId } from 'utils';
 import { StatementOfFinancialPerformanceModal } from 'screens/Shared/Accounting/modals/StatementOfFinancialPerformanceModal';
 import { StatementOfFinancialPositionModal } from 'screens/Shared/Accounting/modals/StatementOfFinancialPositionModal';
+import { StatementOfChangesInEquityModal } from 'screens/Shared/Accounting/modals/StatementOfChangesInEquityModal';
+import { NotesToFinancialStatementsModal } from 'screens/Shared/Accounting/modals/NotesToFinancialStatementsModal';
 import { getAppType } from 'utils/localStorage';
 import './style.scss';
 
@@ -39,6 +43,10 @@ export const FinancialStatements = () => {
 		activeStatement === 'Statement of Financial Performance';
 	const isFinancialPositionOpen =
 		activeStatement === 'Statement of Financial Position';
+	const isChangesInEquityOpen =
+		activeStatement === 'Statement of Changes in Equity';
+	const isNotesToFinancialStatementsOpen =
+		activeStatement === 'Notes to Financial Statements';
 	const { params, setQueryParams } = useQueryParams({
 		onParamsCheck: (currentParams) => {
 			const newParams: Record<string, string> = {};
@@ -192,6 +200,32 @@ export const FinancialStatements = () => {
 		},
 		options: {
 			enabled: isFinancialPositionOpen,
+		},
+	});
+
+	const {
+		data: changesInEquityData = null,
+		isFetching: isFetchingChangesInEquity,
+	} = useStatementOfChangesInEquity({
+		params: {
+			branchId: selectedBranchId,
+			timeRange: params.financialStatementsTimeRange,
+		},
+		options: {
+			enabled: isChangesInEquityOpen,
+		},
+	});
+
+	const {
+		data: notesData = null,
+		isFetching: isFetchingNotes,
+	} = useNotesToFinancialStatements({
+		params: {
+			branchId: selectedBranchId,
+			timeRange: params.financialStatementsTimeRange,
+		},
+		options: {
+			enabled: isNotesToFinancialStatementsOpen,
 		},
 	});
 
@@ -488,7 +522,10 @@ export const FinancialStatements = () => {
 			false,
 		);
 		pushRow(liabilitiesEquityRows, {
-			label: 'Current Year Net Income (Loss)',
+			label:
+				Number(financialPositionData?.current_year_net_income ?? 0) < 0
+					? 'Net Income (Loss)'
+					: 'Net Income',
 			amount: formatAmount(financialPositionData?.current_year_net_income),
 			amountBottomBold: true,
 		});
@@ -538,6 +575,234 @@ export const FinancialStatements = () => {
 		mainBranch,
 		selectedBranchLabel,
 	]);
+
+	const notesModalEntry = useMemo(() => {
+		const formatAmount = (value: number | string) => formatInPeso(value, '₱ ');
+		const rows: Array<{
+			id: number;
+			code?: string;
+			label: string;
+			amount: string;
+			isNoteHeader?: boolean;
+			isDescription?: boolean;
+			isColumnHeader?: boolean;
+			isTotal?: boolean;
+			isSpacer?: boolean;
+			isNetIncome?: boolean;
+			amountBottomBold?: boolean;
+		}> = [];
+
+		const pushRow = (row: Omit<typeof rows[number], 'id'>) => {
+			rows.push({ id: rows.length + 1, ...row });
+		};
+
+		const notes = notesData?.notes || [];
+
+		notes.forEach((note: any) => {
+			pushRow({
+				label: `Note ${note.note_number} \u2013 ${note.note_title}`,
+				amount: '',
+				isNoteHeader: true,
+			});
+
+			if (note.description) {
+				pushRow({
+					label: note.description,
+					amount: '',
+					isDescription: true,
+				});
+			}
+
+			const accounts = note.accounts || [];
+
+			if (accounts.length > 0) {
+				// Column header row for notes with tables
+				const isEquityNote = note.note_number === 8;
+				const isPPENote = note.note_number === 6;
+				let columnLabel = 'Account';
+				if (isEquityNote) {
+					columnLabel = 'Component';
+				} else if (isPPENote) {
+					columnLabel = 'Asset';
+				}
+				pushRow({
+					code: '',
+					label: columnLabel,
+					amount: 'Amount',
+					isColumnHeader: true,
+				});
+
+				accounts.forEach((acct: any, idx: number) => {
+					pushRow({
+						code: acct.account_code,
+						label: acct.account_name,
+						amount: formatAmount(acct.amount),
+						amountBottomBold:
+							idx === accounts.length - 1 && note.note_number !== 8,
+					});
+				});
+
+				if (
+					note.note_number === 8 &&
+					note.current_year_net_income !== undefined &&
+					note.current_year_net_income !== null
+				) {
+					pushRow({
+						code: '',
+						label:
+							Number(note.current_year_net_income ?? 0) < 0
+								? 'Net Income (Loss)'
+								: 'Net Income',
+						amount: formatAmount(note.current_year_net_income),
+						isNetIncome: true,
+						amountBottomBold: true,
+					});
+				}
+
+				if (note.total !== null && note.total !== undefined) {
+					let totalLabel = 'Total';
+					if (note.note_number === 6) {
+						totalLabel = `Net ${note.note_title}`;
+					} else if (note.note_number === 8) {
+						totalLabel = 'Total Equity';
+					}
+					pushRow({
+						label: totalLabel,
+						amount: formatAmount(note.total),
+						isTotal: true,
+						amountBottomBold: true,
+					});
+				}
+			}
+
+			pushRow({ label: '', amount: '', isSpacer: true });
+		});
+
+		return {
+			snapshotDate: financialStatementAsOfLabel,
+			storeName:
+				notesData?.store_name ||
+				mainBranch?.store_name ||
+				headerBranch?.store_name ||
+				'',
+			storeAddress:
+				notesData?.store_address ||
+				mainBranch?.store_address ||
+				headerBranch?.store_address ||
+				'',
+			branchName:
+				notesData?.branch_name ||
+				selectedBranchLabel ||
+				mainBranch?.name ||
+				headerBranch?.name ||
+				'',
+			storeTin:
+				notesData?.store_tin || mainBranch?.tin || headerBranch?.tin || '',
+			rows,
+		};
+	}, [
+		financialStatementAsOfLabel,
+		notesData,
+		headerBranch,
+		mainBranch,
+		selectedBranchLabel,
+	]);
+
+	const changesInEquityModalEntry = useMemo(() => {
+		const formatAmount = (value: number | string) => formatInPeso(value, '₱ ');
+		const rows: Array<{
+			id: number;
+			particulars: string;
+			ownersCapital: string;
+			retainedEarnings: string;
+			totalEquity: string;
+			isHeader?: boolean;
+			isTotal?: boolean;
+			amountBottomBold?: boolean;
+			isNegative?: boolean;
+		}> = [];
+
+		const pushRow = (row: Omit<typeof rows[number], 'id'>) => {
+			rows.push({ id: rows.length + 1, ...row });
+		};
+
+		pushRow({
+			particulars: 'Beginning Balance',
+			ownersCapital: formatAmount(
+				changesInEquityData?.beginning_owners_capital,
+			),
+			retainedEarnings: formatAmount(
+				changesInEquityData?.beginning_retained_earnings,
+			),
+			totalEquity: formatAmount(changesInEquityData?.beginning_total_equity),
+		});
+		pushRow({
+			particulars:
+				Number(changesInEquityData?.net_income ?? 0) < 0
+					? 'Net Income (Loss)'
+					: 'Net Income',
+			ownersCapital: '',
+			retainedEarnings: formatAmount(changesInEquityData?.net_income),
+			totalEquity: formatAmount(changesInEquityData?.net_income),
+		});
+		pushRow({
+			particulars: 'Less: Owner Drawings',
+			ownersCapital: formatAmount(
+				changesInEquityData?.owner_drawings
+					? Math.abs(changesInEquityData.owner_drawings)
+					: 0,
+			),
+			retainedEarnings: '',
+			totalEquity: formatAmount(
+				changesInEquityData?.owner_drawings
+					? Math.abs(changesInEquityData.owner_drawings)
+					: 0,
+			),
+		});
+		pushRow({
+			particulars: 'Ending Balance',
+			ownersCapital: formatAmount(changesInEquityData?.ending_owners_capital),
+			retainedEarnings: formatAmount(
+				changesInEquityData?.ending_retained_earnings,
+			),
+			totalEquity: formatAmount(changesInEquityData?.ending_total_equity),
+			isTotal: true,
+			amountBottomBold: true,
+		});
+
+		return {
+			snapshotDate: financialStatementAsOfLabel,
+			storeName:
+				changesInEquityData?.store_name ||
+				mainBranch?.store_name ||
+				headerBranch?.store_name ||
+				'',
+			storeAddress:
+				changesInEquityData?.store_address ||
+				mainBranch?.store_address ||
+				headerBranch?.store_address ||
+				'',
+			branchName:
+				changesInEquityData?.branch_name ||
+				selectedBranchLabel ||
+				mainBranch?.name ||
+				headerBranch?.name ||
+				'',
+			storeTin:
+				changesInEquityData?.store_tin ||
+				mainBranch?.tin ||
+				headerBranch?.tin ||
+				'',
+			rows,
+		};
+	}, [
+		financialStatementAsOfLabel,
+		changesInEquityData,
+		headerBranch,
+		mainBranch,
+		selectedBranchLabel,
+	]);
+
 	return (
 		<Content title="Financial Statements">
 			<Box padding>
@@ -633,9 +898,29 @@ export const FinancialStatements = () => {
 				/>
 			)}
 
+			{isChangesInEquityOpen && (
+				<StatementOfChangesInEquityModal
+					entry={changesInEquityModalEntry}
+					isLoading={isFetchingChangesInEquity}
+					open={isChangesInEquityOpen}
+					onClose={() => setActiveStatement(null)}
+				/>
+			)}
+
+			{isNotesToFinancialStatementsOpen && (
+				<NotesToFinancialStatementsModal
+					entry={notesModalEntry}
+					isLoading={isFetchingNotes}
+					open={isNotesToFinancialStatementsOpen}
+					onClose={() => setActiveStatement(null)}
+				/>
+			)}
+
 			{activeStatement &&
 				!isFinancialPerformanceOpen &&
-				!isFinancialPositionOpen && (
+				!isFinancialPositionOpen &&
+				!isChangesInEquityOpen &&
+				!isNotesToFinancialStatementsOpen && (
 					<Modal
 						className="Modal__hasFooter"
 						footer={

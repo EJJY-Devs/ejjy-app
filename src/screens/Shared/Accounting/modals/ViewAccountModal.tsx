@@ -62,6 +62,12 @@ export const ViewAccountModal = ({ account, open, onClose }: Props) => {
 				<Descriptions.Item label="Account Name">
 					{account?.account_name || '-'}
 				</Descriptions.Item>
+				<Descriptions.Item label="Account Category">
+					{account?.account_category
+						? account.account_category.charAt(0).toUpperCase() +
+						  account.account_category.slice(1)
+						: '-'}
+				</Descriptions.Item>
 				<Descriptions.Item label="Account Type">
 					{getOptionLabel(account?.account_type, accountTypeOptions)}
 				</Descriptions.Item>

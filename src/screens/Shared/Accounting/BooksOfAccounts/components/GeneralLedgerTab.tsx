@@ -17,6 +17,7 @@ import { GeneralLedgerModal } from '../../modals/GeneralLedgerModal';
 
 interface GeneralJournalEntry {
 	id: number;
+	entryType: string;
 	datetime: string;
 	branch?: string;
 	referenceNumber: string;
@@ -24,6 +25,7 @@ interface GeneralJournalEntry {
 	creditAccount: string;
 	amount: string;
 	remarks: string;
+	description: string;
 }
 
 interface GeneralLedgerDetail {
@@ -178,6 +180,7 @@ export const GeneralLedgerTab = ({
 
 	const transformJournalEntry = (entry: any): GeneralJournalEntry => ({
 		id: entry.id,
+		entryType: entry.entry_type || '',
 		datetime: formatDateTime(entry.datetime_created, false),
 		branch: entry.branch_name,
 		referenceNumber: entry.reference_number,
@@ -185,6 +188,7 @@ export const GeneralLedgerTab = ({
 		creditAccount: entry.credit_account,
 		amount: formatInPeso(entry.amount, '₱ '),
 		remarks: entry.remarks || EMPTY_CELL,
+		description: entry.description || '',
 	});
 
 	const allEntriesById = useMemo(() => {

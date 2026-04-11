@@ -27,6 +27,16 @@
 	max-width: 280px;
 }
 
+.ChartOfAccounts_filters {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.ChartOfAccounts_categoryFilter {
+	min-width: 160px;
+}
+
 .CreateAccountModal_form .ant-form-item-label > label {
 	color: #9aa0a6;
 	font-weight: 600;

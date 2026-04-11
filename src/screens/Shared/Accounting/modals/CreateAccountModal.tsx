@@ -3,6 +3,11 @@ import React from 'react';
 import { MAX_PAGE_SIZE } from 'global';
 import { useAccountSubTypes, useAccountTypes, useNormalBalances } from 'hooks';
 
+const ACCOUNT_CATEGORY_OPTIONS = [
+	{ label: 'Standard', value: 'standard' },
+	{ label: 'Special', value: 'special' },
+];
+
 type Option = { label: string; value: number };
 
 interface Props {
@@ -115,6 +120,15 @@ export const CreateAccountModal = ({
 					rules={[{ required: true, message: 'Account name is required' }]}
 				>
 					<Input />
+				</Form.Item>
+
+				<Form.Item
+					initialValue="standard"
+					label="Account Category"
+					name="accountCategory"
+					rules={[{ required: true, message: 'Account category is required' }]}
+				>
+					<Select options={ACCOUNT_CATEGORY_OPTIONS} />
 				</Form.Item>
 
 				<Form.Item

@@ -1,4 +1,4 @@
-import { message, Modal } from 'antd';
+import { message, Modal, Spin } from 'antd';
 
 import {
 	APP_APP_TYPE_KEY,
@@ -50,6 +50,7 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 	const { setAppType, setHeadOfficeType } = useAppType();
 	const [localApiUrl] = useState(getLocalApiUrl() || '');
 	const [onlineApiUrl, setOnlineApiUrl] = useState(getOnlineApiUrl() || '');
+	const [isReady, setIsReady] = useState(!ipcRenderer);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -66,12 +67,23 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 
 				const backendOnlineApiUrl = config.ONLINE_API_URL || '';
 
-				if (backendOnlineApiUrl) {
+				// Only use the backend config value as a fallback when
+				// localStorage does not already have a saved URL.
+				// This prevents overwriting user-saved settings with
+				// defaults from a recreated backend-config.json.
+				const currentLocalStorage = localStorage.getItem(
+					APP_ONLINE_API_URL_KEY,
+				);
+				if (backendOnlineApiUrl && !currentLocalStorage) {
 					setOnlineApiUrl(backendOnlineApiUrl);
 					localStorage.setItem(APP_ONLINE_API_URL_KEY, backendOnlineApiUrl);
 				}
 			} catch (e) {
 				// no-op: fallback remains localStorage values
+			} finally {
+				if (isMounted) {
+					setIsReady(true);
+				}
 			}
 		};
 
@@ -86,8 +98,10 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 	const handleSubmit = async (formData) => {
 		const currentAppType = getAppType();
 
-		// Only trigger relaunch if app type actually changed
-		const shouldRelaunch = formData.appType !== currentAppType;
+		// Trigger relaunch if app type or Online API URL changed
+		const shouldRelaunch =
+			formData.appType !== currentAppType ||
+			formData.onlineApiUrl !== onlineApiUrl;
 
 		localStorage.setItem(APP_APP_TYPE_KEY, formData.appType);
 		localStorage.setItem(
@@ -161,23 +175,29 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 			open
 			onCancel={onClose}
 		>
-			<AppSettingsForm
-				appType={getAppType()}
-				branchId={getOnlineBranchId()}
-				headOfficeType={getHeadOfficeType()}
-				localApiUrl={localApiUrl}
-				onlineApiUrl={onlineApiUrl}
-				printerFontFamily={getAppReceiptPrinterFontFamily()}
-				printerFontSize={getAppReceiptPrinterFontSize()}
-				printerName={getAppReceiptPrinterName()}
-				printingType={getAppReceiptPrintingType()}
-				tagPrinterFontFamily={getAppTagPrinterFontFamily()}
-				tagPrinterFontSize={getAppTagPrinterFontSize()}
-				tagPrinterPaperHeight={getAppTagPrinterPaperHeight()}
-				tagPrinterPaperWidth={getAppTagPrinterPaperWidth()}
-				onClose={onClose}
-				onSubmit={handleSubmit}
-			/>
+			{isReady ? (
+				<AppSettingsForm
+					appType={getAppType()}
+					branchId={getOnlineBranchId()}
+					headOfficeType={getHeadOfficeType()}
+					localApiUrl={localApiUrl}
+					onlineApiUrl={onlineApiUrl}
+					printerFontFamily={getAppReceiptPrinterFontFamily()}
+					printerFontSize={getAppReceiptPrinterFontSize()}
+					printerName={getAppReceiptPrinterName()}
+					printingType={getAppReceiptPrintingType()}
+					tagPrinterFontFamily={getAppTagPrinterFontFamily()}
+					tagPrinterFontSize={getAppTagPrinterFontSize()}
+					tagPrinterPaperHeight={getAppTagPrinterPaperHeight()}
+					tagPrinterPaperWidth={getAppTagPrinterPaperWidth()}
+					onClose={onClose}
+					onSubmit={handleSubmit}
+				/>
+			) : (
+				<div style={{ textAlign: 'center', padding: 40 }}>
+					<Spin />
+				</div>
+			)}
 		</Modal>
 	);
 };

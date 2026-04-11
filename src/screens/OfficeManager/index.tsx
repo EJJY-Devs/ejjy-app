@@ -40,6 +40,7 @@ import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
 import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
+import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
 import { Checkings } from './Checkings/Checkings';
 import { ViewChecking } from './Checkings/ViewChecking';
 import { Dashboard } from './Dashboard';
@@ -298,6 +299,10 @@ const OfficeManager = () => {
 					<Route
 						component={DiscountOptions}
 						path="/office-manager/accounting/discount-options"
+					/>
+					<Route
+						component={TransactionList}
+						path="/office-manager/accounting/transaction-list"
 					/>
 					<Redirect
 						from="/office-manager/accounting"

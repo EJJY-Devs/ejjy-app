@@ -85,6 +85,7 @@ const apiPath = isDev
 // Auto Updater
 //-------------------------------------------------------------------
 autoUpdater.autoDownload = false;
+autoUpdater.allowPrerelease = true;
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 log.info('App starting...');
@@ -221,14 +222,13 @@ function createWindow() {
 		},
 	});
 
-	// Lock Chromium's built-in visual/layout zoom to avoid random zoom-outs.
-	// We still allow our explicit zoomFactor changes via menu actions.
+	// Lock Chromium's pinch-to-zoom so zoom only changes through our menu actions.
+	// NOTE: Do NOT call setLayoutZoomLevelLimits(0, 0) here — it locks the layout
+	// zoom level to 0 (factor 1.0), which causes setZoomFactor() values to be
+	// reverted on every in-page navigation (e.g. React Router tab switches).
 	try {
 		if (typeof mainWindow.webContents.setVisualZoomLevelLimits === 'function') {
 			mainWindow.webContents.setVisualZoomLevelLimits(1, 1);
-		}
-		if (typeof mainWindow.webContents.setLayoutZoomLevelLimits === 'function') {
-			mainWindow.webContents.setLayoutZoomLevelLimits(0, 0);
 		}
 	} catch (e) {
 		// Best-effort only; different Electron versions expose different APIs.
@@ -256,6 +256,18 @@ function createWindow() {
 		mainWindow.show();
 		// Apply validated zoom level using the safe function
 		updateZoom(zoomLevel);
+	});
+
+	// Re-apply zoom after any navigation event so that in-page navigations
+	// (e.g. React Router's history.replace on tab switches) don't reset zoom.
+	mainWindow.webContents.on('did-navigate', () => {
+		mainWindow.webContents.setZoomFactor(zoomLevel);
+	});
+	mainWindow.webContents.on('did-navigate-in-page', () => {
+		mainWindow.webContents.setZoomFactor(zoomLevel);
+	});
+	mainWindow.webContents.on('did-finish-load', () => {
+		mainWindow.webContents.setZoomFactor(zoomLevel);
 	});
 
 	// Prevent unintended zoom changes from system gestures or Chromium shortcuts.

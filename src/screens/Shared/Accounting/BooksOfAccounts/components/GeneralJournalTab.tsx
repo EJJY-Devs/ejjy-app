@@ -16,6 +16,7 @@ import { formatDateTime, formatInPeso } from 'utils';
 
 export interface GeneralJournalEntry {
 	id: number;
+	entryType: string;
 	datetime: string;
 	branch?: string;
 	referenceNumber: string;
@@ -23,20 +24,25 @@ export interface GeneralJournalEntry {
 	creditAccount: string;
 	amount: string;
 	remarks: string;
+	description: string;
 }
 
 interface Props {
 	isHeadOffice: boolean;
 	localBranchId: number;
+	onAddTransactionEntry: () => void;
 	onCreateJournalEntry: () => void;
 	onOpenJournalEntry: (entry: GeneralJournalEntry) => void;
+	onViewTransaction?: (transactionId: number, description: string) => void;
 }
 
 export const GeneralJournalTab = ({
 	isHeadOffice,
 	localBranchId,
+	onAddTransactionEntry,
 	onCreateJournalEntry,
 	onOpenJournalEntry,
+	onViewTransaction,
 }: Props) => {
 	const { params, setQueryParams } = useQueryParams();
 	const { data: { branches } = { branches: [] } } = useBranches({
@@ -74,6 +80,7 @@ export const GeneralJournalTab = ({
 	const entries: GeneralJournalEntry[] = (journalEntries || []).map(
 		(entry: any) => ({
 			id: entry.id,
+			entryType: entry.entry_type || '',
 			datetime: formatDateTime(entry.datetime_created, true),
 			branch: entry.branch_name,
 			referenceNumber: entry.reference_number,
@@ -81,6 +88,7 @@ export const GeneralJournalTab = ({
 			creditAccount: entry.credit_account,
 			amount: formatInPeso(entry.amount, '₱ '),
 			remarks: entry.remarks || EMPTY_CELL,
+			description: entry.description || '',
 		}),
 	);
 
@@ -120,6 +128,33 @@ export const GeneralJournalTab = ({
 				title: 'Remarks',
 				dataIndex: 'remarks',
 				key: 'remarks',
+				render: (_: string, record: GeneralJournalEntry) => {
+					if (record.entryType === 'transaction') {
+						const match = record.remarks.match(/^(.+)\s*\(TXN-(\d+)\)$/);
+						if (match) {
+							const txnName = match[1].trim();
+							const txnId = Number(match[2]);
+							return (
+								<>
+									<div>Transaction Name: {txnName}</div>
+									<div>
+										Transaction Id:{' '}
+										<Button
+											style={{ padding: 0, height: 'auto' }}
+											type="link"
+											onClick={() =>
+												onViewTransaction?.(txnId, record.description)
+											}
+										>
+											{txnId}
+										</Button>
+									</div>
+								</>
+							);
+						}
+					}
+					return record.remarks;
+				},
 			},
 		];
 
@@ -132,7 +167,7 @@ export const GeneralJournalTab = ({
 		}
 
 		return baseColumns;
-	}, [isHeadOffice, onOpenJournalEntry]);
+	}, [isHeadOffice, onOpenJournalEntry, onViewTransaction]);
 
 	return (
 		<>
@@ -192,13 +227,22 @@ export const GeneralJournalTab = ({
 					)}
 				</Row>
 				{!isHeadOffice && (
-					<Button
-						icon={<PlusOutlined />}
-						type="primary"
-						onClick={onCreateJournalEntry}
-					>
-						Create Journal Entry
-					</Button>
+					<>
+						<Button
+							icon={<PlusOutlined />}
+							type="primary"
+							onClick={onAddTransactionEntry}
+						>
+							Select Transaction
+						</Button>
+						<Button
+							icon={<PlusOutlined />}
+							type="primary"
+							onClick={onCreateJournalEntry}
+						>
+							Create Journal Entry
+						</Button>
+					</>
 				)}
 			</div>
 			<Table

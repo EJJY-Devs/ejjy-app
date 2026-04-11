@@ -161,11 +161,7 @@ export const BranchSales = ({ branchId }: Props) => {
 						<Col md={4}>
 							<Statistic
 								title="Cash On Hand"
-								value={[
-									summary.cashOnHand < 0 ? '(' : '',
-									formatInPeso(Math.abs(summary.cashOnHand)),
-									summary.cashOnHand < 0 ? ')' : '',
-								].join('')}
+								value={formatInPeso(summary.cashOnHand)}
 							/>
 						</Col>
 						<Col md={4}>

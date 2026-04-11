@@ -22,6 +22,7 @@ import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation'
 import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
+import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
@@ -304,6 +305,10 @@ const BranchManager = () => {
 					<Route
 						component={DiscountOptions}
 						path="/branch-manager/accounting/discount-options"
+					/>
+					<Route
+						component={TransactionList}
+						path="/branch-manager/accounting/transaction-list"
 					/>
 					<Redirect
 						from="/branch-manager/accounting"

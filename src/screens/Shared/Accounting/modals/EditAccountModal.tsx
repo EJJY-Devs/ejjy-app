@@ -3,6 +3,11 @@ import React, { useEffect } from 'react';
 import { MAX_PAGE_SIZE } from 'global';
 import { useAccountSubTypes, useAccountTypes, useNormalBalances } from 'hooks';
 
+const ACCOUNT_CATEGORY_OPTIONS = [
+	{ label: 'Standard', value: 'standard' },
+	{ label: 'Special', value: 'special' },
+];
+
 type Option = { label: string; value: number };
 
 interface Props {
@@ -79,6 +84,7 @@ export const EditAccountModal = ({
 			form.setFieldsValue({
 				accountCode: String(account.account_code ?? ''),
 				accountName: account.account_name,
+				accountCategory: account.account_category || 'standard',
 				accountType: account.account_type,
 				subType: account.sub_type,
 				normalBalance: account.normal_balance,
@@ -126,6 +132,14 @@ export const EditAccountModal = ({
 					rules={[{ required: true, message: 'Account name is required' }]}
 				>
 					<Input />
+				</Form.Item>
+
+				<Form.Item
+					label="Account Category"
+					name="accountCategory"
+					rules={[{ required: true, message: 'Account category is required' }]}
+				>
+					<Select options={ACCOUNT_CATEGORY_OPTIONS} />
 				</Form.Item>
 
 				<Form.Item

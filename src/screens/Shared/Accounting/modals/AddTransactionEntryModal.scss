@@ -1,0 +1,123 @@
+.AddTransactionEntryModal {
+	.ant-modal-content {
+		border-radius: 20px;
+	}
+
+	.ant-modal-body {
+		padding-top: 12px;
+	}
+
+	.ant-modal-title {
+		font-weight: 600;
+	}
+
+	.ant-input[disabled],
+	.ant-input-number-disabled,
+	.ant-input-number-disabled .ant-input-number-input {
+		cursor: default !important;
+	}
+
+	.AddTransactionEntryModal_gridInputs .ant-input[disabled],
+	.AddTransactionEntryModal_gridInputs
+		.ant-input-number-disabled
+		.ant-input-number-input,
+	.AddTransactionEntryModal_gridInputs .ant-input-number-input[disabled] {
+		color: #222 !important;
+		-webkit-text-fill-color: #222 !important;
+		opacity: 1 !important;
+	}
+
+	.AddTransactionEntryModal_gridInputs .ant-input-number-disabled {
+		background: #f6f7fb;
+	}
+}
+
+.AddTransactionEntryModal_form {
+	.ant-form-item {
+		margin-bottom: 14px;
+	}
+}
+
+.AddTransactionEntryModal_searchItem {
+	margin-bottom: 18px;
+
+	.ant-select-selector {
+		height: 64px !important;
+		border-radius: 8px !important;
+	}
+
+	.ant-select-selection-search-input,
+	.ant-select-selection-placeholder,
+	.ant-select-selection-item {
+		height: 64px !important;
+		line-height: 64px !important;
+		font-size: 16px;
+	}
+}
+
+.AddTransactionEntryModal_gridLabels {
+	display: grid;
+	grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.7fr) minmax(140px, 0.8fr);
+	gap: 12px;
+	margin-bottom: 6px;
+
+	span {
+		font-size: 24px;
+		font-weight: 600;
+		line-height: 1;
+		text-align: center;
+	}
+}
+
+.AddTransactionEntryModal_gridInputs {
+	display: grid;
+	grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.7fr) minmax(140px, 0.8fr);
+	gap: 12px;
+	margin-bottom: 8px;
+	align-items: start;
+
+	.ant-input-number,
+	.ant-input-number-input {
+		height: 64px;
+	}
+
+	.ant-input[disabled],
+	.ant-input-number-input {
+		font-weight: 500;
+		text-align: left;
+	}
+
+	.ant-input[disabled] {
+		background: #f6f7fb;
+		height: 64px;
+		padding: 0 14px;
+		line-height: 64px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.ant-input-number-input {
+		font-size: 18px;
+		text-align: center;
+	}
+}
+
+@media (max-width: 820px) {
+	.AddTransactionEntryModal_gridLabels,
+	.AddTransactionEntryModal_gridInputs {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.AddTransactionEntryModal_gridInputs {
+		.ant-input-number-input {
+			font-size: 18px;
+		}
+	}
+}
+
+.AddTransactionEntryModal_remarksLabel {
+	font-size: 18px;
+	font-weight: 600;
+	margin-bottom: 6px;
+}

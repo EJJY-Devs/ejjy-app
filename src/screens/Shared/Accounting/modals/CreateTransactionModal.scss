@@ -1,0 +1,57 @@
+.CreateTransactionModal_field {
+	margin-bottom: 16px;
+}
+
+.CreateTransactionModal_label {
+	display: block;
+	color: #9aa0a6;
+	font-weight: 600;
+	font-size: 13px;
+	margin-bottom: 4px;
+}
+
+.CreateTransactionModal_accountSelect {
+	width: 100%;
+}
+
+.CreateTransactionModal_creditCell {
+	position: relative;
+}
+
+.CreateTransactionModal_rowDeleteBtn {
+	position: absolute;
+	top: -8px;
+	right: -8px;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: #ff4d4f;
+	color: #fff;
+	font-size: 10px;
+	cursor: pointer;
+	z-index: 1;
+	line-height: 1;
+
+	&:hover {
+		background: #cf1322;
+	}
+}
+
+.ant-table-row:hover .CreateTransactionModal_rowDeleteBtn {
+	display: flex;
+}
+
+.CreateTransactionModal_addBtn {
+	margin-top: 12px;
+}
+
+.CreateTransactionModal_footer {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 16px;
+}

@@ -20,6 +20,16 @@ interface StatementOfFinancialPosition {
 	time_range?: string;
 }
 
+interface StatementOfChangesInEquity {
+	branch_id?: number;
+	time_range?: string;
+}
+
+interface NotesToFinancialStatements {
+	branch_id?: number;
+	time_range?: string;
+}
+
 const service = {
 	list: async (params: List, baseURL: string) =>
 		axios.get('/trial-balance/', { baseURL, params }),
@@ -41,6 +51,24 @@ const service = {
 		baseURL: string,
 	) =>
 		axios.get('/trial-balance/statement-of-financial-position/', {
+			baseURL,
+			params,
+		}),
+
+	statementOfChangesInEquity: async (
+		params: StatementOfChangesInEquity,
+		baseURL: string,
+	) =>
+		axios.get('/trial-balance/statement-of-changes-in-equity/', {
+			baseURL,
+			params,
+		}),
+
+	notesToFinancialStatements: async (
+		params: NotesToFinancialStatements,
+		baseURL: string,
+	) =>
+		axios.get('/trial-balance/notes-to-financial-statements/', {
 			baseURL,
 			params,
 		}),

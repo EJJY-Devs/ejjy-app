@@ -1,0 +1,167 @@
+import { DEFAULT_PAGE_SIZE } from 'global';
+import { wrapServiceWithCatch } from 'hooks/helper';
+import { Query } from 'hooks/inteface';
+import { useQuery } from 'react-query';
+import { TrialBalanceService } from 'services';
+import { getLocalApiUrl } from 'utils';
+
+const DEFAULT_PAGE = 1;
+
+const useTrialBalance = ({ params, options }: Query) =>
+	useQuery<any>(
+		[
+			'useTrialBalance',
+			params?.branchId,
+			params?.timeRange,
+			params?.page,
+			params?.pageSize,
+		],
+		() =>
+			wrapServiceWithCatch(
+				TrialBalanceService.list(
+					{
+						branch_id: params?.branchId,
+						time_range: params?.timeRange,
+						page: params?.page || DEFAULT_PAGE,
+						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: { results: [], count: 0 } },
+			select: (query) => ({
+				trialBalanceEntries: query.data.results,
+				total: query.data.count,
+			}),
+			...(options || {}),
+		},
+	);
+
+export const useTrialBalanceDetails = ({ params, options }: Query) =>
+	useQuery<any>(
+		['useTrialBalanceDetails', params?.referenceNumber],
+		() =>
+			wrapServiceWithCatch(
+				TrialBalanceService.detail(
+					{
+						reference_number: params?.referenceNumber,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			enabled: !!params?.referenceNumber,
+			initialData: { data: null },
+			select: (query) => query.data,
+			...(options || {}),
+		},
+	);
+
+export const useMultipleTrialBalanceDetails = ({ params, options }: Query) =>
+	useQuery<any>(
+		['useMultipleTrialBalanceDetails', params?.referenceNumbers],
+		() =>
+			wrapServiceWithCatch(
+				Promise.all(
+					(params?.referenceNumbers || []).map((referenceNumber: string) =>
+						TrialBalanceService.detail(
+							{
+								reference_number: referenceNumber,
+							},
+							getLocalApiUrl(),
+						).then((response) => response.data),
+					),
+				),
+			),
+		{
+			enabled: !!params?.referenceNumbers?.length,
+			initialData: [],
+			...(options || {}),
+		},
+	);
+
+export const useStatementOfFinancialPerformance = ({
+	params,
+	options,
+}: Query) =>
+	useQuery<any>(
+		['useStatementOfFinancialPerformance', params?.branchId, params?.timeRange],
+		() =>
+			wrapServiceWithCatch(
+				TrialBalanceService.statementOfFinancialPerformance(
+					{
+						branch_id: params?.branchId,
+						time_range: params?.timeRange,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: null },
+			select: (query) => query.data,
+			...(options || {}),
+		},
+	);
+
+export const useStatementOfFinancialPosition = ({ params, options }: Query) =>
+	useQuery<any>(
+		['useStatementOfFinancialPosition', params?.branchId, params?.timeRange],
+		() =>
+			wrapServiceWithCatch(
+				TrialBalanceService.statementOfFinancialPosition(
+					{
+						branch_id: params?.branchId,
+						time_range: params?.timeRange,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: null },
+			select: (query) => query.data,
+			...(options || {}),
+		},
+	);
+
+export const useStatementOfChangesInEquity = ({ params, options }: Query) =>
+	useQuery<any>(
+		['useStatementOfChangesInEquity', params?.branchId, params?.timeRange],
+		() =>
+			wrapServiceWithCatch(
+				TrialBalanceService.statementOfChangesInEquity(
+					{
+						branch_id: params?.branchId,
+						time_range: params?.timeRange,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: null },
+			select: (query) => query.data,
+			...(options || {}),
+		},
+	);
+
+export const useNotesToFinancialStatements = ({ params, options }: Query) =>
+	useQuery<any>(
+		['useNotesToFinancialStatements', params?.branchId, params?.timeRange],
+		() =>
+			wrapServiceWithCatch(
+				TrialBalanceService.notesToFinancialStatements(
+					{
+						branch_id: params?.branchId,
+						time_range: params?.timeRange,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: null },
+			select: (query) => query.data,
+			...(options || {}),
+		},
+	);
+
+export default useTrialBalance;

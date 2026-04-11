@@ -1,8 +1,7 @@
 import { DeleteOutlined, EditFilled } from '@ant-design/icons';
-import { Button, message, Popconfirm, Space, Tooltip } from 'antd';
-import Table from 'antd/lib/table';
+import { Button, message, Popconfirm, Space, Table, Tooltip } from 'antd';
 import cn from 'classnames';
-import { ConnectionAlert, RequestErrors } from 'components';
+import { ConnectionAlert, RequestErrors, TableHeader } from 'components';
 import { Box } from 'components/elements';
 import {
 	appTypes,
@@ -17,7 +16,7 @@ import {
 	useQueryParams,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { useUserStore } from 'stores';
 import { convertIntoArray, getAppType, getId, isStandAlone } from 'utils';
 
@@ -28,6 +27,7 @@ type Props = {
 export const ProductGroupsTab = ({ basePath }: Props) => {
 	const [dataSource, setDataSource] = useState([]);
 
+	const history = useHistory();
 	const { params, setQueryParams } = useQueryParams();
 	const { isConnected } = usePingOnlineServer();
 	const user = useUserStore((state) => state.user);
@@ -40,7 +40,7 @@ export const ProductGroupsTab = ({ basePath }: Props) => {
 		shouldFetchOfflineFirst: !isStandAlone(),
 	});
 	const {
-		mutate: deleteProductGroup,
+		mutateAsync: deleteProductGroup,
 		isLoading: isDeletingProductGroup,
 		error: deleteProductGroupError,
 	} = useProductGroupDelete();
@@ -68,8 +68,12 @@ export const ProductGroupsTab = ({ basePath }: Props) => {
 						placement="left"
 						title="Are you sure to remove this?"
 						onConfirm={async () => {
-							await deleteProductGroup(getId(productGroup));
-							message.success('Product group was deleted successfully');
+							try {
+								await deleteProductGroup(getId(productGroup));
+								message.success('Product group was deleted successfully');
+							} catch (e: any) {
+								message.error('Failed to delete product group');
+							}
 						}}
 					>
 						<Tooltip title="Remove">
@@ -97,15 +101,13 @@ export const ProductGroupsTab = ({ basePath }: Props) => {
 		<>
 			<ConnectionAlert />
 
-			<Box>
+			<Box padding>
 				{getAppType() === appTypes.HEAD_OFFICE && (
-					<div className="pa-6 d-flex justify-end">
-						<Link to={`${basePath}/product-groups/create`}>
-							<Button disabled={isConnected === false} type="primary">
-								Create Product Group
-							</Button>
-						</Link>
-					</div>
+					<TableHeader
+						buttonName="Create Product Group"
+						onCreate={() => history.push(`${basePath}/product-groups/create`)}
+						onCreateDisabled={isConnected === false}
+					/>
 				)}
 
 				<RequestErrors

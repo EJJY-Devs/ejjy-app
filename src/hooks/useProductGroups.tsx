@@ -3,7 +3,7 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { ProductGroupsService } from 'services';
-import { getLocalApiUrl } from 'utils';
+import { getLocalApiUrl, getOnlineApiUrl } from 'utils';
 
 const useProductGroups = ({ params, shouldFetchOfflineFirst }: Query) =>
 	useQuery<any>(
@@ -66,7 +66,7 @@ export const useProductGroupCreate = () => {
 
 	return useMutation<any, any, any>(
 		async ({ name, items }: any) => {
-			const baseURL = getLocalApiUrl();
+			const baseURL = getOnlineApiUrl();
 
 			const response = await ProductGroupsService.create({ name }, baseURL);
 
@@ -98,7 +98,7 @@ export const useProductGroupEdit = () => {
 					name,
 					items,
 				},
-				getLocalApiUrl(),
+				getOnlineApiUrl(),
 			),
 		{
 			onSuccess: () => {
@@ -112,7 +112,7 @@ export const useProductGroupDelete = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		(id: number) => ProductGroupsService.delete(id, getLocalApiUrl()),
+		(id: number) => ProductGroupsService.delete(id, getOnlineApiUrl()),
 		{
 			onSuccess: () => {
 				queryClient.invalidateQueries('useProductGroups');

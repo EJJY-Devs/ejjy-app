@@ -153,9 +153,9 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 					{product.is_vat_exempted ? 'VAT-EXEMPTED' : 'VAT'}
 				</Descriptions.Item>
 
-				{product.point_system_tag && (
+				{product.patronage_system_tag && (
 					<Descriptions.Item label="Patronage System Tag">
-						{product.point_system_tag.name}
+						{product.patronage_system_tag.name}
 					</Descriptions.Item>
 				)}
 

@@ -104,7 +104,7 @@ interface Props {
 	isLoading: boolean;
 	onClose: any;
 	onSubmit: any;
-	pointSystemTags: any;
+	patronageSystemTags: any;
 	product: any;
 }
 
@@ -112,7 +112,7 @@ export const ModifyProductForm = ({
 	isLoading,
 	onClose,
 	onSubmit,
-	pointSystemTags,
+	patronageSystemTags,
 	product,
 }: Props) => {
 	// CUSTOM HOOKS
@@ -150,7 +150,7 @@ export const ModifyProductForm = ({
 				name: product?.name || '',
 				piecesInBulk: product?.pieces_in_bulk || 1,
 				conversionAmount: product?.conversion_amount || 1,
-				pointSystemTagId: getId(product?.point_system_tag),
+				patronageSystemTagId: getId(product?.patronage_system_tag),
 				costPerBulk: product?.cost_per_bulk || 1,
 				costPerPiece: product?.cost_per_piece || '',
 				pricePerBulk: product?.price_per_bulk || 1,
@@ -279,7 +279,7 @@ export const ModifyProductForm = ({
 						.moreThan(0)
 						.nullable()
 						.label('PO Price'),
-					pointSystemTagId: Yup.string()
+					patronageSystemTagId: Yup.string()
 						.nullable()
 						.label('Patronage System Tag'),
 				},
@@ -484,30 +484,34 @@ export const ModifyProductForm = ({
 						</Col>
 
 						<Col sm={12} span={24}>
-							<Label id="pointSystemTagId" label="Loyalty Program" spacing />
+							<Label
+								id="patronageSystemTagId"
+								label="Loyalty Program"
+								spacing
+							/>
 							<Select
 								className="w-100"
 								filterOption={filterOption}
 								optionFilterProp="children"
 								placeholder="None"
-								value={values.pointSystemTagId}
+								value={values.patronageSystemTagId}
 								allowClear
 								showSearch
 								onChange={(value) => {
-									setFieldValue('pointSystemTagId', value);
+									setFieldValue('patronageSystemTagId', value);
 								}}
 							>
-								{pointSystemTags.map((pointSystemTag) => (
+								{patronageSystemTags.map((patronageSystemTag) => (
 									<Select.Option
-										key={pointSystemTag.id}
-										value={getId(pointSystemTag)}
+										key={patronageSystemTag.id}
+										value={getId(patronageSystemTag)}
 									>
-										{pointSystemTag.name}
+										{patronageSystemTag.name}
 									</Select.Option>
 								))}
 							</Select>
 							<ErrorMessage
-								name="pointSystemTagId"
+								name="patronageSystemTagId"
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>

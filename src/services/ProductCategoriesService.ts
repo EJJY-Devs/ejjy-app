@@ -8,21 +8,21 @@ interface Modify {
 
 const service = {
 	list: async (params: IListRequest, baseURL) =>
-		axios.get('/product-categories/', { baseURL, params }),
+		axios.get('/tags/product-categories/', { baseURL, params }),
 
 	create: async (body: Modify, baseURL) =>
-		axios.post('/product-categories/', body, { baseURL }),
+		axios.post('/tags/product-categories/', body, { baseURL }),
 
 	edit: async (id, body: Modify, baseURL) =>
-		axios.patch(`/product-categories/${id}/`, body, { baseURL }),
+		axios.patch(`/tags/product-categories/${id}/`, body, { baseURL }),
 
 	delete: async (id, baseURL) =>
-		axios.delete(`/product-categories/${id}/`, { baseURL }),
+		axios.delete(`/tags/product-categories/${id}/`, { baseURL }),
 };
 
 const serviceOffline = {
 	listOffline: async (params: IListRequest, baseURL) =>
-		axios.get('/offline-product-categories/', { baseURL, params }),
+		axios.get('/offline-tags-product-categories/', { baseURL, params }),
 };
 
 export default {

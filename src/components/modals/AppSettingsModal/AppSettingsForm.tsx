@@ -251,6 +251,14 @@ export const AppSettingsForm = ({
 								name="onlineApiUrl"
 								render={(error) => <FieldError error={error} />}
 							/>
+							{values.onlineApiUrl !== onlineApiUrl && (
+								<Alert
+									className="mt-1"
+									message="App will relaunch after saving app settings."
+									type="info"
+									showIcon
+								/>
+							)}
 						</Col>
 
 						{values.appType === appTypes.BACK_OFFICE && (

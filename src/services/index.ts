@@ -4,6 +4,7 @@ export const NO_VERIFICATION_NEEDED = 'NO_VERIFICATION_NEEDED';
 
 export const NO_VERIFICATION_CONFIG = { params: NO_VERIFICATION_NEEDED };
 
+export { default as AccountingTransactionsService } from './AccountingTransactionsService';
 export { default as AccountsService } from './AccountsService';
 export { default as AdjustmentSlipsService } from './AdjustmentSlipsService';
 export { default as AttendanceLogsService } from './AttendanceLogsService';
@@ -27,12 +28,19 @@ export { default as ConnectivityLogsService } from './ConnectivityLogsService';
 export { default as CreditRegistrationsService } from './CreditRegistrationsService';
 export { default as DataService } from './DataService';
 export { default as DiscountOptionsService } from './DiscountOptionsService';
+export { default as AccountTypesService } from './AccountTypesService';
+export { default as AccountSubTypesService } from './AccountSubTypesService';
+export { default as NormalBalancesService } from './NormalBalancesService';
+export { default as ChartOfAccountsService } from './ChartOfAccountsService';
+export { default as JournalEntriesService } from './JournalEntriesService';
+export { default as GeneralLedgerService } from './GeneralLedgerService';
+export { default as TrialBalanceService } from './TrialBalanceService';
 export { default as InvoiceService } from './InvoiceService';
 export { default as LogsService } from './LogsService';
 export { default as NetworkService } from './NetworkService';
 export { default as OrderOfPaymentsService } from './OrderOfPaymentsService';
 export { default as PaymentsService } from './PaymentsService';
-export { default as PointSystemTagsService } from './PointSystemTagsService';
+export { default as PatronageSystemTagsService } from './PatronageSystemTagsService';
 export { default as PointTransactionsService } from './PointTransactionsService';
 export { default as PriceMarkdownsService } from './PriceMarkdownsService';
 export { default as ProductCategoriesService } from './ProductCategoriesService';

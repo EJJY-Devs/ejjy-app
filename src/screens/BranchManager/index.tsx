@@ -12,19 +12,24 @@ import {
 	useSalesTrackerCount,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Redirect, Route, Switch } from 'react-router-dom';
+import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
 import { Checkings } from 'screens/BranchManager/Checkings';
 import { ViewChecking } from 'screens/BranchManager/Checkings/ViewChecking';
 import { Logs } from 'screens/BranchManager/Logs';
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
+import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
+import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
+import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
+import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
+import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
 import { Cart } from 'screens/Shared/Cart';
 import { DiscountOptions } from 'screens/Shared/DiscountOptions';
 import { DTR } from 'screens/Shared/DTR';
-import { PointSystemTags } from 'screens/Shared/PointSystemTags';
+import { PatronageSystemTags } from 'screens/Shared/PatronageSystemTags/PatronageSystemTagsView';
 import { ProductCategories } from 'screens/Shared/ProductCategories';
 import { ProductGroups } from 'screens/Shared/ProductGroups';
 import { ModifyProductGroup } from 'screens/Shared/ProductGroups/ModifyProductGroup';
@@ -54,6 +59,9 @@ import { ReturnItemSlips } from './ReturnItemSlips';
 const PING_BRANCH_INTERVAL_MS = 10_000;
 
 const BranchManager = () => {
+	const { pathname } = useLocation();
+	const isAccounting = pathname.startsWith('/branch-manager/accounting');
+
 	// VARIABLES
 	const branchKey = getBranchKey();
 
@@ -128,8 +136,14 @@ const BranchManager = () => {
 		}
 	}, [salesTrackerCount, branchProductsNegativeBalanceCount, dtrCount]);
 
-	const getSidebarItems = useCallback(
-		() => [
+	const getSidebarItems = useCallback(() => {
+		if (isAccounting) {
+			return getAccountingSidebarItems('/branch-manager', {
+				includeFinancialStatements: true,
+			});
+		}
+
+		return [
 			{
 				key: 'branch-machines',
 				name: 'Branch Machines',
@@ -143,13 +157,6 @@ const BranchManager = () => {
 				activeIcon: require('../../assets/images/icon-report-active.svg'),
 				defaultIcon: require('../../assets/images/icon-report.svg'),
 				link: '/branch-manager/reports',
-			},
-			{
-				key: 'sales',
-				name: 'Sales',
-				activeIcon: require('../../assets/images/icon-sales-active.svg'),
-				defaultIcon: require('../../assets/images/icon-sales.svg'),
-				link: '/branch-manager/sales',
 			},
 			{
 				key: 'dashboard',
@@ -166,13 +173,6 @@ const BranchManager = () => {
 				link: '/branch-manager/products',
 			},
 			{
-				key: 'tags',
-				name: 'Tags',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/branch-manager/tags',
-			},
-			{
 				key: 'product-conversion',
 				name: 'Product Conversion',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
@@ -185,20 +185,6 @@ const BranchManager = () => {
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
 				link: '/branch-manager/inventory-transfer',
-			},
-			{
-				key: 'discount-options',
-				name: 'Discount Options',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/branch-manager/discount-options',
-			},
-			{
-				key: 'accounts',
-				name: 'Accounts',
-				activeIcon: require('../../assets/images/icon-users-active.svg'),
-				defaultIcon: require('../../assets/images/icon-users.svg'),
-				link: '/branch-manager/accounts',
 			},
 			{
 				key: 'dtr',
@@ -272,9 +258,8 @@ const BranchManager = () => {
 				link: '/branch-manager/notifications',
 				count: notificationsCount,
 			},
-		],
-		[notificationsCount, logsCount],
-	);
+		];
+	}, [isAccounting, notificationsCount, logsCount]);
 
 	if (isFetchingBranches) {
 		return <Spin className="GlobalSpinner" tip="Fetching data..." />;
@@ -286,6 +271,50 @@ const BranchManager = () => {
 
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
+					<Route
+						component={FinancialStatements}
+						path="/branch-manager/accounting/financial-statements"
+					/>
+					<Route
+						component={ChartOfAccounts}
+						path="/branch-manager/accounting/chart-of-accounts"
+					/>
+					<Route
+						component={BooksOfAccounts}
+						path="/branch-manager/accounting/books-of-accounts"
+					/>
+					<Route
+						component={Products}
+						path="/branch-manager/accounting/products"
+					/>
+					<Route component={Sales} path="/branch-manager/accounting/sales" />
+					<Route
+						path="/branch-manager/accounting/tags"
+						render={() => <Tags basePath="/branch-manager" />}
+					/>
+					<Route
+						component={Accounts}
+						path="/branch-manager/accounting/accounts"
+						exact
+					/>
+					<Route
+						component={ViewAccount}
+						path="/branch-manager/accounting/accounts/:id"
+						exact
+					/>
+					<Route
+						component={DiscountOptions}
+						path="/branch-manager/accounting/discount-options"
+					/>
+					<Route
+						component={TransactionList}
+						path="/branch-manager/accounting/transaction-list"
+					/>
+					<Redirect
+						from="/branch-manager/accounting"
+						to="/branch-manager/accounting/chart-of-accounts"
+						exact
+					/>
 					<Route component={Dashboard} path="/branch-manager/dashboard" />
 					<Route component={Reports} path="/branch-manager/reports" />
 					<Route component={Sales} path="/branch-manager/sales" />
@@ -299,8 +328,8 @@ const BranchManager = () => {
 					/>
 					<Route component={Products} path="/branch-manager/products" />
 					<Route
-						component={PointSystemTags}
-						path="/branch-manager/point-system-tags"
+						component={PatronageSystemTags}
+						path="/branch-manager/patronage-system-tags"
 					/>
 					<Route
 						component={ProductGroups}

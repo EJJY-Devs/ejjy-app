@@ -1,43 +1,41 @@
 import { Button, Col, Input, message, Modal, Row } from 'antd';
+import { RequestErrors } from 'components';
+import { FieldError, FormattedInputNumber, Label } from 'components/elements';
 import { ErrorMessage, Form, Formik } from 'formik';
-import { usePointSystemTagCreate, usePointSystemTagEdit } from 'hooks';
+import { usePatronageSystemTagCreate, usePatronageSystemTagEdit } from 'hooks';
 import React, { useCallback } from 'react';
 import { convertIntoArray, getId } from 'utils';
 import * as Yup from 'yup';
-import { RequestErrors } from '../..';
-import { FieldError, FormattedInputNumber, Label } from '../../elements';
 
 interface ModalProps {
-	pointSystemTag: any;
+	patronageSystemTag: any;
 	onClose: any;
 }
 
-export const ModifyPointSystemTagModal = ({
-	pointSystemTag,
+export const ModifyPatronageSystemTagModal = ({
+	patronageSystemTag,
 	onClose,
 }: ModalProps) => {
-	// CUSTOM HOOKS
 	const {
-		mutateAsync: createPointSystemTag,
-		isLoading: isCreatingPointSystemTag,
-		error: createPointSystemTagError,
-	} = usePointSystemTagCreate();
+		mutateAsync: createPatronageSystemTag,
+		isLoading: isCreatingPatronageSystemTag,
+		error: createPatronageSystemTagError,
+	} = usePatronageSystemTagCreate();
 	const {
-		mutateAsync: editPointSystemTag,
-		isLoading: isEditingPointSystemTag,
-		error: editPointSystemTagError,
-	} = usePointSystemTagEdit();
+		mutateAsync: editPatronageSystemTag,
+		isLoading: isEditingPatronageSystemTag,
+		error: editPatronageSystemTagError,
+	} = usePatronageSystemTagEdit();
 
-	// METHODS
 	const handleSubmit = async (formData) => {
-		if (pointSystemTag) {
-			await editPointSystemTag({
+		if (patronageSystemTag) {
+			await editPatronageSystemTag({
 				...formData,
-				id: getId(pointSystemTag),
+				id: getId(patronageSystemTag),
 			});
 			message.success('Patronage system tag was edited successfully');
 		} else {
-			await createPointSystemTag(formData);
+			await createPatronageSystemTag(formData);
 			message.success('Patronage system tag was created successfully');
 		}
 
@@ -47,7 +45,9 @@ export const ModifyPointSystemTagModal = ({
 	return (
 		<Modal
 			footer={null}
-			title={`${pointSystemTag ? '[Edit]' : '[Create]'} Patronage System Tag`}
+			title={`${
+				patronageSystemTag ? '[Edit]' : '[Create]'
+			} Patronage System Tag`}
 			centered
 			closable
 			visible
@@ -55,15 +55,15 @@ export const ModifyPointSystemTagModal = ({
 		>
 			<RequestErrors
 				errors={[
-					...convertIntoArray(createPointSystemTagError?.errors),
-					...convertIntoArray(editPointSystemTagError?.errors),
+					...convertIntoArray(createPatronageSystemTagError?.errors),
+					...convertIntoArray(editPatronageSystemTagError?.errors),
 				]}
 				withSpaceBottom
 			/>
 
-			<ModifyPointSystemTagForm
-				isLoading={isCreatingPointSystemTag || isEditingPointSystemTag}
-				pointSystemTag={pointSystemTag}
+			<ModifyPatronageSystemTagForm
+				isLoading={isCreatingPatronageSystemTag || isEditingPatronageSystemTag}
+				patronageSystemTag={patronageSystemTag}
 				onClose={onClose}
 				onSubmit={handleSubmit}
 			/>
@@ -72,14 +72,14 @@ export const ModifyPointSystemTagModal = ({
 };
 
 interface FormProps {
-	pointSystemTag?: any;
+	patronageSystemTag?: any;
 	isLoading: boolean;
 	onSubmit: any;
 	onClose: any;
 }
 
-export const ModifyPointSystemTagForm = ({
-	pointSystemTag,
+export const ModifyPatronageSystemTagForm = ({
+	patronageSystemTag,
 	isLoading,
 	onSubmit,
 	onClose,
@@ -87,15 +87,15 @@ export const ModifyPointSystemTagForm = ({
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: {
-				name: pointSystemTag?.name || '',
-				divisorAmount: pointSystemTag?.divisor_amount || '',
+				name: patronageSystemTag?.name || '',
+				divisorAmount: patronageSystemTag?.divisor_amount || '',
 			},
 			Schema: Yup.object().shape({
 				name: Yup.string().required().max(75).label('Name').trim(),
 				divisorAmount: Yup.string().required().label('Divisor Amount').trim(),
 			}),
 		}),
-		[pointSystemTag],
+		[patronageSystemTag],
 	);
 
 	return (
@@ -146,7 +146,7 @@ export const ModifyPointSystemTagForm = ({
 							Cancel
 						</Button>
 						<Button htmlType="submit" loading={isLoading} type="primary">
-							{pointSystemTag ? 'Edit' : 'Create'}
+							{patronageSystemTag ? 'Edit' : 'Create'}
 						</Button>
 					</div>
 				</Form>

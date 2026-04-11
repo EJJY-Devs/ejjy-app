@@ -269,7 +269,8 @@ export const FastMovingProductsTile = ({ branchId }: Props) => {
 
 					productKeys.forEach((key, idx) => {
 						const seriesName = productNames[idx];
-						point[seriesName] = perDateQty[date]?.[key] || 0;
+						const raw = perDateQty[date]?.[key] || 0;
+						point[seriesName] = Math.round(raw * 1000) / 1000;
 					});
 
 					return point;
@@ -342,7 +343,8 @@ export const FastMovingProductsTile = ({ branchId }: Props) => {
 								<Tooltip
 									formatter={(value: any, name: any) => {
 										const seriesName = getTruncatedName(String(name || ''), 40);
-										return [value, seriesName];
+										const formatted = Number(Number(value).toFixed(3));
+										return [formatted, seriesName];
 									}}
 								/>
 

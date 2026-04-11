@@ -1,0 +1,156 @@
+.FinancialStatements {
+	width: 100%;
+}
+
+.FinancialStatements_header {
+	margin-bottom: 20px;
+}
+
+.FinancialStatements_filters {
+	width: fit-content;
+	max-width: 100%;
+}
+
+.FinancialStatements_timeRange {
+	flex: 0 0 auto;
+	width: auto;
+	max-width: max-content;
+}
+
+.FinancialStatements_branchFilter {
+	flex: 0 0 260px;
+	max-width: 260px;
+}
+
+.FinancialStatements_grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+	gap: 20px;
+}
+
+.FinancialStatements_card {
+	border-radius: 12px;
+	overflow: hidden;
+	min-height: 144px;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.FinancialStatements_cardInner {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	min-height: 108px;
+}
+
+.FinancialStatements_iconWrap {
+	width: 80px;
+	height: 80px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	flex: 0 0 auto;
+}
+
+.FinancialStatements_icon {
+	font-size: 38px;
+}
+
+.FinancialStatements_cardTag {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	margin: 0;
+}
+
+.FinancialStatements_text {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+	padding-top: 2px;
+}
+
+.FinancialStatements_title {
+	font-size: 16px;
+	font-weight: 700;
+	text-transform: uppercase;
+	line-height: 1.2;
+	word-break: break-word;
+}
+
+.FinancialStatements_subtitle {
+	font-size: 13px;
+	line-height: 1.35;
+	color: rgba(0, 0, 0, 0.65);
+}
+
+.FinancialStatements_modalBody {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.FinancialStatements_modalTags {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.FinancialPerformanceModal_header {
+	text-align: center;
+	font-size: 12px;
+	line-height: 1.35;
+	margin-bottom: 14px;
+}
+
+.FinancialPerformanceModal_header div + div {
+	margin-top: 2px;
+}
+
+.FinancialPerformanceModal_titleBlock {
+	text-align: center;
+	margin-bottom: 12px;
+}
+
+.FinancialPerformanceModal_title {
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.FinancialPerformanceModal_asOf {
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.25;
+	margin-top: 4px;
+}
+
+.FinancialPerformanceModal_table {
+	.ant-table-thead > tr > th {
+		background: #f5f6fa;
+		font-weight: 600;
+	}
+
+	.ant-table-tbody > tr > td {
+		font-size: 12px;
+	}
+}
+
+@media (max-width: 768px) {
+	.FinancialStatements_filters {
+		width: 100%;
+	}
+
+	.FinancialStatements_timeRange,
+	.FinancialStatements_branchFilter {
+		flex: 0 0 100%;
+		width: 100%;
+		max-width: 100%;
+	}
+
+	.FinancialStatements_grid {
+		grid-template-columns: 1fr;
+		gap: 16px;
+	}
+}

@@ -52,11 +52,14 @@ export const standardRound = (number) => _.round(number, 3).toFixed(2);
 export const formatInPeso = (value, pesoSign = '₱') => {
 	const x = Number(value);
 
-	return _.isNaN(x)
-		? EMPTY_CELL
-		: `${x < 0 ? '-' : ''}${pesoSign}${formatNumberWithCommas(
-				standardRound(Math.abs(x)),
-		  )}`;
+	if (_.isNaN(x)) {
+		return EMPTY_CELL;
+	}
+
+	const formatted = `${pesoSign}${formatNumberWithCommas(
+		standardRound(Math.abs(x)),
+	)}`;
+	return x < 0 ? `(${formatted})` : formatted;
 };
 
 export const formatQuantity = ({

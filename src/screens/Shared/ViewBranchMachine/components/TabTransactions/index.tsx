@@ -23,6 +23,7 @@ import {
 import { useQueryParams, useSiteSettingsNew, useTransactions } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
+import { useQueryClient } from 'react-query';
 import { TransactionsCancelled } from 'screens/Shared/Branches/components/TabTransactions/components/TransactionsCancelled';
 import { convertIntoArray, formatInPeso } from 'utils';
 import { Summary } from './components/Summary';
@@ -73,6 +74,7 @@ export const TabTransactions = ({ branchMachineId }: Props) => {
 	const [selectedTransaction, setSelectedTransaction] = useState(null);
 
 	// CUSTOM HOOKS
+	const queryClient = useQueryClient();
 	const { params, setQueryParams } = useQueryParams();
 	const { data: siteSettings } = useSiteSettingsNew();
 	const {
@@ -89,6 +91,11 @@ export const TabTransactions = ({ branchMachineId }: Props) => {
 		},
 		options: refetchOptions,
 	});
+
+	// Refetch summary whenever transactions data changes so summary stays in sync
+	useEffect(() => {
+		queryClient.invalidateQueries('useTransactionsSummary');
+	}, [transactions, queryClient]);
 
 	// METHODS
 	useEffect(() => {

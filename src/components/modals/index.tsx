@@ -19,7 +19,7 @@ export * from './ModifyBranchModal';
 export * from './ModifyCashieringAssignmentModal';
 export * from './ModifyCreditRegistration';
 export * from './ModifyDiscountOptionModal';
-export * from './ModifyPointSystemTagModal';
+export * from './ModifyPatronageSystemTagModal';
 export * from './ModifyProductCategoryModal';
 export * from './ModifyProductGroupModal';
 export * from './ModifyProductModal';

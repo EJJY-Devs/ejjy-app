@@ -6,14 +6,15 @@ import { IS_APP_LIVE, appTypes, userTypes } from 'global';
 import { useAuthLogin, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { useUserStore } from 'stores';
-import {
-	convertIntoArray,
-	getAppType,
-	getLocalApiUrl,
-	getOnlineApiUrl,
-} from 'utils';
+import { convertIntoArray, getAppType, getOnlineApiUrl } from 'utils';
 import { LoginForm } from './components/LoginForm';
 import './style.scss';
+
+let ipcRenderer;
+if (window.require) {
+	const electron = window.require('electron');
+	ipcRenderer = electron.ipcRenderer;
+}
 
 const Login = () => {
 	// STATES
@@ -40,10 +41,28 @@ const Login = () => {
 	});
 
 	useEffect(() => {
-		if (!getLocalApiUrl() || !getOnlineApiUrl()) {
-			setAppSettingsModalVisible(true);
-			setSetupButtonsVisible(true);
-		}
+		const checkBackendSetup = async () => {
+			let requiresSetup = !getOnlineApiUrl();
+
+			if (ipcRenderer) {
+				try {
+					const backendRequiresSetup = await ipcRenderer.invoke(
+						'isBackendConfigSetupRequired',
+						getAppType(),
+					);
+					requiresSetup = requiresSetup || !!backendRequiresSetup;
+				} catch (e) {
+					// no-op: keep local validation result
+				}
+			}
+
+			if (requiresSetup) {
+				setAppSettingsModalVisible(true);
+				setSetupButtonsVisible(true);
+			}
+		};
+
+		checkBackendSetup();
 	}, []);
 
 	const handleKeyDown = (event) => {

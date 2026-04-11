@@ -26,7 +26,7 @@ interface Modify {
 	// packing_barcode_unit_of_measurement?: 'Weighing' | 'Non-Weighing';
 	// packing_barcode?: string;
 	pieces_in_bulk: number;
-	point_system_tag_id: number;
+	patronage_system_tag_id: number;
 	price_per_bulk: number;
 	price_per_piece: number;
 	price_tag_print_details: string;

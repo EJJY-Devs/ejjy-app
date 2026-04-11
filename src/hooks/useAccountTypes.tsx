@@ -2,16 +2,16 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
 import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { PointSystemTagsService } from 'services';
+import { AccountTypesService } from 'services';
 import { getLocalApiUrl, getOnlineApiUrl, isStandAlone } from 'utils';
 
-const usePointSystemTags = ({ params }: Query) =>
+const useAccountTypes = ({ params }: Query) =>
 	useQuery<any>(
-		['usePointSystemTags', params?.page, params?.pageSize],
+		['useAccountTypes', params?.page, params?.pageSize],
 		() => {
 			const service = isStandAlone()
-				? PointSystemTagsService.list
-				: PointSystemTagsService.listOffline;
+				? AccountTypesService.list
+				: AccountTypesService.listOffline;
 
 			return wrapServiceWithCatch(
 				service(
@@ -26,64 +26,63 @@ const usePointSystemTags = ({ params }: Query) =>
 		{
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => ({
-				pointSystemTags: query.data.results,
+				accountTypes: query.data.results,
 				total: query.data.count,
 			}),
 		},
 	);
 
-export const usePointSystemTagCreate = () => {
+export const useAccountTypeCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ name, divisorAmount }: any) =>
-			PointSystemTagsService.create(
+		({ name }: { name: string }) =>
+			AccountTypesService.create(
 				{
 					name,
-					divisor_amount: divisorAmount,
 				},
 				getOnlineApiUrl(),
 			),
 		{
 			onSuccess: () => {
-				queryClient.invalidateQueries('usePointSystemTags');
+				queryClient.invalidateQueries('useAccountTypes');
 			},
 		},
 	);
 };
 
-export const usePointSystemTagEdit = () => {
+export const useAccountTypeEdit = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ id, name, divisorAmount }: any) =>
-			PointSystemTagsService.edit(
+		({ id, name }: { id: number; name: string }) =>
+			AccountTypesService.edit(
 				id,
 				{
 					name,
-					divisor_amount: divisorAmount,
 				},
 				getOnlineApiUrl(),
 			),
 		{
 			onSuccess: () => {
-				queryClient.invalidateQueries('usePointSystemTags');
+				queryClient.invalidateQueries('useAccountTypes');
 			},
 		},
 	);
 };
 
-export const usePointSystemTagDelete = () => {
+export const useAccountTypeDelete = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		(id: number) => PointSystemTagsService.delete(id, getOnlineApiUrl()),
+		({ id }: { id: number }) =>
+			AccountTypesService.delete(id, getOnlineApiUrl()),
 		{
 			onSuccess: () => {
-				queryClient.invalidateQueries('usePointSystemTags');
+				queryClient.invalidateQueries('useAccountTypes');
 			},
 		},
 	);
 };
 
-export default usePointSystemTags;
+export default useAccountTypes;

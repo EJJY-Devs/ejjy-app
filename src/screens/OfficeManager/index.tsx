@@ -6,7 +6,7 @@ import {
 	useProductSyncStatus,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Redirect, Route, Switch } from 'react-router-dom';
+import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
 import { refetchOptions } from 'global';
 import {
 	useNotificationConnectivity,
@@ -21,7 +21,7 @@ import { Branches } from 'screens/Shared/Branches';
 import { ViewBranch } from 'screens/Shared/Branches/ViewBranch';
 import { DTR } from 'screens/Shared/DTR';
 import { DiscountOptions } from 'screens/Shared/DiscountOptions';
-import { PointSystemTags } from 'screens/Shared/PointSystemTags';
+import { PatronageSystemTags } from 'screens/Shared/PatronageSystemTags/PatronageSystemTagsView';
 import { ProductCategories } from 'screens/Shared/ProductCategories';
 import { ProductGroups } from 'screens/Shared/ProductGroups';
 import { ModifyProductGroup } from 'screens/Shared/ProductGroups/ModifyProductGroup';
@@ -30,12 +30,17 @@ import { Tags } from 'screens/Shared/Tags';
 import { Reports } from 'screens/Shared/Reports';
 import { Sales } from 'screens/Shared/Sales';
 import { SiteSettings } from 'screens/Shared/SiteSettings';
+import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
 import shallow from 'zustand/shallow';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
+import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
+import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
+import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
+import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
 import { Checkings } from './Checkings/Checkings';
 import { ViewChecking } from './Checkings/ViewChecking';
 import { Dashboard } from './Dashboard';
@@ -45,6 +50,9 @@ import { RequisitionSlips } from './RequisitionSlips';
 import { ViewRequisitionSlip } from './RequisitionSlips/ViewRequisitionSlip';
 
 const OfficeManager = () => {
+	const { pathname } = useLocation();
+	const isAccounting = pathname.startsWith('/office-manager/accounting');
+
 	useNotificationConnectivity();
 	useNotificationDtr();
 	useUploadData({
@@ -117,21 +125,21 @@ const OfficeManager = () => {
 		unsyncedProductsCount,
 	]);
 
-	const getSidebarItems = useCallback(
-		() => [
+	const getSidebarItems = useCallback(() => {
+		if (isAccounting) {
+			return getAccountingSidebarItems('/office-manager', {
+				includeBranches: true,
+				includeFinancialStatements: true,
+			});
+		}
+
+		return [
 			{
 				key: 'dashboard',
 				name: 'Dashboard',
 				activeIcon: require('../../assets/images/icon-dashboard-active.svg'),
 				defaultIcon: require('../../assets/images/icon-dashboard.svg'),
 				link: '/office-manager/dashboard',
-			},
-			{
-				key: 'sales',
-				name: 'Sales',
-				activeIcon: require('../../assets/images/icon-sales-active.svg'),
-				defaultIcon: require('../../assets/images/icon-sales.svg'),
-				link: '/office-manager/sales',
 			},
 			{
 				key: 'reports',
@@ -148,27 +156,6 @@ const OfficeManager = () => {
 				link: '/office-manager/products',
 			},
 			{
-				key: 'tags',
-				name: 'Tags',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/office-manager/tags',
-			},
-			{
-				key: 'branches',
-				name: 'Branches',
-				activeIcon: require('../../assets/images/icon-branches-active.svg'),
-				defaultIcon: require('../../assets/images/icon-branches.svg'),
-				link: '/office-manager/branches',
-			},
-			{
-				key: 'accounts',
-				name: 'Accounts',
-				activeIcon: require('../../assets/images/icon-users-active.svg'),
-				defaultIcon: require('../../assets/images/icon-users.svg'),
-				link: '/office-manager/accounts',
-			},
-			{
 				key: 'assignments',
 				name: 'Assignments',
 				activeIcon: require('../../assets/images/icon-users-active.svg'),
@@ -181,13 +168,6 @@ const OfficeManager = () => {
 				activeIcon: require('../../assets/images/icon-users-active.svg'),
 				defaultIcon: require('../../assets/images/icon-users.svg'),
 				link: '/office-manager/dtr',
-			},
-			{
-				key: 'discount-options',
-				name: 'Discount Options',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/office-manager/discount-options',
 			},
 			{
 				key: 'settings',
@@ -268,14 +248,68 @@ const OfficeManager = () => {
 				link: '/office-manager/notifications',
 				count: notificationsCount,
 			},
-		],
-		[notificationsCount, logsCount],
-	);
+		];
+	}, [isAccounting, notificationsCount, logsCount]);
 
 	return (
 		<Container sidebarItems={getSidebarItems()}>
 			<React.Suspense fallback={<div>Loading...</div>}>
 				<Switch>
+					<Route
+						component={FinancialStatements}
+						path="/office-manager/accounting/financial-statements"
+					/>
+					<Route
+						component={Products}
+						path="/office-manager/accounting/products"
+					/>
+					<Route
+						component={ChartOfAccounts}
+						path="/office-manager/accounting/chart-of-accounts"
+					/>
+					<Route
+						component={BooksOfAccounts}
+						path="/office-manager/accounting/books-of-accounts"
+					/>
+					<Route component={Sales} path="/office-manager/accounting/sales" />
+					<Route
+						path="/office-manager/accounting/tags"
+						render={() => <Tags basePath="/office-manager" />}
+					/>
+					<Route
+						component={Accounts}
+						path="/office-manager/accounting/accounts"
+						exact
+					/>
+					<Route
+						component={ViewAccount}
+						path="/office-manager/accounting/accounts/:id"
+						exact
+					/>
+					<Route
+						component={Branches}
+						path="/office-manager/accounting/branches"
+						exact
+					/>
+					<Route
+						component={ViewBranch}
+						path="/office-manager/accounting/branches/:id"
+						exact
+					/>
+					<Route
+						component={DiscountOptions}
+						path="/office-manager/accounting/discount-options"
+					/>
+					<Route
+						component={TransactionList}
+						path="/office-manager/accounting/transaction-list"
+					/>
+					<Redirect
+						from="/office-manager/accounting"
+						to="/office-manager/accounting/chart-of-accounts"
+						exact
+					/>
+
 					<Route component={Products} path="/office-manager/products" />
 
 					<Route
@@ -289,8 +323,8 @@ const OfficeManager = () => {
 					/>
 
 					<Route
-						component={PointSystemTags}
-						path="/office-manager/point-system-tags"
+						component={PatronageSystemTags}
+						path="/office-manager/patronage-system-tags"
 					/>
 
 					<Route component={Branches} path="/office-manager/branches" exact />

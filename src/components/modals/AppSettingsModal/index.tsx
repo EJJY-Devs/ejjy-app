@@ -1,4 +1,4 @@
-import { message, Modal } from 'antd';
+import { message, Modal, Spin } from 'antd';
 
 import {
 	APP_APP_TYPE_KEY,
@@ -16,7 +16,7 @@ import {
 } from 'global';
 import { useAppType } from 'hooks';
 import _ from 'lodash';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
 	getAppReceiptPrinterFontFamily,
 	getAppReceiptPrinterFontSize,
@@ -39,23 +39,69 @@ interface Props {
 	onClose: any;
 }
 
+let ipcRenderer;
+if (window.require) {
+	const electron = window.require('electron');
+	ipcRenderer = electron.ipcRenderer;
+}
+
 export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 	// CUSTOM HOOKS
 	const { setAppType, setHeadOfficeType } = useAppType();
+	const [localApiUrl] = useState(getLocalApiUrl() || '');
+	const [onlineApiUrl, setOnlineApiUrl] = useState(getOnlineApiUrl() || '');
+	const [isReady, setIsReady] = useState(!ipcRenderer);
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const fetchBackendConfig = async () => {
+			if (!ipcRenderer) return;
+
+			try {
+				const config = await ipcRenderer.invoke(
+					'getBackendConfig',
+					getAppType(),
+				);
+				if (!isMounted || !config) return;
+
+				const backendOnlineApiUrl = config.ONLINE_API_URL || '';
+
+				// Only use the backend config value as a fallback when
+				// localStorage does not already have a saved URL.
+				// This prevents overwriting user-saved settings with
+				// defaults from a recreated backend-config.json.
+				const currentLocalStorage = localStorage.getItem(
+					APP_ONLINE_API_URL_KEY,
+				);
+				if (backendOnlineApiUrl && !currentLocalStorage) {
+					setOnlineApiUrl(backendOnlineApiUrl);
+					localStorage.setItem(APP_ONLINE_API_URL_KEY, backendOnlineApiUrl);
+				}
+			} catch (e) {
+				// no-op: fallback remains localStorage values
+			} finally {
+				if (isMounted) {
+					setIsReady(true);
+				}
+			}
+		};
+
+		fetchBackendConfig();
+
+		return () => {
+			isMounted = false;
+		};
+	}, []);
 
 	// METHODS
-	const handleSubmit = (formData) => {
+	const handleSubmit = async (formData) => {
 		const currentAppType = getAppType();
 
-		// Only trigger relaunch if app type actually changed
-		const shouldRelaunch = formData.appType !== currentAppType;
-
-		setHeadOfficeType(formData.headOfficeType);
-		if (shouldRelaunch) {
-			setAppType(formData.appType, true);
-		} else {
-			setAppType(formData.appType, false);
-		}
+		// Trigger relaunch if app type or Online API URL changed
+		const shouldRelaunch =
+			formData.appType !== currentAppType ||
+			formData.onlineApiUrl !== onlineApiUrl;
 
 		localStorage.setItem(APP_APP_TYPE_KEY, formData.appType);
 		localStorage.setItem(
@@ -93,6 +139,27 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 			formData.tagPrinterPaperWidth,
 		);
 
+		if (ipcRenderer) {
+			try {
+				await ipcRenderer.invoke('setBackendConfig', {
+					appType: formData.appType,
+					config: {
+						ONLINE_API_URL: formData.onlineApiUrl,
+					},
+				});
+			} catch (e) {
+				message.error('Failed to save backend settings');
+				return;
+			}
+		}
+
+		setHeadOfficeType(formData.headOfficeType);
+		if (shouldRelaunch) {
+			setAppType(formData.appType, true);
+		} else {
+			setAppType(formData.appType, false);
+		}
+
 		message.success('App settings were updated successfully');
 		onSuccess?.();
 		onClose();
@@ -108,23 +175,29 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 			open
 			onCancel={onClose}
 		>
-			<AppSettingsForm
-				appType={getAppType()}
-				branchId={getOnlineBranchId()}
-				headOfficeType={getHeadOfficeType()}
-				localApiUrl={getLocalApiUrl()}
-				onlineApiUrl={getOnlineApiUrl()}
-				printerFontFamily={getAppReceiptPrinterFontFamily()}
-				printerFontSize={getAppReceiptPrinterFontSize()}
-				printerName={getAppReceiptPrinterName()}
-				printingType={getAppReceiptPrintingType()}
-				tagPrinterFontFamily={getAppTagPrinterFontFamily()}
-				tagPrinterFontSize={getAppTagPrinterFontSize()}
-				tagPrinterPaperHeight={getAppTagPrinterPaperHeight()}
-				tagPrinterPaperWidth={getAppTagPrinterPaperWidth()}
-				onClose={onClose}
-				onSubmit={handleSubmit}
-			/>
+			{isReady ? (
+				<AppSettingsForm
+					appType={getAppType()}
+					branchId={getOnlineBranchId()}
+					headOfficeType={getHeadOfficeType()}
+					localApiUrl={localApiUrl}
+					onlineApiUrl={onlineApiUrl}
+					printerFontFamily={getAppReceiptPrinterFontFamily()}
+					printerFontSize={getAppReceiptPrinterFontSize()}
+					printerName={getAppReceiptPrinterName()}
+					printingType={getAppReceiptPrintingType()}
+					tagPrinterFontFamily={getAppTagPrinterFontFamily()}
+					tagPrinterFontSize={getAppTagPrinterFontSize()}
+					tagPrinterPaperHeight={getAppTagPrinterPaperHeight()}
+					tagPrinterPaperWidth={getAppTagPrinterPaperWidth()}
+					onClose={onClose}
+					onSubmit={handleSubmit}
+				/>
+			) : (
+				<div style={{ textAlign: 'center', padding: 40 }}>
+					<Spin />
+				</div>
+			)}
 		</Modal>
 	);
 };

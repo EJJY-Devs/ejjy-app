@@ -85,6 +85,7 @@ const apiPath = isDev
 // Auto Updater
 //-------------------------------------------------------------------
 autoUpdater.autoDownload = false;
+autoUpdater.allowPrerelease = true;
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 log.info('App starting...');
@@ -115,6 +116,89 @@ function getBackendConfigPath(appType) {
 	return path.join(app.getPath('appData'), configDir, 'backend-config.json');
 }
 
+function getDefaultBackendConfig(appType) {
+	const localDbName =
+		appType === appTypes.BACK_OFFICE
+			? 'backoffice'
+			: appType === appTypes.HEAD_OFFICE
+			? 'headoffice'
+			: 'cashiering';
+
+	return {
+		SECRET_KEY: '@26!xtf&^xr@p$$x%7zwj9j-k)(k7-!0z_@_-sc!t13js1pwum',
+		DEBUG: false,
+		STATUS: 'online',
+		IS_ONLINE_WEB_SERVER: false,
+		ONLINE_API_URL: 'http://localhost:8002/v1',
+		DB_NAME: '',
+		DB_USER: '',
+		DB_PASSWORD: '',
+		DB_HOST: '127.0.0.1',
+		DB_PORT: 3306,
+		LOCAL_DB_NAME: localDbName,
+	};
+}
+
+function readBackendConfig(configPath) {
+	try {
+		return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+	} catch (e) {
+		return null;
+	}
+}
+
+function writeBackendConfig(configPath, config) {
+	const configDir = path.dirname(configPath);
+	if (!fs.existsSync(configDir)) {
+		fs.mkdirSync(configDir, { recursive: true });
+	}
+
+	fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+}
+
+function ensureBackendConfig(appType) {
+	const safeAppType = appType || appTypes.BACK_OFFICE;
+	const configPath = getBackendConfigPath(safeAppType);
+	const defaults = getDefaultBackendConfig(safeAppType);
+	const existingConfig = readBackendConfig(configPath);
+
+	if (!existingConfig) {
+		writeBackendConfig(configPath, defaults);
+		logStatus(`Created backend-config.json: ${configPath}`);
+		return defaults;
+	}
+
+	const mergedConfig = { ...defaults, ...existingConfig };
+	delete mergedConfig.BRANCH_SERVER_URL;
+	if (JSON.stringify(mergedConfig) !== JSON.stringify(existingConfig)) {
+		writeBackendConfig(configPath, mergedConfig);
+	}
+
+	return mergedConfig;
+}
+
+function updateBackendConfig(appType, updates = {}) {
+	const safeAppType = appType || appTypes.BACK_OFFICE;
+	const configPath = getBackendConfigPath(safeAppType);
+	const currentConfig = ensureBackendConfig(safeAppType);
+	const mergedConfig = {
+		...currentConfig,
+		ONLINE_API_URL:
+			typeof updates.ONLINE_API_URL === 'string'
+				? updates.ONLINE_API_URL
+				: currentConfig.ONLINE_API_URL,
+	};
+	delete mergedConfig.BRANCH_SERVER_URL;
+
+	writeBackendConfig(configPath, mergedConfig);
+	return mergedConfig;
+}
+
+function isBackendConfigSetupRequired(appType) {
+	const config = ensureBackendConfig(appType);
+	return !config.ONLINE_API_URL;
+}
+
 function createWindow() {
 	// Splash screen
 	splashWindow = new BrowserWindow({
@@ -138,14 +222,13 @@ function createWindow() {
 		},
 	});
 
-	// Lock Chromium's built-in visual/layout zoom to avoid random zoom-outs.
-	// We still allow our explicit zoomFactor changes via menu actions.
+	// Lock Chromium's pinch-to-zoom so zoom only changes through our menu actions.
+	// NOTE: Do NOT call setLayoutZoomLevelLimits(0, 0) here — it locks the layout
+	// zoom level to 0 (factor 1.0), which causes setZoomFactor() values to be
+	// reverted on every in-page navigation (e.g. React Router tab switches).
 	try {
 		if (typeof mainWindow.webContents.setVisualZoomLevelLimits === 'function') {
 			mainWindow.webContents.setVisualZoomLevelLimits(1, 1);
-		}
-		if (typeof mainWindow.webContents.setLayoutZoomLevelLimits === 'function') {
-			mainWindow.webContents.setLayoutZoomLevelLimits(0, 0);
 		}
 	} catch (e) {
 		// Best-effort only; different Electron versions expose different APIs.
@@ -175,6 +258,18 @@ function createWindow() {
 		updateZoom(zoomLevel);
 	});
 
+	// Re-apply zoom after any navigation event so that in-page navigations
+	// (e.g. React Router's history.replace on tab switches) don't reset zoom.
+	mainWindow.webContents.on('did-navigate', () => {
+		mainWindow.webContents.setZoomFactor(zoomLevel);
+	});
+	mainWindow.webContents.on('did-navigate-in-page', () => {
+		mainWindow.webContents.setZoomFactor(zoomLevel);
+	});
+	mainWindow.webContents.on('did-finish-load', () => {
+		mainWindow.webContents.setZoomFactor(zoomLevel);
+	});
+
 	// Prevent unintended zoom changes from system gestures or Chromium shortcuts.
 	mainWindow.webContents.on('before-input-event', (event, input) => {
 		if (!DISABLE_USER_ZOOM_SHORTCUTS) return;
@@ -201,6 +296,7 @@ function createWindow() {
 
 	// Initialize Store
 	const store = initStore();
+	ensureBackendConfig(store.get('appType'));
 
 	// Migrate and Run API
 	initServer(store);
@@ -214,15 +310,7 @@ function createWindow() {
 
 		// Read config to get app type and DB name
 		const appType = store.get('appType');
-		const configPath = getBackendConfigPath(appType);
-		let config = {};
-		try {
-			config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-		} catch (e) {
-			logStatus('Failed to read backend-config.json: ' + e.message);
-			mainWindow.setProgressBar(-1);
-			return;
-		}
+		const config = ensureBackendConfig(appType);
 
 		const dbName = config.LOCAL_DB_NAME || 'backoffice'; // 'headoffice' or 'backoffice'
 		const backupFileName = `${dbName}-${new Date()
@@ -364,6 +452,24 @@ function initStore() {
 		if (relaunch) {
 			relaunchApp();
 		}
+	});
+
+	ipcMain.handle('getBackendConfig', (event, requestedAppType) => {
+		const selectedAppType = requestedAppType || store.get('appType');
+		return ensureBackendConfig(selectedAppType);
+	});
+
+	ipcMain.handle(
+		'setBackendConfig',
+		(event, { appType: requestedAppType, config = {} }) => {
+			const selectedAppType = requestedAppType || store.get('appType');
+			return updateBackendConfig(selectedAppType, config);
+		},
+	);
+
+	ipcMain.handle('isBackendConfigSetupRequired', (event, requestedAppType) => {
+		const selectedAppType = requestedAppType || store.get('appType');
+		return isBackendConfigSetupRequired(selectedAppType);
 	});
 
 	return store;

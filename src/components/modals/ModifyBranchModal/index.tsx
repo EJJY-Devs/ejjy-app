@@ -1,4 +1,13 @@
-import { Button, Col, Input, message, Modal, Row, Select } from 'antd';
+import {
+	Button,
+	Checkbox,
+	Col,
+	Input,
+	message,
+	Modal,
+	Row,
+	Select,
+} from 'antd';
 import { RequestErrors } from 'components';
 import { ErrorMessage, Form, Formik } from 'formik';
 import { useBranchCreate, useBranchEdit } from 'hooks';
@@ -10,11 +19,17 @@ import { FieldError, Label } from '../../elements';
 
 interface Props {
 	branch: any;
+	mainBranchId?: number | null;
 	onClose: any;
 	onSuccess: any;
 }
 
-export const ModifyBranchModal = ({ branch, onClose, onSuccess }: Props) => {
+export const ModifyBranchModal = ({
+	branch,
+	mainBranchId,
+	onClose,
+	onSuccess,
+}: Props) => {
 	// CUSTOM HOOKS
 	const {
 		mutateAsync: createBranch,
@@ -64,6 +79,7 @@ export const ModifyBranchModal = ({ branch, onClose, onSuccess }: Props) => {
 			<ModifyBranchForm
 				branch={branch}
 				isLoading={isCreatingBranch || isEditingBranch}
+				mainBranchId={mainBranchId}
 				onClose={onClose}
 				onSubmit={handleSubmit}
 			/>
@@ -73,6 +89,7 @@ export const ModifyBranchModal = ({ branch, onClose, onSuccess }: Props) => {
 
 interface FormProps {
 	branch?: any;
+	mainBranchId?: number | null;
 	isLoading: boolean;
 	onSubmit: any;
 	onClose: any;
@@ -80,14 +97,18 @@ interface FormProps {
 
 export const ModifyBranchForm = ({
 	branch,
+	mainBranchId,
 	isLoading,
 	onSubmit,
 	onClose,
 }: FormProps) => {
+	const showMainBranchOption = !mainBranchId || branch?.id === mainBranchId;
+
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: {
 				name: branch?.name || '',
+				isMain: Boolean(branch?.is_main),
 				serverUrl: branch?.server_url || '',
 				storeName: branch?.store_name || '',
 				storeAddress: branch?.store_address || '',
@@ -135,6 +156,19 @@ export const ModifyBranchForm = ({
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>
+
+						{showMainBranchOption && (
+							<Col span={24}>
+								<Checkbox
+									checked={values['isMain']}
+									onChange={(e) => {
+										setFieldValue('isMain', e.target.checked);
+									}}
+								>
+									Set as main branch
+								</Checkbox>
+							</Col>
+						)}
 
 						<Col span={24}>
 							<Label label="Server URL" spacing />

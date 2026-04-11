@@ -3,26 +3,25 @@ import { IListRequest } from './interfaces';
 
 interface Modify {
 	name: string;
-	divisor_amount: number;
 }
 
 const service = {
 	list: async (params: IListRequest, baseURL) =>
-		axios.get('/point-system-tags/', { baseURL, params }),
+		axios.get('/tags/normal-balances/', { baseURL, params }),
 
 	create: async (body: Modify, baseURL) =>
-		axios.post('/point-system-tags/', body, { baseURL }),
+		axios.post('/tags/normal-balances/', body, { baseURL }),
 
 	edit: async (id: number, body: Modify, baseURL) =>
-		axios.patch(`/point-system-tags/${id}/`, body, { baseURL }),
+		axios.patch(`/tags/normal-balances/${id}/`, body, { baseURL }),
 
 	delete: async (id: number, baseURL) =>
-		axios.delete(`/point-system-tags/${id}/`, { baseURL }),
+		axios.delete(`/tags/normal-balances/${id}/`, { baseURL }),
 };
 
 const serviceOffline = {
 	listOffline: async (params: IListRequest, baseURL) =>
-		axios.get('/offline-point-system-tags/', { baseURL, params }),
+		axios.get('/offline-tags-normal-balances/', { baseURL, params }),
 };
 
 export default {

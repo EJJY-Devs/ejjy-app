@@ -9,10 +9,12 @@ const useProductChecks = ({ params }: Query) =>
 	useQuery<any>(
 		[
 			'useProductChecks',
+			params?.serverUrl,
 			params?.isFilledUp,
 			params?.onlyOfToday,
 			params?.page,
 			params?.pageSize,
+			params?.timeRange,
 			params?.type,
 		],
 		() =>
@@ -23,9 +25,10 @@ const useProductChecks = ({ params }: Query) =>
 						only_of_today: params?.onlyOfToday,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						page: params?.page || DEFAULT_PAGE,
+						time_range: params?.timeRange,
 						type: params?.type,
 					},
-					getLocalApiUrl(),
+					params?.serverUrl || getLocalApiUrl(),
 				),
 			),
 		{

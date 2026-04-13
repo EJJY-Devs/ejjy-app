@@ -1,12 +1,15 @@
 import {
+	CheckCircleFilled,
 	ClockCircleFilled,
 	EditFilled,
 	SearchOutlined,
+	StopOutlined,
 } from '@ant-design/icons';
 import {
 	Button,
 	Col,
 	Input,
+	message,
 	Row,
 	Select,
 	Space,
@@ -31,7 +34,12 @@ import {
 	accountTypes,
 	pageSizeOptions,
 } from 'global';
-import { useAccounts, useQueryParams } from 'hooks';
+import {
+	useAccounts,
+	useAccountActivate,
+	useAccountDeactivate,
+	useQueryParams,
+} from 'hooks';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -62,12 +70,25 @@ export const TabAccounts = ({ disabled }: Props) => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
 	const user = useUserStore((state) => state.user);
+
+	const isActive = params.isActive !== 'false';
+
 	const {
 		data: { accounts, total },
 		isFetching: isFetchingAccounts,
 		error: accountError,
 		refetch: refetchAccounts,
-	} = useAccounts({ params });
+	} = useAccounts({ params: { ...params, isActive } });
+
+	const {
+		mutateAsync: activateAccount,
+		isLoading: isActivating,
+	} = useAccountActivate();
+
+	const {
+		mutateAsync: deactivateAccount,
+		isLoading: isDeactivating,
+	} = useAccountDeactivate();
 
 	// METHODS
 	useEffect(() => {
@@ -77,6 +98,11 @@ export const TabAccounts = ({ disabled }: Props) => {
 				<Link to={`accounts/${account.id}`}>{account.account_code}</Link>
 			),
 			name: getFullName(account),
+			businessName: [accountTypes.CORPORATE, accountTypes.GOVERNMENT].includes(
+				account.type,
+			)
+				? account.business_name
+				: null,
 			type: getAccountTypeName(account.type),
 			homeAddress: account.home_address,
 			businessAddress: account.business_address,
@@ -115,17 +141,50 @@ export const TabAccounts = ({ disabled }: Props) => {
 							/>
 						</Tooltip>
 					)}
+					{account.is_active ? (
+						<Tooltip title="Deactivate">
+							<Button
+								disabled={disabled}
+								icon={<StopOutlined />}
+								loading={isDeactivating}
+								type="primary"
+								danger
+								ghost
+								onClick={async () => {
+									await deactivateAccount({ id: account.id });
+									message.success('Account deactivated successfully.');
+									refetchAccounts();
+								}}
+							/>
+						</Tooltip>
+					) : (
+						<Tooltip title="Activate">
+							<Button
+								disabled={disabled}
+								icon={<CheckCircleFilled />}
+								loading={isActivating}
+								style={{ color: '#52c41a', borderColor: '#52c41a' }}
+								ghost
+								onClick={async () => {
+									await activateAccount({ id: account.id });
+									message.success('Account activated successfully.');
+									refetchAccounts();
+								}}
+							/>
+						</Tooltip>
+					)}
 				</Space>
 			),
 		}));
 
 		setDataSource(data);
-	}, [accounts, disabled]);
+	}, [accounts, disabled, isActivating, isDeactivating]);
 
 	const getColumns = useCallback(() => {
 		const columns: ColumnsType = [
 			{ title: 'Client Code', dataIndex: 'clientCode' },
 			{ title: 'Name', dataIndex: 'name' },
+			{ title: 'Business / Agency Name', dataIndex: 'businessName' },
 			{ title: 'Type', dataIndex: 'type' },
 			{ title: 'Address (Home)', dataIndex: 'homeAddress' },
 			{ title: 'Address (Business)', dataIndex: 'businessAddress' },
@@ -142,7 +201,7 @@ export const TabAccounts = ({ disabled }: Props) => {
 			columns.push({
 				title: 'Actions',
 				dataIndex: 'actions',
-				width: 100,
+				width: 150,
 				fixed: 'right',
 			});
 		}
@@ -218,6 +277,8 @@ export const TabAccounts = ({ disabled }: Props) => {
 const Filter = () => {
 	const { params, setQueryParams } = useQueryParams();
 
+	const isActive = params.isActive !== 'false';
+
 	const handleSearchDebounced = useCallback(
 		_.debounce((search) => {
 			setQueryParams({ search }, { shouldResetPage: true });
@@ -275,6 +336,31 @@ const Filter = () => {
 						Government
 					</Select.Option>
 				</Select>
+			</Col>
+
+			<Col span={24}>
+				<Label label="Status" spacing />
+				<Space>
+					<Button
+						type={isActive ? 'primary' : 'default'}
+						onClick={() => {
+							setQueryParams(
+								{ isActive: undefined },
+								{ shouldResetPage: true },
+							);
+						}}
+					>
+						Active
+					</Button>
+					<Button
+						type={!isActive ? 'primary' : 'default'}
+						onClick={() => {
+							setQueryParams({ isActive: 'false' }, { shouldResetPage: true });
+						}}
+					>
+						Inactive
+					</Button>
+				</Space>
 			</Col>
 		</Row>
 	);

@@ -41,8 +41,8 @@ import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
 import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
-import { Checkings } from './Checkings/Checkings';
-import { ViewChecking } from './Checkings/ViewChecking';
+import { InventoryAudit } from 'screens/Shared/InventoryAudit';
+import { ViewChecking } from 'screens/Shared/InventoryAudit/ViewChecking';
 import { Dashboard } from './Dashboard';
 import { Logs } from './Logs';
 import { Notifications } from './Notifications';
@@ -176,13 +176,13 @@ const OfficeManager = () => {
 				defaultIcon: require('../../assets/images/icon-settings.svg'),
 				link: '/office-manager/settings',
 			},
-			// {
-			// 	key: 'checking',
-			// 	name: 'Checking',
-			// 	activeIcon: require('../../assets/images/icon-checking-active.svg'),
-			// 	defaultIcon: require('../../assets/images/icon-checking.svg'),
-			// 	link: '/office-manager/checkings',
-			// },
+			{
+				key: 'checking',
+				name: 'Inventory Audit',
+				activeIcon: require('../../assets/images/icon-checking-active.svg'),
+				defaultIcon: require('../../assets/images/icon-checking.svg'),
+				link: '/office-manager/checkings',
+			},
 			{
 				key: 'product-conversion',
 				name: 'Product Conversion',
@@ -391,7 +391,11 @@ const OfficeManager = () => {
 					{/* Disabled as of the moment */}
 					<Route component={Dashboard} path="/office-manager/dashboard" />
 
-					<Route component={Checkings} path="/office-manager/checkings" exact />
+					<Route
+						component={InventoryAudit}
+						path="/office-manager/checkings"
+						exact
+					/>
 					<Route
 						component={ViewChecking}
 						path="/office-manager/checkings/:branchId/:id"

@@ -27,6 +27,7 @@ interface ModalProps {
 	prePopulatedProduct?: any;
 	initialSearchText?: string;
 	onRefetch?: () => void;
+	onAdjustmentSlipCreated?: (slip: any) => void;
 }
 
 export const Cart = ({
@@ -35,6 +36,7 @@ export const Cart = ({
 	prePopulatedProduct,
 	initialSearchText,
 	onRefetch,
+	onAdjustmentSlipCreated,
 }: ModalProps) => {
 	// STATES
 	const [barcodeScanLoading, setBarcodeScanLoading] = useState(false);
@@ -195,6 +197,7 @@ export const Cart = ({
 				throw Error;
 			}
 
+			onAdjustmentSlipCreated?.(response.data);
 			message.success('Adjustment Slip was created successfully');
 		}
 	};

@@ -5,6 +5,7 @@ interface List extends IListRequest {
 	type?: string;
 	with_credit_registration?: boolean;
 	with_supplier_registration?: boolean;
+	is_active?: boolean;
 }
 
 interface Modify {
@@ -52,6 +53,12 @@ const service = {
 
 	redeemPoints: async (id: number, body: RedeemPoints, baseURL: string) =>
 		axios.post(`/accounts/${id}/redeem-points/`, body, { baseURL }),
+
+	activate: async (id: number, baseURL: string) =>
+		axios.post(`/accounts/${id}/activate/`, {}, { baseURL }),
+
+	deactivate: async (id: number, baseURL: string) =>
+		axios.post(`/accounts/${id}/deactivate/`, {}, { baseURL }),
 
 	creditLogs: async (baseURL: string) =>
 		axios.get('/accounts/credit-logs/', { baseURL }),

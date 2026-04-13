@@ -12,7 +12,10 @@ interface List extends IListRequest {
 	product_status?: string;
 	time_range?: string;
 	ids?: string;
+	search?: string;
 	search_by?: string;
+	is_daily_checked?: boolean;
+	is_randomly_checked?: boolean;
 }
 
 interface Edit {

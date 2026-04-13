@@ -13,8 +13,8 @@ import {
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
-import { Checkings } from 'screens/BranchManager/Checkings';
-import { ViewChecking } from 'screens/BranchManager/Checkings/ViewChecking';
+import { InventoryAudit } from 'screens/Shared/InventoryAudit';
+import { ViewChecking } from 'screens/Shared/InventoryAudit/ViewChecking';
 import { Logs } from 'screens/BranchManager/Logs';
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
@@ -230,7 +230,7 @@ const BranchManager = () => {
 			},
 			{
 				key: 'checkings',
-				name: 'Checkings',
+				name: 'Inventory Audit',
 				activeIcon: require('../../assets/images/icon-checking-active.svg'),
 				defaultIcon: require('../../assets/images/icon-checking.svg'),
 				link: '/branch-manager/checkings',
@@ -428,7 +428,11 @@ const BranchManager = () => {
 						exact
 					/>
 					<Route component={OrderSlips} path="/branch-manager/order-slips" />
-					<Route component={Checkings} path="/branch-manager/checkings" exact />
+					<Route
+						component={InventoryAudit}
+						path="/branch-manager/checkings"
+						exact
+					/>
 					<Route
 						component={ViewChecking}
 						path="/branch-manager/checkings/:id"

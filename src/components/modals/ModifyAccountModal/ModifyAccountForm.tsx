@@ -3,6 +3,7 @@ import {
 	EyeOutlined,
 	LoadingOutlined,
 	PlusOutlined,
+	ReloadOutlined,
 } from '@ant-design/icons';
 import {
 	Button,
@@ -30,6 +31,9 @@ interface Props {
 	onSubmit: any;
 	onClose: any;
 }
+
+const generatePin = () =>
+	Math.floor(100000 + Math.random() * 900000).toString();
 
 const getEmployeeSchema = (label) =>
 	Yup.string()
@@ -184,6 +188,12 @@ export const ModifyAccountForm = ({
 										setFieldValue('businessName', undefined);
 										setFieldValue('businessAddress', undefined);
 									}
+
+									if (value === accountTypes.EMPLOYEE && !account) {
+										const pin = generatePin();
+										setFieldValue('pin', pin);
+										setFieldValue('confirmPin', pin);
+									}
 								}}
 							>
 								<Select.Option
@@ -289,6 +299,46 @@ export const ModifyAccountForm = ({
 							/>
 						</Col>
 
+						{[accountTypes.CORPORATE, accountTypes.GOVERNMENT].includes(
+							values.type,
+						) && (
+							<>
+								<Col lg={12} span={24}>
+									<Label label="Business / Agency Name" spacing />
+									<Input
+										value={values.businessName}
+										onChange={(e) => {
+											setFieldValue('businessName', e.target.value);
+										}}
+									/>
+									<ErrorMessage
+										name="businessName"
+										render={(error) => <FieldError error={error} />}
+									/>
+								</Col>
+								<Col lg={12} span={24}>
+									<Label
+										label={
+											values.type === accountTypes.CORPORATE
+												? 'Address (Business)'
+												: 'Address (Agency)'
+										}
+										spacing
+									/>
+									<Input
+										value={values.businessAddress}
+										onChange={(e) => {
+											setFieldValue('businessAddress', e.target.value);
+										}}
+									/>
+									<ErrorMessage
+										name="businessAddress"
+										render={(error) => <FieldError error={error} />}
+									/>
+								</Col>
+							</>
+						)}
+
 						{accountTypes.EMPLOYEE === values.type && (
 							<>
 								<Col span={24}>
@@ -393,9 +443,22 @@ export const ModifyAccountForm = ({
 								</Col>
 								<Col span={24}>
 									<Label label="PIN" spacing />
-									<Input.Password
-										iconRender={(visible) =>
-											visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+									<Input.Search
+										enterButton={
+											!account && (
+												<Button
+													icon={<ReloadOutlined />}
+													title="Regenerate PIN"
+													type="primary"
+													onClick={() => {
+														const pin = generatePin();
+														setFieldValue('pin', pin);
+														setFieldValue('confirmPin', pin);
+													}}
+												>
+													Generate
+												</Button>
+											)
 										}
 										maxLength={6}
 										placeholder="Enter 4-6 digit PIN"
@@ -453,52 +516,6 @@ export const ModifyAccountForm = ({
 							/>
 						</Col>
 
-						{[accountTypes.CORPORATE, accountTypes.GOVERNMENT].includes(
-							values.type,
-						) && (
-							<>
-								<Col lg={12} span={24}>
-									<Label
-										label={
-											values.type === accountTypes.CORPORATE
-												? 'Business Name'
-												: 'Agency Name'
-										}
-										spacing
-									/>
-									<Input
-										value={values.businessName}
-										onChange={(e) => {
-											setFieldValue('businessName', e.target.value);
-										}}
-									/>
-									<ErrorMessage
-										name="businessName"
-										render={(error) => <FieldError error={error} />}
-									/>
-								</Col>
-								<Col lg={12} span={24}>
-									<Label
-										label={
-											values.type === accountTypes.CORPORATE
-												? 'Address (Business)'
-												: 'Address (Agency)'
-										}
-										spacing
-									/>
-									<Input
-										value={values.businessAddress}
-										onChange={(e) => {
-											setFieldValue('businessAddress', e.target.value);
-										}}
-									/>
-									<ErrorMessage
-										name="businessAddress"
-										render={(error) => <FieldError error={error} />}
-									/>
-								</Col>
-							</>
-						)}
 						<Col span={24}>
 							<Label label="Address (Home)" spacing />
 							<Input

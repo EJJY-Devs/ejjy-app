@@ -16,6 +16,7 @@ const useAccounts = ({ params }: Query) =>
 			params?.type,
 			params?.withCreditRegistration,
 			params?.withSupplierRegistration,
+			params?.isActive,
 		],
 		() => {
 			const service = isStandAlone()
@@ -31,6 +32,7 @@ const useAccounts = ({ params }: Query) =>
 						type: params?.type,
 						with_credit_registration: params?.withCreditRegistration,
 						with_supplier_registration: params?.withSupplierRegistration,
+						is_active: params?.isActive,
 					},
 					getLocalApiUrl(),
 				),
@@ -175,6 +177,16 @@ export const useAccountRedeemPoints = () =>
 				},
 				getOnlineApiUrl(),
 			),
+	);
+
+export const useAccountActivate = () =>
+	useMutation<any, any, any>(({ id }: any) =>
+		AccountsService.activate(id, getOnlineApiUrl()),
+	);
+
+export const useAccountDeactivate = () =>
+	useMutation<any, any, any>(({ id }: any) =>
+		AccountsService.deactivate(id, getOnlineApiUrl()),
 	);
 
 export const useCreditLogs = ({ options }: Query = {}) =>

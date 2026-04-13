@@ -60,6 +60,8 @@ export * from './usePatronageSystemTags';
 export { default as usePatronageSystemTags } from './usePatronageSystemTags';
 export { default as usePointTransactions } from './usePointTransactions';
 export * from './usePriceMarkdowns';
+export * from './useAuditLogs';
+export { default as useAuditLogs } from './useAuditLogs';
 export * from './useProductCategories';
 export { default as useProductCategories } from './useProductCategories';
 export * from './useProductChecks';

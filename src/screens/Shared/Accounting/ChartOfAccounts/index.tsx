@@ -1,4 +1,9 @@
-import { DeleteOutlined, EditFilled, SearchOutlined } from '@ant-design/icons';
+import {
+	DeleteOutlined,
+	EditFilled,
+	ExclamationCircleOutlined,
+	SearchOutlined,
+} from '@ant-design/icons';
 import {
 	Button,
 	Input,
@@ -101,10 +106,17 @@ export const ChartOfAccounts = () => {
 				title: 'Category',
 				dataIndex: 'account_category',
 				key: 'category',
-				render: (value: string) => (
-					<Tag color={value === 'standard' ? 'blue' : 'orange'}>
-						{value === 'standard' ? 'Standard' : 'Special'}
-					</Tag>
+				render: (value: string, record: any) => (
+					<Space size={4}>
+						<Tag color={value === 'standard' ? 'blue' : 'orange'}>
+							{value === 'standard' ? 'Standard' : 'Special'}
+						</Tag>
+						{value === 'special' && !record.is_report_linked && (
+							<Tooltip title="Not linked to any report">
+								<ExclamationCircleOutlined style={{ color: '#faad14' }} />
+							</Tooltip>
+						)}
+					</Space>
 				),
 			},
 		];

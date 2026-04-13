@@ -14,6 +14,7 @@ interface ListProductChecks extends IListRequest {
 	type: 'daily' | 'random';
 	is_filled_up: boolean;
 	only_of_today?: boolean;
+	time_range?: string;
 }
 
 const service = {

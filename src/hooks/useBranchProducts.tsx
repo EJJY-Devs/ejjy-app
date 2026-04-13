@@ -555,4 +555,40 @@ export const useBranchProductEditLocal = () => {
 	);
 };
 
+export const useBranchProductsForAudit = ({ params }: Query) =>
+	useQuery<any>(
+		[
+			'useBranchProductsForAudit',
+			params?.serverUrl,
+			params?.isDailyChecked,
+			params?.isRandomlyChecked,
+			params?.page,
+			params?.pageSize,
+			params?.search,
+			params?.searchBy,
+		],
+		() =>
+			wrapServiceWithCatch(
+				BranchProductsService.list(
+					{
+						branch_id: params?.branchId,
+						is_daily_checked: params?.isDailyChecked,
+						is_randomly_checked: params?.isRandomlyChecked,
+						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
+						page: params?.page || DEFAULT_PAGE,
+						search: params?.search,
+						search_by: params?.searchBy,
+					},
+					params?.serverUrl || getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: { results: [], count: 0 } },
+			select: (query) => ({
+				branchProducts: query.data.results,
+				total: query.data.count,
+			}),
+		},
+	);
+
 export default useBranchProductsNew;

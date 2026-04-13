@@ -44,6 +44,7 @@ export { default as PatronageSystemTagsService } from './PatronageSystemTagsServ
 export { default as PointTransactionsService } from './PointTransactionsService';
 export { default as PriceMarkdownsService } from './PriceMarkdownsService';
 export { default as ProductCategoriesService } from './ProductCategoriesService';
+export { default as AuditLogsService } from './AuditLogsService';
 export { default as ProductChecksService } from './ProductChecksService';
 export { default as ProductConversionsService } from './ProductConversionsService';
 export { default as ProductGroupsService } from './ProductGroupsService';

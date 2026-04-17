@@ -108,6 +108,7 @@ export const PricesForm = ({
 							wholeSalePrice: '',
 							specialPrice: '',
 							creditPrice: '',
+							poPrice: '',
 
 							initialMarkdownType: markdownTypes.REGULAR,
 							initialCostPerPiece: '',
@@ -118,7 +119,9 @@ export const PricesForm = ({
 							initialSpecialPrice: '',
 							initialCreditPrice: '',
 
-							initialCreditPriceDifference: 0,
+							initialCreditPriceDifference:
+								Number(product?.credit_price) -
+								Number(product?.price_per_piece),
 						},
 				  ]
 				: branchProducts.map((branchProduct) => {

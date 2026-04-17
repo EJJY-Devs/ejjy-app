@@ -1,4 +1,5 @@
 import {
+	CheckCircleOutlined,
 	DeleteOutlined,
 	EditFilled,
 	ExclamationCircleOutlined,
@@ -114,6 +115,11 @@ export const ChartOfAccounts = () => {
 						{value === 'special' && !record.is_report_linked && (
 							<Tooltip title="Not linked to any report">
 								<ExclamationCircleOutlined style={{ color: '#faad14' }} />
+							</Tooltip>
+						)}
+						{value === 'special' && record.is_report_linked && (
+							<Tooltip title="Linked to a report">
+								<CheckCircleOutlined style={{ color: '#52c41a' }} />
 							</Tooltip>
 						)}
 					</Space>

@@ -106,9 +106,6 @@ export const AccountDetails = ({ account }: Props) => {
 						<Descriptions.Item label="Mother's Maiden Name">
 							{account.mother_maiden_name}
 						</Descriptions.Item>
-						<Descriptions.Item label="Email Address">
-							{account.email_address}
-						</Descriptions.Item>
 						<Descriptions.Item label="Biodata Image">
 							<Avatar src={account.biodata_image} />
 						</Descriptions.Item>

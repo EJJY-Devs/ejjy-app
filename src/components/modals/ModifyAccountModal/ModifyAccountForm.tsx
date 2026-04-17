@@ -82,7 +82,6 @@ export const ModifyAccountForm = ({
 				fatherName: account?.father_name || undefined,
 				motherMaidenName: account?.mother_maiden_name || undefined,
 				religion: account?.religion || undefined,
-				emailAddress: account?.email_address || undefined,
 				biodataImage: account?.biodata_image || undefined,
 				pin: account?.pin || '',
 				confirmPin: '',
@@ -110,7 +109,6 @@ export const ModifyAccountForm = ({
 				fatherName: getEmployeeSchema("Father's Name"),
 				motherMaidenName: getEmployeeSchema("Mother's Maiden Name"),
 				religion: getEmployeeSchema('Religion'),
-				emailAddress: getEmployeeSchema('Email Address').email(),
 				biodataImage: getEmployeeSchema('Biodata Image'),
 				pin: Yup.string()
 					.trim()
@@ -424,20 +422,6 @@ export const ModifyAccountForm = ({
 									/>
 									<ErrorMessage
 										name="motherMaidenName"
-										render={(error) => <FieldError error={error} />}
-									/>
-								</Col>
-								<Col span={24}>
-									<Label label="Email Address" spacing />
-									<Input
-										type="email"
-										value={values.emailAddress}
-										onChange={(e) => {
-											setFieldValue('emailAddress', e.target.value);
-										}}
-									/>
-									<ErrorMessage
-										name="emailAddress"
 										render={(error) => <FieldError error={error} />}
 									/>
 								</Col>

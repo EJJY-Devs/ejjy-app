@@ -15,7 +15,6 @@ interface Modify {
 	business_name?: string;
 	civil_status?: string;
 	contact_number: string;
-	email_address?: string;
 	father_name?: string;
 	first_name: string;
 	gender: string;

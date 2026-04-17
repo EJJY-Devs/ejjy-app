@@ -16,6 +16,7 @@ interface List extends IListRequest {
 	search_by?: string;
 	is_daily_checked?: boolean;
 	is_randomly_checked?: boolean;
+	is_below_reorder_point?: boolean;
 }
 
 interface Edit {

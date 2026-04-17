@@ -58,6 +58,8 @@ export const useAuditLogCounts = ({ params }: Query) =>
 				random: query.data.random,
 				pending: query.data.pending,
 			}),
+			refetchInterval: 30_000,
+			refetchIntervalInBackground: true,
 		},
 	);
 

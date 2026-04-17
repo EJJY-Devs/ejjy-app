@@ -53,6 +53,8 @@ export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 			isDailyChecked: type === productCheckingTypes.DAILY ? true : undefined,
 			isRandomlyChecked:
 				type === productCheckingTypes.RANDOM ? true : undefined,
+			isBelowReorderPoint:
+				type === productCheckingTypes.RANDOM ? true : undefined,
 			page,
 			pageSize,
 			search: search || undefined,

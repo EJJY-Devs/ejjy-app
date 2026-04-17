@@ -563,6 +563,7 @@ export const useBranchProductsForAudit = ({ params }: Query) =>
 			params?.branchId,
 			params?.isDailyChecked,
 			params?.isRandomlyChecked,
+			params?.isBelowReorderPoint,
 			params?.page,
 			params?.pageSize,
 			params?.search,
@@ -575,6 +576,7 @@ export const useBranchProductsForAudit = ({ params }: Query) =>
 						branch_id: params?.branchId,
 						is_daily_checked: params?.isDailyChecked,
 						is_randomly_checked: params?.isRandomlyChecked,
+						is_below_reorder_point: params?.isBelowReorderPoint,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						page: params?.page || DEFAULT_PAGE,
 						search: params?.search,
@@ -589,6 +591,8 @@ export const useBranchProductsForAudit = ({ params }: Query) =>
 				branchProducts: query.data.results,
 				total: query.data.count,
 			}),
+			refetchInterval: 30_000,
+			refetchIntervalInBackground: true,
 		},
 	);
 

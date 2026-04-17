@@ -1,16 +1,17 @@
-import { Button, Modal, message } from 'antd';
+import { Button, Modal, Tooltip, message } from 'antd';
 import Table, { ColumnsType } from 'antd/lib/table';
 import { RequestErrors } from 'components';
 import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
+	appTypes,
 	pageSizeOptions,
 } from 'global';
 import useAuditLogs, { useAuditLogMarkAdjusted } from 'hooks/useAuditLogs';
 import React, { useEffect, useState } from 'react';
 import { Cart } from 'screens/Shared/Cart';
-import { convertIntoArray, getLocalBranchId } from 'utils';
+import { convertIntoArray, getAppType, getLocalBranchId } from 'utils';
 
 interface Props {
 	serverUrl: string;
@@ -19,6 +20,8 @@ interface Props {
 }
 
 export const PendingAuditModal = ({ serverUrl, branchId, onClose }: Props) => {
+	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
+
 	// STATES
 	const [page, setPage] = useState(DEFAULT_PAGE);
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -131,9 +134,17 @@ export const PendingAuditModal = ({ serverUrl, branchId, onClose }: Props) => {
 				: EMPTY_CELL,
 		excessShortage: formatExcessShortage(auditLog.adjusted_balance),
 		action: (
-			<Button type="link" onClick={() => setSelectedAuditLog(auditLog)}>
-				Adjust
-			</Button>
+			<Tooltip
+				title={!isHeadOffice ? 'Only HO can adjust pending products' : ''}
+			>
+				<Button
+					disabled={!isHeadOffice}
+					type="link"
+					onClick={() => setSelectedAuditLog(auditLog)}
+				>
+					Adjust
+				</Button>
+			</Tooltip>
 		),
 	}));
 

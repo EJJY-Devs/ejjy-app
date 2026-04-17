@@ -17,10 +17,11 @@ import { convertIntoArray } from 'utils';
 interface Props {
 	type: string;
 	serverUrl: string;
+	branchId?: number;
 	onClose: () => void;
 }
 
-export const AuditModal = ({ type, serverUrl, onClose }: Props) => {
+export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 	// STATES
 	const [quantities, setQuantities] = useState<Record<number, string>>({});
 	const [submitting, setSubmitting] = useState<Record<number, boolean>>({});
@@ -48,6 +49,7 @@ export const AuditModal = ({ type, serverUrl, onClose }: Props) => {
 	} = useBranchProductsForAudit({
 		params: {
 			serverUrl,
+			branchId,
 			isDailyChecked: type === productCheckingTypes.DAILY ? true : undefined,
 			isRandomlyChecked:
 				type === productCheckingTypes.RANDOM ? true : undefined,

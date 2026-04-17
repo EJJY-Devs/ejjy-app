@@ -560,6 +560,7 @@ export const useBranchProductsForAudit = ({ params }: Query) =>
 		[
 			'useBranchProductsForAudit',
 			params?.serverUrl,
+			params?.branchId,
 			params?.isDailyChecked,
 			params?.isRandomlyChecked,
 			params?.page,

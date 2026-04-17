@@ -6,6 +6,7 @@ interface ListAuditLogs extends IListRequest {
 	is_filled_up?: boolean;
 	time_range?: string;
 	status?: string;
+	branch_id?: number;
 }
 
 interface CreateAuditLog {
@@ -24,8 +25,8 @@ const service = {
 	create: async (body: CreateAuditLog, baseURL: string) =>
 		axios.post('/audit-logs/', body, { baseURL }),
 
-	getCounts: async (baseURL: string) =>
-		axios.get('/audit-logs/counts/', { baseURL }),
+	getCounts: async (baseURL: string, params?: { branch_id?: number }) =>
+		axios.get('/audit-logs/counts/', { baseURL, params }),
 
 	markAdjusted: async (
 		id: number,

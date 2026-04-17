@@ -302,7 +302,10 @@ export const ProductTable = ({
 										...prev,
 										[key]: value,
 									}));
-									// Update product in store
+								}}
+								onBlur={(e) => {
+									const { value } = e.target;
+									// Update product in store only on blur to avoid focus loss
 									editProduct({
 										key,
 										product: {

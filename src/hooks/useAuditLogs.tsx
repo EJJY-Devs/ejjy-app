@@ -16,6 +16,7 @@ const useAuditLogs = ({ params }: Query) =>
 			params?.timeRange,
 			params?.type,
 			params?.status,
+			params?.branchId,
 		],
 		() =>
 			wrapServiceWithCatch(
@@ -27,6 +28,7 @@ const useAuditLogs = ({ params }: Query) =>
 						time_range: params?.timeRange,
 						type: params?.type,
 						status: params?.status,
+						branch_id: params?.branchId,
 					},
 					params?.serverUrl || getLocalApiUrl(),
 				),
@@ -42,10 +44,12 @@ const useAuditLogs = ({ params }: Query) =>
 
 export const useAuditLogCounts = ({ params }: Query) =>
 	useQuery<any>(
-		['useAuditLogCounts', params?.serverUrl],
+		['useAuditLogCounts', params?.serverUrl, params?.branchId],
 		() =>
 			wrapServiceWithCatch(
-				AuditLogsService.getCounts(params?.serverUrl || getLocalApiUrl()),
+				AuditLogsService.getCounts(params?.serverUrl || getLocalApiUrl(), {
+					branch_id: params?.branchId,
+				}),
 			),
 		{
 			initialData: { data: { daily: 0, random: 0, pending: 0 } },

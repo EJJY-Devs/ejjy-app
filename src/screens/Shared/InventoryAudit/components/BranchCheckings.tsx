@@ -6,12 +6,10 @@ import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
-	appTypes,
 	pageSizeOptions,
 } from 'global';
 import { useAuditLogCounts, useAuditLogs, useQueryParams } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { getAppType } from 'utils';
 import { convertIntoArray } from 'utils';
 import { ViewAdjustmentSlipModal } from 'components/modals/ViewAdjustmentSlipModal';
 import { AuditModal } from './AuditModal';
@@ -32,8 +30,6 @@ interface Props {
 }
 
 export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
-	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
-
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [auditModalType, setAuditModalType] = useState<string | null>(null);
@@ -56,13 +52,14 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 			pageSize: params.pageSize,
 			timeRange: params.timeRange,
 			serverUrl,
+			branchId,
 		},
 	});
 
 	const {
 		data: { daily: dailyCount, random: randomCount, pending: pendingCount },
 	} = useAuditLogCounts({
-		params: { serverUrl },
+		params: { serverUrl, branchId },
 	});
 
 	// METHODS
@@ -133,16 +130,14 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 					<span className="InventoryAudit__card-label">RANDOM AUDIT</span>
 				</button>
 
-				{isHeadOffice && (
-					<button
-						className="InventoryAudit__card"
-						type="button"
-						onClick={() => setPendingModalOpen(true)}
-					>
-						<span className="InventoryAudit__card-number">{pendingCount}</span>
-						<span className="InventoryAudit__card-label">PENDING PRODUCT</span>
-					</button>
-				)}
+				<button
+					className="InventoryAudit__card"
+					type="button"
+					onClick={() => setPendingModalOpen(true)}
+				>
+					<span className="InventoryAudit__card-number">{pendingCount}</span>
+					<span className="InventoryAudit__card-label">PENDING PRODUCT</span>
+				</button>
 			</div>
 
 			<p className="InventoryAudit__section-title">Audit Logs</p>
@@ -180,6 +175,7 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 
 			{auditModalType && (
 				<AuditModal
+					branchId={branchId}
 					serverUrl={serverUrl}
 					type={auditModalType}
 					onClose={() => setAuditModalType(null)}

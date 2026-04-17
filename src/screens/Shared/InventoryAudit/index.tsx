@@ -46,8 +46,11 @@ export const InventoryAudit = () => {
 						onTabClick={handleTabClick}
 					>
 						{branches.map(({ id, name, online_url }) => (
-							<Tabs.TabPane key={id} disabled={!online_url} tab={name}>
-								<BranchCheckings branchId={id} serverUrl={online_url} />
+							<Tabs.TabPane key={id} tab={name}>
+								<BranchCheckings
+									branchId={id}
+									serverUrl={online_url || getLocalApiUrl()}
+								/>
 							</Tabs.TabPane>
 						))}
 					</Tabs>

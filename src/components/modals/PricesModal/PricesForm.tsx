@@ -91,9 +91,6 @@ export const PricesForm = ({
 		}
 	}, [branches, isBulkEdit]);
 
-	const initialCreditPriceDifference =
-		product?.credit_price - product?.price_per_piece;
-
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: isBulkEdit
@@ -140,6 +137,7 @@ export const PricesForm = ({
 							wholeSalePrice: branchProduct?.wholesale_price || '',
 							specialPrice: branchProduct?.special_price || '',
 							creditPrice: branchProduct?.credit_price || '',
+							poPrice: branchProduct?.credit_price || '',
 
 							initialMarkdownType:
 								branchProduct?.price_markdown?.type || markdownTypes.REGULAR,
@@ -153,8 +151,8 @@ export const PricesForm = ({
 
 							// NOTE: UI changes only
 							initialCreditPriceDifference:
-								Number(branchProduct?.creditPrice) -
-								Number(branchProduct?.pricePerPiece),
+								Number(branchProduct?.credit_price) -
+								Number(branchProduct?.price_per_piece),
 						};
 				  }),
 			Schema: Yup.array(
@@ -333,18 +331,17 @@ export const PricesForm = ({
 												value: branchProduct.pricePerPiece,
 												setFieldValue: (name, newValue) => {
 													setFieldValue(name, newValue);
-													// Automatically update other prices based on the new value of pricePerPiece
 
+													const diff =
+														branchProduct.initialCreditPriceDifference;
 													setFieldValue(
 														`${index}.creditPrice`,
-														branchProduct
-															? Number(newValue) +
-																	branchProduct.creditPrice -
-																	branchProduct.pricePerPiece
-															: Number(newValue) + initialCreditPriceDifference,
+														Number(newValue) + diff,
 													);
-
-													setFieldValue(`${index}.poPrice`, newValue);
+													setFieldValue(
+														`${index}.poPrice`,
+														Number(newValue) + diff,
+													);
 												},
 											})}
 										</Col>
@@ -368,45 +365,38 @@ export const PricesForm = ({
 														<span>Credit Price</span>
 														<Tooltip title="Difference between credit price and regular price">
 															<Tag color="blue">
-																{branchProduct
-																	? formatInPeso(
-																			branchProduct.creditPrice -
-																				branchProduct.pricePerPiece,
-																	  )
-																	: formatInPeso(initialCreditPriceDifference)}
+																{formatInPeso(
+																	branchProduct.initialCreditPriceDifference,
+																)}
 															</Tag>
 														</Tooltip>
 													</Space>
 												),
 												placeholder:
-													branchProduct.CreditPrice || product?.credit_price,
+													branchProduct.creditPrice || product?.credit_price,
 												value: branchProduct.creditPrice,
 												setFieldValue,
 											})}
 										</Col>
 										<Col sm={12} span={24}>
 											{renderInputField({
-												name: 'poPrice',
+												name: `${index}.poPrice`,
 												label: (
 													<Space>
 														<span>PO Price</span>
 														<Tooltip title="Difference between PO price and regular price">
 															<Tag color="blue">
-																{branchProduct
-																	? formatInPeso(
-																			branchProduct.creditPrice -
-																				branchProduct.pricePerPiece,
-																	  )
-																	: formatInPeso(initialCreditPriceDifference)}
+																{formatInPeso(
+																	branchProduct.initialCreditPriceDifference,
+																)}
 															</Tag>
 														</Tooltip>
 													</Space>
 												),
 												setFieldValue,
 												placeholder:
-													branchProduct.CreditPrice || product?.credit_price,
-
-												value: branchProduct.creditPrice,
+													branchProduct.poPrice || product?.credit_price,
+												value: branchProduct.poPrice,
 											})}
 										</Col>
 										<Col span={24}>

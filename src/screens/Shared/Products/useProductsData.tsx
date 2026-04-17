@@ -27,6 +27,7 @@ export const useProductsData = ({ params, user }) => {
 		params: {
 			...params,
 			branchId: getLocalBranchId(),
+			ordering: 'product__name',
 			searchBy: 'name',
 			serviceType: serviceTypes.OFFLINE,
 		},

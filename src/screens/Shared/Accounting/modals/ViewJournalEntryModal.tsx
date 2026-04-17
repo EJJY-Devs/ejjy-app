@@ -85,6 +85,9 @@ export const ViewJournalEntryModal = ({
 												{txnId}
 											</Button>
 										</div>
+										{entry.description && (
+											<div>Remarks: {entry.description}</div>
+										)}
 									</>
 								);
 							}

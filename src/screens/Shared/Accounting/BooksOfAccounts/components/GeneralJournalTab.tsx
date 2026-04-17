@@ -149,6 +149,9 @@ export const GeneralJournalTab = ({
 											{txnId}
 										</Button>
 									</div>
+									{record.description && (
+										<div>Remarks: {record.description}</div>
+									)}
 								</>
 							);
 						}

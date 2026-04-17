@@ -51,7 +51,7 @@ const transactionStatusOptions = [
 	},
 	{
 		value: transactionStatuses.VOID_CANCELLED,
-		title: 'Void Cancelled',
+		title: 'Cancelled',
 	},
 	{
 		value: transactionStatuses.FULLY_PAID,

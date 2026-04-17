@@ -1,6 +1,11 @@
 import { Button, Col, Row, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
+import {
+	RequestErrors,
+	TableHeader,
+	TimeRangeFilter,
+	TransactionStatus,
+} from 'components';
 import {
 	ViewTransactionModal,
 	formatDateTime,
@@ -117,7 +122,11 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 					payment: formatInPeso(transaction.total_amount),
 					cashier: getFullName(transaction.teller),
 					modeOfPayment: getModeOfPaymentDescription(transaction.payment?.mode),
-					remarks: '',
+					remarks: voidedStatuses.includes(transaction.status) ? (
+						<TransactionStatus transaction={transaction} />
+					) : (
+						''
+					),
 				}));
 
 			// Convert collection receipts to table rows

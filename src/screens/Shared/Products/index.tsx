@@ -49,6 +49,8 @@ import {
 	pageSizeOptions,
 } from 'global';
 import {
+	useLatestBranchProductDatetime,
+	useLatestProductDatetime,
 	usePingOnlineServer,
 	useProductCategories,
 	useProductDelete,
@@ -112,6 +114,12 @@ export const Products = () => {
 		isFetching: isFetchingSiteSettings,
 		error: siteSettingsError,
 	} = useSiteSettings();
+	const { data: latestProductDatetime } = useLatestProductDatetime({
+		enabled: getAppType() !== appTypes.BACK_OFFICE,
+	});
+	const { data: latestBranchProductDatetime } = useLatestBranchProductDatetime({
+		enabled: getAppType() === appTypes.BACK_OFFICE,
+	});
 	const {
 		data: { products, total: productsTotal },
 		isFetching: isFetchingProducts,
@@ -303,8 +311,12 @@ export const Products = () => {
 
 	// Calculate product statistics
 	const productCount = productsTotal || 0;
-	const latestDateTime = siteSettings?.datetime_last_updated_products
-		? formatDateTime(siteSettings.datetime_last_updated_products)
+	const rawLatestDatetime =
+		getAppType() === appTypes.BACK_OFFICE
+			? latestBranchProductDatetime
+			: latestProductDatetime;
+	const latestDateTime = rawLatestDatetime
+		? formatDateTime(rawLatestDatetime)
 		: 'No updates';
 
 	return (

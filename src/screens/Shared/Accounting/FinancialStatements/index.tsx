@@ -280,6 +280,7 @@ export const FinancialStatements = () => {
 			amountBottomBold: true,
 		});
 		pushRow({
+			code: financialPerformanceData?.net_sales_account_code || '',
 			label: 'Net Sales',
 			amount: formatAmount(financialPerformanceData?.net_sales),
 			isTotal: true,
@@ -296,6 +297,7 @@ export const FinancialStatements = () => {
 			amountBottomBold: true,
 		});
 		pushRow({
+			code: financialPerformanceData?.total_revenue_account_code || '',
 			label: 'Total Revenue',
 			amount: formatAmount(financialPerformanceData?.total_revenue),
 		});
@@ -306,6 +308,7 @@ export const FinancialStatements = () => {
 			amountBottomBold: true,
 		});
 		pushRow({
+			code: financialPerformanceData?.gross_profit_account_code || '',
 			label: 'Gross Profit',
 			amount: formatAmount(financialPerformanceData?.gross_profit),
 		});
@@ -323,21 +326,23 @@ export const FinancialStatements = () => {
 			isSection: true,
 			topBorderVisible: true,
 		});
-		expenses.forEach((entry: any) => {
+		expenses.forEach((entry: any, index: number) => {
 			pushRow({
 				code: entry.account_code,
 				label: entry.account_name,
 				amount: formatAmount(entry.amount),
-				amountBottomBold: entry.account_code === '7100',
+				amountBottomBold: index === expenses.length - 1,
 			});
 		});
 
 		pushRow({
+			code: financialPerformanceData?.total_expenses_account_code || '',
 			label: 'Total Expenses',
 			amount: formatAmount(financialPerformanceData?.total_expenses),
 			amountBottomBold: true,
 		});
 		pushRow({
+			code: financialPerformanceData?.income_before_tax_account_code || '',
 			label: 'Income Before Tax',
 			amount: formatAmount(financialPerformanceData?.income_before_tax),
 		});
@@ -348,6 +353,7 @@ export const FinancialStatements = () => {
 			amountBottomBold: true,
 		});
 		pushRow({
+			code: financialPerformanceData?.net_income_account_code || '',
 			label: 'Net Income',
 			amount: formatAmount(financialPerformanceData?.net_income),
 			isTotal: true,

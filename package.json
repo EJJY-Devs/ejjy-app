@@ -1,6 +1,6 @@
 {
 	"name": "ejjy-inventory-app",
-	"version": "0.1.952",
+	"version": "0.1.1006",
 	"private": true,
 	"homepage": "./",
 	"scripts": {
@@ -8,6 +8,8 @@
 		"lint": "cd src && eslint . --ext .tsx --ext .ts",
 		"lint:fix": "cd src && eslint . --ext .tsx --ext .ts --fix",
 		"prettify": "prettier --write ./src",
+		"setup": "npm install && cd api && poetry install",
+		"build:api": "cd api && poetry run pip install pyinstaller && poetry run pyinstaller server.spec --clean",
 		"deploy": "npm version patch --no-git-tag-version && python deploy.py",
 		"start:online": "env-cmd -f .env.online react-scripts start",
 		"start:local": "env-cmd -f .env.local react-scripts start",

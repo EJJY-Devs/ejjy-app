@@ -450,4 +450,30 @@ export const useProductEditLocal = () => {
 	);
 };
 
+export const useLatestProductDatetime = (options?: any) =>
+	useQuery<any>(
+		['useLatestProductDatetime'],
+		() => {
+			const service = isStandAlone()
+				? ProductsService.list
+				: ProductsService.listOffline;
+
+			return wrapServiceWithCatch(
+				service(
+					{
+						page_size: 1,
+						page: 1,
+						ordering: '-datetime_updated',
+					} as any,
+					getLocalApiUrl(),
+				),
+			);
+		},
+		{
+			initialData: { data: { results: [], count: 0 } },
+			select: (query) => query.data.results[0]?.datetime_updated ?? null,
+			...options,
+		},
+	);
+
 export default useProducts;

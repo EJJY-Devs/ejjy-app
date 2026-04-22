@@ -30,6 +30,127 @@ interface Props {
 	isBulkEdit?: boolean;
 }
 
+function priceAboveCostTest(
+	this: Yup.TestContext,
+	value: number | undefined,
+	costKey: string,
+	initialCostKey: string,
+	referenceCostKey?: string,
+) {
+	if (value === undefined || value === null) return true;
+	const parent = this.parent as any;
+	const cost =
+		parent[costKey] ||
+		parent[initialCostKey] ||
+		(referenceCostKey ? parent[referenceCostKey] : undefined);
+	if (!cost && cost !== 0) return true;
+	return Number(value) >= Number(cost);
+}
+
+const validationSchema = Yup.array(
+	Yup.object().shape({
+		markdownType: Yup.string().label('Current Sales Price Type'),
+		costPerPiece: Yup.number().min(0).label('Cost (Piece)'),
+		costPerBulk: Yup.number().min(0).label('Cost (Bulk)'),
+		pricePerPiece: Yup.number()
+			.min(0)
+			.label('Regular Price (Piece)')
+			.test(
+				'greater-than-cost',
+				'Regular Price must be at least the cost',
+				function testPricePerPiece(value) {
+					return priceAboveCostTest.call(
+						this,
+						value,
+						'costPerPiece',
+						'initialCostPerPiece',
+						'referenceCostPerPiece',
+					);
+				},
+			),
+		pricePerBulk: Yup.number()
+			.min(0)
+			.label('Regular Price (Bulk)')
+			.test(
+				'greater-than-cost',
+				'Regular Price (Bulk) must be at least the cost',
+				function testPricePerBulk(value) {
+					return priceAboveCostTest.call(
+						this,
+						value,
+						'costPerBulk',
+						'initialCostPerBulk',
+						'referenceCostPerBulk',
+					);
+				},
+			),
+		wholeSalePrice: Yup.number()
+			.min(0)
+			.label('Wholesale Price')
+			.test(
+				'greater-than-cost',
+				'Wholesale Price must be at least the cost',
+				function testWholeSalePrice(value) {
+					return priceAboveCostTest.call(
+						this,
+						value,
+						'costPerPiece',
+						'initialCostPerPiece',
+						'referenceCostPerPiece',
+					);
+				},
+			),
+		specialPrice: Yup.number()
+			.min(0)
+			.label('Special Price')
+			.test(
+				'greater-than-cost',
+				'Special Price must be at least the cost',
+				function testSpecialPrice(value) {
+					return priceAboveCostTest.call(
+						this,
+						value,
+						'costPerPiece',
+						'initialCostPerPiece',
+						'referenceCostPerPiece',
+					);
+				},
+			),
+		creditPrice: Yup.number()
+			.min(0)
+			.label('Credit Price')
+			.test(
+				'greater-than-cost',
+				'Credit Price must be at least the cost',
+				function testCreditPrice(value) {
+					return priceAboveCostTest.call(
+						this,
+						value,
+						'costPerPiece',
+						'initialCostPerPiece',
+						'referenceCostPerPiece',
+					);
+				},
+			),
+		poPrice: Yup.number()
+			.min(0)
+			.label('PO Price')
+			.test(
+				'greater-than-cost',
+				'PO Price must be at least the cost',
+				function testPoPrice(value) {
+					return priceAboveCostTest.call(
+						this,
+						value,
+						'costPerPiece',
+						'initialCostPerPiece',
+						'referenceCostPerPiece',
+					);
+				},
+			),
+	}),
+);
+
 const variableNames = [
 	{
 		valueKey: 'markdownType',
@@ -119,6 +240,9 @@ export const PricesForm = ({
 							initialSpecialPrice: '',
 							initialCreditPrice: '',
 
+							referenceCostPerPiece: product?.cost_per_piece || '',
+							referenceCostPerBulk: product?.cost_per_bulk || '',
+
 							initialCreditPriceDifference:
 								Number(product?.credit_price) -
 								Number(product?.price_per_piece),
@@ -158,18 +282,7 @@ export const PricesForm = ({
 								Number(branchProduct?.price_per_piece),
 						};
 				  }),
-			Schema: Yup.array(
-				Yup.object().shape({
-					markdownType: Yup.string().label('Current Sales Price Type'),
-					costPerPiece: Yup.number().min(0).label('Cost (Piece)'),
-					costPerBulk: Yup.number().min(0).label('Cost (Bulk)'),
-					pricePerPiece: Yup.number().min(0).label('Regular Price (Piece)'),
-					pricePerBulk: Yup.number().min(0).label('Regular Price (Bulk)'),
-					wholeSalePrice: Yup.number().min(0).label('Wholesale Price'),
-					specialPrice: Yup.number().min(0).label('Special Price'),
-					creditPrice: Yup.number().min(0).label('Credit Price'),
-				}),
-			),
+			Schema: validationSchema,
 		}),
 		[branchProducts, branches],
 	);

@@ -2,11 +2,12 @@
 	"appId": "com.ejjy.inventory.app",
 	"productName": "Back Office",
 	"extraResources": [
-		"api/**",
-		"gcs-service-key.json",
-		"!api/.venv",
-		"!api/db.sqlite3",
-		"!api/backend/.env"
+		{
+			"from": "api/dist/server",
+			"to": "server",
+			"filter": ["**/*", "!backend/.env"]
+		},
+		"gcs-service-key.json"
 	],
 	"publish": [
 		{

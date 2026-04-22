@@ -253,6 +253,16 @@ export const ModifyProductForm = ({
 						.required()
 						.moreThan(0)
 						.nullable()
+						.test(
+							'greater-than-cost',
+							'Regular Price must be greater than the cost',
+							function test(value) {
+								if (value === undefined || value === null) return true;
+								const { costPerPiece } = this.parent;
+								if (!costPerPiece) return true;
+								return Number(value) > Number(costPerPiece);
+							},
+						)
 						.label('Regular Price'),
 					// pricePerBulk: Yup.number()
 					// 	.required()
@@ -263,21 +273,61 @@ export const ModifyProductForm = ({
 						.required()
 						.moreThan(0)
 						.nullable()
+						.test(
+							'greater-than-cost',
+							'Credit Price must be greater than the cost',
+							function test(value) {
+								if (value === undefined || value === null) return true;
+								const { costPerPiece } = this.parent;
+								if (!costPerPiece) return true;
+								return Number(value) > Number(costPerPiece);
+							},
+						)
 						.label('Credit Price'),
 					wholeSalePrice: Yup.number()
 						.required()
 						.moreThan(0)
 						.nullable()
+						.test(
+							'greater-than-cost',
+							'Wholesale Price must be greater than the cost',
+							function test(value) {
+								if (value === undefined || value === null) return true;
+								const { costPerPiece } = this.parent;
+								if (!costPerPiece) return true;
+								return Number(value) > Number(costPerPiece);
+							},
+						)
 						.label('Wholesale Price'),
 					specialPrice: Yup.number()
 						.required()
 						.moreThan(0)
 						.nullable()
+						.test(
+							'greater-than-cost',
+							'Special Price must be greater than the cost',
+							function test(value) {
+								if (value === undefined || value === null) return true;
+								const { costPerPiece } = this.parent;
+								if (!costPerPiece) return true;
+								return Number(value) > Number(costPerPiece);
+							},
+						)
 						.label('Special Price'),
 					poPrice: Yup.number()
 						.required()
 						.moreThan(0)
 						.nullable()
+						.test(
+							'greater-than-cost',
+							'PO Price must be greater than the cost',
+							function test(value) {
+								if (value === undefined || value === null) return true;
+								const { costPerPiece } = this.parent;
+								if (!costPerPiece) return true;
+								return Number(value) > Number(costPerPiece);
+							},
+						)
 						.label('PO Price'),
 					patronageSystemTagId: Yup.string()
 						.nullable()

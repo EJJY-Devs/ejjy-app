@@ -81,6 +81,13 @@ const apiPath = isDev
 	? path.resolve(__dirname, '../api')
 	: path.join(process.resourcesPath, 'api');
 
+// In production the Django backend is a PyInstaller-compiled standalone bundle.
+// No Python installation required on the target machine.
+const serverDir = isDev
+	? path.resolve(__dirname, '../api/dist/server')
+	: path.join(process.resourcesPath, 'server');
+const serverExe = path.join(serverDir, 'server.exe');
+
 //-------------------------------------------------------------------
 // Auto Updater
 //-------------------------------------------------------------------
@@ -500,9 +507,8 @@ function initServer(store) {
 			ENV: 'prod',
 		};
 
-		spawn('python', ['manage.py', 'migrate'], {
-			cwd: apiPath,
-			detached: true,
+		spawn(serverExe, ['migrate'], {
+			cwd: serverDir,
 			stdio: 'ignore',
 			windowsHide: true,
 			env: djangoEnv,
@@ -515,10 +521,8 @@ function initServer(store) {
 
 		logStatus('Server: Starting API');
 
-		const apiCommand = `manage.py runserver ${apiPort}`;
-		spawnApi = spawn('python', apiCommand.split(' '), {
-			cwd: apiPath,
-			detached: true,
+		spawnApi = spawn(serverExe, ['runserver', apiPort], {
+			cwd: serverDir,
 			stdio: 'ignore',
 			windowsHide: true,
 			env: djangoEnv,
@@ -546,9 +550,8 @@ function initServer(store) {
 		}
 
 		setTimeout(() => {
-			spawn('python', ['manage.py', 'create_branch_product_balance'], {
-				cwd: apiPath,
-				detached: true,
+			spawn(serverExe, ['create_branch_product_balance'], {
+				cwd: serverDir,
 				stdio: 'ignore',
 				windowsHide: true,
 				env: djangoEnv,
@@ -632,7 +635,7 @@ if (process.platform === 'win32') {
 ipcMain.on('openFolder', (event, folderPath) => {
 	const mediaPath = isDev
 		? path.resolve(__dirname, '../api/' + folderPath)
-		: path.join(process.resourcesPath, 'api/' + folderPath);
+		: path.join(serverDir, folderPath);
 	shell.openPath(mediaPath);
 });
 

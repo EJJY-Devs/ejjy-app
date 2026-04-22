@@ -5,7 +5,7 @@ import { appTypes } from 'global';
 import { useBranches, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect } from 'react';
-import { getAppType, getLocalApiUrl } from 'utils';
+import { getAppType, getLocalApiUrl, getLocalBranchId } from 'utils';
 import { BranchCheckings } from './components/BranchCheckings';
 import './style.scss';
 
@@ -62,7 +62,10 @@ export const InventoryAudit = () => {
 	return (
 		<Content title="Inventory Audit">
 			<Box>
-				<BranchCheckings serverUrl={getLocalApiUrl()} />
+				<BranchCheckings
+					branchId={Number(getLocalBranchId()) || undefined}
+					serverUrl={getLocalApiUrl()}
+				/>
 			</Box>
 		</Content>
 	);

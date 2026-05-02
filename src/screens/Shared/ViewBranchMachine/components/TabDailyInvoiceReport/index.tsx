@@ -6,7 +6,6 @@ import {
 	DiscountDisplay,
 	ViewTransactionModal,
 	getFullName,
-	getInvoiceType,
 } from 'ejjy-global';
 import {
 	DEFAULT_PAGE,
@@ -21,7 +20,12 @@ import { useQueryParams, useSiteSettingsNew, useTransactions } from 'hooks';
 import _ from 'lodash';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
-import { convertIntoArray, formatDateTime, formatInPeso } from 'utils';
+import {
+	convertIntoArray,
+	formatDateTime,
+	formatInPeso,
+	getInvoiceTypeLabel,
+} from 'utils';
 
 const columns: ColumnsType = [
 	{ title: 'Date & Time', dataIndex: 'dateTime' },
@@ -123,7 +127,7 @@ export const TabDailyInvoiceReport = ({ branchMachineId }: Props) => {
 				) : (
 					EMPTY_CELL
 				),
-				invoiceType: getInvoiceType(invoiceType),
+				invoiceType: getInvoiceTypeLabel(invoiceType),
 				totalAmount: formatInPeso(transaction.total_amount),
 				cashier: getFullName(transaction.teller),
 				remarks,

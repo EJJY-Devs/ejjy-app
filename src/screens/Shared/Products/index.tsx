@@ -118,7 +118,8 @@ export const Products = () => {
 		enabled: getAppType() !== appTypes.BACK_OFFICE,
 	});
 	const { data: latestBranchProductDatetime } = useLatestBranchProductDatetime({
-		enabled: getAppType() === appTypes.BACK_OFFICE,
+		params: { branchId: getLocalBranchId() },
+		options: { enabled: getAppType() === appTypes.BACK_OFFICE },
 	});
 	const {
 		data: { products, total: productsTotal },

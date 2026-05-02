@@ -472,6 +472,8 @@ export const useLatestProductDatetime = (options?: any) =>
 		{
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => query.data.results[0]?.datetime_updated ?? null,
+			refetchInterval: 30_000,
+			refetchIntervalInBackground: true,
 			...options,
 		},
 	);

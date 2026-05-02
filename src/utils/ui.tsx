@@ -13,6 +13,7 @@ import {
 	ReorderBadgePill,
 } from 'components';
 import { BadgePill } from 'components/elements';
+import { getInvoiceType } from 'ejjy-global';
 import {
 	accountTypes,
 	ADMIN_PASSWORD,
@@ -44,6 +45,13 @@ import {
 	getLocalApiUrl,
 	getOnlineApiUrl,
 } from 'utils/localStorage';
+
+export const DELIVERY_INVOICE = 'delivery_invoice';
+
+export const getInvoiceTypeLabel = (invoiceType: string): string => {
+	if (invoiceType === DELIVERY_INVOICE) return 'Delivery SI';
+	return getInvoiceType(invoiceType);
+};
 
 // Getters
 export const getColoredText = (

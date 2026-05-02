@@ -596,24 +596,29 @@ export const useBranchProductsForAudit = ({ params }: Query) =>
 		},
 	);
 
-export const useLatestBranchProductDatetime = (options?: any) =>
+export const useLatestBranchProductDatetime = ({
+	params,
+	options,
+}: { params?: { branchId?: number | string }; options?: any } = {}) =>
 	useQuery<any>(
-		['useLatestBranchProductDatetime'],
+		['useLatestBranchProductDatetime', params?.branchId],
 		() =>
 			wrapServiceWithCatch(
 				BranchProductsService.listOffline(
 					{
 						page_size: 1,
 						page: 1,
-						ordering: '-product__datetime_updated',
+						ordering: '-datetime_updated',
+						...(params?.branchId && { branch_id: params.branchId }),
 					} as any,
 					getLocalApiUrl(),
 				),
 			),
 		{
 			initialData: { data: { results: [], count: 0 } },
-			select: (query) =>
-				query.data.results[0]?.product?.datetime_updated ?? null,
+			select: (query) => query.data.results[0]?.datetime_updated ?? null,
+			refetchInterval: 30_000,
+			refetchIntervalInBackground: true,
 			...options,
 		},
 	);

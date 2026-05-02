@@ -138,8 +138,12 @@ export const ModifyProductForm = ({
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
 				isShownInScaleList: String(product?.is_shown_in_scale_list ?? false),
 				isMultipleInstance: String(product?.is_multiple_instance ?? false),
-				checking: productCheckingTypes.RANDOM,
-				isSoldInBranch: 'true',
+				checking: product?.is_daily_checked
+					? productCheckingTypes.DAILY
+					: productCheckingTypes.RANDOM,
+				isDailyChecked: product?.is_daily_checked ?? false,
+				isRandomlyChecked: product?.is_randomly_checked ?? true,
+				isSoldInBranch: String(product?.is_sold_in_branch ?? true),
 				isVatExempted: (!!product?.is_vat_exempted).toString(),
 				maxBalance: product?.max_balance
 					? formatQuantity({

@@ -81,13 +81,6 @@ const apiPath = isDev
 	? path.resolve(__dirname, '../api')
 	: path.join(process.resourcesPath, 'api');
 
-// In production the Django backend is a PyInstaller-compiled standalone bundle.
-// No Python installation required on the target machine.
-const serverDir = isDev
-	? path.resolve(__dirname, '../api/dist/server')
-	: path.join(process.resourcesPath, 'server');
-const serverExe = path.join(serverDir, 'server.exe');
-
 //-------------------------------------------------------------------
 // Auto Updater
 //-------------------------------------------------------------------
@@ -306,7 +299,7 @@ function createWindow() {
 	ensureBackendConfig(store.get('appType'));
 
 	// Migrate and Run API
-	initServer(store);
+	startServer();
 
 	// Set Menu
 	const menuItems = Menu.getApplicationMenu().items;
@@ -484,84 +477,55 @@ function initStore() {
 //-------------------------------------------------------------------
 // Server
 //-------------------------------------------------------------------
-let spawnApi = null;
-let spawnLocalhostRun = null;
-let appType = null;
-let headOfficeType = null;
-function initServer(store) {
+let spawnRun = null;
+function startServer() {
 	if (!isDev) {
-		logStatus('Server: Starting');
-
-		appType = store.get('appType');
-		headOfficeType = store.get('headOfficeType');
-
-		// Set EJJY_APP_TYPE and ENV for Django child processes
-		const djangoEnv = {
+		const selectedAppType = store.get('appType');
+		const backendConfigPath = getBackendConfigPath(selectedAppType);
+		ensureBackendConfig(selectedAppType);
+		const spawnEnv = {
 			...process.env,
 			EJJY_APP_TYPE:
-				appType === appTypes.HEAD_OFFICE
+				selectedAppType === appTypes.HEAD_OFFICE
 					? 'headoffice'
-					: appType === appTypes.BACK_OFFICE
+					: selectedAppType === appTypes.BACK_OFFICE
 					? 'backoffice'
 					: 'cashiering',
-			ENV: 'prod',
+			EJJY_CONFIG_PATH: backendConfigPath,
 		};
 
-		spawn(serverExe, ['migrate'], {
-			cwd: serverDir,
+		spawn('python', ['manage.py', 'migrate'], {
+			cwd: apiPath,
+			env: spawnEnv,
+			windowsHide: false,
+			detached: true,
 			stdio: 'ignore',
-			windowsHide: true,
-			env: djangoEnv,
 		});
-
-		let apiPort = '0.0.0.0:8000';
-		if (appType === appTypes.HEAD_OFFICE) {
-			apiPort = '[::]:8001';
-		}
-
-		logStatus('Server: Starting API');
-
-		spawnApi = spawn(serverExe, ['runserver', apiPort], {
-			cwd: serverDir,
+		const apiPort =
+			selectedAppType === appTypes.HEAD_OFFICE
+				? '0.0.0.0:8001'
+				: selectedAppType === appTypes.BACK_OFFICE
+				? '0.0.0.0:8000'
+				: '0.0.0.0:8005';
+		spawnRun = spawn('python', ['manage.py', 'runserver', apiPort], {
+			cwd: apiPath,
+			env: spawnEnv,
+			windowsHide: false,
+			detached: true,
 			stdio: 'ignore',
-			windowsHide: true,
-			env: djangoEnv,
 		});
-		logSpawn('API', spawnApi);
-
-		logStatus('Server: Started API');
-
-		if (appType === appTypes.HEAD_OFFICE && headOfficeType === 1) {
-			logStatus('Server: Starting Tunneling');
-
-			exec(
-				'ngrok config add-authtoken 1n3K1Pcfqdy2WKRk60koXTY1ZrB_7QC7rqRsspNCkayebuRUN',
-			);
-
-			exec(
-				'ngrok http --domain=headoffice.ngrok.app 8001',
-				(error, stdout, stderr) => {
-					if (error) return logStatus(`Tunneling error: ${error.message}`);
-					if (stderr) return logStatus(`Tunneling stderr: ${stderr}`);
-					logStatus(`Tunneling stdout: ${stdout}`);
-				},
-			);
-			logStatus('Server: Started Tunneling');
-		}
-
 		setTimeout(() => {
-			spawn(serverExe, ['create_branch_product_balance'], {
-				cwd: serverDir,
+			spawn('python', ['manage.py', 'create_branch_product_balance'], {
+				cwd: apiPath,
+				env: spawnEnv,
+				windowsHide: false,
+				detached: true,
 				stdio: 'ignore',
-				windowsHide: true,
-				env: djangoEnv,
 			});
 		}, SPLASH_SCREEN_SHOWN_MS + 500);
-
-		logStatus('Server: Started');
-
-		mainWindow.once('closed', function () {
-			killSpawns();
+		logStatus('API: Started');
+		mainWindow.once('closed', () => {
+			if (spawnRun) kill(Number(spawnRun.pid));
 		});
 	}
 }
@@ -635,7 +599,7 @@ if (process.platform === 'win32') {
 ipcMain.on('openFolder', (event, folderPath) => {
 	const mediaPath = isDev
 		? path.resolve(__dirname, '../api/' + folderPath)
-		: path.join(serverDir, folderPath);
+		: path.join(apiPath, folderPath);
 	shell.openPath(mediaPath);
 });
 
@@ -648,8 +612,7 @@ function relaunchApp() {
 }
 
 function killSpawns() {
-	if (spawnApi) kill(spawnApi.pid);
-	if (spawnLocalhostRun) kill(spawnLocalhostRun.pid);
+	if (spawnRun && spawnRun.pid) kill(Number(spawnRun.pid));
 }
 
 function logSpawn(key, spawn) {

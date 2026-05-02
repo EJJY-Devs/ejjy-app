@@ -1,6 +1,6 @@
 import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { DataService, ProductSyncStatusService } from 'services';
 import {
 	APP_PRODUCTS_IDS,
@@ -11,20 +11,14 @@ import {
 	DEFAULT_PAGE_SIZE,
 } from 'global';
 
-import {
-	getLocalApiUrl,
-	isStandAlone,
-	getProductIds,
-	getBranchProductIds,
-	getBranchProductBalanceUpdateLogsIds,
-	getAppType,
-} from 'utils';
+import { getLocalApiUrl, isStandAlone, getAppType } from 'utils';
 import axios from 'axios';
 
 const REFETCH_INTERVAL_MS = 30_000;
 
-export const useInitializeData = ({ params, options }: Query) =>
-	useQuery<any>(
+export const useInitializeData = ({ params, options }: Query) => {
+	const queryClient = useQueryClient();
+	return useQuery<any>(
 		[
 			'useInitializeData',
 			params?.branchId,
@@ -100,58 +94,38 @@ export const useInitializeData = ({ params, options }: Query) =>
 			refetchIntervalInBackground: true,
 			notifyOnChangeProps: ['isLoading', 'isSuccess'],
 			onSuccess: () => {
+				// Read from localStorage at write-time to avoid stale closure races
+				// with useInitializeIds.onSuccess adding IDs concurrently.
 				const updateRemainingIds = (
 					key: string,
-					initializedIdsString: string | null,
 					paramIdsString: string | undefined,
 				) => {
-					if (!initializedIdsString || !paramIdsString) return;
-
-					// Convert the comma-separated strings to arrays
-					const initializedIds = initializedIdsString.split(',');
-					const paramIds = paramIdsString.split(',');
-
-					if (initializedIds.length > 0) {
-						// Filter out the IDs that are already initialized (from the params)
-						const remainingIds = initializedIds.filter(
-							(id) => !paramIds.includes(id), // Remove matching IDs from local storage
-						);
-
-						// Update localStorage: set an empty string if no remaining IDs, otherwise store as a string
-						localStorage.setItem(
-							key,
-							remainingIds.length === 0 ? '' : remainingIds.join(','),
-						);
-					}
+					if (!paramIdsString) return;
+					const current = localStorage.getItem(key) || '';
+					const currentSet = new Set(current.split(',').filter(Boolean));
+					paramIdsString
+						.split(',')
+						.filter(Boolean)
+						.forEach((id) => currentSet.delete(id));
+					localStorage.setItem(key, Array.from(currentSet).join(','));
 				};
 
-				// Update product IDs
-				const initializedProductIdsString = getProductIds(); // Fetch product IDs from local storage
-				updateRemainingIds(
-					APP_PRODUCTS_IDS,
-					initializedProductIdsString,
-					params?.productIds,
-				);
-
-				// Update branch product IDs
-				const initializedBranchProductIdsString = getBranchProductIds(); // Fetch branch product IDs from local storage
-				updateRemainingIds(
-					APP_BRANCH_PRODUCT_IDS,
-					initializedBranchProductIdsString,
-					params?.branchProductIds,
-				);
-
-				// Update branch product balance update logs IDs
-				const initializedBranchProductBalanceUpdateLogsIdsString = getBranchProductBalanceUpdateLogsIds();
+				updateRemainingIds(APP_PRODUCTS_IDS, params?.productIds);
+				updateRemainingIds(APP_BRANCH_PRODUCT_IDS, params?.branchProductIds);
 				updateRemainingIds(
 					APP_BRANCH_PRODUCT_BALANCE_UPDATE_LOGS_IDS,
-					initializedBranchProductBalanceUpdateLogsIdsString,
 					params?.branchProductBalanceUpdateLogsIds,
 				);
+
+				queryClient.invalidateQueries('useProducts');
+				queryClient.invalidateQueries('useBranchProducts');
+				queryClient.invalidateQueries('useLatestProductDatetime');
+				queryClient.invalidateQueries('useLatestBranchProductDatetime');
 			},
 			...options,
 		},
 	);
+};
 
 export const useInitializeIds = ({ params, options }: Query) =>
 	useQuery<any>(

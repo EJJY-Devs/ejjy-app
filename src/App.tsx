@@ -227,10 +227,7 @@ const App = () => {
 				isFetchingBranchesSuccess &&
 				!!getOnlineApiUrl() &&
 				!isStandAlone() &&
-				(getAppType() === appTypes.HEAD_OFFICE || branchId !== null) &&
-				!storageData.productIds &&
-				!storageData.branchProductIds &&
-				!storageData.branchProductBalanceUpdateLogsIds,
+				(getAppType() === appTypes.HEAD_OFFICE || branchId !== null),
 		},
 	});
 

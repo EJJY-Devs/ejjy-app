@@ -7,11 +7,7 @@ import {
 	TransactionStatus,
 } from 'components';
 import { Label } from 'components/elements';
-import {
-	ViewTransactionModal,
-	filterOption,
-	getInvoiceType,
-} from 'ejjy-global';
+import { ViewTransactionModal, filterOption } from 'ejjy-global';
 import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
@@ -25,7 +21,7 @@ import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
 import { TransactionsCancelled } from 'screens/Shared/Branches/components/TabTransactions/components/TransactionsCancelled';
-import { convertIntoArray, formatInPeso } from 'utils';
+import { convertIntoArray, formatInPeso, getInvoiceTypeLabel } from 'utils';
 import { Summary } from './components/Summary';
 
 const columns: ColumnsType = [
@@ -120,7 +116,7 @@ export const TabTransactions = ({ branchMachineId }: Props) => {
 						{invoice?.or_number}
 					</Button>
 				),
-				invoice_type: getInvoiceType(invoice_type),
+				invoice_type: getInvoiceTypeLabel(invoice_type),
 				amount: formatInPeso(total_paid_amount),
 				gross_sales: formatInPeso(gross_amount),
 				status: <TransactionStatus transaction={transaction} />,

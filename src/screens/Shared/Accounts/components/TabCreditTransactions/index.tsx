@@ -34,6 +34,7 @@ import {
 	formatInPeso,
 	getLocalApiUrl,
 	getAppType,
+	getInvoiceTypeLabel,
 } from 'utils';
 import { Payor } from 'utils/type';
 import { AccountTotalBalance } from './components/AccountTotalBalance';
@@ -276,6 +277,7 @@ export const TabCreditTransactions = () => {
 				const {
 					id,
 					invoice,
+					invoice_type,
 					total_amount,
 					teller,
 					datetime_created,
@@ -294,7 +296,7 @@ export const TabCreditTransactions = () => {
 					amount: formatInPeso(total_amount),
 					cashier: getFullName(teller),
 					authorizer: getFullName(payment?.credit_payment_authorizer),
-					remarks: 'Charge Invoice',
+					remarks: getInvoiceTypeLabel(invoice_type),
 					type: 'credit_transaction',
 					outstandingBalance: formatInPeso(0), // Will be calculated later
 				};

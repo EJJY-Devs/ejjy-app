@@ -3,7 +3,7 @@ import { PdfButtons } from 'components/Printing';
 import { EMPTY_CELL } from 'global';
 import jsPDF from 'jspdf';
 import React, { useState } from 'react';
-import { formatInPeso, getProductType } from 'utils';
+import { formatInPeso, getBranchProductStatus, getProductType } from 'utils';
 
 import robotoRegularTtf from 'assets/fonts/Roboto-Regular.ttf';
 
@@ -243,8 +243,12 @@ export const ViewBranchInventoryReportModal = ({ balance, onClose }: Props) => {
 				<Descriptions.Item label="Reorder Point">
 					{branchProduct?.reorder_point ?? product?.reorder_point ?? EMPTY_CELL}
 				</Descriptions.Item>
+				<Descriptions.Item label="Max Balance">
+					{branchProduct?.max_balance ?? product?.max_balance ?? EMPTY_CELL}
+				</Descriptions.Item>
 				<Descriptions.Item label="Status">
-					{product?.status || EMPTY_CELL}
+					{getBranchProductStatus(balance?.branch_product?.product_status) ||
+						EMPTY_CELL}
 				</Descriptions.Item>
 				<Descriptions.Item label="Nearest Expiry Date">
 					{balance?.nearest_expiry_date || EMPTY_CELL}

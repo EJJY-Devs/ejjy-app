@@ -3,7 +3,9 @@ import {
 	useUploadData,
 	useSalesTrackerCount,
 	useBranchProducts,
+	usePurchaseCostNotifications,
 	useProductSyncStatus,
+	useVoidedTransactionsCount,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
@@ -33,21 +35,23 @@ import { SiteSettings } from 'screens/Shared/SiteSettings';
 import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
+import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
 import shallow from 'zustand/shallow';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
+import { Purchases } from 'screens/Shared/Purchases';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
 import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
 import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
+import { Expenses } from 'screens/Shared/Accounting/Expenses';
 import { InventoryAudit } from 'screens/Shared/InventoryAudit';
 import { ViewChecking } from 'screens/Shared/InventoryAudit/ViewChecking';
 import { Dashboard } from './Dashboard';
 import { Logs } from './Logs';
 import { Notifications } from './Notifications';
 import { RequisitionSlips } from './RequisitionSlips';
-import { ViewRequisitionSlip } from './RequisitionSlips/ViewRequisitionSlip';
 
 const OfficeManager = () => {
 	const { pathname } = useLocation();
@@ -98,6 +102,13 @@ const OfficeManager = () => {
 	});
 
 	const salesTrackerCount = useSalesTrackerCount();
+	const { data: voidedTransactionsCount } = useVoidedTransactionsCount();
+	const {
+		data: { total: purchaseCostChangesCount },
+	} = usePurchaseCostNotifications({
+		params: { isResolved: false, pageSize: 1 },
+		options: { notifyOnChangeProps: ['data'] },
+	});
 
 	useEffect(() => {
 		const newLogsCount = cancelledTransactionsCount > 0 ? 1 : 0;
@@ -113,7 +124,9 @@ const OfficeManager = () => {
 			(dtrCount > 0 ? 1 : 0) +
 			(connectivityCount > 0 ? 1 : 0) +
 			(branchProductsNegativeBalanceCount > 0 ? 1 : 0) +
-			(unsyncedProductsCount > 0 ? 1 : 0);
+			(unsyncedProductsCount > 0 ? 1 : 0) +
+			(voidedTransactionsCount > 0 ? 1 : 0) +
+			(purchaseCostChangesCount > 0 ? 1 : 0);
 		if (newNotificationsCount !== notificationsCount) {
 			setNotificationsCount(newNotificationsCount);
 		}
@@ -123,6 +136,8 @@ const OfficeManager = () => {
 		connectivityCount,
 		branchProductsNegativeBalanceCount,
 		unsyncedProductsCount,
+		voidedTransactionsCount,
+		purchaseCostChangesCount,
 	]);
 
 	const getSidebarItems = useCallback(() => {
@@ -206,7 +221,7 @@ const OfficeManager = () => {
 			},
 			{
 				key: 'requisition-slips',
-				name: 'Branch Requisitions',
+				name: 'Requisition Slips',
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
 				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
 				link: '/office-manager/requisition-slips',
@@ -304,6 +319,15 @@ const OfficeManager = () => {
 						component={TransactionList}
 						path="/office-manager/accounting/transaction-list"
 					/>
+					<Route
+						component={Expenses}
+						path="/office-manager/accounting/expenses"
+					/>
+					<Route
+						component={Purchases}
+						path="/office-manager/accounting/purchases"
+						exact
+					/>
 					<Redirect
 						from="/office-manager/accounting"
 						to="/office-manager/accounting/chart-of-accounts"
@@ -349,6 +373,11 @@ const OfficeManager = () => {
 					<Route
 						component={InventoryTransfer}
 						path="/office-manager/inventory-transfer"
+						exact
+					/>
+					<Redirect
+						from="/office-manager/purchases"
+						to="/office-manager/accounting/purchases"
 						exact
 					/>
 

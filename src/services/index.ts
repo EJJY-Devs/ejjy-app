@@ -5,6 +5,7 @@ export const NO_VERIFICATION_NEEDED = 'NO_VERIFICATION_NEEDED';
 export const NO_VERIFICATION_CONFIG = { params: NO_VERIFICATION_NEEDED };
 
 export { default as AccountingTransactionsService } from './AccountingTransactionsService';
+export { default as ExpensesService } from './ExpensesService';
 export { default as AccountsService } from './AccountsService';
 export { default as AdjustmentSlipsService } from './AdjustmentSlipsService';
 export { default as AttendanceLogsService } from './AttendanceLogsService';
@@ -53,6 +54,10 @@ export { default as StorageTypesService } from './StorageTypesService';
 export { default as ProductLocationsService } from './ProductLocationsService';
 export { default as BrandNamesService } from './BrandNamesService';
 export { default as ProductsService } from './ProductsService';
+export { default as PurchasesService } from './PurchasesService';
+export { default as PurchaseOrdersService } from './PurchaseOrdersService';
+export { default as PurchaseCostNotificationsService } from './PurchaseCostNotificationsService';
+export { default as PurchaseOrderQtyNotificationsService } from './PurchaseOrderQtyNotificationsService';
 export { default as ProductSyncStatusService } from './ProductSyncStatusService';
 export { default as ReceivingVouchersService } from './ReceivingVouchersService';
 export { default as ReportsService } from './ReportsService';

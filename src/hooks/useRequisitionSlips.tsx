@@ -189,6 +189,8 @@ const useRequisitionSlipsNew = ({ params }: Query) =>
 			params?.vendorId,
 			params?.slipType,
 			params?.timeRange || 'daily',
+			params?.rsSearch,
+			params?.poSearch,
 		],
 		() => {
 			const service =
@@ -207,6 +209,8 @@ const useRequisitionSlipsNew = ({ params }: Query) =>
 						vendor_id: params?.vendorId,
 						slip_type: params?.slipType,
 						time_range: params?.timeRange || 'daily',
+						rs_search: params?.rsSearch,
+						po_search: params?.poSearch,
 					},
 					getLocalApiUrl(),
 				),
@@ -244,7 +248,7 @@ export const useRequisitionSlipCreate = () => {
 
 	return useMutation<any, any, any>(
 		({
-			preparedBy,
+			authorizerId,
 			approvedBy,
 			products,
 			branchId,
@@ -253,7 +257,7 @@ export const useRequisitionSlipCreate = () => {
 		}: any) =>
 			RequisitionSlipsService.create(
 				{
-					prepared_by: preparedBy,
+					authorizer_id: authorizerId,
 					approved_by: approvedBy,
 					products,
 					branch_id: branchId,

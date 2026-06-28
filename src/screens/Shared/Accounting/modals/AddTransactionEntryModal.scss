@@ -38,6 +38,24 @@
 	}
 }
 
+.AddTransactionEntryModal_dateRow {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-bottom: 16px;
+}
+
+.AddTransactionEntryModal_dateLabel {
+	font-size: 14px;
+	font-weight: 600;
+	color: #595959;
+}
+
+.AddTransactionEntryModal_datePicker {
+	width: 200px;
+}
+
 .AddTransactionEntryModal_searchItem {
 	margin-bottom: 18px;
 

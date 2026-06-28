@@ -97,7 +97,7 @@ export const ViewRequisitionSlipModal = ({
 					previewPdf={previewPdf}
 				/>,
 			]}
-			title="Requisition Slip"
+			title="[View] Requisition Slip"
 			width={425}
 			centered
 			closable
@@ -143,8 +143,8 @@ export const ViewRequisitionSlipModal = ({
 				<Descriptions.Item label="Customer">
 					{requisitionSlip.branch?.name}
 				</Descriptions.Item>
-				<Descriptions.Item label="Encoder:">
-					{getFullName(requisitionSlip?.prepared_by)}
+				<Descriptions.Item label="Authorizer:">
+					{getFullName(requisitionSlip?.authorizer)}
 				</Descriptions.Item>
 			</Descriptions>
 

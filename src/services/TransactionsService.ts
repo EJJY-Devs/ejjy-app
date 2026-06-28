@@ -10,6 +10,11 @@ interface List extends IListRequest {
 	statuses?: string;
 	time_range?: string;
 	or_number?: string;
+	has_void_adjustment_slip?: boolean;
+}
+
+interface CreateAdjustmentSlip {
+	encoded_by_id: number;
 }
 
 const service = {
@@ -21,6 +26,15 @@ const service = {
 
 	summary: async (params: List, baseURL) =>
 		axios.get('/transactions/summary/', { baseURL, params }),
+
+	createAdjustmentSlip: async (
+		id: number,
+		body: CreateAdjustmentSlip,
+		baseURL: string,
+	) =>
+		axios.post(`/transactions/${id}/create-adjustment-slip/`, body, {
+			baseURL,
+		}),
 };
 
 export default service;

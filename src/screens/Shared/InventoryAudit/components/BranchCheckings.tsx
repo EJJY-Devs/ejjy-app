@@ -6,17 +6,25 @@ import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
+	MAX_PAGE_SIZE,
 	pageSizeOptions,
+	productStatus,
 } from 'global';
-import { useAuditLogCounts, useAuditLogs, useQueryParams } from 'hooks';
+import {
+	useAuditLogCounts,
+	useAuditLogs,
+	useBranchProductsForAudit,
+	useQueryParams,
+} from 'hooks';
 import React, { useEffect, useState } from 'react';
+import { useQueryClient } from 'react-query';
 import { convertIntoArray } from 'utils';
 import { ViewAdjustmentSlipModal } from 'components/modals/ViewAdjustmentSlipModal';
 import { AuditModal } from './AuditModal';
 import { PendingAuditModal } from './PendingAuditModal';
 
 const columns: ColumnsType = [
-	{ title: 'Reference Number', dataIndex: 'id' },
+	{ title: 'Reference Number', dataIndex: 'referenceNumber' },
 	{ title: 'Name', dataIndex: 'name' },
 	{ title: 'Captured QTY', dataIndex: 'capturedQty', align: 'center' },
 	{ title: 'Inputted QTY', dataIndex: 'inputtedQty', align: 'center' },
@@ -39,6 +47,7 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 	>(null);
 
 	// CUSTOM HOOKS
+	const queryClient = useQueryClient();
 	const { params, setQueryParams } = useQueryParams();
 
 	const {
@@ -57,16 +66,33 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 	});
 
 	const {
-		data: { daily: dailyCount, random: randomCount, pending: pendingCount },
+		data: { daily: dailyCount, pending: pendingCount },
 	} = useAuditLogCounts({
 		params: { serverUrl, branchId },
 	});
+
+	const {
+		data: { branchProducts: randomProducts },
+	} = useBranchProductsForAudit({
+		params: {
+			serverUrl,
+			branchId,
+			isRandomlyChecked: true,
+			page: DEFAULT_PAGE,
+			pageSize: MAX_PAGE_SIZE,
+		},
+	});
+
+	const randomCount = randomProducts.filter(
+		(bp) => bp.product_status !== productStatus.AVAILABLE,
+	).length;
 
 	// METHODS
 	useEffect(() => {
 		const data = auditLogs.map((auditLog) => {
 			const {
 				id,
+				reference_number,
 				name,
 				captured_qty,
 				inputted_qty,
@@ -92,7 +118,7 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 
 			return {
 				key: id,
-				id,
+				referenceNumber: reference_number || id,
 				name,
 				capturedQty:
 					captured_qty != null ? Number(captured_qty).toFixed(3) : EMPTY_CELL,
@@ -109,13 +135,18 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 		setDataSource(data);
 	}, [auditLogs]);
 
+	const handleOpenAuditModal = (type: string) => {
+		queryClient.invalidateQueries('useBranchProductsForAudit');
+		setAuditModalType(type);
+	};
+
 	return (
 		<div className="InventoryAudit">
 			<div className="InventoryAudit__cards">
 				<button
 					className="InventoryAudit__card"
 					type="button"
-					onClick={() => setAuditModalType('daily')}
+					onClick={() => handleOpenAuditModal('daily')}
 				>
 					<span className="InventoryAudit__card-number">{dailyCount}</span>
 					<span className="InventoryAudit__card-label">DAILY AUDIT</span>
@@ -124,7 +155,7 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 				<button
 					className="InventoryAudit__card"
 					type="button"
-					onClick={() => setAuditModalType('random')}
+					onClick={() => handleOpenAuditModal('random')}
 				>
 					<span className="InventoryAudit__card-number">{randomCount}</span>
 					<span className="InventoryAudit__card-label">RANDOM AUDIT</span>
@@ -193,6 +224,7 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 			{viewAdjustmentSlipId && (
 				<ViewAdjustmentSlipModal
 					adjustmentSlipId={viewAdjustmentSlipId}
+					serverUrl={serverUrl}
 					onClose={() => setViewAdjustmentSlipId(null)}
 				/>
 			)}

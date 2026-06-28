@@ -110,6 +110,7 @@ const TabBranchInventoryReport = () => {
 	);
 	const [viewedBalance, setViewedBalance] = useState<any | null>(null);
 	const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+	const [isConverted, setIsConverted] = useState(false);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -204,6 +205,7 @@ const TabBranchInventoryReport = () => {
 			branchId: effectiveBranchId,
 			page: Number(params?.page) || DEFAULT_PAGE,
 			pageSize: Number(params?.pageSize) || DEFAULT_PAGE_SIZE,
+			ordering: params?.ordering || 'branch_product__product__name',
 		},
 		options: {
 			enabled: Boolean(effectiveBranchId),
@@ -296,6 +298,19 @@ const TabBranchInventoryReport = () => {
 		params?.search,
 	]);
 
+	const formatBalance = (balance, isWeighing: boolean) => {
+		const raw = Number(balance.value);
+		if (isConverted) {
+			const packagingQty = Math.max(
+				1,
+				Number(balance.branch_product?.product?.pieces_in_bulk) || 1,
+			);
+			const converted = Math.trunc(raw / Math.floor(packagingQty));
+			return isWeighing ? converted.toFixed(3) : String(converted);
+		}
+		return isWeighing ? raw.toFixed(3) : raw.toFixed(0);
+	};
+
 	useEffect(() => {
 		if (isAllBranches) {
 			const data = branchProductBalances.map((balance) => {
@@ -319,9 +334,7 @@ const TabBranchInventoryReport = () => {
 						</Button>
 					),
 					description: balance.branch_product?.product?.name || EMPTY_CELL,
-					value: isWeighing
-						? Number(balance.value).toFixed(3)
-						: Number(balance.value).toFixed(0),
+					value: formatBalance(balance, isWeighing),
 					status: status || EMPTY_CELL,
 				};
 			});
@@ -349,9 +362,7 @@ const TabBranchInventoryReport = () => {
 						</Button>
 					),
 					description: balance.branch_product?.product?.name || EMPTY_CELL,
-					value: isWeighing
-						? Number(balance.value).toFixed(3)
-						: Number(balance.value).toFixed(0),
+					value: formatBalance(balance, isWeighing),
 					status: status || EMPTY_CELL,
 				};
 
@@ -375,9 +386,13 @@ const TabBranchInventoryReport = () => {
 
 			setDataSource(data);
 		}
-	}, [branchProductBalances, isAllBranches, isHeadOffice]);
+	}, [branchProductBalances, isAllBranches, isHeadOffice, isConverted]);
 
 	// METHODS
+	const handleConvertClick = () => {
+		setIsConverted((prev) => !prev);
+	};
+
 	const handleCreateAdjustmentSlip = (balance) => {
 		const hasBranchProduct = Boolean(balance?.branch_product);
 		if (!hasBranchProduct) {
@@ -490,6 +505,20 @@ const TabBranchInventoryReport = () => {
 			/>
 
 			<Filter
+				convertButton={
+					<Button
+						disabled={
+							isFetchingBranchProductBalances ||
+							branchProductBalances.length === 0
+						}
+						type={isConverted ? 'primary' : 'default'}
+						onClick={handleConvertClick}
+					>
+						{isConverted
+							? 'Convert to Original Balance'
+							: 'Convert to Packaging Qty'}
+					</Button>
+				}
 				pdfButtons={
 					<PdfButtons
 						downloadPdf={downloadPdf}
@@ -548,7 +577,13 @@ const TabBranchInventoryReport = () => {
 	);
 };
 
-const Filter = ({ pdfButtons }: { pdfButtons?: React.ReactNode }) => {
+const Filter = ({
+	convertButton,
+	pdfButtons,
+}: {
+	convertButton?: React.ReactNode;
+	pdfButtons?: React.ReactNode;
+}) => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
 	const {
@@ -635,6 +670,7 @@ const Filter = ({ pdfButtons }: { pdfButtons?: React.ReactNode }) => {
 								))}
 							</Select>
 						</div>
+						{convertButton}
 						{pdfButtons}
 					</div>
 				</Col>

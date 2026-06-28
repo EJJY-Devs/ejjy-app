@@ -146,6 +146,27 @@ body {
 	position: initial;
 }
 
+a {
+	color: var(--ant-primary-color);
+}
+
 .ant-btn-link {
 	padding: 0;
 }
+
+.ant-btn.ant-btn-primary:not(.ant-btn-background-ghost):not(.ant-btn-disabled):not([disabled]) {
+	background-color: var(--ant-primary-color);
+	border-color: var(--ant-primary-color);
+	color: #fff;
+}
+
+// Tailwind utility classes used by ejjy-global components (not bundled in ejjy-global/dist/styles.css)
+.my-1 { margin-top: 0.25rem; margin-bottom: 0.25rem; }
+.ml-1 { margin-left: 0.25rem; }
+.mb-4 { margin-bottom: 1rem; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-end { justify-content: flex-end; }
+.text-xs { font-size: 0.75rem; line-height: 1rem; }
+.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+.text-red-600 { color: rgb(220, 38, 38); }

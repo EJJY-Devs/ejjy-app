@@ -3,6 +3,7 @@ import {
 	APP_LOCAL_API_URL_KEY,
 	APP_LOCAL_BRANCH_ID_KEY,
 	APP_HEAD_OFFICE_TYPE,
+	APP_START_NGROK,
 	APP_ONLINE_API_URL_KEY,
 	APP_ONLINE_BRANCH_ID_KEY,
 	APP_RECEIPT_PRINTER_FONT_FAMILY,
@@ -31,6 +32,9 @@ export const getAppType = () => localStorage.getItem(APP_APP_TYPE_KEY);
 
 export const getHeadOfficeType = () =>
 	Number(localStorage.getItem(APP_HEAD_OFFICE_TYPE));
+
+export const getStartNgrok = () =>
+	localStorage.getItem(APP_START_NGROK) === 'true';
 
 export const getBranchKey = () => localStorage.getItem(APP_BRANCH_KEY_KEY);
 

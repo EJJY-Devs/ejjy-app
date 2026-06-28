@@ -26,12 +26,12 @@ interface Props {
 	appType: string;
 	branchId: string;
 	headOfficeType: number;
+	startNgrok: boolean;
 	localApiUrl: string;
 	onlineApiUrl: string;
 	printerFontFamily: string;
 	printerFontSize: string;
 	printerName: string;
-	tagPrinterFontFamily: string;
 	tagPrinterFontSize: string;
 	tagPrinterPaperHeight: string;
 	tagPrinterPaperWidth: string;
@@ -49,6 +49,7 @@ export const AppSettingsForm = ({
 	appType,
 	branchId,
 	headOfficeType,
+	startNgrok,
 	localApiUrl,
 	onClose,
 	onlineApiUrl,
@@ -57,7 +58,6 @@ export const AppSettingsForm = ({
 	printerFontSize,
 	printerName,
 	printingType,
-	tagPrinterFontFamily,
 	tagPrinterFontSize,
 	tagPrinterPaperHeight,
 	tagPrinterPaperWidth,
@@ -79,6 +79,7 @@ export const AppSettingsForm = ({
 			DefaultValues: {
 				appType: appType || appTypes.BACK_OFFICE,
 				headOfficeType,
+				startNgrok: startNgrok || false,
 				branchId: branchId || '',
 				localApiUrl: localApiUrl || '',
 				onlineApiUrl: onlineApiUrl || '',
@@ -88,7 +89,6 @@ export const AppSettingsForm = ({
 				printingType: printingType || printingTypes.HTML,
 				tagPrinterPaperWidth: Number(tagPrinterPaperWidth),
 				tagPrinterPaperHeight: Number(tagPrinterPaperHeight),
-				tagPrinterFontFamily,
 				tagPrinterFontSize: Number(tagPrinterFontSize),
 			},
 			Schema: Yup.object().shape({
@@ -113,10 +113,6 @@ export const AppSettingsForm = ({
 				tagPrinterPaperHeight: Yup.number()
 					.required()
 					.label('Tag Printer Paper Height'),
-				tagPrinterFontFamily: Yup.string()
-					.required()
-					.label('Tag Printer Font Family')
-					.trim(),
 				tagPrinterFontSize: Yup.number()
 					.required()
 					.label('Tag Printer Font Size'),
@@ -126,13 +122,13 @@ export const AppSettingsForm = ({
 			appType,
 			branchId,
 			headOfficeType,
+			startNgrok,
 			localApiUrl,
 			onlineApiUrl,
 			printerFontFamily,
 			printerFontSize,
 			printerName,
 			printingType,
-			tagPrinterFontFamily,
 			tagPrinterFontSize,
 			tagPrinterPaperHeight,
 			tagPrinterPaperWidth,
@@ -210,12 +206,6 @@ export const AppSettingsForm = ({
 										setFieldValue('headOfficeType', e.target.value);
 									}}
 								/>
-								<Alert
-									className="mt-1"
-									message="Main head office app starts the ngrok when opened."
-									type="info"
-									showIcon
-								/>
 								<ErrorMessage
 									name="headOfficeType"
 									render={(error) => <FieldError error={error} />}
@@ -260,6 +250,24 @@ export const AppSettingsForm = ({
 								/>
 							)}
 						</Col>
+
+						{values.appType === appTypes.HEAD_OFFICE && (
+							<Col span={24}>
+								<Label label="Start Ngrok on Launch" spacing />
+								<Radio.Group
+									buttonStyle="solid"
+									options={[
+										{ label: 'Enable', value: true },
+										{ label: 'Disable', value: false },
+									]}
+									optionType="button"
+									value={values.startNgrok}
+									onChange={(e) => {
+										setFieldValue('startNgrok', e.target.value);
+									}}
+								/>
+							</Col>
+						)}
 
 						{values.appType === appTypes.BACK_OFFICE && (
 							<Col span={24}>
@@ -509,21 +517,6 @@ const TagPrinter = () => {
 				/>
 				<ErrorMessage
 					name="tagPrinterPaperHeight"
-					render={(error) => <FieldError error={error} />}
-				/>
-			</Col>
-
-			<Col span={24}>
-				<Label label="Tag Printer Font Family" spacing />
-				<Input
-					name="tagPrinterFontFamily"
-					value={values['tagPrinterFontFamily']}
-					onChange={(e) => {
-						setFieldValue('tagPrinterFontFamily', e.target.value);
-					}}
-				/>
-				<ErrorMessage
-					name="tagPrinterFontFamily"
 					render={(error) => <FieldError error={error} />}
 				/>
 			</Col>

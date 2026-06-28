@@ -4,7 +4,7 @@ import { PrinterOutlined } from '@ant-design/icons';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import { formatDateTime, formatQuantity } from 'utils';
 import { useAdjustmentSlipRetrieve } from 'hooks/useAdjustmentSlips';
-import { useSiteSettings } from 'hooks';
+import { useSiteSettings, usePdf } from 'hooks';
 import { useUserStore } from 'stores';
 import {
 	EMPTY_CELL,
@@ -28,8 +28,15 @@ export const ViewAdjustmentSlipModal = ({
 	const { data: adjustmentSlip, isLoading } = useAdjustmentSlipRetrieve(
 		adjustmentSlipId,
 	);
+
 	const user = useUserStore((state) => state.user);
 	const { data: siteSettings } = useSiteSettings();
+
+	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+		title: `AdjustmentSlip_${adjustmentSlip?.reference_number}.pdf`,
+		print: () =>
+			printAdjustmentSlip({ adjustmentSlip, siteSettings, user, isPdf: true }),
+	});
 
 	if (!adjustmentSlip) return null;
 
@@ -52,23 +59,13 @@ export const ViewAdjustmentSlipModal = ({
 		printAdjustmentSlip({ adjustmentSlip, siteSettings, user });
 	};
 
-	const handleDownloadPdf = () => {
-		// TODO: Implement PDF download functionality
-		console.log('Download PDF for adjustment slip:', adjustmentSlip?.id);
-	};
-
-	const handlePreviewPdf = () => {
-		// TODO: Implement PDF preview functionality
-		console.log('Preview PDF for adjustment slip:', adjustmentSlip?.id);
-	};
-
 	return (
 		<Modal
 			className="Modal__hasFooter"
 			footer={[
 				<Button
 					key="print"
-					disabled={isLoading}
+					disabled={isLoading || isLoadingPdf}
 					icon={<PrinterOutlined />}
 					type="primary"
 					onClick={handlePrint}
@@ -77,10 +74,10 @@ export const ViewAdjustmentSlipModal = ({
 				</Button>,
 				<PdfButtons
 					key="pdf"
-					downloadPdf={handleDownloadPdf}
-					isDisabled={isLoading}
-					isLoading={isLoading}
-					previewPdf={handlePreviewPdf}
+					downloadPdf={downloadPdf}
+					isDisabled={isLoading || isLoadingPdf}
+					isLoading={isLoadingPdf}
+					previewPdf={previewPdf}
 				/>,
 			]}
 			title="View Adjustment Slip"
@@ -182,6 +179,12 @@ export const ViewAdjustmentSlipModal = ({
 					</Text>
 				</Space>
 			)}
+
+			<div
+				// eslint-disable-next-line react/no-danger
+				dangerouslySetInnerHTML={{ __html: htmlPdf }}
+				style={{ display: 'none' }}
+			/>
 		</Modal>
 	);
 };

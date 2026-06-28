@@ -6,6 +6,7 @@ import {
 	DEFAULT_PAGE_SIZE,
 	pageSizeOptions,
 	productCheckingTypes,
+	productStatus,
 	unitOfMeasurementTypes,
 	QUANTITY_NON_WEIGHING_PRECISION,
 	QUANTITY_WEIGHING_PRECISION,
@@ -52,8 +53,6 @@ export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 			branchId,
 			isDailyChecked: type === productCheckingTypes.DAILY ? true : undefined,
 			isRandomlyChecked:
-				type === productCheckingTypes.RANDOM ? true : undefined,
-			isBelowReorderPoint:
 				type === productCheckingTypes.RANDOM ? true : undefined,
 			page,
 			pageSize,
@@ -116,7 +115,14 @@ export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 		},
 	];
 
-	const dataSource = branchProducts.map((bp) => {
+	const eligibleProducts =
+		type === productCheckingTypes.RANDOM
+			? branchProducts.filter(
+					(bp) => bp.product_status !== productStatus.AVAILABLE,
+			  )
+			: branchProducts;
+
+	const dataSource = eligibleProducts.map((bp) => {
 		const isWeighing =
 			bp.product?.unit_of_measurement === unitOfMeasurementTypes.WEIGHING;
 		const precision = isWeighing

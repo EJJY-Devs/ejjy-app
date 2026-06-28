@@ -68,6 +68,15 @@ export const ViewAccountModal = ({ account, open, onClose }: Props) => {
 						  account.account_category.slice(1)
 						: '-'}
 				</Descriptions.Item>
+				<Descriptions.Item label="Account Classification">
+					{(() => {
+						if (account?.account_classification === 'real')
+							return 'Real (Permanent)';
+						if (account?.account_classification === 'nominal')
+							return 'Nominal (Temporary)';
+						return '-';
+					})()}
+				</Descriptions.Item>
 				<Descriptions.Item label="Account Type">
 					{getOptionLabel(account?.account_type, accountTypeOptions)}
 				</Descriptions.Item>

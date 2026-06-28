@@ -25,6 +25,10 @@ export interface GeneralJournalEntry {
 	amount: string;
 	remarks: string;
 	description: string;
+	expenseId?: number | null;
+	expenseReferenceNumber?: string | null;
+	purchaseId?: number | null;
+	purchaseReferenceNumber?: string | null;
 }
 
 interface Props {
@@ -33,6 +37,8 @@ interface Props {
 	onAddTransactionEntry: () => void;
 	onCreateJournalEntry: () => void;
 	onOpenJournalEntry: (entry: GeneralJournalEntry) => void;
+	onViewExpense?: (expenseId: number) => void;
+	onViewPurchase?: (purchaseId: number) => void;
 	onViewTransaction?: (transactionId: number, description: string) => void;
 }
 
@@ -42,6 +48,8 @@ export const GeneralJournalTab = ({
 	onAddTransactionEntry,
 	onCreateJournalEntry,
 	onOpenJournalEntry,
+	onViewExpense,
+	onViewPurchase,
 	onViewTransaction,
 }: Props) => {
 	const { params, setQueryParams } = useQueryParams();
@@ -89,6 +97,10 @@ export const GeneralJournalTab = ({
 			amount: formatInPeso(entry.amount, '₱ '),
 			remarks: entry.remarks || EMPTY_CELL,
 			description: entry.description || '',
+			expenseId: entry.expense ?? null,
+			expenseReferenceNumber: entry.expense_reference_number ?? null,
+			purchaseId: entry.purchase ?? null,
+			purchaseReferenceNumber: entry.purchase_reference_number ?? null,
 		}),
 	);
 
@@ -155,6 +167,38 @@ export const GeneralJournalTab = ({
 								</>
 							);
 						}
+					}
+					if (record.expenseId) {
+						const ref = record.expenseReferenceNumber;
+						const hasRemarks = record.remarks && record.remarks !== EMPTY_CELL;
+						return (
+							<span>
+								<Button
+									style={{ padding: 0, height: 'auto' }}
+									type="link"
+									onClick={() => onViewExpense?.(record.expenseId as number)}
+								>
+									{ref || 'View'}
+								</Button>
+								{ref && hasRemarks && ` - ${record.remarks}`}
+							</span>
+						);
+					}
+					if (record.purchaseId) {
+						const ref = record.purchaseReferenceNumber;
+						const hasRemarks = record.remarks && record.remarks !== EMPTY_CELL;
+						return (
+							<span>
+								<Button
+									style={{ padding: 0, height: 'auto' }}
+									type="link"
+									onClick={() => onViewPurchase?.(record.purchaseId as number)}
+								>
+									{ref || 'View'}
+								</Button>
+								{ref && hasRemarks && ` - ${record.remarks}`}
+							</span>
+						);
 					}
 					return record.remarks;
 				},

@@ -51,7 +51,7 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 		data: { creditRegistrations, total },
 		isFetching: isFetchingCreditRegistrations,
 		error: creditRegistrationsError,
-	} = useCreditRegistrations({ params });
+	} = useCreditRegistrations({ params: { ...params, isActive: true } });
 
 	// METHODS
 	useEffect(() => {

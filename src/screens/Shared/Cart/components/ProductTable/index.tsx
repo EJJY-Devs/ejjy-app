@@ -4,7 +4,15 @@ import {
 	PlusOutlined,
 	MinusOutlined,
 } from '@ant-design/icons';
-import { Button, Modal, Tooltip, Input, Select, message } from 'antd';
+import {
+	Button,
+	InputNumber,
+	Modal,
+	Tooltip,
+	Input,
+	Select,
+	message,
+} from 'antd';
 import { formatInPeso } from 'ejjy-global';
 import React, { useEffect, useState, useRef } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
@@ -49,6 +57,11 @@ export const ProductTable = ({
 	);
 	const [previousProductCount, setPreviousProductCount] = useState(0);
 	const [unitErrors, setUnitErrors] = useState<{ [key: string]: boolean }>({});
+	const [localCosts, setLocalCosts] = useState<{ [key: string]: number }>({});
+	const [localPoQtys, setLocalPoQtys] = useState<{
+		[key: string]: number | null;
+	}>({});
+	const [localQtys, setLocalQtys] = useState<{ [key: string]: number }>({});
 
 	// Ref to store unit input references
 	const unitInputRefs = useRef<{ [key: string]: any }>({});
@@ -75,23 +88,40 @@ export const ProductTable = ({
 		shallow,
 	);
 
-	const baseColumns =
-		type === 'Adjustment Slip'
-			? [
-					{ name: '', width: '1px' },
-					{ name: 'Barcode', width: '40px' },
-					{ name: 'Description', alignment: 'center' },
-					{ name: 'Current Balance', alignment: 'center' },
-					{ name: 'Action', alignment: 'center' },
-					{ name: 'Value', alignment: 'center' },
-					{ name: 'Remarks', alignment: 'center', width: '275px' },
-			  ]
-			: [
-					{ name: '', width: '1px' },
-					{ name: 'Barcode', width: '40px' },
-					{ name: 'Product Name', alignment: 'center' },
-					{ name: 'Qty', alignment: 'center' },
-			  ];
+	let baseColumns: { name: string; width?: string; alignment?: string }[];
+	if (type === 'Adjustment Slip') {
+		baseColumns = [
+			{ name: '', width: '1px' },
+			{ name: 'Barcode', width: '40px' },
+			{ name: 'Description', alignment: 'center' },
+			{ name: 'Current Balance', alignment: 'center' },
+			{ name: 'Action', alignment: 'center' },
+			{ name: 'Value', alignment: 'center' },
+			{ name: 'Remarks', alignment: 'center', width: '275px' },
+		];
+	} else if (type === 'Purchase') {
+		baseColumns = [
+			{ name: '', width: '1px' },
+			{ name: 'Barcode', width: '40px' },
+			{ name: 'Product Name', alignment: 'center' },
+			{ name: 'Qty', alignment: 'center', width: '275px' },
+		];
+	} else if (type === 'Purchase Order') {
+		baseColumns = [
+			{ name: '', width: '1px' },
+			{ name: 'Barcode', width: '150px' },
+			{ name: 'Product Name', alignment: 'center' },
+			{ name: 'Requisition', alignment: 'center', width: '200px' },
+			{ name: 'Purchase Order', alignment: 'center', width: '200px' },
+		];
+	} else {
+		baseColumns = [
+			{ name: '', width: '1px' },
+			{ name: 'Barcode', width: '40px' },
+			{ name: 'Product Name', alignment: 'center' },
+			{ name: 'Qty', alignment: 'center', width: '275px' },
+		];
+	}
 
 	const columns = [...baseColumns];
 
@@ -103,12 +133,18 @@ export const ProductTable = ({
 	} else if (
 		type !== 'Receiving Report' &&
 		type !== 'Delivery Receipt' &&
-		type !== 'Adjustment Slip'
+		type !== 'Adjustment Slip' &&
+		type !== 'Purchase Order'
 	) {
-		columns.push(
-			{ name: 'Unit Price', alignment: 'center' },
-			{ name: 'Amount', alignment: 'center' },
-		);
+		columns.push({
+			name: type === 'Purchase' ? 'Unit Cost' : 'Unit Price',
+			alignment: 'center',
+			width: type === 'Purchase' ? '200px' : undefined,
+		});
+
+		if (type !== 'Purchase') {
+			columns.push({ name: 'Amount', alignment: 'center' });
+		}
 	}
 
 	if (type === 'Delivery Receipt' || type === 'Receiving Report') {
@@ -159,6 +195,29 @@ export const ProductTable = ({
 			}
 		});
 	}, [products, unitErrors]);
+
+	// Initialize toggleAction for newly-added products based on the initial
+	// quantity sign: negative quantity  = shortage  → start in "Decrease" mode.
+	//                positive quantity  = excess    → start in "Increase" mode.
+	// This runs before the dataSource effect so the icon/tooltip are correct
+	// on first render.
+	useEffect(() => {
+		if (type !== 'Adjustment Slip') return;
+		setToggleAction((prev) => {
+			const next = { ...prev };
+			let changed = false;
+			products.forEach((p) => {
+				const k = p.product?.key;
+				// Use String(k) so `undefined` keys become "undefined" – consistent
+				// with how JS object indexing with `undefined` works.
+				if (!(k in prev)) {
+					next[k] = p.quantity < 0; // true = Decrease, false = Increase
+					changed = true;
+				}
+			});
+			return changed ? next : prev;
+		});
+	}, [products, type]);
 
 	useEffect(() => {
 		if (type === 'Adjustment Slip') {
@@ -241,7 +300,9 @@ export const ProductTable = ({
 					>
 						{formatQuantity({
 							unitOfMeasurement: product.unit_of_measurement,
-							quantity,
+							// Always display the magnitude – the +/− Action button
+							// already conveys the direction (increase / decrease).
+							quantity: Math.abs(quantity),
 						})}
 					</Button>,
 
@@ -265,7 +326,14 @@ export const ProductTable = ({
 									...prev,
 									[key]: value,
 								}));
-								// Clear error remarks if not "Error"
+								// Read the LATEST product from the store to avoid
+								// overwriting quantity/errorRemarks that changed after
+								// this closure was created (stale-closure guard).
+								const fresh = useBoundStore
+									.getState()
+									.products.find((p) => p.product?.key === key);
+								const base = fresh ?? branchProduct;
+
 								if (value !== 'Error') {
 									setErrorRemarks((prev) => ({
 										...prev,
@@ -274,17 +342,16 @@ export const ProductTable = ({
 									editProduct({
 										key,
 										product: {
-											...branchProduct,
+											...base,
 											remarks: value,
 											errorRemarks: '',
 										},
 									});
 								} else {
-									// Update product in store
 									editProduct({
 										key,
 										product: {
-											...branchProduct,
+											...base,
 											remarks: value,
 										},
 									});
@@ -296,6 +363,21 @@ export const ProductTable = ({
 								placeholder="Reference number"
 								style={{ width: '100%', textAlign: 'center' }}
 								value={errorRemarks[key] || ''}
+								onBlur={(e) => {
+									const { value } = e.target;
+									// Same stale-closure guard: read fresh from store.
+									const fresh = useBoundStore
+										.getState()
+										.products.find((p) => p.product?.key === key);
+									const base = fresh ?? branchProduct;
+									editProduct({
+										key,
+										product: {
+											...base,
+											errorRemarks: value,
+										},
+									});
+								}}
 								onChange={(e) => {
 									const { value } = e.target;
 									setErrorRemarks((prev) => ({
@@ -303,23 +385,84 @@ export const ProductTable = ({
 										[key]: value,
 									}));
 								}}
-								onBlur={(e) => {
-									const { value } = e.target;
-									// Update product in store only on blur to avoid focus loss
-									editProduct({
-										key,
-										product: {
-											...branchProduct,
-											errorRemarks: value,
-										},
-									});
-								}}
 							/>
 						)}
 					</div>,
 				];
 			});
 			setDataSource(data);
+			return;
+		}
+
+		if (type === 'Purchase Order') {
+			const poData = products.map((branchProduct, index) => {
+				const { product, quantity } = branchProduct;
+				const { barcode, textcode, name, key } = product;
+				const currentPoQty =
+					localPoQtys[key] !== undefined ? localPoQtys[key] : null;
+
+				return [
+					<Tooltip key={`tooltip-delete-${key}`} placement="top" title="Remove">
+						<Button
+							icon={<DeleteOutlined />}
+							type="primary"
+							danger
+							ghost
+							onClick={() =>
+								showRemoveProductConfirmation(branchProduct, index)
+							}
+						/>
+					</Tooltip>,
+
+					<Tooltip
+						key={`tooltip-barcode-${key}`}
+						placement="top"
+						title={barcode || textcode}
+					>
+						{barcode || textcode}
+					</Tooltip>,
+
+					<Tooltip key={`tooltip-name-${key}`} placement="top" title={name}>
+						{name}
+					</Tooltip>,
+
+					<div key={`rs-qty-unit-${key}`} style={{ textAlign: 'center' }}>
+						{`${formatQuantity({
+							unitOfMeasurement: product.unit_of_measurement,
+							quantity: Number(branchProduct.rs_quantity ?? quantity ?? 0),
+						})} ${branchProduct.rs_unit || ''}`.trim()}
+					</div>,
+
+					<div
+						key={`po-qty-wrapper-${key}`}
+						style={{ display: 'flex', justifyContent: 'center' }}
+					>
+						<InputNumber
+							className="ProductTable_centeredInput"
+							controls={false}
+							min={0}
+							precision={product.unit_of_measurement === 'weighing' ? 3 : 0}
+							style={{ width: '120px' }}
+							value={currentPoQty}
+							onBlur={() => {
+								const qty =
+									localPoQtys[key] !== undefined ? localPoQtys[key] : null;
+								editProduct({
+									key,
+									product: { ...branchProduct, quantity: qty },
+								});
+							}}
+							onChange={(value) => {
+								setLocalPoQtys((prev) => ({
+									...prev,
+									[key]: value ?? null,
+								}));
+							}}
+						/>
+					</div>,
+				];
+			});
+			setDataSource(poData);
 			return;
 		}
 
@@ -363,16 +506,45 @@ export const ProductTable = ({
 					{name}
 				</Tooltip>,
 
-				<Button
-					key={`btn-edit-quantity-${key}`}
-					type="text"
-					onClick={() => handleEdit(index)}
-				>
-					{formatQuantity({
-						unitOfMeasurement: product.unit_of_measurement,
-						quantity,
-					})}
-				</Button>,
+				type === 'Purchase' ? (
+					<InputNumber
+						key={`input-qty-${key}`}
+						bordered={false}
+						className="ProductTable_costInput"
+						controls={false}
+						min={0}
+						precision={product.unit_of_measurement === 'weighing' ? 3 : 0}
+						value={
+							localQtys[key] !== undefined
+								? localQtys[key]
+								: Number(quantity ?? 0)
+						}
+						onBlur={() => {
+							const qty =
+								localQtys[key] !== undefined
+									? localQtys[key]
+									: Number(quantity ?? 0);
+							editProduct({
+								key,
+								product: { ...branchProduct, quantity: qty },
+							});
+						}}
+						onChange={(value) => {
+							setLocalQtys((prev) => ({ ...prev, [key]: value ?? 0 }));
+						}}
+					/>
+				) : (
+					<Button
+						key={`btn-edit-quantity-${key}`}
+						type="text"
+						onClick={() => handleEdit(index)}
+					>
+						{formatQuantity({
+							unitOfMeasurement: product.unit_of_measurement,
+							quantity,
+						})}
+					</Button>
+				),
 			];
 
 			if (type === 'Requisition Slip') {
@@ -493,25 +665,77 @@ export const ProductTable = ({
 					</Tooltip>,
 				);
 			} else if (type !== 'Receiving Report' && type !== 'Delivery Receipt') {
-				const unitPrice = price_per_piece;
-				const totalPrice = unitPrice * quantity;
+				if (type === 'Purchase') {
+					const currentCost =
+						localCosts[key] !== undefined
+							? localCosts[key]
+							: branchProduct.cost_per_piece ?? 0;
 
-				row.push(
-					<Tooltip
-						key={`tooltip-unit-price-${key}`}
-						placement="top"
-						title={`Unit Price: ${formatInPeso(unitPrice)}`}
-					>
-						{formatInPeso(unitPrice)}
-					</Tooltip>,
-					<Tooltip
-						key={`tooltip-total-price-${key}`}
-						placement="top"
-						title={`Total Amount: ${formatInPeso(totalPrice)}`}
-					>
-						{formatInPeso(totalPrice)}
-					</Tooltip>,
-				);
+					row.push(
+						<InputNumber
+							key={`input-cost-${key}`}
+							bordered={false}
+							className="ProductTable_costInput"
+							controls={false}
+							formatter={(value) => `₱${value}`}
+							min={0}
+							parser={(value) => Number((value || '').replace(/₱/g, '')) as any}
+							precision={2}
+							value={currentCost}
+							onBlur={() => {
+								const cost =
+									localCosts[key] !== undefined ? localCosts[key] : 0;
+								editProduct({
+									key,
+									product: {
+										...branchProduct,
+										cost_per_piece: cost,
+									},
+								});
+							}}
+							onChange={(value) => {
+								setLocalCosts((prev) => ({
+									...prev,
+									[key]: value ?? 0,
+								}));
+							}}
+							onKeyDown={(e) => {
+								const allowed = [
+									'Backspace',
+									'Delete',
+									'Tab',
+									'ArrowLeft',
+									'ArrowRight',
+									'Home',
+									'End',
+								];
+								if (!allowed.includes(e.key) && !/^[0-9.]$/.test(e.key)) {
+									e.preventDefault();
+								}
+							}}
+						/>,
+					);
+				} else {
+					const unitPrice = price_per_piece;
+					const totalPrice = unitPrice * quantity;
+
+					row.push(
+						<Tooltip
+							key={`tooltip-unit-price-${key}`}
+							placement="top"
+							title={`Unit Price: ${formatInPeso(unitPrice)}`}
+						>
+							{formatInPeso(unitPrice)}
+						</Tooltip>,
+						<Tooltip
+							key={`tooltip-total-price-${key}`}
+							placement="top"
+							title={`Total Amount: ${formatInPeso(totalPrice)}`}
+						>
+							{formatInPeso(totalPrice)}
+						</Tooltip>,
+					);
+				}
 			}
 
 			if (type === 'Delivery Receipt' || type === 'Receiving Report') {
@@ -547,6 +771,9 @@ export const ProductTable = ({
 		remarks,
 		errorRemarks,
 		unitErrors,
+		localCosts,
+		localPoQtys,
+		localQtys,
 	]);
 
 	useEffect(() => {
@@ -626,6 +853,7 @@ export const ProductTable = ({
 				<EditProductModal
 					product={products[activeIndex]}
 					sign={toggleAction[products[activeIndex]?.product?.key] ? -1 : 1}
+					type={type}
 					onClose={() => setEditProductModalVisible(false)}
 				/>
 			)}

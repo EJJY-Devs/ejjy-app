@@ -25,7 +25,7 @@ import {
 	EMPTY_CELL,
 } from 'ejjy-global';
 
-import { pageSizeOptions, refetchOptions } from 'global';
+import { MAX_PAGE_SIZE, pageSizeOptions, refetchOptions } from 'global';
 import { useQueryParams, useSiteSettingsNew } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
@@ -81,6 +81,8 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 	} = useTransactions({
 		params: {
 			...params,
+			page: DEFAULT_PAGE,
+			pageSize: MAX_PAGE_SIZE,
 			branchMachineId,
 			timeRange: params?.timeRange?.toString() || timeRangeTypes.DAILY,
 			statuses: `${transactionStatuses.VOID_EDITED},${transactionStatuses.VOID_CANCELLED},${transactionStatuses.FULLY_PAID}`,
@@ -95,6 +97,8 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 	} = useCollectionReceipts({
 		params: {
 			...params,
+			page: DEFAULT_PAGE,
+			pageSize: MAX_PAGE_SIZE,
 			branchMachineId,
 			timeRange: (params?.timeRange || timeRangeTypes.DAILY) as string,
 		},

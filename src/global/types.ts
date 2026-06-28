@@ -147,6 +147,7 @@ export const timeRangeTypes = {
 	DAILY: 'daily',
 	MONTHLY: 'monthly',
 	DATE_RANGE: 'date_range',
+	ANNUAL: 'annual',
 };
 
 export const returnItemSlipsStatuses = {

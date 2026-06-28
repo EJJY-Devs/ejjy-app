@@ -1,8 +1,12 @@
 import { RequestErrors, CreateInventoryTransferModal } from 'components';
 import { Modal, message, Select, Spin } from 'antd';
+import {
+	AuthorizationModal,
+	Props as AuthorizationModalProps,
+} from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import React, { useEffect, useRef, useState } from 'react';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
-import { convertIntoArray, getLocalBranchId } from 'utils';
+import { convertIntoArray, getLocalApiUrl, getLocalBranchId } from 'utils';
 import shallow from 'zustand/shallow';
 import { backOrderTypes, MAX_PAGE_SIZE } from 'ejjy-global';
 import {
@@ -11,9 +15,15 @@ import {
 	useRequisitionSlipCreate,
 	useBranches,
 	useAdjustmentSlipCreate,
+	usePurchaseCreate,
+	usePurchaseOrderCreate,
+	usePurchaseOrders,
+	usePurchaseOrderById,
 } from 'hooks';
+import { Label } from 'components/elements';
 import { CreateRequisitionSlipModal } from 'components/modals/CreateRequisitionSlipModal';
 import { CreateAdjustmentSlipModal } from 'components/modals/CreateAdjustmentSlipModal';
+import { CreatePurchaseModal } from 'components/modals/CreatePurchaseModal';
 import { BarcodeScanner } from './components/BarcodeScanner';
 import { FooterButtons } from './components/FooterButtons';
 import { ProductSearch } from './components/ProductSearch';
@@ -25,18 +35,30 @@ interface ModalProps {
 	onClose: () => void;
 	type: string;
 	prePopulatedProduct?: any;
+	prePopulatedProducts?: any[];
+	preSelectedBranchId?: string | null;
 	initialSearchText?: string;
 	onRefetch?: () => void;
 	onAdjustmentSlipCreated?: (slip: any) => void;
+	requisitionSlipId?: number | null;
+	branchId?: string | null;
+	rsProducts?: any[];
+	onPurchaseCreated?: (purchase: any) => void;
 }
 
 export const Cart = ({
 	onClose,
 	type,
 	prePopulatedProduct,
+	prePopulatedProducts,
+	preSelectedBranchId,
 	initialSearchText,
 	onRefetch,
 	onAdjustmentSlipCreated,
+	requisitionSlipId,
+	branchId: branchIdProp,
+	rsProducts,
+	onPurchaseCreated,
 }: ModalProps) => {
 	// STATES
 	const [barcodeScanLoading, setBarcodeScanLoading] = useState(false);
@@ -53,23 +75,50 @@ export const Cart = ({
 		isCreateAdjustmentSlipVisible,
 		setIsCreateAdjustmentSlipVisible,
 	] = useState(false);
+	const [isCreatePurchaseVisible, setIsCreatePurchaseVisible] = useState(false);
 	const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
+
+	// Purchase Order selection state
+	const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState<
+		number | null
+	>(null);
+	const [isPOSelectVisible, setIsPOSelectVisible] = useState(
+		type === 'Purchase',
+	);
+	const poProductsPopulated = useRef(false);
+
+	const hasPrePopulated =
+		!!prePopulatedProduct ||
+		(prePopulatedProducts && prePopulatedProducts.length > 0) ||
+		(type === 'Purchase Order' && !!rsProducts?.length) ||
+		(type === 'Purchase' && selectedPurchaseOrderId !== null);
 
 	const [isBranchSelectVisible, setIsBranchSelectVisible] = useState(
-		type === 'Adjustment Slip' && !prePopulatedProduct,
+		type === 'Adjustment Slip' && !hasPrePopulated && !preSelectedBranchId,
 	);
 	const [selectedBranchId, setSelectedBranchId] = useState<string | null>(
 		prePopulatedProduct?.branch_product?.branch_id ||
 			prePopulatedProduct?.branch_product?.branch?.id ||
-			null,
+			preSelectedBranchId ||
+			(prePopulatedProducts?.[0]?.branch_id
+				? String(prePopulatedProducts[0].branch_id)
+				: null) ||
+			(prePopulatedProducts?.[0]?.branch?.id
+				? String(prePopulatedProducts[0].branch.id)
+				: null),
 	);
 	const [hasEmptyUnits, setHasEmptyUnits] = useState(false);
 
 	// REFS
 	const barcodeScannerRef = useRef(null);
 	const cartModalRef = useRef(null);
+	const prePopulatedProductIdRef = useRef<number | null>(null);
 
-	const branchId = getLocalBranchId();
+	const branchId = branchIdProp ?? getLocalBranchId();
 
 	const {
 		data: { branches = [] } = {},
@@ -77,6 +126,19 @@ export const Cart = ({
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
 	});
+
+	// Load purchase orders for PO selector (only when type is Purchase)
+	const {
+		data: { purchaseOrders = [] } = {},
+		isFetching: isFetchingPurchaseOrders,
+	} = usePurchaseOrders({
+		params: { pageSize: MAX_PAGE_SIZE },
+	});
+
+	// Load selected PO details to pre-populate cart
+	const { data: purchaseOrderData } = usePurchaseOrderById(
+		selectedPurchaseOrderId || 0,
+	);
 
 	// CUSTOM HOOKS
 	const {
@@ -104,19 +166,88 @@ export const Cart = ({
 	const { mutateAsync: createBackOrder } = useBackOrderCreate();
 	const { mutateAsync: createRequisitionSlip } = useRequisitionSlipCreate();
 	const { mutateAsync: createAdjustmentSlip } = useAdjustmentSlipCreate();
+	const { mutateAsync: createPurchase } = usePurchaseCreate();
+	const { mutateAsync: createPurchaseOrder } = usePurchaseOrderCreate();
+
+	// Pre-populate cart from selected PO (once, when PO data arrives)
+	useEffect(() => {
+		if (
+			!purchaseOrderData ||
+			type !== 'Purchase' ||
+			poProductsPopulated.current
+		) {
+			return;
+		}
+
+		const products = purchaseOrderData.purchase_order_products || [];
+		if (products.length === 0) return;
+
+		resetProducts();
+		const { addProduct } = useBoundStore.getState();
+
+		products.forEach((pop: any) => {
+			addProduct({
+				id: pop.product?.id,
+				product: {
+					...pop.product,
+					key: pop.product?.id,
+					current_balance: 0,
+				},
+				quantity: 0,
+				cost_per_piece: Number(pop.cost_per_piece) || 0,
+				current_balance: 0,
+			});
+		});
+
+		poProductsPopulated.current = true;
+	}, [purchaseOrderData, type, resetProducts]);
+
+	// Pre-populate cart from RS products for Purchase Order creation
+	useEffect(() => {
+		if (type !== 'Purchase Order' || !rsProducts?.length) return;
+		resetProducts();
+		const { addProduct } = useBoundStore.getState();
+		rsProducts.forEach((rsp: any) => {
+			addProduct({
+				id: rsp.product?.id,
+				product: {
+					...rsp.product,
+					key: rsp.product?.id,
+					current_balance: 0,
+				},
+				quantity: null,
+				rs_quantity: Number(rsp.quantity),
+				rs_unit: rsp.unit || '',
+				cost_per_piece: 0,
+				current_balance: 0,
+			});
+		});
+	}, [rsProducts, type, resetProducts]);
 
 	// Effect to handle pre-populated single product
 	useEffect(() => {
 		if (prePopulatedProduct && type === 'Adjustment Slip') {
+			const productId = prePopulatedProduct.branch_product?.id ?? null;
+			if (
+				productId !== null &&
+				productId === prePopulatedProductIdRef.current
+			) {
+				return;
+			}
+			prePopulatedProductIdRef.current = productId;
+
 			resetProducts();
 			const { addProduct } = useBoundStore.getState();
+
+			const adjustedBalance = Number(prePopulatedProduct.adjustedBalance ?? 0);
+
 			addProduct({
 				id: prePopulatedProduct.branch_product?.id,
 				product: {
 					...prePopulatedProduct.branch_product?.product,
 					current_balance: prePopulatedProduct.value,
 				},
-				quantity: 1,
+				quantity: adjustedBalance,
 				remarks: '',
 				errorRemarks: '',
 			});
@@ -130,17 +261,36 @@ export const Cart = ({
 		}
 	}, [prePopulatedProduct, type, resetProducts]);
 
-	// Cleanup messages on unmount
+	// Pre-populate multiple branch products (e.g. from HO notifications)
+	useEffect(() => {
+		if (prePopulatedProducts?.length > 0 && type === 'Adjustment Slip') {
+			resetProducts();
+			const { addProduct } = useBoundStore.getState();
+			prePopulatedProducts.forEach((bp) => {
+				addProduct({
+					id: bp.id,
+					product: {
+						...bp.product,
+						current_balance: bp.current_balance,
+					},
+					quantity: bp.current_balance ?? 0,
+					remarks: '',
+					errorRemarks: '',
+				});
+			});
+		}
+	}, [prePopulatedProducts, type, resetProducts]);
+
+	// Cleanup error messages on unmount
 	useEffect(() => {
 		return () => {
-			message.destroy(); // Clear any pending error messages when component unmounts
+			message.destroy('cart-error');
 		};
 	}, []);
 
 	// Focus the cart after adding products so ESC key works
 	useEffect(() => {
 		if (cartModalRef.current) {
-			// Small delay to ensure DOM is updated after product is added
 			setTimeout(() => {
 				if (cartModalRef.current) {
 					cartModalRef.current.focus();
@@ -252,6 +402,70 @@ export const Cart = ({
 		}
 	};
 
+	const handleRequisitionSlipFormSubmit = (formData: any) => {
+		setAuthorizeConfig({
+			baseURL: getLocalApiUrl(),
+			onSuccess: async (authorizer: any) => {
+				setAuthorizeConfig(null);
+				await handleModalSubmit({ ...formData, authorizerId: authorizer?.id });
+			},
+			onCancel: () => {
+				setAuthorizeConfig(null);
+			},
+		});
+	};
+
+	const handleCreatePurchaseOrder = async (formData) => {
+		const currentProducts = useBoundStore.getState().products;
+		if (currentProducts.length > 0) {
+			const mappedProducts = currentProducts.map((bp: any) => ({
+				product_id: bp.product.id,
+				quantity: bp.quantity,
+				cost_per_piece: 0,
+				unit: bp.rs_unit || '',
+			}));
+			const response = await createPurchaseOrder({
+				...formData,
+				products: mappedProducts,
+				branchId,
+				requisitionSlipId,
+			});
+
+			if (!response) {
+				throw Error;
+			}
+
+			message.success('Purchase Order was created successfully');
+		}
+	};
+
+	const handleCreatePurchase = async (formData) => {
+		const currentProducts = useBoundStore.getState().products;
+		if (currentProducts.length > 0) {
+			const mappedProducts = currentProducts.map(
+				({ product, quantity, cost_per_piece }) => ({
+					product_id: product.id,
+					quantity,
+					cost_per_piece: cost_per_piece || 0,
+				}),
+			);
+			const response = await createPurchase({
+				...formData,
+				products: mappedProducts,
+				branchId,
+				requisitionSlipId,
+				purchaseOrderId: selectedPurchaseOrderId,
+			});
+
+			if (!response) {
+				throw Error;
+			}
+
+			onPurchaseCreated?.(response.data);
+			message.success('Purchase was created successfully');
+		}
+	};
+
 	const handleModalSubmit = async (formData) => {
 		setLoading(true);
 
@@ -264,10 +478,14 @@ export const Cart = ({
 				await handleCreateRequisitionSlip(formData);
 			} else if (type === 'Adjustment Slip') {
 				await handleCreateAdjustmentSlip(formData);
+			} else if (type === 'Purchase') {
+				await handleCreatePurchase(formData);
+			} else if (type === 'Purchase Order') {
+				await handleCreatePurchaseOrder(formData);
 			}
 		} catch (error) {
-			message.error(`Failed to create ${type}`);
-			return; // Stop execution if there's an error
+			message.error({ key: 'cart-error', content: `Failed to create ${type}` });
+			return;
 		} finally {
 			setLoading(false);
 		}
@@ -276,9 +494,8 @@ export const Cart = ({
 		onClose();
 
 		const { setRefetchData } = useBoundStore.getState();
-		setRefetchData(); // Toggle the refetch flag
+		setRefetchData();
 
-		// Call the refetch callback if provided
 		if (onRefetch) {
 			onRefetch();
 		}
@@ -287,19 +504,16 @@ export const Cart = ({
 	const handleBack = () => {
 		const currentProducts = useBoundStore.getState().products;
 
-		// If no products, close immediately
 		if (!currentProducts || currentProducts.length === 0) {
-			onClose(); // Close the modal if no products
+			onClose();
 			setSearchedText('');
 			return;
 		}
 
-		// Prevent multiple confirmation modals from opening
 		if (isConfirmModalOpen) {
 			return;
 		}
 
-		// Show confirmation modal for products
 		setIsConfirmModalOpen(true);
 		Modal.confirm({
 			title: 'Warning',
@@ -309,14 +523,13 @@ export const Cart = ({
 			cancelText: 'Cancel',
 			autoFocusButton: 'ok',
 			onOk: () => {
-				resetProducts(); // Reset the products
-				message.destroy(); // Clear any pending error messages
+				resetProducts();
+				message.destroy();
 				setIsConfirmModalOpen(false);
-				onClose(); // Close the modal
+				onClose();
 			},
 			onCancel: () => {
 				setIsConfirmModalOpen(false);
-				// Restore focus to cart modal after confirmation modal closes
 				setTimeout(() => {
 					if (cartModalRef.current) {
 						cartModalRef.current.focus();
@@ -324,9 +537,7 @@ export const Cart = ({
 				}, 100);
 			},
 			afterClose: () => {
-				// Ensure state is reset even if modal is closed by other means
 				setIsConfirmModalOpen(false);
-				// Restore focus to cart modal after confirmation modal closes
 				setTimeout(() => {
 					if (cartModalRef.current) {
 						cartModalRef.current.focus();
@@ -336,6 +547,19 @@ export const Cart = ({
 		});
 
 		setSearchedText('');
+	};
+
+	const handlePurchaseFormSubmit = (formData: any) => {
+		setAuthorizeConfig({
+			baseURL: getLocalApiUrl(),
+			onSuccess: async (authorizer: any) => {
+				setAuthorizeConfig(null);
+				await handleModalSubmit({ ...formData, authorizerId: authorizer?.id });
+			},
+			onCancel: () => {
+				setAuthorizeConfig(null);
+			},
+		});
 	};
 
 	const handleSubmit = () => {
@@ -349,7 +573,6 @@ export const Cart = ({
 				return;
 			}
 
-			// Validate that all products have remarks
 			const productsWithoutRemarks = currentProducts.filter(
 				({ remarks }) => !remarks || remarks.trim() === '',
 			);
@@ -361,7 +584,6 @@ export const Cart = ({
 				return;
 			}
 
-			// Validate that products with "Error" remarks have errorRemarks
 			const productsWithoutErrorRemarks = currentProducts.filter(
 				({ remarks, errorRemarks }) =>
 					remarks === 'Error' && (!errorRemarks || errorRemarks.trim() === ''),
@@ -375,6 +597,20 @@ export const Cart = ({
 			}
 
 			setIsCreateAdjustmentSlipVisible(true);
+		} else if (type === 'Purchase') {
+			setIsCreatePurchaseVisible(true);
+		} else if (type === 'Purchase Order') {
+			const currentProducts = useBoundStore.getState().products;
+			const incomplete = currentProducts.filter(
+				(p: any) => !p.quantity || Number(p.quantity) <= 0,
+			);
+			if (incomplete.length > 0) {
+				message.error(
+					'Please fill in the Purchase Order quantity for all products before submitting.',
+				);
+				return;
+			}
+			setIsCreatePurchaseVisible(true);
 		} else {
 			setIsCreateInventoryTransferModalVisible(true);
 		}
@@ -385,7 +621,54 @@ export const Cart = ({
 		setIsBranchSelectVisible(false);
 	};
 
-	// Prevent opening the cart modal until a branch is selected for Adjustment Slip
+	// PO selector step (shown before the cart for Purchase type)
+	if (type === 'Purchase' && isPOSelectVisible) {
+		return (
+			<Modal
+				footer={null}
+				title="Select Purchase Order"
+				centered
+				closable
+				open
+				onCancel={() => {
+					message.destroy();
+					setIsPOSelectVisible(false);
+					onClose();
+				}}
+			>
+				{isFetchingPurchaseOrders ? (
+					<Spin />
+				) : (
+					<>
+						<Label label="Purchase Order" spacing />
+						<Select
+							className="w-100"
+							filterOption={(input, option) =>
+								((option?.children as unknown) as string)
+									.toLowerCase()
+									.includes(input.toLowerCase())
+							}
+							placeholder="Select a purchase order"
+							showSearch
+							onChange={(value: number) => {
+								poProductsPopulated.current = false;
+								setSelectedPurchaseOrderId(value);
+								setIsPOSelectVisible(false);
+							}}
+						>
+							{purchaseOrders.map((po: any) => (
+								<Select.Option key={po.id} value={po.id}>
+									{po.reference_number}
+								</Select.Option>
+							))}
+						</Select>
+					</>
+				)}
+			</Modal>
+		);
+	}
+
+	// Branch selector step for Adjustment Slip
 	if (type === 'Adjustment Slip' && isBranchSelectVisible) {
 		return (
 			<Modal
@@ -395,7 +678,7 @@ export const Cart = ({
 				closable
 				open
 				onCancel={() => {
-					message.destroy(); // Clear any pending error messages
+					message.destroy();
 					setIsBranchSelectVisible(false);
 					onClose();
 				}}
@@ -436,7 +719,7 @@ export const Cart = ({
 			open
 			onCancel={handleBack}
 		>
-			{!prePopulatedProduct && (
+			{!hasPrePopulated && (
 				<BarcodeScanner
 					ref={barcodeScannerRef}
 					setLoading={setBarcodeScanLoading}
@@ -445,7 +728,7 @@ export const Cart = ({
 
 			<section
 				ref={cartModalRef}
-				className={`Cart ${prePopulatedProduct ? 'Cart--prepopulated' : ''}`}
+				className={`Cart ${hasPrePopulated ? 'Cart--prepopulated' : ''}`}
 				style={{ outline: 'none' }}
 				tabIndex={-1}
 			>
@@ -454,7 +737,7 @@ export const Cart = ({
 					withSpaceBottom
 				/>
 
-				{!prePopulatedProduct && (
+				{!hasPrePopulated && (
 					<ProductSearch
 						barcodeScannerRef={barcodeScannerRef}
 						branchId={type === 'Adjustment Slip' ? selectedBranchId : branchId}
@@ -481,7 +764,6 @@ export const Cart = ({
 						type={type}
 						onClose={() => {
 							setIsCreateInventoryTransferModalVisible(false);
-							// Restore focus to cart modal after closing
 							setTimeout(() => {
 								if (cartModalRef.current) {
 									cartModalRef.current.focus();
@@ -497,7 +779,21 @@ export const Cart = ({
 						isLoading={isLoading}
 						onClose={() => {
 							setIsCreateRequisitionSlipVisible(false);
-							// Restore focus to cart modal after closing
+							setTimeout(() => {
+								if (cartModalRef.current) {
+									cartModalRef.current.focus();
+								}
+							}, 100);
+						}}
+						onSubmit={handleRequisitionSlipFormSubmit}
+					/>
+				)}
+
+				{isCreateAdjustmentSlipVisible && (
+					<CreateAdjustmentSlipModal
+						isLoading={isLoading}
+						onClose={() => {
+							setIsCreateAdjustmentSlipVisible(false);
 							setTimeout(() => {
 								if (cartModalRef.current) {
 									cartModalRef.current.focus();
@@ -508,21 +804,22 @@ export const Cart = ({
 					/>
 				)}
 
-				{isCreateAdjustmentSlipVisible && (
-					<CreateAdjustmentSlipModal
+				{isCreatePurchaseVisible && (
+					<CreatePurchaseModal
 						isLoading={isLoading}
 						onClose={() => {
-							setIsCreateAdjustmentSlipVisible(false);
-							// Restore focus to cart modal after closing
+							setIsCreatePurchaseVisible(false);
 							setTimeout(() => {
 								if (cartModalRef.current) {
 									cartModalRef.current.focus();
 								}
 							}, 100);
 						}}
-						onSubmit={handleModalSubmit}
+						onSubmit={handlePurchaseFormSubmit}
 					/>
 				)}
+
+				{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
 			</section>
 		</Modal>
 	);

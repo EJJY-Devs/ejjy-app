@@ -1,4 +1,5 @@
-import { Button, Descriptions, Modal } from 'antd';
+import { Button, Modal, Table } from 'antd';
+import { ColumnsType } from 'antd/lib/table';
 import React from 'react';
 
 interface JournalEntry {
@@ -33,6 +34,86 @@ export const ViewJournalEntryModal = ({
 		return null;
 	}
 
+	const remarksCell = (() => {
+		if (entry.entryType === 'transaction') {
+			const match = entry.remarks.match(/^(.+)\s*\(TXN-(\d+)\)$/);
+			if (match) {
+				const txnName = match[1].trim();
+				const txnId = Number(match[2]);
+				return (
+					<>
+						<div>Transaction Name: {txnName}</div>
+						<div>
+							Transaction Id:{' '}
+							<Button
+								style={{ padding: 0, height: 'auto' }}
+								type="link"
+								onClick={() => {
+									onClose();
+									onViewTransaction?.(txnId, entry.description);
+								}}
+							>
+								{txnId}
+							</Button>
+						</div>
+						{entry.description && <div>Remarks: {entry.description}</div>}
+					</>
+				);
+			}
+		}
+		return entry.remarks || '-';
+	})();
+
+	const columns: ColumnsType<JournalEntry> = [
+		{
+			title: 'Datetime',
+			dataIndex: 'datetime',
+			key: 'datetime',
+			render: (value: string) => value || '-',
+		},
+		{
+			title: 'RefNum',
+			dataIndex: 'referenceNumber',
+			key: 'referenceNumber',
+			render: (value: string) => value || '-',
+		},
+		{
+			title: 'Debit',
+			dataIndex: 'debitAccount',
+			key: 'debitAccount',
+			render: (value: string) => value || '-',
+		},
+		{
+			title: 'Credit',
+			dataIndex: 'creditAccount',
+			key: 'creditAccount',
+			render: (value: string) => value || '-',
+		},
+		{
+			title: 'Amount',
+			dataIndex: 'amount',
+			key: 'amount',
+			align: 'right',
+			render: (value: string) => value || '-',
+		},
+		{
+			title: 'Remarks',
+			dataIndex: 'remarks',
+			key: 'remarks',
+			render: () => remarksCell,
+		},
+		...(isHeadOffice
+			? [
+					{
+						title: 'Branch',
+						dataIndex: 'branch',
+						key: 'branch',
+						render: (value: string) => value || '-',
+					},
+			  ]
+			: []),
+	];
+
 	return (
 		<Modal
 			className="Modal__large Modal__hasFooter"
@@ -42,65 +123,14 @@ export const ViewJournalEntryModal = ({
 			destroyOnClose
 			onCancel={onClose}
 		>
-			<Descriptions
-				column={2}
-				labelStyle={{ fontWeight: 600, width: 190, whiteSpace: 'nowrap' }}
+			<Table
+				columns={columns}
+				dataSource={[entry]}
+				pagination={false}
+				rowKey="id"
+				size="small"
 				bordered
-			>
-				<Descriptions.Item label="Datetime">
-					{entry.datetime || '-'}
-				</Descriptions.Item>
-				<Descriptions.Item label="Reference Number">
-					{entry.referenceNumber || '-'}
-				</Descriptions.Item>
-				<Descriptions.Item label="Debit Account">
-					{entry.debitAccount || '-'}
-				</Descriptions.Item>
-				<Descriptions.Item label="Credit Account">
-					{entry.creditAccount || '-'}
-				</Descriptions.Item>
-				<Descriptions.Item label="Amount">
-					{entry.amount || '-'}
-				</Descriptions.Item>
-				<Descriptions.Item label="Remarks">
-					{(() => {
-						if (entry.entryType === 'transaction') {
-							const match = entry.remarks.match(/^(.+)\s*\(TXN-(\d+)\)$/);
-							if (match) {
-								const txnName = match[1].trim();
-								const txnId = Number(match[2]);
-								return (
-									<>
-										<div>Transaction Name: {txnName}</div>
-										<div>
-											Transaction Id:{' '}
-											<Button
-												style={{ padding: 0, height: 'auto' }}
-												type="link"
-												onClick={() => {
-													onClose();
-													onViewTransaction?.(txnId, entry.description);
-												}}
-											>
-												{txnId}
-											</Button>
-										</div>
-										{entry.description && (
-											<div>Remarks: {entry.description}</div>
-										)}
-									</>
-								);
-							}
-						}
-						return entry.remarks || '-';
-					})()}
-				</Descriptions.Item>
-				{isHeadOffice && (
-					<Descriptions.Item label="Branch">
-						{entry.branch || '-'}
-					</Descriptions.Item>
-				)}
-			</Descriptions>
+			/>
 		</Modal>
 	);
 };

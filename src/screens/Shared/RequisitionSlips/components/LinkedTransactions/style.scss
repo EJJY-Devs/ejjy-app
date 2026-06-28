@@ -1,0 +1,21 @@
+.LinkedTransactions {
+	margin-top: 24px;
+
+	&_icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border-radius: 50%;
+		background-color: #e6f7ff;
+		color: #1890ff;
+		font-size: 16px;
+	}
+
+	&_list {
+		.ant-list-empty-text {
+			padding: 32px 0;
+		}
+	}
+}

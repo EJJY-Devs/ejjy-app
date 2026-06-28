@@ -8,8 +8,11 @@ import {
 	useProductCheckCreateDaily,
 	useProductCheckCreateRandom,
 	useDtrNotificationCount,
+	usePurchaseCostNotifications,
+	usePurchaseOrderQtyNotifications,
 	useUploadData,
 	useSalesTrackerCount,
+	useVoidedTransactionsCount,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
@@ -23,7 +26,9 @@ import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
 import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
+import { Expenses } from 'screens/Shared/Accounting/Expenses';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
+import { Purchases } from 'screens/Shared/Purchases';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
 import { Cart } from 'screens/Shared/Cart';
@@ -38,6 +43,7 @@ import { Sales } from 'screens/Shared/Sales';
 import { SiteSettings } from 'screens/Shared/SiteSettings';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
+import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
 import shallow from 'zustand/shallow';
 import useInterval from 'use-interval';
 import { getBranchKey, getLocalBranchId } from 'utils';
@@ -52,7 +58,6 @@ import { Dashboard } from './Dashboard';
 import { Notifications } from './Notifications';
 import { OrderSlips } from './OrderSlips/OrderSlips';
 import { RequisitionSlips } from './RequisitionSlips';
-import { ViewRequisitionSlip } from './RequisitionSlips/ViewRequisitionSlip';
 import { CreateReturnItemSlip } from './ReturnItemSlips/CreateReturnItemSlip';
 import { ReturnItemSlips } from './ReturnItemSlips';
 
@@ -124,17 +129,50 @@ const BranchManager = () => {
 	}, [cancelledTransactionsCount]);
 
 	const salesTrackerCount = useSalesTrackerCount();
+	const { data: voidedTransactionsCount } = useVoidedTransactionsCount(
+		Number(getLocalBranchId()) || undefined,
+	);
+	const {
+		data: { total: purchaseCostChangesCount },
+	} = usePurchaseCostNotifications({
+		params: {
+			branchId: Number(getLocalBranchId()) || undefined,
+			isResolved: false,
+			pageSize: 1,
+		},
+		options: { notifyOnChangeProps: ['data'] },
+	});
+	const {
+		data: { total: poQtyCount },
+	} = usePurchaseOrderQtyNotifications({
+		params: {
+			branchId: Number(getLocalBranchId()) || undefined,
+			isResolved: false,
+			pageSize: 1,
+		},
+		options: { notifyOnChangeProps: ['data'] },
+	});
 
 	useEffect(() => {
 		const newNotificationsCount =
 			(branchProductsNegativeBalanceCount > 0 ? 1 : 0) +
 			(salesTrackerCount > 0 ? 1 : 0) +
-			(dtrCount > 0 ? 1 : 0);
+			(dtrCount > 0 ? 1 : 0) +
+			(voidedTransactionsCount > 0 ? 1 : 0) +
+			(purchaseCostChangesCount > 0 ? 1 : 0) +
+			(poQtyCount > 0 ? 1 : 0);
 
 		if (newNotificationsCount !== notificationsCount) {
 			setNotificationsCount(newNotificationsCount);
 		}
-	}, [salesTrackerCount, branchProductsNegativeBalanceCount, dtrCount]);
+	}, [
+		salesTrackerCount,
+		branchProductsNegativeBalanceCount,
+		dtrCount,
+		voidedTransactionsCount,
+		purchaseCostChangesCount,
+		poQtyCount,
+	]);
 
 	const getSidebarItems = useCallback(() => {
 		if (isAccounting) {
@@ -195,7 +233,7 @@ const BranchManager = () => {
 			},
 			{
 				key: 'requisition-slips',
-				name: 'Branch Requisitions',
+				name: 'Requisition Slips',
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
 				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
 				link: '/branch-manager/requisition-slips',
@@ -310,6 +348,15 @@ const BranchManager = () => {
 						component={TransactionList}
 						path="/branch-manager/accounting/transaction-list"
 					/>
+					<Route
+						component={Expenses}
+						path="/branch-manager/accounting/expenses"
+					/>
+					<Route
+						component={Purchases}
+						path="/branch-manager/accounting/purchases"
+						exact
+					/>
 					<Redirect
 						from="/branch-manager/accounting"
 						to="/branch-manager/accounting/chart-of-accounts"
@@ -354,6 +401,11 @@ const BranchManager = () => {
 					<Route
 						component={InventoryTransfer}
 						path="/branch-manager/inventory-transfer"
+						exact
+					/>
+					<Redirect
+						from="/branch-manager/purchases"
+						to="/branch-manager/accounting/purchases"
 						exact
 					/>
 					<Route

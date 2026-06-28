@@ -7,12 +7,14 @@ interface Props {
 	branchMachine?: any;
 	title?: string;
 	branchHeader?: any;
+	branchName?: string;
 }
 
 export const ReceiptHeaderV2 = ({
 	branchMachine,
 	title,
 	branchHeader,
+	branchName,
 }: Props) => {
 	// CUSTOM HOOKS
 
@@ -27,14 +29,34 @@ export const ReceiptHeaderV2 = ({
 			direction="vertical"
 			size={0}
 		>
-			<Text style={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
-				{branchInfo?.store_name}
-			</Text>
+			{branchInfo?.store_name && (
+				<Text style={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+					{branchInfo.store_name}
+				</Text>
+			)}
+
+			{branchInfo?.store_address && (
+				<Text style={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+					{branchInfo.store_address}
+				</Text>
+			)}
+
+			{(branchName ?? branchInfo?.name) && (
+				<Text style={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+					{branchName ?? branchInfo?.name}
+				</Text>
+			)}
+
+			{branchInfo?.tin && (
+				<Text style={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+					{branchInfo.tin}
+				</Text>
+			)}
 
 			{title && (
 				<>
 					<br />
-					<Text>{title}</Text>
+					<Text strong>{title}</Text>
 				</>
 			)}
 		</Space>

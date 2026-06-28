@@ -49,6 +49,7 @@ import {
 	formatDate,
 	getAccountTypeName,
 	getAppType,
+	getId,
 } from 'utils';
 
 interface Props {
@@ -151,7 +152,7 @@ export const TabAccounts = ({ disabled }: Props) => {
 								danger
 								ghost
 								onClick={async () => {
-									await deactivateAccount({ id: account.id });
+									await deactivateAccount({ id: getId(account) });
 									message.success('Account deactivated successfully.');
 									refetchAccounts();
 								}}
@@ -166,7 +167,7 @@ export const TabAccounts = ({ disabled }: Props) => {
 								style={{ color: '#52c41a', borderColor: '#52c41a' }}
 								ghost
 								onClick={async () => {
-									await activateAccount({ id: account.id });
+									await activateAccount({ id: getId(account) });
 									message.success('Account activated successfully.');
 									refetchAccounts();
 								}}

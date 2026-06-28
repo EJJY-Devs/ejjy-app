@@ -6,7 +6,6 @@ const {
 	ipcMain,
 	shell,
 } = require('electron');
-const { autoUpdater } = require('electron-updater');
 const kill = require('tree-kill');
 const isDev = require('electron-is-dev');
 const log = require('electron-log');
@@ -80,15 +79,6 @@ const appTypes = {
 const apiPath = isDev
 	? path.resolve(__dirname, '../api')
 	: path.join(process.resourcesPath, 'api');
-
-//-------------------------------------------------------------------
-// Auto Updater
-//-------------------------------------------------------------------
-autoUpdater.autoDownload = false;
-autoUpdater.allowPrerelease = true;
-autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'info';
-log.info('App starting...');
 
 //-------------------------------------------------------------------
 // Initialization
@@ -439,6 +429,10 @@ function initStore() {
 			type: 'number',
 			default: 0,
 		},
+		startNgrok: {
+			type: 'boolean',
+			default: false,
+		},
 	};
 
 	const store = new Store({ schema });
@@ -477,10 +471,14 @@ function initStore() {
 //-------------------------------------------------------------------
 // Server
 //-------------------------------------------------------------------
+const NGROK_RESTART_INTERVAL_MS = 60_000;
+
 let spawnRun = null;
 function startServer() {
 	if (!isDev) {
 		const selectedAppType = store.get('appType');
+		const headOfficeType = store.get('headOfficeType');
+		const shouldStartNgrok = store.get('startNgrok');
 		const backendConfigPath = getBackendConfigPath(selectedAppType);
 		ensureBackendConfig(selectedAppType);
 		const spawnEnv = {
@@ -497,8 +495,8 @@ function startServer() {
 		spawn('python', ['manage.py', 'migrate'], {
 			cwd: apiPath,
 			env: spawnEnv,
-			windowsHide: false,
-			detached: true,
+			windowsHide: true,
+			detached: false,
 			stdio: 'ignore',
 		});
 		const apiPort =
@@ -510,20 +508,51 @@ function startServer() {
 		spawnRun = spawn('python', ['manage.py', 'runserver', apiPort], {
 			cwd: apiPath,
 			env: spawnEnv,
-			windowsHide: false,
-			detached: true,
+			windowsHide: true,
+			detached: false,
 			stdio: 'ignore',
 		});
 		setTimeout(() => {
 			spawn('python', ['manage.py', 'create_branch_product_balance'], {
 				cwd: apiPath,
 				env: spawnEnv,
-				windowsHide: false,
-				detached: true,
+				windowsHide: true,
+				detached: false,
 				stdio: 'ignore',
 			});
 		}, SPLASH_SCREEN_SHOWN_MS + 500);
 		logStatus('API: Started');
+
+		if (selectedAppType === appTypes.HEAD_OFFICE && shouldStartNgrok) {
+			logStatus('Ngrok: Starting');
+
+			exec(
+				'ngrok config add-authtoken 1n3K1Pcfqdy2WKRk60koXTY1ZrB_7QC7rqRsspNCkayebuRUN',
+			);
+
+			const startNgrok = () => {
+				exec(
+					'ngrok http --domain=headoffice.ngrok.app 8001',
+					(error, stdout, stderr) => {
+						if (error) {
+							logStatus(`Ngrok error: ${error.message}`);
+							return;
+						}
+						if (stderr) {
+							logStatus(`Ngrok stderr: ${stderr}`);
+							return;
+						}
+						logStatus(`Ngrok stdout: ${stdout}`);
+					},
+				);
+			};
+
+			startNgrok();
+			setInterval(startNgrok, NGROK_RESTART_INTERVAL_MS);
+
+			logStatus('Ngrok: Started');
+		}
+
 		mainWindow.once('closed', () => {
 			if (spawnRun) kill(Number(spawnRun.pid));
 		});
@@ -544,53 +573,6 @@ if (!gotTheLock) {
 		}
 	});
 	app.on('ready', createWindow);
-}
-
-//-------------------------------------------------------------------
-// Check for updates (Windows only)
-//-------------------------------------------------------------------
-if (process.platform === 'win32') {
-	autoUpdater.on('checking-for-update', () =>
-		logStatus('Checking for update...'),
-	);
-	autoUpdater.on('update-available', (info) => {
-		dialog
-			.showMessageBox(mainWindow, {
-				type: 'info',
-				title: 'Software Update',
-				message: `EJJY Inventory App ${info.version} is available. Please press the button below to download the update.`,
-				buttons: ['Download Update'],
-				cancelId: -1,
-			})
-			.then(({ response }) => {
-				if (response === 0) autoUpdater.downloadUpdate();
-			});
-	});
-	autoUpdater.on('update-not-available', () =>
-		logStatus('Update not available'),
-	);
-	autoUpdater.on('error', (err) => logStatus('Error in auto-updater: ' + err));
-	autoUpdater.on('download-progress', (progress) => {
-		mainWindow.setProgressBar(Number(progress.percent) / 100);
-		logStatus(
-			`Download speed: ${progress.bytesPerSecond} - Downloaded ${progress.percent}% (${progress.transferred}/${progress.total})`,
-		);
-	});
-	autoUpdater.on('update-downloaded', () => {
-		logStatus('Update downloaded');
-		dialog
-			.showMessageBox(mainWindow, {
-				type: 'info',
-				title: 'Software Update',
-				message: 'EJJY Inventory App is successfully updated.',
-				buttons: ['Install Update'],
-				cancelId: -1,
-			})
-			.then(({ response }) => {
-				if (response === 0) autoUpdater.quitAndInstall();
-			});
-	});
-	app.on('ready', () => autoUpdater.checkForUpdates());
 }
 
 //-------------------------------------------------------------------

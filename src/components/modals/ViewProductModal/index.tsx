@@ -182,7 +182,7 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 						quantity: product.max_balance,
 					})}
 				</Descriptions.Item>
-				<Descriptions.Item label="Pieces in Bulk">
+				<Descriptions.Item label="Packaging Qty">
 					{product.pieces_in_bulk}
 				</Descriptions.Item>
 				<Descriptions.Item label="Allowable Spoilage (%)">

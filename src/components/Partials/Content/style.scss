@@ -36,6 +36,20 @@
 				cursor: pointer;
 			}
 		}
+
+		&_right {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		&_contextTag {
+			font-size: 0.875rem !important;
+			font-weight: 600 !important;
+			padding: 4px 14px !important;
+			border-radius: 20px !important;
+			white-space: nowrap;
+		}
 	}
 
 	&_mainContent {

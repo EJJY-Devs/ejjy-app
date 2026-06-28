@@ -143,6 +143,7 @@ export const TabUsers = ({ disabled }: Props) => {
 
 		const formattedUsers = usersData?.list
 			.filter((user) => user.username !== DEV_USERNAME)
+			.filter((user) => (user as any).account_is_active !== false)
 			.map((user) => ({
 				key: user.id,
 				id: (

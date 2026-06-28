@@ -6,9 +6,12 @@ const TIMEOUT_MS = 2000;
 const JSPDF_SETTINGS: jsPDFOptions = {
 	orientation: 'p',
 	unit: 'px',
-	format: [400, 700],
+	format: [460, 920],
 	// hotfixes: ['px_scaling'],
 };
+
+const WRAPPER_WIDTH = 450;
+const WRAPPER_PADDING = 35;
 
 const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 	const [htmlPdf, setHtmlPdf] = useState('');
@@ -24,7 +27,7 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 
 		const dataHtml = print?.();
 
-		const wrappedHtml = `<div style="width: 380px; padding: 24px;">${dataHtml}</div>`;
+		const wrappedHtml = `<div style="width: ${WRAPPER_WIDTH}px; padding: ${WRAPPER_PADDING}px; box-sizing: border-box;">${dataHtml}</div>`;
 
 		if (image) {
 			const img = new Image();
@@ -34,7 +37,7 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 
 		setTimeout(() => {
 			pdf.html(wrappedHtml, {
-				margin: 10,
+				margin: 5,
 				callback: (instance) => {
 					window.open(instance.output('bloburl').toString());
 					setLoadingPdf(false);
@@ -54,7 +57,7 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 
 		const dataHtml = print?.(data?.printData);
 
-		const wrappedHtml = `<div style="width: 380px; padding: 24px;">${dataHtml}</div>`;
+		const wrappedHtml = `<div style="width: ${WRAPPER_WIDTH}px; padding: ${WRAPPER_PADDING}px; box-sizing: border-box;">${dataHtml}</div>`;
 
 		if (image) {
 			const img = new Image();
@@ -64,7 +67,7 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 
 		setTimeout(() => {
 			pdf.html(wrappedHtml, {
-				margin: 10,
+				margin: 5,
 				callback: (instance) => {
 					instance.save(pdfTitle);
 					setLoadingPdf(false);

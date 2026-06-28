@@ -16,6 +16,7 @@ interface Props {
 	useSingleDateForDateRange?: boolean;
 	dateRangeLabel?: string;
 	dailyLabel?: string;
+	annualLabel?: string;
 }
 
 export const TimeRangeFilter = ({
@@ -30,6 +31,7 @@ export const TimeRangeFilter = ({
 	useSingleDateForDateRange = false,
 	dateRangeLabel = 'Select Date Range',
 	dailyLabel = 'Daily',
+	annualLabel = 'Annual',
 }: Props) => {
 	// STATES
 	const [timeRangeType, setTimeRangeType] = useState(timeRangeTypes.DAILY);
@@ -62,6 +64,8 @@ export const TimeRangeFilter = ({
 						areSameMonth,
 						isStartOfTheMonth,
 						isEndOfTheMonth,
+						startDate,
+						endDate,
 					} = validatedTimeRange;
 
 					if (
@@ -71,6 +75,16 @@ export const TimeRangeFilter = ({
 						isEndOfTheMonth
 					) {
 						setTimeRangeType(timeRangeTypes.MONTHLY);
+					} else if (
+						areValid &&
+						fields?.includes(timeRangeTypes.ANNUAL) &&
+						startDate.date() === 1 &&
+						startDate.month() === 0 &&
+						endDate.date() === 31 &&
+						endDate.month() === 11 &&
+						startDate.year() === endDate.year()
+					) {
+						setTimeRangeType(timeRangeTypes.ANNUAL);
 					}
 				}
 			}
@@ -119,6 +133,34 @@ export const TimeRangeFilter = ({
 			/>
 		);
 	}, [params[queryName]]);
+
+	const renderYearPicker = useCallback(() => {
+		const timeRangeValues = _.toString(params[queryName])?.split(',') || [];
+		const startDate = moment(timeRangeValues[0], DATE_FORMAT, true);
+		const defaultValue = startDate.isValid() ? startDate : undefined;
+
+		return (
+			<DatePicker
+				className="w-100"
+				defaultPickerValue={defaultValue}
+				defaultValue={defaultValue}
+				disabled={disabled}
+				format="YYYY"
+				picker="year"
+				onChange={(date) => {
+					if (date) {
+						const firstDay = date.clone().startOf('year');
+						const lastDay = date.clone().endOf('year');
+						handleChange(
+							[firstDay.format(DATE_FORMAT), lastDay.format(DATE_FORMAT)].join(
+								',',
+							),
+						);
+					}
+				}}
+			/>
+		);
+	}, [params[queryName], disabled]);
 
 	const renderRangePicker = useCallback(() => {
 		if (useSingleDateForDateRange) {
@@ -182,8 +224,12 @@ export const TimeRangeFilter = ({
 			});
 		}
 
+		if (fields?.includes(timeRangeTypes.ANNUAL)) {
+			options.push({ label: annualLabel, value: timeRangeTypes.ANNUAL });
+		}
+
 		return options;
-	}, [dailyLabel, fields, dateRangeLabel]);
+	}, [annualLabel, dailyLabel, fields, dateRangeLabel]);
 
 	const validateTimeRange = (timeRange) => {
 		const timeRangeValues = _.toString(timeRange)?.split(',') || [];
@@ -255,6 +301,7 @@ export const TimeRangeFilter = ({
 					}}
 				/>
 				{timeRangeType === timeRangeTypes.MONTHLY && renderMonthPicker()}
+				{timeRangeType === timeRangeTypes.ANNUAL && renderYearPicker()}
 				{timeRangeType === timeRangeTypes.DATE_RANGE && renderRangePicker()}
 			</Space>
 		</>

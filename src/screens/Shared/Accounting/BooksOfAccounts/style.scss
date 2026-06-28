@@ -88,6 +88,24 @@
 	}
 }
 
+.CreateJournalEntryModal_dateRow {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-bottom: 16px;
+}
+
+.CreateJournalEntryModal_dateLabel {
+	font-size: 14px;
+	font-weight: 600;
+	color: #595959;
+}
+
+.CreateJournalEntryModal_datePicker {
+	width: 200px;
+}
+
 .CreateJournalEntryModal_searchItem {
 	margin-bottom: 18px;
 
@@ -111,6 +129,10 @@
 	gap: 12px;
 	margin-bottom: 6px;
 
+	&.has-delete {
+		grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.7fr) minmax(140px, 0.8fr) 44px;
+	}
+
 	span {
 		font-size: 24px;
 		font-weight: 600;
@@ -125,6 +147,11 @@
 	gap: 12px;
 	margin-bottom: 8px;
 	align-items: start;
+
+	&.has-delete {
+		grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.7fr) minmax(140px, 0.8fr) 44px;
+		align-items: center;
+	}
 
 	.ant-input-number,
 	.ant-input-number-input {
@@ -157,6 +184,10 @@
 	.CreateJournalEntryModal_gridLabels,
 	.CreateJournalEntryModal_gridInputs {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
+
+		&.has-delete {
+			grid-template-columns: repeat(3, minmax(0, 1fr)) 44px;
+		}
 	}
 
 	.CreateJournalEntryModal_gridInputs {

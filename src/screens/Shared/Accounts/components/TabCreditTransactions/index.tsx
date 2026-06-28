@@ -17,8 +17,10 @@ import {
 	useOrderOfPayments,
 	useTransactions,
 	ViewCollectionReceiptModal,
+	ViewDeliveryInvoiceModal,
 	ViewOrderOfPaymentModal,
 	ViewTransactionModal,
+	useDeliveryInvoices,
 } from 'ejjy-global';
 import {
 	DEFAULT_PAGE,
@@ -52,6 +54,9 @@ export const TabCreditTransactions = () => {
 		any | null
 	>(null);
 	const [selectedAccount, setSelectedAccount] = useState(null);
+	const [selectedDeliveryInvoice, setSelectedDeliveryInvoice] = useState<
+		any | null
+	>(null);
 	const [
 		isCreateOrderOfPaymentModalVisible,
 		setIsCreateOrderOfPaymentModalVisible,
@@ -89,6 +94,20 @@ export const TabCreditTransactions = () => {
 									onClick={() =>
 										record.referenceData &&
 										setSelectedTransaction(record.referenceData)
+									}
+								>
+									{text}
+								</Button>
+							);
+						}
+						if (record.type === 'delivery_invoice') {
+							return (
+								<Button
+									className="pa-0"
+									type="link"
+									onClick={() =>
+										record.referenceData &&
+										setSelectedDeliveryInvoice(record.referenceData)
 									}
 								>
 									{text}
@@ -160,6 +179,20 @@ export const TabCreditTransactions = () => {
 							</Button>
 						);
 					}
+					if (record.type === 'delivery_invoice') {
+						return (
+							<Button
+								className="pa-0"
+								type="link"
+								onClick={() =>
+									record.referenceData &&
+									setSelectedDeliveryInvoice(record.referenceData)
+								}
+							>
+								{text}
+							</Button>
+						);
+					}
 					return text;
 				},
 			},
@@ -179,7 +212,12 @@ export const TabCreditTransactions = () => {
 				align: 'left',
 			},
 		];
-	}, [params.payorId, setSelectedTransaction, setSelectedCollectionReceipt]);
+	}, [
+		params.payorId,
+		setSelectedTransaction,
+		setSelectedCollectionReceipt,
+		setSelectedDeliveryInvoice,
+	]);
 
 	// Get account details when payorId is present
 	const { data: accountsData } = useAccounts({
@@ -249,6 +287,19 @@ export const TabCreditTransactions = () => {
 		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
 
+	// Fetch Delivery Invoices
+	const {
+		data: deliveryInvoicesData,
+		isFetching: isFetchingDeliveryInvoices,
+		error: deliveryInvoicesError,
+	} = useDeliveryInvoices({
+		params: {
+			timeRange: (params?.timeRange || timeRangeTypes.DAILY) as string,
+			pageSize: DEFAULT_PAGE_SIZE * 10,
+		},
+		serviceOptions: { baseURL: getLocalApiUrl() },
+	});
+
 	// METHODS
 	useEffect(() => {
 		const hasSelectedAccount = !!params.payorId;
@@ -302,6 +353,34 @@ export const TabCreditTransactions = () => {
 				};
 			});
 			combinedData.push(...creditTransactionData);
+		}
+
+		// Process Delivery Invoices
+		const deliveryInvoices = deliveryInvoicesData?.list || [];
+		if (deliveryInvoices.length) {
+			const filteredInvoices = params.payorId
+				? deliveryInvoices.filter(
+						(inv: any) => inv.creditor_account?.id === Number(params.payorId),
+				  )
+				: deliveryInvoices;
+
+			const deliveryInvoiceData = filteredInvoices.map((invoice: any) => ({
+				key: `di-${invoice.id}`,
+				datetime: formatDateTime(invoice.datetime_created),
+				rawDatetime: invoice.datetime_created,
+				clientCode: invoice.creditor_account?.account_code || '',
+				clientName: getFullName(invoice.creditor_account) || '',
+				invoiceNumber: invoice.or_number,
+				referenceNumber: invoice.or_number,
+				referenceData: invoice,
+				amount: formatInPeso(invoice.total_amount),
+				cashier: getFullName(invoice.teller),
+				authorizer: getFullName(invoice.authorizer),
+				remarks: 'Delivery Invoice',
+				type: 'delivery_invoice',
+				outstandingBalance: formatInPeso(0),
+			}));
+			combinedData.push(...deliveryInvoiceData);
 		}
 
 		// Only process Order of Payments and Collection Receipts when account is selected
@@ -393,7 +472,10 @@ export const TabCreditTransactions = () => {
 			let transactionTotal = 0;
 			sortedForCalculation.forEach((item) => {
 				const amount = parseFloat(item.amount.replace(/[₱,]/g, ''));
-				if (item.type === 'credit_transaction') {
+				if (
+					item.type === 'credit_transaction' ||
+					item.type === 'delivery_invoice'
+				) {
 					transactionTotal += amount;
 				} else if (item.type === 'collection_receipt') {
 					transactionTotal -= amount;
@@ -409,8 +491,11 @@ export const TabCreditTransactions = () => {
 				// Parse the amount back to number for calculation
 				const amount = parseFloat(item.amount.replace(/[₱,]/g, ''));
 
-				if (item.type === 'credit_transaction') {
-					// Charge Invoice: Add to outstanding balance
+				if (
+					item.type === 'credit_transaction' ||
+					item.type === 'delivery_invoice'
+				) {
+					// Charge Invoice / Delivery Invoice: Add to outstanding balance
 					runningBalance += amount;
 				} else if (item.type === 'collection_receipt') {
 					// Collection Receipt: Subtract from outstanding balance
@@ -443,6 +528,7 @@ export const TabCreditTransactions = () => {
 		transactions,
 		orderOfPaymentsData?.list,
 		collectionReceiptsData?.list,
+		deliveryInvoicesData?.list,
 		selectedAccount,
 	]);
 
@@ -468,7 +554,8 @@ export const TabCreditTransactions = () => {
 	const isLoading =
 		isFetchingTransactions ||
 		isFetchingOrderOfPayments ||
-		isFetchingCollectionReceipts;
+		isFetchingCollectionReceipts ||
+		isFetchingDeliveryInvoices;
 
 	return (
 		<div>
@@ -495,6 +582,7 @@ export const TabCreditTransactions = () => {
 					...convertIntoArray(transactionsError, 'Credit Transactions'),
 					...convertIntoArray(orderOfPaymentsError, 'Order of Payments'),
 					...convertIntoArray(collectionReceiptsError, 'Collection Receipts'),
+					...convertIntoArray(deliveryInvoicesError, 'Delivery Invoices'),
 				]}
 				withSpaceBottom
 			/>
@@ -543,6 +631,15 @@ export const TabCreditTransactions = () => {
 				<ViewOrderOfPaymentModal
 					orderOfPayment={selectedOrderOfPayment}
 					onClose={() => setSelectedOrderOfPayment(null)}
+				/>
+			)}
+
+			{selectedDeliveryInvoice && (
+				<ViewDeliveryInvoiceModal
+					deliveryInvoice={selectedDeliveryInvoice}
+					serviceOptions={{ baseURL: getLocalApiUrl() }}
+					siteSettings={siteSettings}
+					onClose={() => setSelectedDeliveryInvoice(null)}
 				/>
 			)}
 

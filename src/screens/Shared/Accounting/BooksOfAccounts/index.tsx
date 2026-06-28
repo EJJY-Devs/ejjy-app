@@ -8,7 +8,14 @@ import React, { useCallback, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { getLocalApiUrl, getLocalBranchId } from 'utils';
 import { getAppType } from 'utils/localStorage';
-import { JournalEntriesService } from 'services';
+import {
+	ExpensesService,
+	JournalEntriesService,
+	PurchasesService,
+} from 'services';
+import { Expense } from 'screens/Shared/Accounting/Expenses';
+import { ViewDisbursementVoucherModal } from 'screens/Shared/Accounting/Expenses/modals/ViewDisbursementVoucherModal';
+import { ViewPurchaseModal } from 'components/modals';
 import { GeneralLedgerTab } from './components/GeneralLedgerTab';
 import { TrialBalanceTab } from './components/TrialBalanceTab';
 import {
@@ -41,6 +48,8 @@ export const BooksOfAccounts = () => {
 		null,
 	);
 	const [viewTransactionRemarks, setViewTransactionRemarks] = useState('');
+	const [viewExpense, setViewExpense] = useState<Expense | null>(null);
+	const [viewPurchase, setViewPurchase] = useState<any>(null);
 
 	const {
 		mutateAsync: createJournalEntry,
@@ -53,6 +62,30 @@ export const BooksOfAccounts = () => {
 			pageSize: MAX_PAGE_SIZE,
 		},
 	});
+
+	const handleViewExpense = useCallback(async (expenseId: number) => {
+		try {
+			const response = await ExpensesService.retrieve(
+				expenseId,
+				getLocalApiUrl(),
+			);
+			setViewExpense(response.data);
+		} catch {
+			message.error('Failed to load expense');
+		}
+	}, []);
+
+	const handleViewPurchase = useCallback(async (purchaseId: number) => {
+		try {
+			const response = await PurchasesService.getById(
+				purchaseId,
+				getLocalApiUrl(),
+			);
+			setViewPurchase(response.data);
+		} catch {
+			message.error('Failed to load purchase');
+		}
+	}, []);
 
 	const handleOpenJournalEntry = useCallback((entry: GeneralJournalEntry) => {
 		setSelectedEntry(entry);
@@ -165,6 +198,8 @@ export const BooksOfAccounts = () => {
 							onAddTransactionEntry={() => setIsAddTransactionOpen(true)}
 							onCreateJournalEntry={() => setIsCreateOpen(true)}
 							onOpenJournalEntry={handleOpenJournalEntry}
+							onViewExpense={handleViewExpense}
+							onViewPurchase={handleViewPurchase}
 							onViewTransaction={handleViewTransaction}
 						/>
 					</Tabs.TabPane>
@@ -192,6 +227,7 @@ export const BooksOfAccounts = () => {
 						transactionName,
 						entries,
 						remarks,
+						datetimeCreated,
 					}) => {
 						try {
 							const remarksText = `${transactionName} (TXN-${transactionId})`;
@@ -207,6 +243,7 @@ export const BooksOfAccounts = () => {
 											amount: entry.amount,
 											remarks: remarksText,
 											description: remarks,
+											datetimeCreated,
 										}),
 									),
 							);
@@ -223,21 +260,20 @@ export const BooksOfAccounts = () => {
 					isSubmitting={isCreatingJournalEntry}
 					open={isCreateOpen}
 					onClose={() => setIsCreateOpen(false)}
-					onSubmit={async ({
-						debitAccount,
-						creditAccount,
-						amount,
-						remarks,
-					}) => {
+					onSubmit={async ({ entries, remarks, datetimeCreated }) => {
 						try {
-							await createJournalEntry({
-								branchId: localBranchId || undefined,
-								debitAccount,
-								creditAccount,
-								amount,
-								remarks,
-							});
-
+							await Promise.all(
+								entries.map((entry) =>
+									createJournalEntry({
+										branchId: localBranchId || undefined,
+										debitAccount: entry.debitAccount,
+										creditAccount: entry.creditAccount,
+										amount: entry.amount,
+										remarks,
+										datetimeCreated,
+									}),
+								),
+							);
 							message.success('Journal entry created successfully');
 							setIsCreateOpen(false);
 						} catch (error) {
@@ -256,6 +292,17 @@ export const BooksOfAccounts = () => {
 				}}
 				onViewTransaction={handleViewTransaction}
 			/>
+			<ViewDisbursementVoucherModal
+				expense={viewExpense}
+				open={!!viewExpense}
+				onClose={() => setViewExpense(null)}
+			/>
+			{viewPurchase && (
+				<ViewPurchaseModal
+					purchase={viewPurchase}
+					onClose={() => setViewPurchase(null)}
+				/>
+			)}
 			<ViewTransactionModal
 				open={isViewTransactionOpen}
 				remarks={viewTransactionRemarks}

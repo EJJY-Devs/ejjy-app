@@ -22,8 +22,12 @@ export default function configureAxios() {
 		if (error.isAxiosError) {
 			if (error.response?.status === 500) {
 				modifiedError.errors = [GENERIC_STATUS_500_MESSAGE];
+			} else if (error.response?.status === 404) {
+				modifiedError.errors = ['Resource not found.'];
 			} else if (typeof error?.response?.data === 'string') {
-				modifiedError.errors = [error.response.data];
+				const dataStr: string = error.response.data;
+				const isHtml = dataStr.trimStart().startsWith('<');
+				modifiedError.errors = isHtml ? [GENERIC_ERROR_MESSAGE] : [dataStr];
 			} else if (typeof error?.response?.data === 'object') {
 				modifiedError.errors = _.flatten(_.values(error?.response?.data));
 			} else if (error?.config.baseURL !== getOnlineApiUrl()) {

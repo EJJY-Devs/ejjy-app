@@ -38,7 +38,7 @@ const getColumns = (isHeadOffice: boolean): ColumnsType => [
 	{ title: 'Address', dataIndex: 'address' },
 	{ title: 'Amount of Payment', dataIndex: 'amountOfPayment' },
 	{ title: 'Purpose', dataIndex: 'purpose' },
-	{ title: 'Charge Sales Invoice', dataIndex: 'chargeSalesInvoice' },
+	{ title: 'Invoice', dataIndex: 'chargeSalesInvoice' },
 	...(isHeadOffice ? [{ title: 'Branch', dataIndex: 'branch' }] : []),
 ];
 

@@ -1,9 +1,9 @@
 import { PrinterOutlined } from '@ant-design/icons';
-import { Button, Descriptions } from 'antd';
+import { Button, Descriptions, Tag } from 'antd';
 import { ViewRequisitionSlipModal } from 'components';
 import { EMPTY_CELL, getFullName } from 'ejjy-global';
 import { requisitionSlipDetailsType } from 'global';
-import { upperFirst } from 'lodash';
+import { startCase } from 'lodash';
 import React, { useState } from 'react';
 import { formatDateTime } from 'utils';
 
@@ -16,15 +16,15 @@ export const RequisitionSlipDetails = ({ requisitionSlip, type }: Props) => {
 	// STATES
 	const [isPrintPreviewVisible, setIsPrintPreviewVisible] = useState(false);
 
-	// METHODS
-	// const handleStatusChange = (status) => {
-	// 	editRequisitionSlip(requisitionSlip.id, status);
-	// };
+	// VARIABLES
+	const actionLabel = requisitionSlip?.action?.action
+		? startCase(requisitionSlip.action.action)
+		: null;
 
 	return (
 		<>
 			<Descriptions
-				className="pa-6 pb-0 w-100"
+				className="w-100"
 				column={2}
 				labelStyle={{ width: 200 }}
 				size="small"
@@ -34,35 +34,26 @@ export const RequisitionSlipDetails = ({ requisitionSlip, type }: Props) => {
 					{formatDateTime(requisitionSlip.datetime_created)}
 				</Descriptions.Item>
 
-				<Descriptions.Item label="Requestor">
-					{getFullName(requisitionSlip.approved_by) || EMPTY_CELL}
+				<Descriptions.Item label="Authorizer">
+					{getFullName(requisitionSlip.authorizer) || EMPTY_CELL}
 				</Descriptions.Item>
 
 				{type === requisitionSlipDetailsType.SINGLE_VIEW && (
 					<>
 						<Descriptions.Item label="Status">
-							{requisitionSlip.status || EMPTY_CELL}
+							{actionLabel ? <Tag color="blue">{actionLabel}</Tag> : EMPTY_CELL}
 						</Descriptions.Item>
-
-						{/* {!isUserFromBranch(user.user_type) && (
-							<Descriptions.Item label="Status">
-								<Select
-									classNames="status-select"
-									disabled={requisitionSlipsStatus === request.REQUESTING}
-									options={requisitionSlipActionsOptions}
-									placeholder="status"
-									value={requisitionSlip?.action?.action}
-									onChange={handleStatusChange}
-								/>
-							</Descriptions.Item>
-						)} */}
 
 						<Descriptions.Item label="Customer">
 							{requisitionSlip.branch?.name || EMPTY_CELL}
 						</Descriptions.Item>
 
+						<Descriptions.Item label="Vendor">
+							{requisitionSlip.vendor?.name || EMPTY_CELL}
+						</Descriptions.Item>
+
 						<Descriptions.Item label="Remarks">
-							{upperFirst(requisitionSlip.type) || EMPTY_CELL}
+							{requisitionSlip.overall_remarks || EMPTY_CELL}
 						</Descriptions.Item>
 					</>
 				)}

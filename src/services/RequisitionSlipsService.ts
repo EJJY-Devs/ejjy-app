@@ -7,6 +7,8 @@ interface List extends IListRequest {
 	vendor_id?: number;
 	slip_type?: string;
 	time_range?: string;
+	rs_search?: string;
+	po_search?: string;
 }
 
 interface ListBranchId {
@@ -20,7 +22,7 @@ type Product = {
 };
 
 interface Create {
-	prepared_by?: number;
+	authorizer_id?: number;
 	approved_by?: number;
 	branch_id?: number;
 	vendor_id?: number;

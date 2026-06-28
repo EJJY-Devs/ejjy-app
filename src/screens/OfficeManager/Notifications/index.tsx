@@ -3,15 +3,21 @@ import { Content } from 'components';
 import { Box } from 'components/elements';
 import {
 	useBranchProducts,
+	usePurchaseCostNotifications,
+	usePurchaseOrderQtyNotifications,
 	useProductSyncStatus,
 	useQueryParams,
 	useSalesTrackerCount,
+	useVoidedTransactionsCount,
 } from 'hooks';
 import _ from 'lodash';
 import React from 'react';
 import shallow from 'zustand/shallow';
 import { TabSalesTracker } from 'screens/Shared/Notifications/components/TabSalesTracker';
 import { TabBranchProducts } from 'screens/Shared/Notifications/components/TabBranchProducts';
+import { TabPurchaseCostNotifications } from 'screens/Shared/Notifications/components/TabPurchaseCostNotifications';
+import { TabPurchaseOrderQtyNotifications } from 'screens/Shared/Notifications/components/TabPurchaseOrderQtyNotifications';
+import { TabVoidedTransactions } from 'screens/Shared/Notifications/components/TabVoidedTransactions';
 import { MAX_PAGE_SIZE } from 'global';
 import { TabBranchStatus } from './components/TabBranchStatus';
 import { TabDTR } from './components/TabDTR';
@@ -23,7 +29,10 @@ const tabs = {
 	BRANCH_CONNECTIVITY: 'Branch Connectivity',
 	BRANCH_PRODUCTS: 'Branch Products',
 	PRODUCT_PRICES_SYNCING: 'Product Prices Syncing',
+	PURCHASE_COST_CHANGES: 'Purchase Cost Changes',
+	PO_QTY: 'PO Mismatch',
 	SALES_TRACKER: 'Sales Tracker',
+	VOIDED_TRANSACTIONS: 'Voided Transactions',
 };
 
 export const Notifications = () => {
@@ -49,6 +58,19 @@ export const Notifications = () => {
 		options: { notifyOnChangeProps: ['data'] },
 	});
 	const salesTrackerCount = useSalesTrackerCount();
+	const { data: voidedTransactionsCount } = useVoidedTransactionsCount();
+	const {
+		data: { total: purchaseCostChangesCount },
+	} = usePurchaseCostNotifications({
+		params: { isResolved: false, pageSize: 1 },
+		options: { notifyOnChangeProps: ['data'] },
+	});
+	const {
+		data: { total: poQtyCount },
+	} = usePurchaseOrderQtyNotifications({
+		params: { isResolved: false, pageSize: 1 },
+		options: { notifyOnChangeProps: ['data'] },
+	});
 	const {
 		data: { total: unsyncedProductsCount },
 	} = useProductSyncStatus({
@@ -143,6 +165,48 @@ export const Notifications = () => {
 						}
 					>
 						<TabSalesTracker />
+					</Tabs.TabPane>
+
+					<Tabs.TabPane
+						key={tabs.VOIDED_TRANSACTIONS}
+						tab={
+							<Space align="center">
+								<span>{tabs.VOIDED_TRANSACTIONS}</span>
+								{voidedTransactionsCount > 0 && (
+									<Badge count={voidedTransactionsCount} overflowCount={999} />
+								)}
+							</Space>
+						}
+					>
+						<TabVoidedTransactions />
+					</Tabs.TabPane>
+
+					<Tabs.TabPane
+						key={tabs.PURCHASE_COST_CHANGES}
+						tab={
+							<Space align="center">
+								<span>{tabs.PURCHASE_COST_CHANGES}</span>
+								{purchaseCostChangesCount > 0 && (
+									<Badge count={purchaseCostChangesCount} overflowCount={999} />
+								)}
+							</Space>
+						}
+					>
+						<TabPurchaseCostNotifications />
+					</Tabs.TabPane>
+
+					<Tabs.TabPane
+						key={tabs.PO_QTY}
+						tab={
+							<Space align="center">
+								<span>{tabs.PO_QTY}</span>
+								{poQtyCount > 0 && (
+									<Badge count={poQtyCount} overflowCount={999} />
+								)}
+							</Space>
+						}
+					>
+						<TabPurchaseOrderQtyNotifications />
 					</Tabs.TabPane>
 				</Tabs>
 			</Box>

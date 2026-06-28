@@ -164,4 +164,24 @@ export const useNotesToFinancialStatements = ({ params, options }: Query) =>
 		},
 	);
 
+export const useStatementOfCashFlows = ({ params, options }: Query) =>
+	useQuery<any>(
+		['useStatementOfCashFlows', params?.branchId, params?.timeRange],
+		() =>
+			wrapServiceWithCatch(
+				TrialBalanceService.statementOfCashFlows(
+					{
+						branch_id: params?.branchId,
+						time_range: params?.timeRange,
+					},
+					getLocalApiUrl(),
+				),
+			),
+		{
+			initialData: { data: null },
+			select: (query) => query.data,
+			...(options || {}),
+		},
+	);
+
 export default useTrialBalance;

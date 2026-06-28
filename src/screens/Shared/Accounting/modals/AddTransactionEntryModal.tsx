@@ -1,6 +1,7 @@
-import { Button, Input, InputNumber, Modal, Select } from 'antd';
+import { Button, DatePicker, Input, InputNumber, Modal, Select } from 'antd';
 import { DEFAULT_PAGE, MAX_PAGE_SIZE } from 'global';
 import useAccountingTransactions from 'hooks/useAccountingTransactions';
+import moment, { Moment } from 'moment';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { formatNumberWithCommas } from 'utils';
 import './AddTransactionEntryModal.scss';
@@ -16,6 +17,7 @@ export interface AddTransactionEntryValues {
 	transactionName: string;
 	entries: EntryRow[];
 	remarks: string;
+	datetimeCreated?: string;
 }
 
 interface Props {
@@ -34,6 +36,7 @@ export const AddTransactionEntryModal = ({
 	>(null);
 	const [entries, setEntries] = useState<EntryRow[]>([]);
 	const [remarks, setRemarks] = useState('');
+	const [entryDate, setEntryDate] = useState<Moment>(moment());
 	const firstAmountRef = useRef<any>(null);
 
 	const { data } = useAccountingTransactions({
@@ -118,6 +121,7 @@ export const AddTransactionEntryModal = ({
 		setSelectedTransactionId(null);
 		setEntries([]);
 		setRemarks('');
+		setEntryDate(moment());
 		setLockedRows(new Set());
 	}, []);
 
@@ -134,6 +138,7 @@ export const AddTransactionEntryModal = ({
 			transactionName: txn?.name || '',
 			entries,
 			remarks,
+			datetimeCreated: entryDate.format('YYYY-MM-DD'),
 		});
 		resetModalState();
 	}, [
@@ -141,6 +146,7 @@ export const AddTransactionEntryModal = ({
 		transactions,
 		entries,
 		remarks,
+		entryDate,
 		onSubmit,
 		resetModalState,
 	]);
@@ -160,6 +166,17 @@ export const AddTransactionEntryModal = ({
 			onCancel={handleClose}
 		>
 			<div className="AddTransactionEntryModal_form">
+				<div className="AddTransactionEntryModal_dateRow">
+					<span className="AddTransactionEntryModal_dateLabel">Date</span>
+					<DatePicker
+						allowClear={false}
+						className="AddTransactionEntryModal_datePicker"
+						format="MMMM DD, YYYY"
+						value={entryDate}
+						onChange={(value) => value && setEntryDate(value)}
+					/>
+				</div>
+
 				<div className="AddTransactionEntryModal_searchItem">
 					<Select
 						className="w-100"

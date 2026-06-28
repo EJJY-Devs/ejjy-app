@@ -16,6 +16,7 @@ const useProducts = ({ params, options }: Query) =>
 			'useProducts',
 			params?.branchId,
 			params?.ids,
+			params?.ordering,
 			params?.page,
 			params?.pageSize,
 			params?.productCategory,
@@ -31,6 +32,7 @@ const useProducts = ({ params, options }: Query) =>
 					{
 						branch_id: params?.branchId,
 						ids: params?.ids,
+						ordering: params?.ordering,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						page: params?.page || DEFAULT_PAGE,
 						product_category: params?.productCategory,
@@ -472,6 +474,8 @@ export const useLatestProductDatetime = (options?: any) =>
 		{
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => query.data.results[0]?.datetime_updated ?? null,
+			refetchInterval: 30_000,
+			refetchIntervalInBackground: true,
 			...options,
 		},
 	);

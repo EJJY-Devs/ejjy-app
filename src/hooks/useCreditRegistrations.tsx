@@ -7,7 +7,13 @@ import { getLocalApiUrl, getOnlineApiUrl, isStandAlone } from 'utils';
 
 const useCreditRegistrations = ({ params }: Query = {}) =>
 	useQuery<any>(
-		['useCreditRegistrations', params?.page, params?.pageSize, params?.search],
+		[
+			'useCreditRegistrations',
+			params?.page,
+			params?.pageSize,
+			params?.search,
+			params?.isActive,
+		],
 		() => {
 			const service = isStandAlone()
 				? CreditRegistrationsService.list
@@ -19,6 +25,7 @@ const useCreditRegistrations = ({ params }: Query = {}) =>
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						search: params?.search,
+						is_active: params?.isActive,
 					},
 					getLocalApiUrl(),
 				),

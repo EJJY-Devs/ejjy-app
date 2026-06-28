@@ -1,13 +1,17 @@
 import axios from 'axios';
 import { IListRequest } from './interfaces';
 
+interface List extends IListRequest {
+	is_active?: boolean;
+}
+
 interface Modify {
 	account_id?: string;
 	credit_limit?: string;
 }
 
 const service = {
-	list: async (params: IListRequest, baseURL: string) =>
+	list: async (params: List, baseURL: string) =>
 		axios.get('/credit-registrations/', { baseURL, params }),
 
 	create: async (body: Modify, baseURL: string) =>

@@ -79,6 +79,7 @@ export const TabEmployees = ({ disabled }: Props) => {
 		params: {
 			...params,
 			type: accountTypes.EMPLOYEE,
+			isActive: true,
 		},
 	});
 
@@ -255,7 +256,11 @@ export const TabEmployees = ({ disabled }: Props) => {
 											: 'Never'}
 									</Descriptions.Item>
 									<Descriptions.Item label={<strong>Status</strong>}>
-										<Tag color="green">Active</Tag>
+										{account.is_active ? (
+											<Tag color="green">Active</Tag>
+										) : (
+											<Tag color="red">Inactive</Tag>
+										)}
 									</Descriptions.Item>
 								</Descriptions>
 							</div>

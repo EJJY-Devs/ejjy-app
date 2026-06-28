@@ -18,6 +18,7 @@ import {
 import { useBranchProducts, useBranches, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
+import { Cart } from 'screens/Shared/Cart';
 import { useUserStore } from 'stores';
 import { convertIntoArray, formatQuantity, isUserFromOffice } from 'utils';
 
@@ -32,9 +33,14 @@ export const TabBranchProducts = () => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedBranchProduct, setSelectedBranchProduct] = useState(null);
+	const [
+		isAdjustmentSlipCartVisible,
+		setIsAdjustmentSlipCartVisible,
+	] = useState(false);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
+	const user = useUserStore((state) => state.user);
 	const {
 		data: { branchProducts, total },
 		isFetching: isFetchingBranchProducts,
@@ -75,6 +81,13 @@ export const TabBranchProducts = () => {
 		setDataSource(data);
 	}, [branchProducts]);
 
+	let adjSlipTooltip = '';
+	if (!params.branchId) {
+		adjSlipTooltip = 'Please select a branch first';
+	} else if (branchProducts.length === 0) {
+		adjSlipTooltip = 'No negative-balance products for this branch';
+	}
+
 	return (
 		<>
 			<TableHeader title="Branch Products" wrapperClassName="pt-2 px-0" />
@@ -85,6 +98,20 @@ export const TabBranchProducts = () => {
 			/>
 
 			<Filter />
+
+			{isUserFromOffice(user.user_type) && (
+				<div className="mb-4" style={{ textAlign: 'right' }}>
+					<Tooltip title={adjSlipTooltip}>
+						<Button
+							disabled={!params.branchId || branchProducts.length === 0}
+							type="primary"
+							onClick={() => setIsAdjustmentSlipCartVisible(true)}
+						>
+							Create Adjustment Slip
+						</Button>
+					</Tooltip>
+				</div>
+			)}
 
 			<Table
 				columns={columns}
@@ -112,6 +139,15 @@ export const TabBranchProducts = () => {
 				<CreateBalanceAdjustmentLogModal
 					branchProduct={selectedBranchProduct}
 					onClose={() => setSelectedBranchProduct(null)}
+				/>
+			)}
+
+			{isAdjustmentSlipCartVisible && (
+				<Cart
+					prePopulatedProducts={branchProducts}
+					preSelectedBranchId={params.branchId ? String(params.branchId) : null}
+					type="Adjustment Slip"
+					onClose={() => setIsAdjustmentSlipCartVisible(false)}
 				/>
 			)}
 		</>

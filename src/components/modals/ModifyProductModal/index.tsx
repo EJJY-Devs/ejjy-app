@@ -1,7 +1,8 @@
-import { message, Modal } from 'antd';
+import { message, Modal, Spin } from 'antd';
 import { RequestErrors } from 'components/RequestErrors';
 import { MAX_PAGE_SIZE } from 'global';
 import {
+	useBranchProducts,
 	usePatronageSystemTags,
 	useProductCreate,
 	useProductEdit,
@@ -20,6 +21,13 @@ interface Props {
 export const ModifyProductModal = ({ product, onClose, onSuccess }: Props) => {
 	// CUSTOM HOOKS
 	const {
+		data: { branchProducts },
+		isFetchedAfterMount: isBranchProductsFetchedAfterMount,
+	} = useBranchProducts({
+		params: { productIds: product?.id },
+		options: { enabled: !!product },
+	});
+	const {
 		data: { patronageSystemTags },
 		isFetching: isFetchingPatronageSystemTags,
 	} = usePatronageSystemTags({
@@ -36,6 +44,9 @@ export const ModifyProductModal = ({ product, onClose, onSuccess }: Props) => {
 		isLoading: isEditingProduct,
 		error: editProductError,
 	} = useProductEdit();
+
+	const isDailyChecked = branchProducts?.[0]?.is_daily_checked ?? false;
+	const isFormReady = !product || isBranchProductsFetchedAfterMount;
 
 	// METHODS
 	const handleSubmit = async (formData) => {
@@ -88,15 +99,24 @@ export const ModifyProductModal = ({ product, onClose, onSuccess }: Props) => {
 				withSpaceBottom
 			/>
 
-			<ModifyProductForm
-				isLoading={
-					isCreatingProduct || isEditingProduct || isFetchingPatronageSystemTags
-				}
-				patronageSystemTags={patronageSystemTags}
-				product={product}
-				onClose={onClose}
-				onSubmit={handleSubmit}
-			/>
+			{isFormReady ? (
+				<ModifyProductForm
+					isDailyChecked={isDailyChecked}
+					isLoading={
+						isCreatingProduct ||
+						isEditingProduct ||
+						isFetchingPatronageSystemTags
+					}
+					patronageSystemTags={patronageSystemTags}
+					product={product}
+					onClose={onClose}
+					onSubmit={handleSubmit}
+				/>
+			) : (
+				<div style={{ textAlign: 'center', padding: '40px 0' }}>
+					<Spin size="large" />
+				</div>
+			)}
 		</Modal>
 	);
 };

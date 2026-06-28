@@ -2,4 +2,30 @@
 
 .ProductTable {
 	margin-top: 1.5em;
+
+	&_centeredInput {
+		.ant-input-number-input {
+			text-align: center;
+		}
+	}
+
+	&_costInput {
+		background: transparent !important;
+		border-bottom: 1px dashed #aaa !important;
+		border-radius: 0 !important;
+		margin: 0 16px;
+		width: 120px !important;
+
+		&:hover,
+		&:focus-within {
+			border-bottom-color: #1890ff !important;
+		}
+
+		.ant-input-number-input {
+			background: transparent !important;
+			height: 24px;
+			padding: 0 2px;
+			text-align: center;
+		}
+	}
 }

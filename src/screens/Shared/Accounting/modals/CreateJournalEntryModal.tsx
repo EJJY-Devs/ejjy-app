@@ -1,6 +1,8 @@
-import { Button, Form, Input, InputNumber, Modal, Select } from 'antd';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, DatePicker, Input, InputNumber, Modal, Select } from 'antd';
 import { DEFAULT_PAGE } from 'global';
 import useChartOfAccounts from 'hooks/useChartOfAccounts';
+import moment, { Moment } from 'moment';
 import { formatNumberWithCommas } from 'utils';
 import React, {
 	useCallback,
@@ -10,15 +12,31 @@ import React, {
 	useState,
 } from 'react';
 
+interface EntryRow {
+	debitAccount: string;
+	creditAccount: string;
+	amount: number | null;
+}
+
+interface ActiveCell {
+	rowIndex: number;
+	field: 'debitAccount' | 'creditAccount';
+}
+
+const createEmptyRow = (): EntryRow => ({
+	debitAccount: '',
+	creditAccount: '',
+	amount: null,
+});
+
 interface Props {
 	isSubmitting?: boolean;
 	open: boolean;
 	onClose: () => void;
 	onSubmit: (values: {
-		debitAccount: string;
-		creditAccount: string;
-		amount: number;
+		entries: { debitAccount: string; creditAccount: string; amount: number }[];
 		remarks?: string;
+		datetimeCreated?: string;
 	}) => Promise<void> | void;
 }
 
@@ -28,20 +46,22 @@ export const CreateJournalEntryModal = ({
 	onClose,
 	onSubmit,
 }: Props) => {
-	const [form] = Form.useForm();
-	const amountRef = useRef<any>(null);
-	const remarksRef = useRef<any>(null);
 	const searchSelectRef = useRef<any>(null);
-	const debitAccountValue = Form.useWatch('debitAccount', form);
-	const creditAccountValue = Form.useWatch('creditAccount', form);
-	const [activeField, setActiveField] = useState<
-		'debitAccount' | 'creditAccount' | null
-	>('debitAccount');
-	const [isAmountLocked, setIsAmountLocked] = useState(false);
+	const amountRefs = useRef<any[]>([]);
+
+	const [entries, setEntries] = useState<EntryRow[]>([createEmptyRow()]);
+	const [activeCell, setActiveCell] = useState<ActiveCell | null>({
+		rowIndex: 0,
+		field: 'debitAccount',
+	});
+	const [lockedAmounts, setLockedAmounts] = useState<Set<number>>(new Set());
+	const [remarks, setRemarks] = useState('');
+	const [entryDate, setEntryDate] = useState<Moment>(moment());
 	const [searchText, setSearchText] = useState('');
 	const [selectedSearchValue, setSelectedSearchValue] = useState<string | null>(
 		null,
 	);
+
 	const { data, isFetching } = useChartOfAccounts({
 		params: {
 			page: DEFAULT_PAGE,
@@ -58,17 +78,17 @@ export const CreateJournalEntryModal = ({
 		if (len <= 40) return 13;
 		return 11;
 	}, []);
-	const isAccountSelectionComplete = Boolean(
-		debitAccountValue && creditAccountValue,
-	);
 
-	const resetModalState = () => {
-		form.resetFields();
-		setActiveField('debitAccount');
-		setIsAmountLocked(false);
+	const resetModalState = useCallback(() => {
+		setEntries([createEmptyRow()]);
+		setActiveCell({ rowIndex: 0, field: 'debitAccount' });
+		setLockedAmounts(new Set());
+		setRemarks('');
+		setEntryDate(moment());
 		setSearchText('');
 		setSelectedSearchValue(null);
-	};
+		amountRefs.current = [];
+	}, []);
 
 	const handleClose = () => {
 		resetModalState();
@@ -80,28 +100,30 @@ export const CreateJournalEntryModal = ({
 			resetModalState();
 			return;
 		}
-
 		resetModalState();
-
 		setTimeout(() => {
 			searchSelectRef.current?.focus?.();
 		}, 0);
 	}, [open]);
 
 	const accountOptions = useMemo(() => {
-		const blockedValues = [
-			debitAccountValue,
-			creditAccountValue,
-		].filter((value): value is string => Boolean(value));
 		const normalizedSearchText = searchText.trim().toLowerCase();
+		const blockedValues: string[] = [];
+		if (activeCell) {
+			const row = entries[activeCell.rowIndex];
+			if (row) {
+				const otherValue =
+					activeCell.field === 'debitAccount'
+						? row.creditAccount
+						: row.debitAccount;
+				if (otherValue) blockedValues.push(otherValue);
+			}
+		}
 
 		return chartOfAccounts
 			.map((account: any) => {
 				const label = `${account.account_code} - ${account.account_name}`;
-				return {
-					label,
-					value: label,
-				};
+				return { label, value: label };
 			})
 			.filter((option: any) => !blockedValues.includes(option.value))
 			.filter(
@@ -109,37 +131,126 @@ export const CreateJournalEntryModal = ({
 					!normalizedSearchText ||
 					option.label.toLowerCase().includes(normalizedSearchText),
 			);
-	}, [chartOfAccounts, creditAccountValue, debitAccountValue, searchText]);
+	}, [chartOfAccounts, searchText, activeCell, entries]);
 
 	const handleAccountSelect = (value: string) => {
-		form.setFieldsValue({
-			[activeField]: value,
+		if (!activeCell) return;
+		const { rowIndex, field } = activeCell;
+
+		setEntries((prev) => {
+			const updated = [...prev];
+			updated[rowIndex] = { ...updated[rowIndex], [field]: value };
+			return updated;
 		});
 
-		if (activeField === 'debitAccount') {
-			setActiveField('creditAccount');
+		if (field === 'debitAccount') {
+			setActiveCell({ rowIndex, field: 'creditAccount' });
 		} else {
-			setActiveField(null);
+			setActiveCell(null);
 			setTimeout(() => {
-				searchSelectRef.current?.blur?.();
-				amountRef.current?.focus?.();
+				amountRefs.current[rowIndex]?.focus?.();
 			}, 0);
 		}
+
 		setSelectedSearchValue(null);
 		setSearchText('');
 	};
 
-	const lockAmountAndFocusRemarks = () => {
-		const amountValue = form.getFieldValue('amount');
-		if (!isAmountLocked && typeof amountValue === 'number' && amountValue > 0) {
-			const rounded = Math.round(amountValue * 100) / 100;
-			setIsAmountLocked(true);
-			setTimeout(() => {
-				form.setFieldsValue({ amount: rounded });
-				remarksRef.current?.focus?.();
-			}, 0);
+	const lockAmount = useCallback(
+		(index: number) => {
+			const amount = entries[index]?.amount;
+			if (
+				typeof amount === 'number' &&
+				amount > 0 &&
+				!lockedAmounts.has(index)
+			) {
+				const rounded = Math.round(amount * 100) / 100;
+				setEntries((prev) => {
+					const updated = [...prev];
+					updated[index] = { ...updated[index], amount: rounded };
+					return updated;
+				});
+				setLockedAmounts((prev) => new Set(prev).add(index));
+			}
+		},
+		[entries, lockedAmounts],
+	);
+
+	const handleAmountChange = useCallback(
+		(index: number, value: number | null) => {
+			setEntries((prev) => {
+				const updated = [...prev];
+				updated[index] = { ...updated[index], amount: value };
+				return updated;
+			});
+		},
+		[],
+	);
+
+	const addEntry = () => {
+		const newIndex = entries.length;
+		setEntries((prev) => [...prev, createEmptyRow()]);
+		setActiveCell({ rowIndex: newIndex, field: 'debitAccount' });
+		setTimeout(() => {
+			searchSelectRef.current?.focus?.();
+		}, 0);
+	};
+
+	const removeEntry = (index: number) => {
+		setEntries((prev) => prev.filter((_, i) => i !== index));
+		amountRefs.current.splice(index, 1);
+		setLockedAmounts((prev) => {
+			const updated = new Set<number>();
+			prev.forEach((i) => {
+				if (i < index) updated.add(i);
+				else if (i > index) updated.add(i - 1);
+			});
+			return updated;
+		});
+		if (activeCell?.rowIndex === index) {
+			setActiveCell(null);
+		} else if (activeCell && activeCell.rowIndex > index) {
+			setActiveCell({ ...activeCell, rowIndex: activeCell.rowIndex - 1 });
 		}
 	};
+
+	const handleCellClick = (
+		rowIndex: number,
+		field: 'debitAccount' | 'creditAccount',
+	) => {
+		setActiveCell({ rowIndex, field });
+		setSearchText('');
+		setSelectedSearchValue(null);
+		setTimeout(() => {
+			searchSelectRef.current?.focus?.();
+		}, 0);
+	};
+
+	const isValid = entries.every(
+		(e) => e.debitAccount && e.creditAccount && e.amount && e.amount > 0,
+	);
+
+	const handleSubmit = async () => {
+		if (!isValid) return;
+		await onSubmit({
+			entries: entries.map((e) => ({
+				debitAccount: e.debitAccount,
+				creditAccount: e.creditAccount,
+				amount: e.amount as number,
+			})),
+			remarks: remarks || undefined,
+			datetimeCreated: entryDate.format('YYYY-MM-DD'),
+		});
+		resetModalState();
+	};
+
+	const hasMultipleRows = entries.length > 1;
+	const gridClass = `CreateJournalEntryModal_gridInputs${
+		hasMultipleRows ? ' has-delete' : ''
+	}`;
+	const labelsClass = `CreateJournalEntryModal_gridLabels${
+		hasMultipleRows ? ' has-delete' : ''
+	}`;
 
 	return (
 		<Modal
@@ -155,25 +266,29 @@ export const CreateJournalEntryModal = ({
 			keyboard
 			onCancel={handleClose}
 		>
-			<Form
-				className="CreateJournalEntryModal_form"
-				form={form}
-				layout="vertical"
-				onFinish={async (values) => {
-					await onSubmit(values);
-					resetModalState();
-				}}
-			>
-				<Form.Item className="CreateJournalEntryModal_searchItem">
+			<div className="CreateJournalEntryModal_form">
+				<div className="CreateJournalEntryModal_dateRow">
+					<span className="CreateJournalEntryModal_dateLabel">Date</span>
+					<DatePicker
+						allowClear={false}
+						className="CreateJournalEntryModal_datePicker"
+						format="MMMM DD, YYYY"
+						value={entryDate}
+						onChange={(value) => value && setEntryDate(value)}
+					/>
+				</div>
+
+				<div className="CreateJournalEntryModal_searchItem">
 					<Select
 						ref={searchSelectRef}
-						disabled={isAccountSelectionComplete}
+						className="w-100"
+						disabled={!activeCell}
 						filterOption={false}
 						loading={isFetching}
 						notFoundContent={isFetching ? 'Loading...' : 'No accounts found'}
 						options={accountOptions}
 						placeholder={
-							activeField === 'debitAccount'
+							activeCell?.field === 'debitAccount'
 								? 'Search account for debit'
 								: 'Search account for credit'
 						}
@@ -190,64 +305,91 @@ export const CreateJournalEntryModal = ({
 						onSearch={(value) => setSearchText(value)}
 						onSelect={(value) => handleAccountSelect(value)}
 					/>
-				</Form.Item>
+				</div>
 
-				<div className="CreateJournalEntryModal_gridLabels">
+				<div className={labelsClass}>
 					<span>DEBIT</span>
 					<span>CREDIT</span>
 					<span>AMOUNT</span>
+					{hasMultipleRows && <span />}
 				</div>
 
-				<div className="CreateJournalEntryModal_gridInputs">
-					<Form.Item
-						name="debitAccount"
-						rules={[{ required: true, message: 'Debit account is required' }]}
-					>
-						<Input
-							className={
-								!isAccountSelectionComplete && activeField === 'debitAccount'
-									? 'CreateJournalEntryModal_activeInput'
-									: ''
-							}
-							placeholder="Select from search"
-							style={{ fontSize: getAccountFontSize(debitAccountValue) }}
-							title={debitAccountValue}
-							disabled
-							readOnly
-						/>
-					</Form.Item>
-
-					<Form.Item
-						name="creditAccount"
-						rules={[{ required: true, message: 'Credit account is required' }]}
-					>
-						<Input
-							className={
-								!isAccountSelectionComplete && activeField === 'creditAccount'
-									? 'CreateJournalEntryModal_activeInput'
-									: ''
-							}
-							placeholder="Select from search"
-							style={{ fontSize: getAccountFontSize(creditAccountValue) }}
-							title={creditAccountValue}
-							disabled
-							readOnly
-						/>
-					</Form.Item>
-
-					<Form.Item
-						name="amount"
-						rules={[{ required: true, message: 'Amount is required' }]}
-					>
+				{entries.map((entry, index) => (
+					<div key={index} className={gridClass}>
+						<div
+							role="button"
+							style={{ cursor: 'pointer' }}
+							tabIndex={0}
+							onClick={() => handleCellClick(index, 'debitAccount')}
+							onKeyDown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ')
+									handleCellClick(index, 'debitAccount');
+							}}
+						>
+							<Input
+								className={
+									activeCell?.rowIndex === index &&
+									activeCell?.field === 'debitAccount'
+										? 'CreateJournalEntryModal_activeInput'
+										: ''
+								}
+								placeholder="Select from search"
+								style={{
+									fontSize: getAccountFontSize(entry.debitAccount),
+									pointerEvents: 'none',
+								}}
+								title={entry.debitAccount}
+								value={entry.debitAccount}
+								disabled
+								readOnly
+							/>
+						</div>
+						<div
+							role="button"
+							style={{ cursor: 'pointer' }}
+							tabIndex={0}
+							onClick={() => handleCellClick(index, 'creditAccount')}
+							onKeyDown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ')
+									handleCellClick(index, 'creditAccount');
+							}}
+						>
+							<Input
+								className={
+									activeCell?.rowIndex === index &&
+									activeCell?.field === 'creditAccount'
+										? 'CreateJournalEntryModal_activeInput'
+										: ''
+								}
+								placeholder="Select from search"
+								style={{
+									fontSize: getAccountFontSize(entry.creditAccount),
+									pointerEvents: 'none',
+								}}
+								title={entry.creditAccount}
+								value={entry.creditAccount}
+								disabled
+								readOnly
+							/>
+						</div>
 						<InputNumber
-							key={isAmountLocked ? 'locked' : 'unlocked'}
-							ref={amountRef}
+							key={
+								lockedAmounts.has(index)
+									? `locked-${index}`
+									: `unlocked-${index}`
+							}
+							ref={(el) => {
+								amountRefs.current[index] = el;
+							}}
 							className="w-100"
 							controls={false}
-							disabled={!isAccountSelectionComplete || isAmountLocked}
+							disabled={
+								!(entry.debitAccount && entry.creditAccount) ||
+								lockedAmounts.has(index)
+							}
 							formatter={(value) => {
 								if (!value) return '₱ ';
-								if (isAmountLocked) {
+								if (lockedAmounts.has(index)) {
 									return `₱ ${formatNumberWithCommas(
 										Number(value).toFixed(2),
 									)}`;
@@ -259,7 +401,9 @@ export const CreateJournalEntryModal = ({
 								Number((value || '').replace(/₱\s?|,/g, '')) as any
 							}
 							precision={2}
-							onBlur={lockAmountAndFocusRemarks}
+							value={entry.amount}
+							onBlur={() => lockAmount(index)}
+							onChange={(val) => handleAmountChange(index, val)}
 							onKeyDown={(e) => {
 								const allowedKeys = [
 									'Backspace',
@@ -275,15 +419,37 @@ export const CreateJournalEntryModal = ({
 								}
 								e.preventDefault();
 							}}
-							onPressEnter={lockAmountAndFocusRemarks}
+							onPressEnter={() => lockAmount(index)}
 						/>
-					</Form.Item>
-				</div>
+						{hasMultipleRows && (
+							<Button
+								icon={<DeleteOutlined />}
+								style={{ height: 64 }}
+								type="text"
+								danger
+								onClick={() => removeEntry(index)}
+							/>
+						)}
+					</div>
+				))}
+
+				<Button
+					className="CreateJournalEntryModal_addEntryBtn"
+					icon={<PlusOutlined />}
+					style={{ marginBottom: 16, marginTop: 4 }}
+					type="primary"
+					ghost
+					onClick={addEntry}
+				>
+					Add Entry
+				</Button>
 
 				<div className="CreateJournalEntryModal_remarksLabel">Remarks</div>
-				<Form.Item name="remarks">
-					<Input ref={remarksRef} />
-				</Form.Item>
+				<Input
+					style={{ marginBottom: 14 }}
+					value={remarks}
+					onChange={(e) => setRemarks(e.target.value)}
+				/>
 
 				<div className="ModalCustomFooter">
 					<Button
@@ -297,11 +463,17 @@ export const CreateJournalEntryModal = ({
 					>
 						Clear
 					</Button>
-					<Button htmlType="submit" loading={isSubmitting} type="primary">
+					<Button
+						disabled={!isValid}
+						htmlType="button"
+						loading={isSubmitting}
+						type="primary"
+						onClick={handleSubmit}
+					>
 						Submit
 					</Button>
 				</div>
-			</Form>
+			</div>
 		</Modal>
 	);
 };

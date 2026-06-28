@@ -1,4 +1,4 @@
-import { message, Modal, Spin, Tabs } from 'antd';
+import { Col, message, Modal, Row, Spin, Tabs, Tag } from 'antd';
 import { RequestErrors } from 'components';
 import {
 	AuthorizationModal,
@@ -16,6 +16,7 @@ import React, { useState } from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
+	formatInPeso,
 	getAppType,
 	getGoogleApiUrl,
 	getId,
@@ -23,6 +24,12 @@ import {
 	getLocalBranchId,
 } from 'utils';
 import { PricesForm } from './PricesForm';
+
+interface CostDiffInfo {
+	oldCost: number;
+	newCost: number;
+	diff: number;
+}
 
 const tabs = {
 	ALL: 'General Products',
@@ -32,10 +39,18 @@ const tabs = {
 interface Props {
 	product: any;
 	isBulkEdit?: boolean;
+	costDiffInfo?: CostDiffInfo;
+	onSuccess?: () => void;
 	onClose: any;
 }
 
-export const PricesModal = ({ product, isBulkEdit, onClose }: Props) => {
+export const PricesModal = ({
+	product,
+	isBulkEdit,
+	costDiffInfo,
+	onSuccess,
+	onClose,
+}: Props) => {
 	// STATES
 	const [isAuthorized, setIsAuthorized] = useState(false);
 	const [
@@ -115,6 +130,7 @@ export const PricesModal = ({ product, isBulkEdit, onClose }: Props) => {
 		}
 
 		message.success(`Prices for ${product.name} was set successfully`);
+		onSuccess?.();
 		onClose();
 	};
 
@@ -180,6 +196,38 @@ export const PricesModal = ({ product, isBulkEdit, onClose }: Props) => {
 				]}
 				withSpaceBottom
 			/>
+
+			{costDiffInfo && (
+				<Row
+					className="mb-4"
+					gutter={16}
+					style={{
+						background: '#f5f5f5',
+						borderRadius: 6,
+						padding: '10px 16px',
+					}}
+				>
+					<Col span={8}>
+						<div style={{ fontSize: 11, color: '#8c8c8c' }}>Current Cost</div>
+						<div style={{ fontWeight: 600 }}>
+							{formatInPeso(costDiffInfo.oldCost)}
+						</div>
+					</Col>
+					<Col span={8}>
+						<div style={{ fontSize: 11, color: '#8c8c8c' }}>Purchase Cost</div>
+						<div style={{ fontWeight: 600 }}>
+							{formatInPeso(costDiffInfo.newCost)}
+						</div>
+					</Col>
+					<Col span={8}>
+						<div style={{ fontSize: 11, color: '#8c8c8c' }}>Difference</div>
+						<Tag color={costDiffInfo.diff > 0 ? 'red' : 'green'}>
+							{costDiffInfo.diff > 0 ? '+' : '-'}
+							{formatInPeso(Math.abs(costDiffInfo.diff))}
+						</Tag>
+					</Col>
+				</Row>
+			)}
 
 			<Spin spinning={isLoading}>
 				{isBulkEdit && (

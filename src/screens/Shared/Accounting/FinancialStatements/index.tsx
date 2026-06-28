@@ -13,6 +13,7 @@ import {
 	useBranches,
 	useNotesToFinancialStatements,
 	useQueryParams,
+	useStatementOfCashFlows,
 	useStatementOfChangesInEquity,
 	useStatementOfFinancialPerformance,
 	useStatementOfFinancialPosition,
@@ -23,6 +24,7 @@ import { formatInPeso, getLocalBranchId } from 'utils';
 import { StatementOfFinancialPerformanceModal } from 'screens/Shared/Accounting/modals/StatementOfFinancialPerformanceModal';
 import { StatementOfFinancialPositionModal } from 'screens/Shared/Accounting/modals/StatementOfFinancialPositionModal';
 import { StatementOfChangesInEquityModal } from 'screens/Shared/Accounting/modals/StatementOfChangesInEquityModal';
+import { StatementOfCashFlowsModal } from 'screens/Shared/Accounting/modals/StatementOfCashFlowsModal';
 import { NotesToFinancialStatementsModal } from 'screens/Shared/Accounting/modals/NotesToFinancialStatementsModal';
 import { getAppType } from 'utils/localStorage';
 import './style.scss';
@@ -45,6 +47,7 @@ export const FinancialStatements = () => {
 		activeStatement === 'Statement of Financial Position';
 	const isChangesInEquityOpen =
 		activeStatement === 'Statement of Changes in Equity';
+	const isCashFlowsOpen = activeStatement === 'Statement of Cash Flows';
 	const isNotesToFinancialStatementsOpen =
 		activeStatement === 'Notes to Financial Statements';
 	const { params, setQueryParams } = useQueryParams({
@@ -213,6 +216,19 @@ export const FinancialStatements = () => {
 		},
 		options: {
 			enabled: isChangesInEquityOpen,
+		},
+	});
+
+	const {
+		data: cashFlowsData = null,
+		isFetching: isFetchingCashFlows,
+	} = useStatementOfCashFlows({
+		params: {
+			branchId: selectedBranchId,
+			timeRange: params.financialStatementsTimeRange,
+		},
+		options: {
+			enabled: isCashFlowsOpen,
 		},
 	});
 
@@ -809,6 +825,255 @@ export const FinancialStatements = () => {
 		selectedBranchLabel,
 	]);
 
+	const cashFlowPeriodType = useMemo(() => {
+		const value = String(
+			params.financialStatementsTimeRange || timeRangeTypes.DAILY,
+		);
+
+		if (value === timeRangeTypes.DAILY) return 'daily' as const;
+
+		const parts = value.split(',');
+		if (parts.length === 2) {
+			const start = moment(parts[0].trim(), DATE_FORMAT, true);
+			const end = moment(parts[1].trim(), DATE_FORMAT, true);
+			if (start.isValid() && end.isValid()) {
+				const isFullYear =
+					start.date() === 1 &&
+					start.month() === 0 &&
+					end.date() === 31 &&
+					end.month() === 11 &&
+					start.year() === end.year();
+				if (isFullYear) return 'annual' as const;
+
+				const isFullMonth =
+					start.isSame(start.clone().startOf('month'), 'day') &&
+					end.isSame(end.clone().endOf('month'), 'day') &&
+					start.isSame(end, 'month') &&
+					start.isSame(end, 'year');
+				if (isFullMonth) return 'monthly' as const;
+
+				return 'range' as const;
+			}
+		}
+
+		return 'daily' as const;
+	}, [params.financialStatementsTimeRange]);
+
+	const cashFlowsModalEntry = useMemo(() => {
+		const formatAmount = (value: number | string) => formatInPeso(value, '₱ ');
+		// Reversed treatment: increase = deduction (negative), decrease = addition (positive)
+		const formatReversed = (value: number | undefined) =>
+			formatAmount(-(value ?? 0));
+		const rows: Array<{
+			id: number;
+			code?: string;
+			label: string;
+			amount: string;
+			isSection?: boolean;
+			isTotal?: boolean;
+			isGrandTotal?: boolean;
+			isSpacer?: boolean;
+			amountBottomBold?: boolean;
+		}> = [];
+
+		const pushRow = (row: Omit<typeof rows[number], 'id'>) => {
+			rows.push({ id: rows.length + 1, ...row });
+		};
+
+		// Operating Activities
+		pushRow({
+			label: 'Cash Flows from Operating Activities',
+			amount: '',
+			isSection: true,
+		});
+		pushRow({
+			code: '9006',
+			label: 'Net Income / (Loss)',
+			amount: formatAmount(cashFlowsData?.net_income),
+		});
+		pushRow({
+			code: '6400',
+			label: 'Add: Depreciation Expense',
+			amount: formatAmount(cashFlowsData?.depreciation_expense),
+		});
+		pushRow({
+			code: '9015',
+			label: 'Increase in Accounts Receivable',
+			amount: formatReversed(cashFlowsData?.increase_in_accounts_receivable),
+			isReversed: true,
+		});
+		pushRow({
+			code: '9016',
+			label: 'Increase in Inventory',
+			amount: formatReversed(cashFlowsData?.increase_in_inventory),
+			isReversed: true,
+		});
+		pushRow({
+			code: '9017',
+			label: 'Increase in Prepaid Expenses',
+			amount: formatReversed(cashFlowsData?.increase_in_prepaid_expenses),
+			isReversed: true,
+		});
+		pushRow({
+			code: '9018',
+			label: 'Increase in Advances Receivable',
+			amount: formatReversed(cashFlowsData?.increase_in_advances_receivable),
+			isReversed: true,
+		});
+		pushRow({
+			code: '9019',
+			label: 'Increase in Accounts Payable',
+			amount: formatAmount(cashFlowsData?.increase_in_accounts_payable),
+		});
+		pushRow({
+			code: '9020',
+			label: 'Increase in Salaries Payable',
+			amount: formatAmount(cashFlowsData?.increase_in_salaries_payable),
+		});
+		pushRow({
+			code: '9021',
+			label: 'Increase in Utilities Payable',
+			amount: formatAmount(cashFlowsData?.increase_in_utilities_payable),
+		});
+		pushRow({
+			code: '9022',
+			label: 'Increase in Accrued Expenses',
+			amount: formatAmount(cashFlowsData?.increase_in_accrued_expenses),
+			amountBottomBold: true,
+		});
+		pushRow({
+			code: '9023',
+			label: 'Net Cash from Operating Activities',
+			amount: formatAmount(cashFlowsData?.net_cash_from_operating_activities),
+			isTotal: true,
+		});
+
+		pushRow({ label: '', amount: '', isSpacer: true });
+
+		// Investing Activities
+		pushRow({
+			label: 'Cash Flows from Investing Activities',
+			amount: '',
+			isSection: true,
+		});
+		pushRow({
+			code: '9024',
+			label: 'Purchase of Land',
+			amount: formatReversed(cashFlowsData?.purchase_of_land),
+			isReversed: true,
+		});
+		pushRow({
+			code: '9025',
+			label: 'Purchase of Building',
+			amount: formatReversed(cashFlowsData?.purchase_of_building),
+			isReversed: true,
+		});
+		pushRow({
+			code: '9026',
+			label: 'Purchase of Equipment',
+			amount: formatReversed(cashFlowsData?.purchase_of_equipment),
+			isReversed: true,
+		});
+		pushRow({
+			code: '9027',
+			label: 'Purchase of Vehicles',
+			amount: formatReversed(cashFlowsData?.purchase_of_vehicles),
+			isReversed: true,
+		});
+		pushRow({
+			code: '9028',
+			label: 'Increase in Leasehold Improvements',
+			amount: formatReversed(cashFlowsData?.leasehold_improvements),
+			amountBottomBold: true,
+			isReversed: true,
+		});
+		pushRow({
+			code: '9029',
+			label: 'Net Cash Used in Investing Activities',
+			amount: formatAmount(
+				cashFlowsData?.net_cash_used_in_investing_activities,
+			),
+			isTotal: true,
+		});
+
+		pushRow({ label: '', amount: '', isSpacer: true });
+
+		// Financing Activities
+		pushRow({
+			label: 'Cash Flows from Financing Activities',
+			amount: '',
+			isSection: true,
+		});
+		pushRow({
+			code: '3000',
+			label: 'Owner Capital Investment',
+			amount: formatAmount(cashFlowsData?.owner_capital_investment),
+		});
+		pushRow({
+			code: '3100',
+			label: 'Owner Drawings',
+			amount: formatReversed(cashFlowsData?.owner_drawings),
+			isReversed: true,
+		});
+		pushRow({
+			code: '2400',
+			label: 'Short-term Loan Proceeds',
+			amount: formatAmount(cashFlowsData?.short_term_loan_proceeds),
+		});
+		pushRow({
+			code: '2600',
+			label: 'Long-term Loan Proceeds',
+			amount: formatAmount(cashFlowsData?.long_term_loan_proceeds),
+			amountBottomBold: true,
+		});
+		pushRow({
+			code: '9030',
+			label: 'Net Increase from Financing Activities',
+			amount: formatAmount(cashFlowsData?.net_cash_from_financing_activities),
+			isTotal: true,
+		});
+
+		pushRow({ label: '', amount: '', isSpacer: true });
+
+		pushRow({
+			code: '9031',
+			label: 'Net Increase (Decrease) in Cash',
+			amount: formatAmount(cashFlowsData?.net_increase_decrease_in_cash),
+			isGrandTotal: true,
+		});
+
+		return {
+			snapshotDate: financialStatementAsOfLabel,
+			storeName:
+				cashFlowsData?.store_name ||
+				mainBranch?.store_name ||
+				headerBranch?.store_name ||
+				'',
+			storeAddress:
+				cashFlowsData?.store_address ||
+				mainBranch?.store_address ||
+				headerBranch?.store_address ||
+				'',
+			branchName:
+				cashFlowsData?.branch_name ||
+				selectedBranchLabel ||
+				mainBranch?.name ||
+				headerBranch?.name ||
+				'',
+			storeTin:
+				cashFlowsData?.store_tin || mainBranch?.tin || headerBranch?.tin || '',
+			periodType: cashFlowPeriodType,
+			rows,
+		};
+	}, [
+		financialStatementAsOfLabel,
+		cashFlowPeriodType,
+		cashFlowsData,
+		headerBranch,
+		mainBranch,
+		selectedBranchLabel,
+	]);
+
 	return (
 		<Content title="Financial Statements">
 			<Box padding>
@@ -818,6 +1083,12 @@ export const FinancialStatements = () => {
 							<Col className="FinancialStatements_timeRange">
 								<TimeRangeFilter
 									dateRangeLabel="Select Date"
+									fields={[
+										timeRangeTypes.DAILY,
+										timeRangeTypes.MONTHLY,
+										timeRangeTypes.DATE_RANGE,
+										timeRangeTypes.ANNUAL,
+									]}
 									queryName="financialStatementsTimeRange"
 									useSingleDateForDateRange
 								/>
@@ -913,6 +1184,15 @@ export const FinancialStatements = () => {
 				/>
 			)}
 
+			{isCashFlowsOpen && (
+				<StatementOfCashFlowsModal
+					entry={cashFlowsModalEntry}
+					isLoading={isFetchingCashFlows}
+					open={isCashFlowsOpen}
+					onClose={() => setActiveStatement(null)}
+				/>
+			)}
+
 			{isNotesToFinancialStatementsOpen && (
 				<NotesToFinancialStatementsModal
 					entry={notesModalEntry}
@@ -926,6 +1206,7 @@ export const FinancialStatements = () => {
 				!isFinancialPerformanceOpen &&
 				!isFinancialPositionOpen &&
 				!isChangesInEquityOpen &&
+				!isCashFlowsOpen &&
 				!isNotesToFinancialStatementsOpen && (
 					<Modal
 						className="Modal__hasFooter"

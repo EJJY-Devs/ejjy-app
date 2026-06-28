@@ -9,7 +9,7 @@ import {
 	pageSizeOptions,
 } from 'global';
 import useAuditLogs, { useAuditLogMarkAdjusted } from 'hooks/useAuditLogs';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Cart } from 'screens/Shared/Cart';
 import { convertIntoArray, getAppType, getLocalBranchId } from 'utils';
 
@@ -42,6 +42,7 @@ export const PendingAuditModal = ({ serverUrl, branchId, onClose }: Props) => {
 			status: 'pending',
 			page,
 			pageSize,
+			branchId,
 		},
 	});
 
@@ -85,11 +86,23 @@ export const PendingAuditModal = ({ serverUrl, branchId, onClose }: Props) => {
 				id: auditLog.product_id,
 				name: auditLog.name,
 				barcode: auditLog.barcode,
+				unit_of_measurement: auditLog.unit_of_measurement,
 			},
 			branch_id: branchId || getLocalBranchId(),
 		},
 		value: auditLog.captured_qty,
+		// signed excess/shortage: negative = shortage (decrease), positive = excess (increase)
+		adjustedBalance: auditLog.adjusted_balance,
 	});
+
+	// Memoize so the Cart's useEffect only re-fires when the selected audit log
+	// actually changes, not on every parent re-render (e.g. background refetches).
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	const memoizedPrePopulatedProduct = useMemo(
+		() =>
+			selectedAuditLog ? buildPrePopulatedProduct(selectedAuditLog) : null,
+		[selectedAuditLog, branchId],
+	);
 
 	const columns: ColumnsType = [
 		{ title: 'Barcode', dataIndex: 'barcode', width: 160 },
@@ -183,7 +196,7 @@ export const PendingAuditModal = ({ serverUrl, branchId, onClose }: Props) => {
 
 			{selectedAuditLog && (
 				<Cart
-					prePopulatedProduct={buildPrePopulatedProduct(selectedAuditLog)}
+					prePopulatedProduct={memoizedPrePopulatedProduct}
 					type="Adjustment Slip"
 					onAdjustmentSlipCreated={(slip) => {
 						setPendingAdjust({

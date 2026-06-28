@@ -8,6 +8,11 @@ const ACCOUNT_CATEGORY_OPTIONS = [
 	{ label: 'Special', value: 'special' },
 ];
 
+const ACCOUNT_CLASSIFICATION_OPTIONS = [
+	{ label: 'Nominal (Temporary — Reset every year)', value: 'nominal' },
+	{ label: 'Real (Permanent — Balances carry over)', value: 'real' },
+];
+
 type Option = { label: string; value: number };
 
 interface Props {
@@ -129,6 +134,17 @@ export const CreateAccountModal = ({
 					rules={[{ required: true, message: 'Account category is required' }]}
 				>
 					<Select options={ACCOUNT_CATEGORY_OPTIONS} />
+				</Form.Item>
+
+				<Form.Item
+					initialValue="nominal"
+					label="Account Classification"
+					name="accountClassification"
+					rules={[
+						{ required: true, message: 'Account classification is required' },
+					]}
+				>
+					<Select options={ACCOUNT_CLASSIFICATION_OPTIONS} />
 				</Form.Item>
 
 				<Form.Item

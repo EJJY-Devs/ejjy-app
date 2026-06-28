@@ -69,17 +69,18 @@ export const useAdjustmentSlipCreate = () => {
 		{
 			onSuccess: () => {
 				queryClient.invalidateQueries('useAdjustmentSlips');
+				queryClient.invalidateQueries('useBranchProductBalances');
 			},
 		},
 	);
 };
 
-export const useAdjustmentSlipRetrieve = (id: number) =>
+export const useAdjustmentSlipRetrieve = (id: number, serverUrl?: string) =>
 	useQuery<any>(
 		['useAdjustmentSlipRetrieve', id],
 		() =>
 			wrapServiceWithCatch(
-				AdjustmentSlipsService.retrieve(id, getLocalApiUrl()),
+				AdjustmentSlipsService.retrieve(id, serverUrl || getLocalApiUrl()),
 			),
 		{
 			enabled: !!id,

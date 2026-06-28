@@ -66,7 +66,6 @@ import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	formatDateTime,
-	getAppTagPrinterFontFamily,
 	getAppTagPrinterFontSize,
 	getAppTagPrinterPaperHeight,
 	getAppTagPrinterPaperWidth,
@@ -75,6 +74,7 @@ import {
 	getLocalBranchId,
 	isUserFromOffice,
 	isStandAlone,
+	getAppReceiptPrinterFontFamily,
 } from 'utils';
 
 const columns: ColumnsType = [
@@ -118,7 +118,8 @@ export const Products = () => {
 		enabled: getAppType() !== appTypes.BACK_OFFICE,
 	});
 	const { data: latestBranchProductDatetime } = useLatestBranchProductDatetime({
-		enabled: getAppType() === appTypes.BACK_OFFICE,
+		params: { branchId: getLocalBranchId() },
+		options: { enabled: getAppType() === appTypes.BACK_OFFICE },
 	});
 	const {
 		data: { products, total: productsTotal },
@@ -292,7 +293,7 @@ export const Products = () => {
 			paperWidth: tagWidth,
 			paperHeight: tagHeight,
 			fontSize: Number(getAppTagPrinterFontSize()),
-			fontFamily: getAppTagPrinterFontFamily(),
+			fontFamily: getAppReceiptPrinterFontFamily(),
 		});
 
 		setIsCreatingPdf(false);

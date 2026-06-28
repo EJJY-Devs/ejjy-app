@@ -30,6 +30,11 @@ interface NotesToFinancialStatements {
 	time_range?: string;
 }
 
+interface StatementOfCashFlows {
+	branch_id?: number;
+	time_range?: string;
+}
+
 const service = {
 	list: async (params: List, baseURL: string) =>
 		axios.get('/trial-balance/', { baseURL, params }),
@@ -69,6 +74,12 @@ const service = {
 		baseURL: string,
 	) =>
 		axios.get('/trial-balance/notes-to-financial-statements/', {
+			baseURL,
+			params,
+		}),
+
+	statementOfCashFlows: async (params: StatementOfCashFlows, baseURL: string) =>
+		axios.get('/trial-balance/statement-of-cash-flows/', {
 			baseURL,
 			params,
 		}),

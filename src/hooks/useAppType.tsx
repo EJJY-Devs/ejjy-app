@@ -10,6 +10,7 @@ const SET_METHOD_NAME = 'setStoreValue';
 const GET_METHOD_NAME = 'getStoreValue';
 const APP_TYPE_KEY = 'appType';
 const HEAD_OFFICE_TYPE_KEY = 'headOfficeType';
+const START_NGROK_KEY = 'startNgrok';
 
 const useAppType = () => {
 	useEffect(() => {
@@ -47,9 +48,19 @@ const useAppType = () => {
 		}
 	};
 
+	const setNewStartNgrok = (value: boolean) => {
+		if (ipcRenderer) {
+			ipcRenderer.invoke(SET_METHOD_NAME, {
+				key: START_NGROK_KEY,
+				value,
+			});
+		}
+	};
+
 	return {
 		setAppType: setNewAppType,
 		setHeadOfficeType: setNewHeadOfficeType,
+		setStartNgrok: setNewStartNgrok,
 	};
 };
 

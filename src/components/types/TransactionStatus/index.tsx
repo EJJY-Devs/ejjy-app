@@ -2,20 +2,24 @@ import { Tag } from 'antd';
 import { paymentTypes, Transaction } from 'ejjy-global';
 import { EMPTY_CELL, transactionStatuses } from 'global';
 import React from 'react';
+import { DELIVERY_INVOICE } from 'utils';
 
 type Props = {
 	transaction: Transaction;
 };
 
 export const TransactionStatus = ({ transaction }: Props) => {
-	const { status, payment } = transaction;
+	const { status, payment, invoice_type } = transaction;
 
 	switch (status) {
 		case transactionStatuses.NEW: {
 			return <Tag color="yellow">New</Tag>;
 		}
 		case transactionStatuses.FULLY_PAID: {
-			if (payment.mode === paymentTypes.CREDIT) {
+			if (
+				payment.mode === paymentTypes.CREDIT ||
+				invoice_type === DELIVERY_INVOICE
+			) {
 				return <Tag color="orange">Collectible</Tag>;
 			}
 

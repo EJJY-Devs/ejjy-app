@@ -15,9 +15,10 @@ interface Props {
 	product: any;
 	onClose: any;
 	sign: any;
+	type?: string;
 }
 
-export const EditProductModal = ({ product, onClose, sign }: Props) => {
+export const EditProductModal = ({ product, onClose, sign, type }: Props) => {
 	// CUSTOM HOOKS
 	const editProduct = useBoundStore((state: any) => state.editProduct);
 
@@ -47,6 +48,7 @@ export const EditProductModal = ({ product, onClose, sign }: Props) => {
 		>
 			<EditProductForm
 				product={product}
+				type={type}
 				onClose={onClose}
 				onSubmit={handleSubmit}
 			/>
@@ -54,7 +56,7 @@ export const EditProductModal = ({ product, onClose, sign }: Props) => {
 	);
 };
 
-export const EditProductForm = ({ product, onClose, onSubmit }) => {
+export const EditProductForm = ({ product, type, onClose, onSubmit }) => {
 	// REFS
 	const inputRef = useRef(null);
 
@@ -68,7 +70,8 @@ export const EditProductForm = ({ product, onClose, onSubmit }) => {
 	const getFormDetails = useCallback(
 		() => ({
 			DefaultValues: {
-				quantity: '',
+				quantity:
+					type === 'Adjustment Slip' ? Math.abs(product.quantity) || '' : '',
 			},
 			Schema: Yup.object().shape({
 				quantity: Yup.number()
@@ -77,8 +80,9 @@ export const EditProductForm = ({ product, onClose, onSubmit }) => {
 						is: () =>
 							product.product.unit_of_measurement ===
 							unitOfMeasurementTypes.WEIGHING,
-						then: (schema) => schema, // No .moreThan(0) for WEIGHING
-						otherwise: (schema) => schema.moreThan(0),
+						then: (schema) => schema,
+						otherwise: (schema) =>
+							type === 'Purchase' ? schema.min(0) : schema.moreThan(0),
 					})
 					.test(
 						'is-whole-number',
@@ -92,7 +96,7 @@ export const EditProductForm = ({ product, onClose, onSubmit }) => {
 					.label('Quantity'),
 			}),
 		}),
-		[product],
+		[product, type],
 	);
 
 	return (

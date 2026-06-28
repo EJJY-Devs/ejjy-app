@@ -51,7 +51,7 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 		data: { supplierRegistrations, total },
 		isFetching: isFetchingSupplierRegistrations,
 		error: supplierRegistrationsError,
-	} = useSupplierRegistrations({ params });
+	} = useSupplierRegistrations({ params: { ...params, isActive: true } });
 	const {
 		mutateAsync: deleteSupplierRegistration,
 		isLoading: isDeletingSupplierRegistration,

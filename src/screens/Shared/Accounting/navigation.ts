@@ -85,6 +85,20 @@ export const getAccountingSidebarItems = (
 			defaultIcon: require('../../../assets/images/icon-report.svg'),
 			link: `${basePath}/accounting/transaction-list`,
 		},
+		{
+			key: 'expenses',
+			name: 'Expenses',
+			activeIcon: require('../../../assets/images/icon-report-active.svg'),
+			defaultIcon: require('../../../assets/images/icon-report.svg'),
+			link: `${basePath}/accounting/expenses`,
+		},
+		{
+			key: 'purchases',
+			name: 'Purchases',
+			activeIcon: require('../../../assets/images/icon-requisition-slip-active.svg'),
+			defaultIcon: require('../../../assets/images/icon-requisition-slip.svg'),
+			link: `${basePath}/accounting/purchases`,
+		},
 	];
 
 	if (!includeFinancialStatements) {

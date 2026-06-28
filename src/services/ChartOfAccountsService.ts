@@ -4,6 +4,7 @@ import { IListRequest } from './interfaces';
 interface List extends IListRequest {
 	search?: string;
 	account_category?: string;
+	account_classification?: string;
 	account_type?: number;
 	sub_type?: number;
 	normal_balance?: number;
@@ -13,6 +14,7 @@ interface Modify {
 	account_code: number;
 	account_name: string;
 	account_category?: string;
+	account_classification?: string;
 	account_type: number;
 	sub_type: number;
 	normal_balance: number;

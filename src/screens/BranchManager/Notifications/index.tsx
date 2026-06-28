@@ -4,6 +4,8 @@ import { Box } from 'components/elements';
 import { MAX_PAGE_SIZE } from 'global';
 import {
 	useBranchProducts,
+	usePurchaseCostNotifications,
+	usePurchaseOrderQtyNotifications,
 	useQueryParams,
 	useSalesTrackerCount,
 	useDtrNotificationCount,
@@ -11,12 +13,17 @@ import {
 import _ from 'lodash';
 import React from 'react';
 import { TabBranchProducts } from 'screens/Shared/Notifications/components/TabBranchProducts';
+import { TabPurchaseCostNotifications } from 'screens/Shared/Notifications/components/TabPurchaseCostNotifications';
+import { TabPurchaseOrderQtyNotifications } from 'screens/Shared/Notifications/components/TabPurchaseOrderQtyNotifications';
 import { TabSalesTracker } from 'screens/Shared/Notifications/components/TabSalesTracker';
+import { getLocalBranchId } from 'utils';
 import { TabDTR } from './components/TabDTR';
 
 const tabs = {
 	BRANCH_PRODUCTS: 'Branch Products',
 	DTR: 'DTR',
+	PO_QTY: 'PO Mismatch',
+	PURCHASE_COST_CHANGES: 'Purchase Cost Changes',
 	SALES_TRACKER: 'Sales Tracker',
 };
 
@@ -38,6 +45,26 @@ export const Notifications = () => {
 
 	const dtrCount = useDtrNotificationCount();
 	const salesTrackerCount = useSalesTrackerCount();
+	const {
+		data: { total: purchaseCostChangesCount },
+	} = usePurchaseCostNotifications({
+		params: {
+			branchId: Number(getLocalBranchId()) || undefined,
+			isResolved: false,
+			pageSize: 1,
+		},
+		options: { notifyOnChangeProps: ['data'] },
+	});
+	const {
+		data: { total: poQtyCount },
+	} = usePurchaseOrderQtyNotifications({
+		params: {
+			branchId: Number(getLocalBranchId()) || undefined,
+			isResolved: false,
+			pageSize: 1,
+		},
+		options: { notifyOnChangeProps: ['data'] },
+	});
 
 	// METHODS
 	const handleTabClick = (selectedTab) => {
@@ -95,6 +122,38 @@ export const Notifications = () => {
 						}
 					>
 						<TabSalesTracker />
+					</Tabs.TabPane>
+
+					<Tabs.TabPane
+						key={tabs.PURCHASE_COST_CHANGES}
+						tab={
+							<Space align="center">
+								<span>{tabs.PURCHASE_COST_CHANGES}</span>
+								{purchaseCostChangesCount > 0 && (
+									<Badge count={purchaseCostChangesCount} overflowCount={999} />
+								)}
+							</Space>
+						}
+					>
+						<TabPurchaseCostNotifications
+							branchId={Number(getLocalBranchId()) || undefined}
+						/>
+					</Tabs.TabPane>
+
+					<Tabs.TabPane
+						key={tabs.PO_QTY}
+						tab={
+							<Space align="center">
+								<span>{tabs.PO_QTY}</span>
+								{poQtyCount > 0 && (
+									<Badge count={poQtyCount} overflowCount={999} />
+								)}
+							</Space>
+						}
+					>
+						<TabPurchaseOrderQtyNotifications
+							branchId={Number(getLocalBranchId()) || undefined}
+						/>
 					</Tabs.TabPane>
 				</Tabs>
 			</Box>

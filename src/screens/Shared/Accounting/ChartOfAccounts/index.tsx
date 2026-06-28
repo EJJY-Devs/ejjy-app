@@ -45,12 +45,19 @@ const ACCOUNT_CATEGORY_OPTIONS = [
 	{ label: 'Special', value: 'special' },
 ];
 
+const ACCOUNT_CLASSIFICATION_OPTIONS = [
+	{ label: 'All', value: '' },
+	{ label: 'Nominal (Temporary)', value: 'nominal' },
+	{ label: 'Real (Permanent)', value: 'real' },
+];
+
 export const ChartOfAccounts = () => {
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isViewOpen, setIsViewOpen] = useState(false);
 	const [searchText, setSearchText] = useState('');
 	const [categoryFilter, setCategoryFilter] = useState('');
+	const [classificationFilter, setClassificationFilter] = useState('');
 	const [selectedAccount, setSelectedAccount] = useState<any>(null);
 	const [viewAccount, setViewAccount] = useState<any>(null);
 	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
@@ -59,6 +66,7 @@ export const ChartOfAccounts = () => {
 		params: {
 			search: searchText || undefined,
 			accountCategory: categoryFilter || undefined,
+			accountClassification: classificationFilter || undefined,
 			page: params.page,
 			pageSize: params.pageSize,
 		},
@@ -123,6 +131,16 @@ export const ChartOfAccounts = () => {
 							</Tooltip>
 						)}
 					</Space>
+				),
+			},
+			{
+				title: 'Classification',
+				dataIndex: 'account_classification',
+				key: 'classification',
+				render: (value: string) => (
+					<Tag color={value === 'real' ? 'green' : 'purple'}>
+						{value === 'real' ? 'Real' : 'Nominal'}
+					</Tag>
 				),
 			},
 		];
@@ -252,6 +270,20 @@ export const ChartOfAccounts = () => {
 							value={categoryFilter}
 							onChange={(value) => {
 								setCategoryFilter(value);
+								setQueryParams({
+									page: DEFAULT_PAGE,
+									pageSize: params.pageSize,
+								});
+							}}
+						/>
+						<Select
+							className="ChartOfAccounts_categoryFilter"
+							defaultValue=""
+							options={ACCOUNT_CLASSIFICATION_OPTIONS}
+							placeholder="Filter by classification"
+							value={classificationFilter}
+							onChange={(value) => {
+								setClassificationFilter(value);
 								setQueryParams({
 									page: DEFAULT_PAGE,
 									pageSize: params.pageSize,

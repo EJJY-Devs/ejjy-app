@@ -3,6 +3,7 @@ import { IListRequest } from './interfaces';
 
 interface List extends IListRequest {
 	search?: string;
+	type?: string;
 }
 
 interface Entry {
@@ -13,6 +14,7 @@ interface Entry {
 interface Create {
 	name: string;
 	information?: string;
+	type?: string;
 	entries: Entry[];
 }
 

@@ -12,6 +12,7 @@ const useAccountingTransactions = ({ params }: Query) =>
 			params?.page,
 			params?.pageSize,
 			params?.search,
+			params?.type,
 		],
 		async () => {
 			const baseURL = getLocalApiUrl();
@@ -22,6 +23,7 @@ const useAccountingTransactions = ({ params }: Query) =>
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						search: params?.search,
+						type: params?.type,
 					},
 					baseURL,
 				),
@@ -40,11 +42,12 @@ export const useAccountingTransactionCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ name, information, entries }: any) =>
+		({ name, information, type, entries }: any) =>
 			AccountingTransactionsService.create(
 				{
 					name,
 					information,
+					type,
 					entries: entries.map((e: any) => ({
 						debit_account: e.debitAccount || '',
 						credit_account: e.creditAccount || '',

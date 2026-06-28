@@ -12,6 +12,7 @@ const useSupplierRegistrations = ({ params }: Query = {}) =>
 			params?.page,
 			params?.pageSize,
 			params?.search,
+			params?.isActive,
 		],
 		() =>
 			wrapServiceWithCatch(
@@ -20,6 +21,7 @@ const useSupplierRegistrations = ({ params }: Query = {}) =>
 						page: params?.page || DEFAULT_PAGE,
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						search: params?.search,
+						is_active: params?.isActive,
 					},
 					getLocalApiUrl(),
 				),

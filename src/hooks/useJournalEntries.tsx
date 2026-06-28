@@ -53,6 +53,7 @@ export const useJournalEntryCreate = () => {
 			remarks,
 			description,
 			entryType,
+			datetimeCreated,
 		}: any) =>
 			JournalEntriesService.create(
 				{
@@ -63,6 +64,7 @@ export const useJournalEntryCreate = () => {
 					amount,
 					remarks,
 					description,
+					datetime_created: datetimeCreated,
 				},
 				getLocalApiUrl(),
 			),

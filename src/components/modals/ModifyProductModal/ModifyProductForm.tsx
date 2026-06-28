@@ -101,6 +101,7 @@ const isMultipleInstanceOptions = [
 ];
 
 interface Props {
+	isDailyChecked: boolean;
 	isLoading: boolean;
 	onClose: any;
 	onSubmit: any;
@@ -109,6 +110,7 @@ interface Props {
 }
 
 export const ModifyProductForm = ({
+	isDailyChecked,
 	isLoading,
 	onClose,
 	onSubmit,
@@ -138,8 +140,12 @@ export const ModifyProductForm = ({
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
 				isShownInScaleList: String(product?.is_shown_in_scale_list ?? false),
 				isMultipleInstance: String(product?.is_multiple_instance ?? false),
-				checking: productCheckingTypes.RANDOM,
-				isSoldInBranch: 'true',
+				checking: isDailyChecked
+					? productCheckingTypes.DAILY
+					: productCheckingTypes.RANDOM,
+				isDailyChecked,
+				isRandomlyChecked: !isDailyChecked,
+				isSoldInBranch: String(product?.is_sold_in_branch ?? true),
 				isVatExempted: (!!product?.is_vat_exempted).toString(),
 				maxBalance: product?.max_balance
 					? formatQuantity({
@@ -148,7 +154,12 @@ export const ModifyProductForm = ({
 					  })
 					: '',
 				name: product?.name || '',
-				piecesInBulk: product?.pieces_in_bulk || 1,
+				piecesInBulk: product?.pieces_in_bulk
+					? formatQuantity({
+							unitOfMeasurement: product?.unit_of_measurement,
+							quantity: product.pieces_in_bulk,
+					  })
+					: 1,
 				conversionAmount: product?.conversion_amount || 1,
 				patronageSystemTagId: getId(product?.patronage_system_tag),
 				costPerBulk: product?.cost_per_bulk || 1,
@@ -239,6 +250,21 @@ export const ModifyProductForm = ({
 							},
 						)
 						.label('Max Balance'),
+					piecesInBulk: Yup.number()
+						.required()
+						.moreThan(0)
+						.nullable()
+						.test(
+							'is-whole-number',
+							'Non-weighing items require whole number quantity.',
+							function test(value) {
+								const { unitOfMeasurement } = this.parent;
+								return unitOfMeasurement === unitOfMeasurementTypes.NON_WEIGHING
+									? isInteger(Number(value))
+									: true;
+							},
+						)
+						.label('Packaging Qty'),
 					costPerPiece: Yup.number()
 						.required()
 						.moreThan(0)
@@ -336,7 +362,7 @@ export const ModifyProductForm = ({
 				[['barcode', 'textcode']],
 			),
 		}),
-		[product, siteSettings],
+		[product, isDailyChecked],
 	);
 
 	const renderInputField = ({
@@ -639,6 +665,22 @@ export const ModifyProductForm = ({
 							/>
 							<ErrorMessage
 								name="maxBalance"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
+						<Col sm={12} span={24}>
+							<Label label="Packaging Qty" spacing />
+							<FormInput
+								id="piecesInBulk"
+								isWholeNumber={
+									values.unitOfMeasurement ===
+									unitOfMeasurementTypes.NON_WEIGHING
+								}
+								type="number"
+							/>
+							<ErrorMessage
+								name="piecesInBulk"
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>

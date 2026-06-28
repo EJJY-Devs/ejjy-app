@@ -14,6 +14,7 @@ export const useProductsData = ({ params, user }) => {
 		params: {
 			...params,
 			branchId: getLocalBranchId(),
+			ordering: (params as any)?.ordering || 'name',
 		},
 		options: {
 			enabled: getAppType() !== appTypes.BACK_OFFICE,

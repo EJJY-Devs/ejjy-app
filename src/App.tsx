@@ -228,6 +228,9 @@ const App = () => {
 				!!getOnlineApiUrl() &&
 				!isStandAlone() &&
 				(getAppType() === appTypes.HEAD_OFFICE || branchId !== null) &&
+				// Don't fetch new IDs while the current batch is still being processed.
+				// The local DB hasn't been updated yet, so initialize_ids would return
+				// the same IDs again and create an infinite re-queue loop.
 				!storageData.productIds &&
 				!storageData.branchProductIds &&
 				!storageData.branchProductBalanceUpdateLogsIds,

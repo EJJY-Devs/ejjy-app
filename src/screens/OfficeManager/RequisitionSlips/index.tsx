@@ -1,10 +1,11 @@
-import { Col, Row, Select, Table } from 'antd';
+import { Button, Col, Input, Row, Select, Table } from 'antd';
 import {
 	Content,
 	RequestErrors,
 	TableHeaderRequisitionSlip,
 	TimeRangeFilter,
 } from 'components';
+import { ViewPOInternalModal } from 'components/modals';
 import { Box, Label } from 'components/elements';
 import { filterOption } from 'ejjy-global';
 import {
@@ -12,9 +13,11 @@ import {
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
 	MAX_PAGE_SIZE,
+	SEARCH_DEBOUNCE_TIME,
 } from 'global';
 import { useQueryParams, useRequisitionSlips, useBranches } from 'hooks';
-import React, { useEffect, useState } from 'react';
+import { debounce } from 'lodash';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { convertIntoArray, formatDateTime } from 'utils';
 import './style.scss';
@@ -26,11 +29,13 @@ const columns = [
 	{ title: 'Vendor', dataIndex: 'vendor' },
 	{ title: 'Status', dataIndex: 'status' },
 	{ title: 'Remarks', dataIndex: 'overallRemarks' },
+	{ title: 'PO', dataIndex: 'poAction' },
 ];
 
 export const RequisitionSlips = () => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
+	const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -62,6 +67,7 @@ export const RequisitionSlips = () => {
 				reference_number,
 				vendor,
 				overall_remarks,
+				linked_purchase_order,
 			} = requisitionSlip;
 
 			return {
@@ -76,6 +82,16 @@ export const RequisitionSlips = () => {
 				datetimeCreated: formatDateTime(datetime_created),
 				status: EMPTY_CELL,
 				overallRemarks: overall_remarks,
+				poAction: linked_purchase_order ? (
+					<Button
+						type="link"
+						onClick={() => setSelectedPurchase(requisitionSlip)}
+					>
+						{linked_purchase_order.reference_number}
+					</Button>
+				) : (
+					EMPTY_CELL
+				),
 			};
 		});
 
@@ -83,51 +99,78 @@ export const RequisitionSlips = () => {
 	}, [requisitionSlips]);
 
 	return (
-		<Content className="RequisitionSlips" title="Requisition Slips">
-			<Box className="px-6">
-				<TableHeaderRequisitionSlip />
+		<>
+			<Content className="RequisitionSlips" title="Requisition Slips">
+				<Box className="px-6" padding>
+					<TableHeaderRequisitionSlip />
 
-				<RequestErrors
-					className="px-6"
-					errors={[
-						...convertIntoArray(listError),
-						...convertIntoArray(branchErrors),
-					]}
-					withSpaceBottom
-				/>
+					<RequestErrors
+						className="px-6"
+						errors={[
+							...convertIntoArray(listError),
+							...convertIntoArray(branchErrors),
+						]}
+						withSpaceBottom
+					/>
 
-				<Filter
-					branches={branches}
-					isLoading={isFetchingRequisitionSlips || isFetchingBranches}
-				/>
+					<Filter
+						branches={branches}
+						isLoading={isFetchingRequisitionSlips || isFetchingBranches}
+					/>
 
-				<Table
-					columns={columns}
-					dataSource={dataSource}
-					loading={isFetchingRequisitionSlips}
-					pagination={{
-						current: Number(params.page) || DEFAULT_PAGE,
-						total,
-						pageSize: Number(params.pageSize) || DEFAULT_PAGE_SIZE,
-						onChange: (page, newPageSize) => {
-							setQueryParams({
-								page,
-								pageSize: newPageSize,
-							});
-						},
-						disabled: !dataSource,
-						position: ['bottomCenter'],
-						pageSizeOptions: ['5', '10', '15'],
-					}}
-					bordered
+					<Table
+						columns={columns}
+						dataSource={dataSource}
+						loading={isFetchingRequisitionSlips}
+						pagination={{
+							current: Number(params.page) || DEFAULT_PAGE,
+							total,
+							pageSize: Number(params.pageSize) || DEFAULT_PAGE_SIZE,
+							onChange: (page, newPageSize) => {
+								setQueryParams({
+									page,
+									pageSize: newPageSize,
+								});
+							},
+							disabled: !dataSource,
+							position: ['bottomCenter'],
+							pageSizeOptions: ['5', '10', '15'],
+						}}
+						bordered
+					/>
+				</Box>
+			</Content>
+
+			{selectedPurchase && (
+				<ViewPOInternalModal
+					poReferenceNumber={
+						selectedPurchase?.linked_purchase_order?.reference_number
+					}
+					requisitionSlip={selectedPurchase}
+					onClose={() => setSelectedPurchase(null)}
 				/>
-			</Box>
-		</Content>
+			)}
+		</>
 	);
 };
 
 const Filter = ({ isLoading, branches }) => {
 	const { params, setQueryParams } = useQueryParams();
+
+	const handleRsSearchDebounced = useCallback(
+		debounce((value) => {
+			setQueryParams({ rsSearch: value }, { shouldResetPage: true });
+		}, SEARCH_DEBOUNCE_TIME),
+		[],
+	);
+
+	const handlePoSearchDebounced = useCallback(
+		debounce((value) => {
+			setQueryParams({ poSearch: value }, { shouldResetPage: true });
+		}, SEARCH_DEBOUNCE_TIME),
+		[],
+	);
+
 	return (
 		<Row className="mb-4" gutter={[24, 24]}>
 			<Col span={24}>
@@ -135,7 +178,27 @@ const Filter = ({ isLoading, branches }) => {
 					<TimeRangeFilter disabled={isLoading} />
 				</div>
 				<Row gutter={16}>
-					<Col style={{ minWidth: 500 }}>
+					<Col style={{ minWidth: 250 }}>
+						<Label label="Requisition Slip" spacing />
+						<Input
+							defaultValue={params.rsSearch}
+							disabled={isLoading}
+							placeholder="RS number..."
+							allowClear
+							onChange={(e) => handleRsSearchDebounced(e.target.value)}
+						/>
+					</Col>
+					<Col style={{ minWidth: 250 }}>
+						<Label label="Purchase Order" spacing />
+						<Input
+							defaultValue={params.poSearch}
+							disabled={isLoading}
+							placeholder="PO number..."
+							allowClear
+							onChange={(e) => handlePoSearchDebounced(e.target.value)}
+						/>
+					</Col>
+					<Col style={{ minWidth: 250 }}>
 						<Label label="Branch" spacing />
 						<Select
 							className="w-100"
@@ -158,28 +221,22 @@ const Filter = ({ isLoading, branches }) => {
 							))}
 						</Select>
 					</Col>
-
-					<Row gutter={16}>
-						<Col style={{ minWidth: 500 }}>
-							<Label label="Type" spacing />
-							<Select
-								className="w-100"
-								defaultValue={params.slipType || undefined}
-								disabled={isLoading}
-								allowClear
-								showSearch
-								onChange={(value) => {
-									setQueryParams(
-										{ slipType: value },
-										{ shouldResetPage: true },
-									);
-								}}
-							>
-								<Select.Option value="customer">Customer</Select.Option>
-								<Select.Option value="vendor">Vendor</Select.Option>
-							</Select>
-						</Col>
-					</Row>
+					<Col style={{ minWidth: 200 }}>
+						<Label label="Type" spacing />
+						<Select
+							className="w-100"
+							defaultValue={params.slipType || undefined}
+							disabled={isLoading}
+							allowClear
+							showSearch
+							onChange={(value) => {
+								setQueryParams({ slipType: value }, { shouldResetPage: true });
+							}}
+						>
+							<Select.Option value="customer">Customer</Select.Option>
+							<Select.Option value="vendor">Vendor</Select.Option>
+						</Select>
+					</Col>
 				</Row>
 			</Col>
 		</Row>

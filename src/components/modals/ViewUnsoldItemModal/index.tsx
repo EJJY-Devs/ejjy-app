@@ -1,7 +1,6 @@
 import {
 	DeleteOutlined,
 	DollarCircleOutlined,
-	FileTextOutlined,
 	PrinterOutlined,
 } from '@ant-design/icons';
 import {
@@ -60,7 +59,6 @@ export const ViewUnsoldItemModal = ({
 	onClose,
 }: Props) => {
 	// STATES
-	const [isCreatingTxt, setIsCreatingTxt] = useState<boolean>(false);
 	const [selectedProductId, setSelectedProductId] = useState<number | null>(
 		null,
 	);
@@ -129,17 +127,6 @@ export const ViewUnsoldItemModal = ({
 			branchMachine,
 			reportDate,
 		});
-	};
-
-	const handleCreateTxt = () => {
-		setIsCreatingTxt(true);
-		// TODO: Implement createUnsoldItemTxt when TXT printing is needed
-		console.log('Create unsold item TXT:', {
-			unsoldItemSummary: filteredUnsoldItems,
-			branch,
-			branchMachine,
-		});
-		setIsCreatingTxt(false);
 	};
 
 	const handleEditPrice = (item: UnsoldItemSummary) => {
@@ -247,7 +234,7 @@ export const ViewUnsoldItemModal = ({
 				footer={[
 					<Button
 						key="print"
-						disabled={isLoadingPdf || isCreatingTxt || loading}
+						disabled={isLoadingPdf || loading}
 						icon={<PrinterOutlined />}
 						type="primary"
 						onClick={handlePrint}
@@ -261,16 +248,6 @@ export const ViewUnsoldItemModal = ({
 						isLoading={isLoadingPdf}
 						previewPdf={previewPdf}
 					/>,
-					<Button
-						key="txt"
-						disabled={isLoadingPdf || isCreatingTxt || loading}
-						icon={<FileTextOutlined />}
-						loading={isCreatingTxt}
-						type="primary"
-						onClick={handleCreateTxt}
-					>
-						Create TXT
-					</Button>,
 				]}
 				title="Unsold Items"
 				width={425}

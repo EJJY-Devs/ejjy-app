@@ -9,7 +9,7 @@ import {
 	APP_RECEIPT_PRINTER_FONT_FAMILY,
 	APP_RECEIPT_PRINTER_FONT_SIZE,
 	APP_RECEIPT_PRINTER_NAME,
-	APP_TAG_PRINTER_FONT_FAMILY,
+	APP_START_NGROK,
 	APP_TAG_PRINTER_FONT_SIZE,
 	APP_TAG_PRINTER_PAPER_HEIGHT,
 	APP_TAG_PRINTER_PAPER_WIDTH,
@@ -21,7 +21,6 @@ import {
 	getAppReceiptPrinterFontFamily,
 	getAppReceiptPrinterFontSize,
 	getAppReceiptPrinterName,
-	getAppTagPrinterFontFamily,
 	getAppTagPrinterFontSize,
 	getAppTagPrinterPaperHeight,
 	getAppTagPrinterPaperWidth,
@@ -30,6 +29,7 @@ import {
 	getLocalApiUrl,
 	getOnlineApiUrl,
 	getOnlineBranchId,
+	getStartNgrok,
 } from 'utils';
 import { APP_PRINTING_TYPE, getAppReceiptPrintingType } from 'ejjy-global';
 import { AppSettingsForm } from './AppSettingsForm';
@@ -47,7 +47,7 @@ if (window.require) {
 
 export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 	// CUSTOM HOOKS
-	const { setAppType, setHeadOfficeType } = useAppType();
+	const { setAppType, setHeadOfficeType, setStartNgrok } = useAppType();
 	const [localApiUrl] = useState(getLocalApiUrl() || '');
 	const [onlineApiUrl, setOnlineApiUrl] = useState(getOnlineApiUrl() || '');
 	const [isReady, setIsReady] = useState(!ipcRenderer);
@@ -108,6 +108,7 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 			APP_HEAD_OFFICE_TYPE,
 			_.toString(formData.headOfficeType),
 		);
+		localStorage.setItem(APP_START_NGROK, _.toString(formData.startNgrok));
 		localStorage.setItem(APP_ONLINE_BRANCH_ID_KEY, formData.branchId);
 		localStorage.setItem(APP_LOCAL_API_URL_KEY, formData.localApiUrl);
 		localStorage.setItem(APP_ONLINE_API_URL_KEY, formData.onlineApiUrl);
@@ -122,10 +123,6 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 		localStorage.setItem(APP_RECEIPT_PRINTER_NAME, formData.printerName);
 		localStorage.setItem(APP_PRINTING_TYPE, formData.printingType);
 
-		localStorage.setItem(
-			APP_TAG_PRINTER_FONT_FAMILY,
-			formData.tagPrinterFontFamily,
-		);
 		localStorage.setItem(
 			APP_TAG_PRINTER_FONT_SIZE,
 			formData.tagPrinterFontSize,
@@ -154,6 +151,7 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 		}
 
 		setHeadOfficeType(formData.headOfficeType);
+		setStartNgrok(formData.startNgrok);
 		if (shouldRelaunch) {
 			setAppType(formData.appType, true);
 		} else {
@@ -180,13 +178,13 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 					appType={getAppType()}
 					branchId={getOnlineBranchId()}
 					headOfficeType={getHeadOfficeType()}
+					startNgrok={getStartNgrok()}
 					localApiUrl={localApiUrl}
 					onlineApiUrl={onlineApiUrl}
 					printerFontFamily={getAppReceiptPrinterFontFamily()}
 					printerFontSize={getAppReceiptPrinterFontSize()}
 					printerName={getAppReceiptPrinterName()}
 					printingType={getAppReceiptPrintingType()}
-					tagPrinterFontFamily={getAppTagPrinterFontFamily()}
 					tagPrinterFontSize={getAppTagPrinterFontSize()}
 					tagPrinterPaperHeight={getAppTagPrinterPaperHeight()}
 					tagPrinterPaperWidth={getAppTagPrinterPaperWidth()}

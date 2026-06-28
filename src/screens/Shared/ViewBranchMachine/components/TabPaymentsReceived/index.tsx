@@ -22,16 +22,21 @@ import {
 	PaymentType,
 	useTransactions,
 	invoiceTypes,
-	getInvoiceType,
 	EMPTY_CELL,
 } from 'ejjy-global';
 
-import { pageSizeOptions, refetchOptions } from 'global';
+import { MAX_PAGE_SIZE, pageSizeOptions, refetchOptions } from 'global';
 import { useQueryParams, useSiteSettingsNew } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { TransactionsCancelled } from 'screens/Shared/Branches/components/TabTransactions/components/TransactionsCancelled';
-import { convertIntoArray, formatInPeso, getLocalApiUrl } from 'utils';
+import {
+	convertIntoArray,
+	formatInPeso,
+	getLocalApiUrl,
+	DELIVERY_INVOICE,
+	getInvoiceTypeLabel,
+} from 'utils';
 import { Summary } from './components/Summary';
 
 const columns: ColumnsType = [
@@ -76,6 +81,8 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 	} = useTransactions({
 		params: {
 			...params,
+			page: DEFAULT_PAGE,
+			pageSize: MAX_PAGE_SIZE,
 			branchMachineId,
 			timeRange: params?.timeRange?.toString() || timeRangeTypes.DAILY,
 			statuses: `${transactionStatuses.VOID_EDITED},${transactionStatuses.VOID_CANCELLED},${transactionStatuses.FULLY_PAID}`,
@@ -90,6 +97,8 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 	} = useCollectionReceipts({
 		params: {
 			...params,
+			page: DEFAULT_PAGE,
+			pageSize: MAX_PAGE_SIZE,
 			branchMachineId,
 			timeRange: (params?.timeRange || timeRangeTypes.DAILY) as string,
 		},
@@ -104,12 +113,13 @@ export const TabPaymentsReceived = ({ branchMachineId }: Props) => {
 			const transactions = transactionsData.list
 				.filter(
 					(transaction) =>
-						transaction.invoice_type === invoiceTypes.SALES_INVOICE,
+						transaction.invoice_type === invoiceTypes.SALES_INVOICE ||
+						transaction.invoice_type === DELIVERY_INVOICE,
 				)
 				.map((transaction) => ({
 					key: `transaction-${transaction.id}`,
 					datetime: formatDateTime(transaction.datetime_created),
-					invoiceType: getInvoiceType(transaction.invoice_type),
+					invoiceType: getInvoiceTypeLabel(transaction.invoice_type),
 					invoice: (
 						<Button
 							className="pa-0"

@@ -6,7 +6,6 @@ const {
 	ipcMain,
 	shell,
 } = require('electron');
-const { autoUpdater } = require('electron-updater');
 const kill = require('tree-kill');
 const isDev = require('electron-is-dev');
 const log = require('electron-log');
@@ -80,22 +79,6 @@ const appTypes = {
 const apiPath = isDev
 	? path.resolve(__dirname, '../api')
 	: path.join(process.resourcesPath, 'api');
-
-// In production the Django backend is a PyInstaller-compiled standalone bundle.
-// No Python installation required on the target machine.
-const serverDir = isDev
-	? path.resolve(__dirname, '../api/dist/server')
-	: path.join(process.resourcesPath, 'server');
-const serverExe = path.join(serverDir, 'server.exe');
-
-//-------------------------------------------------------------------
-// Auto Updater
-//-------------------------------------------------------------------
-autoUpdater.autoDownload = false;
-autoUpdater.allowPrerelease = true;
-autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'info';
-log.info('App starting...');
 
 //-------------------------------------------------------------------
 // Initialization
@@ -306,7 +289,7 @@ function createWindow() {
 	ensureBackendConfig(store.get('appType'));
 
 	// Migrate and Run API
-	initServer(store);
+	startServer();
 
 	// Set Menu
 	const menuItems = Menu.getApplicationMenu().items;
@@ -446,6 +429,10 @@ function initStore() {
 			type: 'number',
 			default: 0,
 		},
+		startNgrok: {
+			type: 'boolean',
+			default: false,
+		},
 	};
 
 	const store = new Store({ schema });
@@ -484,84 +471,90 @@ function initStore() {
 //-------------------------------------------------------------------
 // Server
 //-------------------------------------------------------------------
-let spawnApi = null;
-let spawnLocalhostRun = null;
-let appType = null;
-let headOfficeType = null;
-function initServer(store) {
+const NGROK_RESTART_INTERVAL_MS = 60_000;
+
+let spawnRun = null;
+function startServer() {
 	if (!isDev) {
-		logStatus('Server: Starting');
-
-		appType = store.get('appType');
-		headOfficeType = store.get('headOfficeType');
-
-		// Set EJJY_APP_TYPE and ENV for Django child processes
-		const djangoEnv = {
+		const selectedAppType = store.get('appType');
+		const headOfficeType = store.get('headOfficeType');
+		const shouldStartNgrok = store.get('startNgrok');
+		const backendConfigPath = getBackendConfigPath(selectedAppType);
+		ensureBackendConfig(selectedAppType);
+		const spawnEnv = {
 			...process.env,
 			EJJY_APP_TYPE:
-				appType === appTypes.HEAD_OFFICE
+				selectedAppType === appTypes.HEAD_OFFICE
 					? 'headoffice'
-					: appType === appTypes.BACK_OFFICE
+					: selectedAppType === appTypes.BACK_OFFICE
 					? 'backoffice'
 					: 'cashiering',
-			ENV: 'prod',
+			EJJY_CONFIG_PATH: backendConfigPath,
 		};
 
-		spawn(serverExe, ['migrate'], {
-			cwd: serverDir,
-			stdio: 'ignore',
+		spawn('python', ['manage.py', 'migrate'], {
+			cwd: apiPath,
+			env: spawnEnv,
 			windowsHide: true,
-			env: djangoEnv,
-		});
-
-		let apiPort = '0.0.0.0:8000';
-		if (appType === appTypes.HEAD_OFFICE) {
-			apiPort = '[::]:8001';
-		}
-
-		logStatus('Server: Starting API');
-
-		spawnApi = spawn(serverExe, ['runserver', apiPort], {
-			cwd: serverDir,
+			detached: false,
 			stdio: 'ignore',
-			windowsHide: true,
-			env: djangoEnv,
 		});
-		logSpawn('API', spawnApi);
+		const apiPort =
+			selectedAppType === appTypes.HEAD_OFFICE
+				? '0.0.0.0:8001'
+				: selectedAppType === appTypes.BACK_OFFICE
+				? '0.0.0.0:8000'
+				: '0.0.0.0:8005';
+		spawnRun = spawn('python', ['manage.py', 'runserver', apiPort], {
+			cwd: apiPath,
+			env: spawnEnv,
+			windowsHide: true,
+			detached: false,
+			stdio: 'ignore',
+		});
+		setTimeout(() => {
+			spawn('python', ['manage.py', 'create_branch_product_balance'], {
+				cwd: apiPath,
+				env: spawnEnv,
+				windowsHide: true,
+				detached: false,
+				stdio: 'ignore',
+			});
+		}, SPLASH_SCREEN_SHOWN_MS + 500);
+		logStatus('API: Started');
 
-		logStatus('Server: Started API');
-
-		if (appType === appTypes.HEAD_OFFICE && headOfficeType === 1) {
-			logStatus('Server: Starting Tunneling');
+		if (selectedAppType === appTypes.HEAD_OFFICE && shouldStartNgrok) {
+			logStatus('Ngrok: Starting');
 
 			exec(
 				'ngrok config add-authtoken 1n3K1Pcfqdy2WKRk60koXTY1ZrB_7QC7rqRsspNCkayebuRUN',
 			);
 
-			exec(
-				'ngrok http --domain=headoffice.ngrok.app 8001',
-				(error, stdout, stderr) => {
-					if (error) return logStatus(`Tunneling error: ${error.message}`);
-					if (stderr) return logStatus(`Tunneling stderr: ${stderr}`);
-					logStatus(`Tunneling stdout: ${stdout}`);
-				},
-			);
-			logStatus('Server: Started Tunneling');
+			const startNgrok = () => {
+				exec(
+					'ngrok http --domain=headoffice.ngrok.app 8001',
+					(error, stdout, stderr) => {
+						if (error) {
+							logStatus(`Ngrok error: ${error.message}`);
+							return;
+						}
+						if (stderr) {
+							logStatus(`Ngrok stderr: ${stderr}`);
+							return;
+						}
+						logStatus(`Ngrok stdout: ${stdout}`);
+					},
+				);
+			};
+
+			startNgrok();
+			setInterval(startNgrok, NGROK_RESTART_INTERVAL_MS);
+
+			logStatus('Ngrok: Started');
 		}
 
-		setTimeout(() => {
-			spawn(serverExe, ['create_branch_product_balance'], {
-				cwd: serverDir,
-				stdio: 'ignore',
-				windowsHide: true,
-				env: djangoEnv,
-			});
-		}, SPLASH_SCREEN_SHOWN_MS + 500);
-
-		logStatus('Server: Started');
-
-		mainWindow.once('closed', function () {
-			killSpawns();
+		mainWindow.once('closed', () => {
+			if (spawnRun) kill(Number(spawnRun.pid));
 		});
 	}
 }
@@ -583,59 +576,12 @@ if (!gotTheLock) {
 }
 
 //-------------------------------------------------------------------
-// Check for updates (Windows only)
-//-------------------------------------------------------------------
-if (process.platform === 'win32') {
-	autoUpdater.on('checking-for-update', () =>
-		logStatus('Checking for update...'),
-	);
-	autoUpdater.on('update-available', (info) => {
-		dialog
-			.showMessageBox(mainWindow, {
-				type: 'info',
-				title: 'Software Update',
-				message: `EJJY Inventory App ${info.version} is available. Please press the button below to download the update.`,
-				buttons: ['Download Update'],
-				cancelId: -1,
-			})
-			.then(({ response }) => {
-				if (response === 0) autoUpdater.downloadUpdate();
-			});
-	});
-	autoUpdater.on('update-not-available', () =>
-		logStatus('Update not available'),
-	);
-	autoUpdater.on('error', (err) => logStatus('Error in auto-updater: ' + err));
-	autoUpdater.on('download-progress', (progress) => {
-		mainWindow.setProgressBar(Number(progress.percent) / 100);
-		logStatus(
-			`Download speed: ${progress.bytesPerSecond} - Downloaded ${progress.percent}% (${progress.transferred}/${progress.total})`,
-		);
-	});
-	autoUpdater.on('update-downloaded', () => {
-		logStatus('Update downloaded');
-		dialog
-			.showMessageBox(mainWindow, {
-				type: 'info',
-				title: 'Software Update',
-				message: 'EJJY Inventory App is successfully updated.',
-				buttons: ['Install Update'],
-				cancelId: -1,
-			})
-			.then(({ response }) => {
-				if (response === 0) autoUpdater.quitAndInstall();
-			});
-	});
-	app.on('ready', () => autoUpdater.checkForUpdates());
-}
-
-//-------------------------------------------------------------------
 // Open folder storing the exported TXT files
 //-------------------------------------------------------------------
 ipcMain.on('openFolder', (event, folderPath) => {
 	const mediaPath = isDev
 		? path.resolve(__dirname, '../api/' + folderPath)
-		: path.join(serverDir, folderPath);
+		: path.join(apiPath, folderPath);
 	shell.openPath(mediaPath);
 });
 
@@ -648,8 +594,7 @@ function relaunchApp() {
 }
 
 function killSpawns() {
-	if (spawnApi) kill(spawnApi.pid);
-	if (spawnLocalhostRun) kill(spawnLocalhostRun.pid);
+	if (spawnRun && spawnRun.pid) kill(Number(spawnRun.pid));
 }
 
 function logSpawn(key, spawn) {

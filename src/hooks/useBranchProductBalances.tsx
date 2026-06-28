@@ -71,3 +71,9 @@ export const useBranchProductBalanceCreate = () =>
 	useMutation<any, any, any>((data) =>
 		BranchProductBalancesService.create(data, getLocalApiUrl()),
 	);
+
+export const useBranchProductBalanceEdit = () =>
+	useMutation<any, any, any>(
+		({ id, body }: { id: number; body: { value: number } }) =>
+			BranchProductBalancesService.edit(id, body, getLocalApiUrl()),
+	);

@@ -14,12 +14,14 @@ interface JournalEntryRow {
 interface CreateTransactionValues {
 	name: string;
 	information: string;
+	type: string;
 	entries: JournalEntryRow[];
 }
 
 interface Props {
 	isSubmitting: boolean;
 	open: boolean;
+	type: string;
 	onClose: () => void;
 	onCreate: (values: CreateTransactionValues) => Promise<void>;
 }
@@ -29,6 +31,7 @@ const EMPTY_ENTRY: JournalEntryRow = { debitAccount: '', creditAccount: '' };
 export const CreateTransactionModal = ({
 	isSubmitting,
 	open,
+	type,
 	onClose,
 	onCreate,
 }: Props) => {
@@ -80,6 +83,7 @@ export const CreateTransactionModal = ({
 		await onCreate({
 			name: name.trim(),
 			information: information.trim(),
+			type,
 			entries: validEntries,
 		});
 		setName('');

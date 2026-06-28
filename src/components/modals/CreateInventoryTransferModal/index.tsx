@@ -10,7 +10,7 @@ import { FieldError, Label } from '../../elements';
 type ModalProps = {
 	type: string;
 	isLoading: boolean;
-	onSubmit: (formData) => void;
+	onSubmit: (formData) => Promise<void>;
 	onClose: () => void;
 };
 
@@ -84,12 +84,12 @@ export const CreateInventoryTransferModal = ({
 			<Formik
 				initialValues={initialValues}
 				validationSchema={formSchema}
-				onSubmit={(formData) => {
-					onSubmit(formData);
+				onSubmit={async (formData) => {
+					await onSubmit(formData);
 					onClose();
 				}}
 			>
-				{({ values, setFieldValue }) => (
+				{({ values, setFieldValue, isSubmitting }) => (
 					<Form>
 						<Row gutter={[16, 16]}>
 							{/* Render different fields based on `type` */}
@@ -242,10 +242,19 @@ export const CreateInventoryTransferModal = ({
 						</Row>
 
 						<div className="ModalCustomFooter">
-							<Button disabled={isLoading} htmlType="button" onClick={onClose}>
+							<Button
+								disabled={isLoading || isSubmitting}
+								htmlType="button"
+								onClick={onClose}
+							>
 								Cancel
 							</Button>
-							<Button htmlType="submit" loading={isLoading} type="primary">
+							<Button
+								disabled={isLoading || isSubmitting}
+								htmlType="submit"
+								loading={isLoading || isSubmitting}
+								type="primary"
+							>
 								Submit
 							</Button>
 						</div>

@@ -35,7 +35,6 @@ import { SiteSettings } from 'screens/Shared/SiteSettings';
 import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
-import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
 import shallow from 'zustand/shallow';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { Purchases } from 'screens/Shared/Purchases';
@@ -51,7 +50,6 @@ import { ViewChecking } from 'screens/Shared/InventoryAudit/ViewChecking';
 import { Dashboard } from './Dashboard';
 import { Logs } from './Logs';
 import { Notifications } from './Notifications';
-import { RequisitionSlips } from './RequisitionSlips';
 
 const OfficeManager = () => {
 	const { pathname } = useLocation();
@@ -218,13 +216,6 @@ const OfficeManager = () => {
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
 				link: '/office-manager/adjustment-slips',
-			},
-			{
-				key: 'requisition-slips',
-				name: 'Requisition Slips',
-				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
-				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
-				link: '/office-manager/requisition-slips',
 			},
 			{
 				key: 'return-item-slips',
@@ -445,17 +436,6 @@ const OfficeManager = () => {
 					<Route
 						component={ModifyProductGroup}
 						path="/office-manager/product-groups/edit/:id"
-						exact
-					/>
-
-					<Route
-						component={RequisitionSlips}
-						path="/office-manager/requisition-slips"
-						exact
-					/>
-					<Route
-						component={ViewRequisitionSlip}
-						path="/office-manager/requisition-slips/:id"
 						exact
 					/>
 

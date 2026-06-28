@@ -20,7 +20,6 @@ import { InventoryAudit } from 'screens/Shared/InventoryAudit';
 import { ViewChecking } from 'screens/Shared/InventoryAudit/ViewChecking';
 import { Logs } from 'screens/BranchManager/Logs';
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
-import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
 import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
 import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
@@ -43,7 +42,6 @@ import { Sales } from 'screens/Shared/Sales';
 import { SiteSettings } from 'screens/Shared/SiteSettings';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
-import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
 import shallow from 'zustand/shallow';
 import useInterval from 'use-interval';
 import { getBranchKey, getLocalBranchId } from 'utils';
@@ -57,7 +55,6 @@ import { BranchMachines } from './BranchMachines';
 import { Dashboard } from './Dashboard';
 import { Notifications } from './Notifications';
 import { OrderSlips } from './OrderSlips/OrderSlips';
-import { RequisitionSlips } from './RequisitionSlips';
 import { CreateReturnItemSlip } from './ReturnItemSlips/CreateReturnItemSlip';
 import { ReturnItemSlips } from './ReturnItemSlips';
 
@@ -230,13 +227,6 @@ const BranchManager = () => {
 				activeIcon: require('../../assets/images/icon-users-active.svg'),
 				defaultIcon: require('../../assets/images/icon-users.svg'),
 				link: '/branch-manager/dtr',
-			},
-			{
-				key: 'requisition-slips',
-				name: 'Requisition Slips',
-				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
-				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
-				link: '/branch-manager/requisition-slips',
 			},
 			{
 				key: 'adjustment-slips',
@@ -432,26 +422,6 @@ const BranchManager = () => {
 					<Route
 						component={ViewBranchMachine}
 						path="/branch-manager/branch-machines/:id"
-						exact
-					/>
-					<Route
-						component={RequisitionSlips}
-						path="/branch-manager/requisition-slips"
-						exact
-					/>
-					<Route
-						component={Cart}
-						path="/branch-manager/requisition-slips/create"
-						exact
-					/>
-					<Route
-						component={CreateRequisitionSlip}
-						path="/branch-manager/requisition-slips/create/template"
-						exact
-					/>
-					<Route
-						component={ViewRequisitionSlip}
-						path="/branch-manager/requisition-slips/:id"
 						exact
 					/>
 					<Route

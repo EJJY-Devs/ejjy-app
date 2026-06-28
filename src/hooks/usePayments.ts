@@ -8,7 +8,7 @@ import { Query } from './inteface';
 export const usePaymentsSummary = ({ params, options }: Query) =>
 	useQuery<any>(
 		[
-			'useTransactionsSummary',
+			'usePaymentsSummary',
 			params?.branchMachineId,
 			params?.statuses,
 			params?.timeRange,

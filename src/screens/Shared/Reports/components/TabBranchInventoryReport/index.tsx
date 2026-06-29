@@ -313,76 +313,88 @@ const TabBranchInventoryReport = () => {
 
 	useEffect(() => {
 		if (isAllBranches) {
-			const data = branchProductBalances.map((balance) => {
-				const isWeighing =
-					balance.branch_product?.product?.unit_of_measurement === 'weighing' ||
-					balance.is_weighing;
-				const barcodeText =
-					balance.branch_product?.product?.barcode || EMPTY_CELL;
-				const statusValue = balance.branch_product?.product_status;
-				const status = getBranchProductStatus(statusValue);
+			const data = branchProductBalances
+				.filter(
+					(balance) =>
+						balance.branch_product != null &&
+						balance.branch_product.product != null,
+				)
+				.map((balance) => {
+					const isWeighing =
+						balance.branch_product?.product?.unit_of_measurement ===
+							'weighing' || balance.is_weighing;
+					const barcodeText =
+						balance.branch_product?.product?.barcode || EMPTY_CELL;
+					const statusValue = balance.branch_product?.product_status;
+					const status = getBranchProductStatus(statusValue);
 
-				return {
-					key: balance.id,
-					barcode: (
-						<Button
-							className="pa-0"
-							type="link"
-							onClick={() => setViewedBalance(balance)}
-						>
-							{barcodeText}
-						</Button>
-					),
-					description: balance.branch_product?.product?.name || EMPTY_CELL,
-					value: formatBalance(balance, isWeighing),
-					status: status || EMPTY_CELL,
-				};
-			});
+					return {
+						key: balance.id,
+						barcode: (
+							<Button
+								className="pa-0"
+								type="link"
+								onClick={() => setViewedBalance(balance)}
+							>
+								{barcodeText}
+							</Button>
+						),
+						description: balance.branch_product?.product?.name || EMPTY_CELL,
+						value: formatBalance(balance, isWeighing),
+						status: status || EMPTY_CELL,
+					};
+				});
 
 			setDataSource(data);
 		} else {
-			const data = branchProductBalances.map((balance) => {
-				const isWeighing =
-					balance.branch_product?.product?.unit_of_measurement === 'weighing';
-				const barcodeText =
-					balance.branch_product?.product?.barcode || EMPTY_CELL;
-				const status = getBranchProductStatus(
-					balance.branch_product?.product_status,
-				);
-
-				const baseData: any = {
-					key: balance.id,
-					barcode: (
-						<Button
-							className="pa-0"
-							type="link"
-							onClick={() => setViewedBalance(balance)}
-						>
-							{barcodeText}
-						</Button>
-					),
-					description: balance.branch_product?.product?.name || EMPTY_CELL,
-					value: formatBalance(balance, isWeighing),
-					status: status || EMPTY_CELL,
-				};
-
-				if (isHeadOffice) {
-					baseData.actions = (
-						<Space>
-							<Tooltip title="Create Adjustment Slip">
-								<Button
-									icon={<EditFilled />}
-									type="primary"
-									ghost
-									onClick={() => handleCreateAdjustmentSlip(balance)}
-								/>
-							</Tooltip>
-						</Space>
+			const data = branchProductBalances
+				.filter(
+					(balance) =>
+						balance.branch_product != null &&
+						balance.branch_product.product != null,
+				)
+				.map((balance) => {
+					const isWeighing =
+						balance.branch_product?.product?.unit_of_measurement === 'weighing';
+					const barcodeText =
+						balance.branch_product?.product?.barcode || EMPTY_CELL;
+					const status = getBranchProductStatus(
+						balance.branch_product?.product_status,
 					);
-				}
 
-				return baseData;
-			});
+					const baseData: any = {
+						key: balance.id,
+						barcode: (
+							<Button
+								className="pa-0"
+								type="link"
+								onClick={() => setViewedBalance(balance)}
+							>
+								{barcodeText}
+							</Button>
+						),
+						description: balance.branch_product?.product?.name || EMPTY_CELL,
+						value: formatBalance(balance, isWeighing),
+						status: status || EMPTY_CELL,
+					};
+
+					if (isHeadOffice) {
+						baseData.actions = (
+							<Space>
+								<Tooltip title="Create Adjustment Slip">
+									<Button
+										icon={<EditFilled />}
+										type="primary"
+										ghost
+										onClick={() => handleCreateAdjustmentSlip(balance)}
+									/>
+								</Tooltip>
+							</Space>
+						);
+					}
+
+					return baseData;
+				});
 
 			setDataSource(data);
 		}

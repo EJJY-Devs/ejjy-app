@@ -253,22 +253,18 @@ export const ProductTable = ({
 					<Tooltip
 						key={`tooltip-current-balance-${key}`}
 						placement="top"
-						title={`Current Balance: ${
-							product.current_balance || branchProduct.current_balance || 0
-						}`}
+						title={`Current Balance: ${formatQuantity({
+							unitOfMeasurement: product.unit_of_measurement,
+							quantity:
+								product.current_balance || branchProduct.current_balance || 0,
+						})}`}
 					>
 						<div style={{ textAlign: 'center' }}>
-							{product.unit_of_measurement === 'weighing'
-								? Number(
-										product.current_balance ||
-											branchProduct.current_balance ||
-											0,
-								  ).toFixed(3)
-								: Number(
-										product.current_balance ||
-											branchProduct.current_balance ||
-											0,
-								  )}
+							{formatQuantity({
+								unitOfMeasurement: product.unit_of_measurement,
+								quantity:
+									product.current_balance || branchProduct.current_balance || 0,
+							})}
 						</div>
 					</Tooltip>,
 

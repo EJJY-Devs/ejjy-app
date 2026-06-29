@@ -1,7 +1,21 @@
-import { EyeOutlined, FileAddOutlined } from '@ant-design/icons';
-import { Button, Col, message, Row, Space, Table, Tooltip } from 'antd';
+import {
+	EyeOutlined,
+	FileAddOutlined,
+	SearchOutlined,
+} from '@ant-design/icons';
+import {
+	Button,
+	Col,
+	Input,
+	message,
+	Radio,
+	Row,
+	Space,
+	Table,
+	Tooltip,
+} from 'antd';
 import { Content, TimeRangeFilter } from 'components';
-import { Box } from 'components/elements';
+import { Box, Label } from 'components/elements';
 import { ViewPurchaseModal, ViewPurchaseOrderModal } from 'components/modals';
 import { EMPTY_CELL } from 'ejjy-global';
 import { pageSizeOptions, DEFAULT_PAGE, appTypes } from 'global';
@@ -42,6 +56,16 @@ export const Purchases = () => {
 		refetch,
 	} = usePurchases({ params });
 
+	const { data: withoutJeData, refetch: refetchCount } = usePurchases({
+		params: {
+			page: DEFAULT_PAGE,
+			pageSize: 1,
+			timeRange: params.timeRange,
+			journalEntryStatus: 'without',
+		},
+	});
+	const withoutJeCount = withoutJeData?.total || 0;
+
 	useEffect(() => {
 		if (purchases) {
 			const data = purchases.map((item: any) => ({
@@ -67,9 +91,10 @@ export const Purchases = () => {
 	useEffect(() => {
 		if (refetchData) {
 			refetch();
+			refetchCount();
 			setRefetchData();
 		}
-	}, [refetchData, refetch, setRefetchData]);
+	}, [refetchData, refetch, refetchCount, setRefetchData]);
 
 	const columns = [
 		{
@@ -141,16 +166,9 @@ export const Purchases = () => {
 
 	return (
 		<Content title="Purchases">
-			<Box className="Purchases_box">
-				<Row
-					align="bottom"
-					className="Purchases_toolbar"
-					justify="space-between"
-				>
-					<Col>
-						<TimeRangeFilter disabled={isFetching} />
-					</Col>
-					{isBackOffice && (
+			<Box padding>
+				{isBackOffice && (
+					<Row className="mb-4" justify="end">
 						<Col>
 							<Button
 								type="primary"
@@ -159,11 +177,65 @@ export const Purchases = () => {
 								Create Purchase
 							</Button>
 						</Col>
-					)}
+					</Row>
+				)}
+
+				<Row className="Purchases_toolbar" gutter={[16, 16]}>
+					<Col span={24}>
+						<Label label="Search" spacing />
+						<Input
+							prefix={<SearchOutlined />}
+							value={params.search || ''}
+							allowClear
+							onChange={(e) =>
+								setQueryParams({
+									search: e.target.value,
+									page: DEFAULT_PAGE,
+									pageSize: params.pageSize,
+								})
+							}
+						/>
+					</Col>
+
+					<Col span={24}>
+						<Row gutter={[16, 0]}>
+							<Col flex="none">
+								<TimeRangeFilter disabled={isFetching} />
+							</Col>
+							<Col flex="none">
+								<Label label="Journal Entry" spacing />
+								<Radio.Group
+									buttonStyle="solid"
+									optionType="button"
+									value={(params.journalEntryStatus as string) ?? 'without'}
+									onChange={(e) =>
+										setQueryParams({
+											journalEntryStatus: e.target.value,
+											page: DEFAULT_PAGE,
+											pageSize: params.pageSize,
+										})
+									}
+								>
+									<Radio.Button
+										className="Purchases_withoutJeBtn"
+										value="without"
+									>
+										Without JE
+										{withoutJeCount > 0 && (
+											<span className="Purchases_jeCount">
+												{withoutJeCount}
+											</span>
+										)}
+									</Radio.Button>
+									<Radio.Button value="with">With JE</Radio.Button>
+									<Radio.Button value="all">All</Radio.Button>
+								</Radio.Group>
+							</Col>
+						</Row>
+					</Col>
 				</Row>
 
 				<Table
-					className="Purchases_table"
 					columns={columns}
 					dataSource={dataSource}
 					loading={isFetching}

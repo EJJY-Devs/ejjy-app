@@ -101,77 +101,71 @@ export const TabPurchaseOrderQtyNotifications = ({ branchId }: Props) => {
 	};
 
 	useEffect(() => {
-		const data = notifications
-			.filter((n: any) => {
-				const poQty = Number(n.po_quantity ?? 0);
-				const purchaseQty = Number(n.purchase_quantity ?? 0);
-				return purchaseQty !== poQty;
-			})
-			.map((n: any) => {
-				const poQty = Number(n.po_quantity ?? 0);
-				const purchaseQty = Number(n.purchase_quantity ?? 0);
-				const diff = purchaseQty - poQty;
+		const data = notifications.map((n: any) => {
+			const poQty = Number(n.po_quantity ?? 0);
+			const purchaseQty = Number(n.purchase_quantity ?? 0);
+			const diff = purchaseQty - poQty;
 
-				return {
-					key: n.id,
-					poReferenceNumber: n.purchase_order ? (
-						<Button
-							style={{ padding: 0 }}
-							type="link"
-							onClick={() => setSelectedPurchaseOrder(n.purchase_order)}
-						>
-							{n.purchase_order.reference_number}
-						</Button>
-					) : (
-						EMPTY_CELL
+			return {
+				key: n.id,
+				poReferenceNumber: n.purchase_order ? (
+					<Button
+						style={{ padding: 0 }}
+						type="link"
+						onClick={() => setSelectedPurchaseOrder(n.purchase_order)}
+					>
+						{n.purchase_order.reference_number}
+					</Button>
+				) : (
+					EMPTY_CELL
+				),
+				purchaseReferenceNumber: n.purchase ? (
+					<Button
+						style={{ padding: 0 }}
+						type="link"
+						onClick={() => setSelectedPurchase(n.purchase)}
+					>
+						{n.purchase.reference_number}
+					</Button>
+				) : (
+					EMPTY_CELL
+				),
+				branch: n.branch?.name ?? EMPTY_CELL,
+				product: n.product?.name ?? EMPTY_CELL,
+				poQty,
+				purchaseQty,
+				difference: (
+					<Tag color={getDiffColor(diff)}>
+						{diff > 0 ? '+' : ''}
+						{diff}
+					</Tag>
+				),
+				...(showActionsColumn && {
+					actions: (
+						<Space size={4}>
+							<Tooltip title="Accept">
+								<Button
+									icon={<CheckOutlined />}
+									size="small"
+									type="primary"
+									ghost
+									onClick={() => handleAccept(n.id)}
+								/>
+							</Tooltip>
+							<Tooltip title="Accept with Action (Create Adjustment Slip)">
+								<Button
+									icon={<EditOutlined />}
+									size="small"
+									type="primary"
+									ghost
+									onClick={() => setAdjustmentSlipNotification(n)}
+								/>
+							</Tooltip>
+						</Space>
 					),
-					purchaseReferenceNumber: n.purchase ? (
-						<Button
-							style={{ padding: 0 }}
-							type="link"
-							onClick={() => setSelectedPurchase(n.purchase)}
-						>
-							{n.purchase.reference_number}
-						</Button>
-					) : (
-						EMPTY_CELL
-					),
-					branch: n.branch?.name ?? EMPTY_CELL,
-					product: n.product?.name ?? EMPTY_CELL,
-					poQty,
-					purchaseQty,
-					difference: (
-						<Tag color={getDiffColor(diff)}>
-							{diff > 0 ? '+' : ''}
-							{diff}
-						</Tag>
-					),
-					...(showActionsColumn && {
-						actions: (
-							<Space size={4}>
-								<Tooltip title="Accept">
-									<Button
-										icon={<CheckOutlined />}
-										size="small"
-										type="primary"
-										ghost
-										onClick={() => handleAccept(n.id)}
-									/>
-								</Tooltip>
-								<Tooltip title="Accept with Action (Create Adjustment Slip)">
-									<Button
-										icon={<EditOutlined />}
-										size="small"
-										type="primary"
-										ghost
-										onClick={() => setAdjustmentSlipNotification(n)}
-									/>
-								</Tooltip>
-							</Space>
-						),
-					}),
-				};
-			});
+				}),
+			};
+		});
 
 		setDataSource(data);
 	}, [notifications, showActionsColumn]);

@@ -14,7 +14,7 @@ import {
 import { getLocalApiUrl, isStandAlone, getAppType } from 'utils';
 import axios from 'axios';
 
-const REFETCH_INTERVAL_MS = 30_000;
+const REFETCH_INTERVAL_MS = 10_000;
 
 export const useInitializeData = ({ params, options }: Query) => {
 	const queryClient = useQueryClient();

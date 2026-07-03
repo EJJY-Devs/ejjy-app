@@ -66,11 +66,15 @@ export const Notifications = () => {
 		options: { notifyOnChangeProps: ['data'] },
 	});
 	const {
-		data: { total: poQtyCount },
+		data: { notifications: poQtyNotifications },
 	} = usePurchaseOrderQtyNotifications({
-		params: { isResolved: false, pageSize: 1 },
+		params: { isResolved: false, pageSize: MAX_PAGE_SIZE },
 		options: { notifyOnChangeProps: ['data'] },
 	});
+	const poQtyCount = poQtyNotifications.filter((n: any) => {
+		const diff = Number(n.purchase_quantity ?? 0) - Number(n.po_quantity ?? 0);
+		return diff !== 0;
+	}).length;
 	const {
 		data: { total: unsyncedProductsCount },
 	} = useProductSyncStatus({

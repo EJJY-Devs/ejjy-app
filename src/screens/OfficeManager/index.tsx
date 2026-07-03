@@ -47,6 +47,8 @@ import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
 import { Expenses } from 'screens/Shared/Accounting/Expenses';
 import { InventoryAudit } from 'screens/Shared/InventoryAudit';
 import { ViewChecking } from 'screens/Shared/InventoryAudit/ViewChecking';
+import { RequisitionSlips } from 'screens/Shared/RequisitionSlips';
+import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
 import { Dashboard } from './Dashboard';
 import { Logs } from './Logs';
 import { Notifications } from './Notifications';
@@ -211,6 +213,13 @@ const OfficeManager = () => {
 				link: '/office-manager/inventory-transfer',
 			},
 			{
+				key: 'requisition-slips',
+				name: 'Requisition Slips',
+				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
+				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
+				link: '/office-manager/requisition-slips',
+			},
+			{
 				key: 'adjustment-slips',
 				name: 'Adjustment Slips',
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
@@ -369,6 +378,17 @@ const OfficeManager = () => {
 					<Redirect
 						from="/office-manager/purchases"
 						to="/office-manager/accounting/purchases"
+						exact
+					/>
+
+					<Route
+						component={RequisitionSlips}
+						path="/office-manager/requisition-slips"
+						exact
+					/>
+					<Route
+						component={ViewRequisitionSlip}
+						path="/office-manager/requisition-slips/:id"
 						exact
 					/>
 

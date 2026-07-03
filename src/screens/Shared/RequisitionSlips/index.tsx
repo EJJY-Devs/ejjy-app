@@ -71,26 +71,15 @@ export const RequisitionSlips = () => {
 				linked_purchase_order,
 			} = rs;
 
-			return {
-				key: id,
-				id: (
-					<Link
-						to={`/${isBackOffice ? 'branch-manager' : 'office-manager'}/requisition-slips/${id}`}
-					>
-						{reference_number}
-					</Link>
-				),
-				type: capitalize(slip_type) || EMPTY_CELL,
-				branch: branch?.name || EMPTY_CELL,
-				vendor: vendor?.name || EMPTY_CELL,
-				datetimeCreated: formatDateTime(datetime_created),
-				status: EMPTY_CELL,
-				overallRemarks: overall_remarks,
-				poAction: linked_purchase_order ? (
+			let poAction: React.ReactNode = EMPTY_CELL;
+			if (linked_purchase_order) {
+				poAction = (
 					<Button type="link" onClick={() => setSelectedPurchase(rs)}>
 						{linked_purchase_order.reference_number}
 					</Button>
-				) : isBackOffice ? (
+				);
+			} else if (isBackOffice) {
+				poAction = (
 					<Tooltip title="Create Purchase Order">
 						<Button
 							icon={<ShoppingCartOutlined />}
@@ -104,9 +93,27 @@ export const RequisitionSlips = () => {
 							}}
 						/>
 					</Tooltip>
-				) : (
-					EMPTY_CELL
+				);
+			}
+
+			return {
+				key: id,
+				id: (
+					<Link
+						to={`/${
+							isBackOffice ? 'branch-manager' : 'office-manager'
+						}/requisition-slips/${id}`}
+					>
+						{reference_number}
+					</Link>
 				),
+				type: capitalize(slip_type) || EMPTY_CELL,
+				branch: branch?.name || EMPTY_CELL,
+				vendor: vendor?.name || EMPTY_CELL,
+				datetimeCreated: formatDateTime(datetime_created),
+				status: EMPTY_CELL,
+				overallRemarks: overall_remarks,
+				poAction,
 			};
 		});
 
@@ -188,9 +195,7 @@ export const RequisitionSlips = () => {
 				<Cart
 					type="Requisition Slip"
 					onClose={() => setIsCartModalVisible(false)}
-					onRefetch={() =>
-						queryClient.invalidateQueries('useRequisitionSlips')
-					}
+					onRefetch={() => queryClient.invalidateQueries('useRequisitionSlips')}
 				/>
 			)}
 
@@ -205,9 +210,7 @@ export const RequisitionSlips = () => {
 						setSelectedRsId(null);
 						setRsProductsForPo([]);
 					}}
-					onRefetch={() =>
-						queryClient.invalidateQueries('useRequisitionSlips')
-					}
+					onRefetch={() => queryClient.invalidateQueries('useRequisitionSlips')}
 				/>
 			)}
 

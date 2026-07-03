@@ -48,6 +48,8 @@ import { getBranchKey, getLocalBranchId } from 'utils';
 import { Reports } from 'screens/Shared/Reports';
 import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
 import { Tags } from 'screens/Shared/Tags';
+import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
+import { RequisitionSlips } from 'screens/Shared/RequisitionSlips';
 import { Accounts } from '../Shared/Accounts';
 import { BackOrders } from './BackOrders';
 import { CreateBackOrder } from './BackOrders/CreateBackOrder';
@@ -227,6 +229,13 @@ const BranchManager = () => {
 				activeIcon: require('../../assets/images/icon-users-active.svg'),
 				defaultIcon: require('../../assets/images/icon-users.svg'),
 				link: '/branch-manager/dtr',
+			},
+			{
+				key: 'requisition-slips',
+				name: 'Requisition Slips',
+				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
+				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
+				link: '/branch-manager/requisition-slips',
 			},
 			{
 				key: 'adjustment-slips',
@@ -422,6 +431,16 @@ const BranchManager = () => {
 					<Route
 						component={ViewBranchMachine}
 						path="/branch-manager/branch-machines/:id"
+						exact
+					/>
+					<Route
+						component={RequisitionSlips}
+						path="/branch-manager/requisition-slips"
+						exact
+					/>
+					<Route
+						component={ViewRequisitionSlip}
+						path="/branch-manager/requisition-slips/:id"
 						exact
 					/>
 					<Route

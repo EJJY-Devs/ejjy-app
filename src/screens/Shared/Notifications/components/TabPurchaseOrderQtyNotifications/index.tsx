@@ -105,7 +105,7 @@ export const TabPurchaseOrderQtyNotifications = ({ branchId }: Props) => {
 			.filter((n: any) => {
 				const poQty = Number(n.po_quantity ?? 0);
 				const purchaseQty = Number(n.purchase_quantity ?? 0);
-				return purchaseQty !== poQty;
+				return purchaseQty - poQty !== 0;
 			})
 			.map((n: any) => {
 				const poQty = Number(n.po_quantity ?? 0);
@@ -143,7 +143,7 @@ export const TabPurchaseOrderQtyNotifications = ({ branchId }: Props) => {
 					difference: (
 						<Tag color={getDiffColor(diff)}>
 							{diff > 0 ? '+' : ''}
-							{diff}
+							{diff.toFixed(2)}
 						</Tag>
 					),
 					...(showActionsColumn && {

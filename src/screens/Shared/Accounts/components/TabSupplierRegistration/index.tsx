@@ -24,7 +24,6 @@ import {
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useUserStore } from 'stores';
 import { convertIntoArray, formatDate, getAppType } from 'utils';
 
 const columns: ColumnsType = [
@@ -46,7 +45,6 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { supplierRegistrations, total },
 		isFetching: isFetchingSupplierRegistrations,

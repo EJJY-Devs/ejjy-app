@@ -12,7 +12,6 @@ import {
 	usePurchaseOrderQtyNotifications,
 	useUploadData,
 	useSalesTrackerCount,
-	useVoidedTransactionsCount,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
@@ -20,7 +19,6 @@ import { InventoryAudit } from 'screens/Shared/InventoryAudit';
 import { ViewChecking } from 'screens/Shared/InventoryAudit/ViewChecking';
 import { Logs } from 'screens/BranchManager/Logs';
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
-import { CreateRequisitionSlip } from 'screens/BranchManager/RequisitionSlips/CreateRequisitionSlip';
 import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
 import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
@@ -43,13 +41,14 @@ import { Sales } from 'screens/Shared/Sales';
 import { SiteSettings } from 'screens/Shared/SiteSettings';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
-import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
 import shallow from 'zustand/shallow';
 import useInterval from 'use-interval';
 import { getBranchKey, getLocalBranchId } from 'utils';
 import { Reports } from 'screens/Shared/Reports';
 import { AdjustmentSlip } from 'screens/Shared/Adjustment Slip';
 import { Tags } from 'screens/Shared/Tags';
+import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
+import { RequisitionSlips } from 'screens/Shared/RequisitionSlips';
 import { Accounts } from '../Shared/Accounts';
 import { BackOrders } from './BackOrders';
 import { CreateBackOrder } from './BackOrders/CreateBackOrder';
@@ -57,7 +56,6 @@ import { BranchMachines } from './BranchMachines';
 import { Dashboard } from './Dashboard';
 import { Notifications } from './Notifications';
 import { OrderSlips } from './OrderSlips/OrderSlips';
-import { RequisitionSlips } from './RequisitionSlips';
 import { CreateReturnItemSlip } from './ReturnItemSlips/CreateReturnItemSlip';
 import { ReturnItemSlips } from './ReturnItemSlips';
 
@@ -129,9 +127,6 @@ const BranchManager = () => {
 	}, [cancelledTransactionsCount]);
 
 	const salesTrackerCount = useSalesTrackerCount();
-	const { data: voidedTransactionsCount } = useVoidedTransactionsCount(
-		Number(getLocalBranchId()) || undefined,
-	);
 	const {
 		data: { total: purchaseCostChangesCount },
 	} = usePurchaseCostNotifications({
@@ -158,7 +153,6 @@ const BranchManager = () => {
 			(branchProductsNegativeBalanceCount > 0 ? 1 : 0) +
 			(salesTrackerCount > 0 ? 1 : 0) +
 			(dtrCount > 0 ? 1 : 0) +
-			(voidedTransactionsCount > 0 ? 1 : 0) +
 			(purchaseCostChangesCount > 0 ? 1 : 0) +
 			(poQtyCount > 0 ? 1 : 0);
 
@@ -169,7 +163,6 @@ const BranchManager = () => {
 		salesTrackerCount,
 		branchProductsNegativeBalanceCount,
 		dtrCount,
-		voidedTransactionsCount,
 		purchaseCostChangesCount,
 		poQtyCount,
 	]);
@@ -437,16 +430,6 @@ const BranchManager = () => {
 					<Route
 						component={RequisitionSlips}
 						path="/branch-manager/requisition-slips"
-						exact
-					/>
-					<Route
-						component={Cart}
-						path="/branch-manager/requisition-slips/create"
-						exact
-					/>
-					<Route
-						component={CreateRequisitionSlip}
-						path="/branch-manager/requisition-slips/create/template"
 						exact
 					/>
 					<Route

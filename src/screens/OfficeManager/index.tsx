@@ -4,6 +4,7 @@ import {
 	useSalesTrackerCount,
 	useBranchProducts,
 	usePurchaseCostNotifications,
+	usePurchaseOrderQtyNotifications,
 	useProductSyncStatus,
 	useVoidedTransactionsCount,
 } from 'hooks';
@@ -35,7 +36,6 @@ import { SiteSettings } from 'screens/Shared/SiteSettings';
 import { getAccountingSidebarItems } from 'screens/Shared/Accounting/navigation';
 import { CashieringAssignment } from 'screens/Shared/Users/CashieringAssignment';
 import { ViewBranchMachine } from 'screens/Shared/ViewBranchMachine';
-import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
 import shallow from 'zustand/shallow';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { Purchases } from 'screens/Shared/Purchases';
@@ -48,10 +48,11 @@ import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
 import { Expenses } from 'screens/Shared/Accounting/Expenses';
 import { InventoryAudit } from 'screens/Shared/InventoryAudit';
 import { ViewChecking } from 'screens/Shared/InventoryAudit/ViewChecking';
+import { RequisitionSlips } from 'screens/Shared/RequisitionSlips';
+import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
 import { Dashboard } from './Dashboard';
 import { Logs } from './Logs';
 import { Notifications } from './Notifications';
-import { RequisitionSlips } from './RequisitionSlips';
 
 const OfficeManager = () => {
 	const { pathname } = useLocation();
@@ -109,6 +110,12 @@ const OfficeManager = () => {
 		params: { isResolved: false, pageSize: 1 },
 		options: { notifyOnChangeProps: ['data'] },
 	});
+	const {
+		data: { total: poQtyCount },
+	} = usePurchaseOrderQtyNotifications({
+		params: { isResolved: false, pageSize: 1 },
+		options: { notifyOnChangeProps: ['data'] },
+	});
 
 	useEffect(() => {
 		const newLogsCount = cancelledTransactionsCount > 0 ? 1 : 0;
@@ -126,7 +133,8 @@ const OfficeManager = () => {
 			(branchProductsNegativeBalanceCount > 0 ? 1 : 0) +
 			(unsyncedProductsCount > 0 ? 1 : 0) +
 			(voidedTransactionsCount > 0 ? 1 : 0) +
-			(purchaseCostChangesCount > 0 ? 1 : 0);
+			(purchaseCostChangesCount > 0 ? 1 : 0) +
+			(poQtyCount > 0 ? 1 : 0);
 		if (newNotificationsCount !== notificationsCount) {
 			setNotificationsCount(newNotificationsCount);
 		}
@@ -138,6 +146,7 @@ const OfficeManager = () => {
 		unsyncedProductsCount,
 		voidedTransactionsCount,
 		purchaseCostChangesCount,
+		poQtyCount,
 	]);
 
 	const getSidebarItems = useCallback(() => {
@@ -213,18 +222,18 @@ const OfficeManager = () => {
 				link: '/office-manager/inventory-transfer',
 			},
 			{
-				key: 'adjustment-slips',
-				name: 'Adjustment Slips',
-				activeIcon: require('../../assets/images/icon-product-active.svg'),
-				defaultIcon: require('../../assets/images/icon-product.svg'),
-				link: '/office-manager/adjustment-slips',
-			},
-			{
 				key: 'requisition-slips',
 				name: 'Requisition Slips',
 				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
 				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
 				link: '/office-manager/requisition-slips',
+			},
+			{
+				key: 'adjustment-slips',
+				name: 'Adjustment Slips',
+				activeIcon: require('../../assets/images/icon-product-active.svg'),
+				defaultIcon: require('../../assets/images/icon-product.svg'),
+				link: '/office-manager/adjustment-slips',
 			},
 			{
 				key: 'return-item-slips',
@@ -382,6 +391,17 @@ const OfficeManager = () => {
 					/>
 
 					<Route
+						component={RequisitionSlips}
+						path="/office-manager/requisition-slips"
+						exact
+					/>
+					<Route
+						component={ViewRequisitionSlip}
+						path="/office-manager/requisition-slips/:id"
+						exact
+					/>
+
+					<Route
 						component={AdjustmentSlip}
 						path="/office-manager/adjustment-slips"
 						exact
@@ -445,17 +465,6 @@ const OfficeManager = () => {
 					<Route
 						component={ModifyProductGroup}
 						path="/office-manager/product-groups/edit/:id"
-						exact
-					/>
-
-					<Route
-						component={RequisitionSlips}
-						path="/office-manager/requisition-slips"
-						exact
-					/>
-					<Route
-						component={ViewRequisitionSlip}
-						path="/office-manager/requisition-slips/:id"
 						exact
 					/>
 

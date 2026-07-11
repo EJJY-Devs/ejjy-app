@@ -246,6 +246,8 @@ export const Cart = ({
 				product: {
 					...prePopulatedProduct.branch_product?.product,
 					current_balance: prePopulatedProduct.value,
+					captured_qty: prePopulatedProduct.capturedQty,
+					inputted_qty: prePopulatedProduct.inputtedQty,
 				},
 				quantity: adjustedBalance,
 				remarks: '',
@@ -288,7 +290,12 @@ export const Cart = ({
 		};
 	}, []);
 
-	// Focus the cart after adding products so ESC key works
+	// Focus the cart after adding/removing products so ESC key works.
+	// Keyed on count (not the products array itself) so editing a field on an
+	// existing row - which replaces the products array reference but keeps its
+	// length - doesn't yank focus away from whatever input the user just
+	// clicked into.
+	const productsCount = useBoundStore((state) => state.products.length);
 	useEffect(() => {
 		if (cartModalRef.current) {
 			setTimeout(() => {
@@ -297,7 +304,7 @@ export const Cart = ({
 				}
 			}, 100);
 		}
-	}, [useBoundStore((state) => state.products)]);
+	}, [productsCount]);
 
 	const handleCreateReceivingVoucher = async (formData) => {
 		const currentProducts = useBoundStore.getState().products;

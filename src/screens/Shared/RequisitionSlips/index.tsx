@@ -1,38 +1,62 @@
-/* eslint-disable no-underscore-dangle */
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import { Button, Col, Input, Row, Select, Space, Table, Tooltip } from 'antd';
-import { Content, RequestErrors, TimeRangeFilter } from 'components';
+import {
+	Content,
+	RequestErrors,
+	TableHeaderRequisitionSlip,
+	TimeRangeFilter,
+} from 'components';
 import { ViewPOInternalModal } from 'components/modals';
 import { Box, Label } from 'components/elements';
 import { Cart } from 'screens/Shared/Cart';
+import { filterOption } from 'ejjy-global';
 import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	EMPTY_CELL,
+	MAX_PAGE_SIZE,
 	SEARCH_DEBOUNCE_TIME,
+	appTypes,
 } from 'global';
-import { useQueryParams, useRequisitionSlips } from 'hooks';
+import { useBranches, useQueryParams, useRequisitionSlips } from 'hooks';
 import { capitalize, debounce } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
 import { Link } from 'react-router-dom';
-import { convertIntoArray, formatDateTime, getLocalBranchId } from 'utils';
+import {
+	convertIntoArray,
+	formatDateTime,
+	getAppType,
+	getLocalBranchId,
+} from 'utils';
 
 export const RequisitionSlips = () => {
+	const isBackOffice = getAppType() === appTypes.BACK_OFFICE;
+
 	const [dataSource, setDataSource] = useState([]);
-	const [isCartModalVisible, setIsCartModalVisible] = useState(false);
 	const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
+	const [isCartModalVisible, setIsCartModalVisible] = useState(false);
 	const [isPoCartVisible, setIsPoCartVisible] = useState(false);
 	const [selectedRsId, setSelectedRsId] = useState<number | null>(null);
 	const [rsProductsForPo, setRsProductsForPo] = useState<any[]>([]);
 
 	const queryClient = useQueryClient();
 	const { params, setQueryParams } = useQueryParams();
+
 	const {
 		data: { requisitionSlips, total },
 		isFetching: isFetchingRequisitionSlips,
 		error: listError,
 	} = useRequisitionSlips({ params: { ...params } });
+
+	const {
+		data: { branches },
+		isFetching: isFetchingBranches,
+		error: branchErrors,
+	} = useBranches({
+		params: { pageSize: MAX_PAGE_SIZE },
+		options: { enabled: !isBackOffice },
+	});
 
 	useEffect(() => {
 		const formatted = requisitionSlips.map((rs: any) => {
@@ -41,26 +65,21 @@ export const RequisitionSlips = () => {
 				datetime_created,
 				reference_number,
 				slip_type,
+				branch,
+				vendor,
 				overall_remarks,
 				linked_purchase_order,
 			} = rs;
 
-			return {
-				key: id,
-				id: (
-					<Link to={`/branch-manager/requisition-slips/${id}`}>
-						{reference_number}
-					</Link>
-				),
-				type: capitalize(slip_type) || EMPTY_CELL,
-				datetimeCreated: formatDateTime(datetime_created),
-				status: EMPTY_CELL,
-				overallRemarks: overall_remarks,
-				poAction: linked_purchase_order ? (
+			let poAction: React.ReactNode = EMPTY_CELL;
+			if (linked_purchase_order) {
+				poAction = (
 					<Button type="link" onClick={() => setSelectedPurchase(rs)}>
 						{linked_purchase_order.reference_number}
 					</Button>
-				) : (
+				);
+			} else if (isBackOffice) {
+				poAction = (
 					<Tooltip title="Create Purchase Order">
 						<Button
 							icon={<ShoppingCartOutlined />}
@@ -74,7 +93,27 @@ export const RequisitionSlips = () => {
 							}}
 						/>
 					</Tooltip>
+				);
+			}
+
+			return {
+				key: id,
+				id: (
+					<Link
+						to={`/${
+							isBackOffice ? 'branch-manager' : 'office-manager'
+						}/requisition-slips/${id}`}
+					>
+						{reference_number}
+					</Link>
 				),
+				type: capitalize(slip_type) || EMPTY_CELL,
+				branch: branch?.name || EMPTY_CELL,
+				vendor: vendor?.name || EMPTY_CELL,
+				datetimeCreated: formatDateTime(datetime_created),
+				status: EMPTY_CELL,
+				overallRemarks: overall_remarks,
+				poAction,
 			};
 		});
 
@@ -84,7 +123,12 @@ export const RequisitionSlips = () => {
 	const columns = [
 		{ title: 'ID', dataIndex: 'id' },
 		{ title: 'Date & Time', dataIndex: 'datetimeCreated' },
-		{ title: 'Type', dataIndex: 'type' },
+		...(isBackOffice
+			? [{ title: 'Type', dataIndex: 'type' }]
+			: [
+					{ title: 'Customer', dataIndex: 'branch' },
+					{ title: 'Vendor', dataIndex: 'vendor' },
+			  ]),
 		{ title: 'Status', dataIndex: 'status' },
 		{ title: 'Remarks', dataIndex: 'overallRemarks' },
 		{ title: 'PO', dataIndex: 'poAction' },
@@ -94,24 +138,37 @@ export const RequisitionSlips = () => {
 		<>
 			<Content title="Requisition Slips">
 				<Box className="px-6" padding>
-					<div className="pa-6 d-flex justify-end">
-						<Space>
-							<Button
-								type="primary"
-								onClick={() => setIsCartModalVisible(true)}
-							>
-								Create Requisition Slip
-							</Button>
-						</Space>
-					</div>
+					{isBackOffice ? (
+						<div className="pa-6 d-flex justify-end">
+							<Space>
+								<Button
+									type="primary"
+									onClick={() => setIsCartModalVisible(true)}
+								>
+									Create Requisition Slip
+								</Button>
+							</Space>
+						</div>
+					) : (
+						<TableHeaderRequisitionSlip />
+					)}
 
 					<RequestErrors
 						className="px-6"
-						errors={[...convertIntoArray(listError)]}
+						errors={[
+							...convertIntoArray(listError),
+							...convertIntoArray(branchErrors),
+						]}
 						withSpaceBottom
 					/>
 
-					<Filter isLoading={isFetchingRequisitionSlips} />
+					<Filter
+						branches={isBackOffice ? undefined : branches}
+						isLoading={
+							isFetchingRequisitionSlips ||
+							(!isBackOffice && isFetchingBranches)
+						}
+					/>
 
 					<Table
 						columns={columns}
@@ -134,7 +191,7 @@ export const RequisitionSlips = () => {
 				</Box>
 			</Content>
 
-			{isCartModalVisible && (
+			{isBackOffice && isCartModalVisible && (
 				<Cart
 					type="Requisition Slip"
 					onClose={() => setIsCartModalVisible(false)}
@@ -142,7 +199,7 @@ export const RequisitionSlips = () => {
 				/>
 			)}
 
-			{isPoCartVisible && (
+			{isBackOffice && isPoCartVisible && (
 				<Cart
 					branchId={getLocalBranchId()}
 					requisitionSlipId={selectedRsId}
@@ -170,7 +227,12 @@ export const RequisitionSlips = () => {
 	);
 };
 
-const Filter = ({ isLoading }) => {
+interface FilterProps {
+	branches?: any[];
+	isLoading: boolean;
+}
+
+const Filter = ({ branches, isLoading }: FilterProps) => {
 	const { params, setQueryParams } = useQueryParams();
 
 	const handleRsSearchDebounced = useCallback(
@@ -198,7 +260,6 @@ const Filter = ({ isLoading }) => {
 						<Label label="Requisition Slip" spacing />
 						<Input
 							defaultValue={params.rsSearch}
-							disabled={isLoading}
 							placeholder="RS number..."
 							allowClear
 							onChange={(e) => handleRsSearchDebounced(e.target.value)}
@@ -208,12 +269,39 @@ const Filter = ({ isLoading }) => {
 						<Label label="Purchase Order" spacing />
 						<Input
 							defaultValue={params.poSearch}
-							disabled={isLoading}
 							placeholder="PO number..."
 							allowClear
 							onChange={(e) => handlePoSearchDebounced(e.target.value)}
 						/>
 					</Col>
+					{branches !== undefined && (
+						<Col style={{ minWidth: 250 }}>
+							<Label label="Branch" spacing />
+							<Select
+								className="w-100"
+								defaultValue={
+									params.branchId ? Number(params.branchId) : undefined
+								}
+								disabled={isLoading}
+								filterOption={filterOption}
+								optionFilterProp="children"
+								allowClear
+								showSearch
+								onChange={(value) => {
+									setQueryParams(
+										{ branchId: value },
+										{ shouldResetPage: true },
+									);
+								}}
+							>
+								{branches?.map(({ id, name }) => (
+									<Select.Option key={id} value={id}>
+										{name}
+									</Select.Option>
+								))}
+							</Select>
+						</Col>
+					)}
 					<Col style={{ minWidth: 200 }}>
 						<Label label="Type" spacing />
 						<Select

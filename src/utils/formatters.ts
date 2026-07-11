@@ -78,6 +78,20 @@ export const formatQuantity = ({
 		: balance.toFixed(0);
 };
 
+export const formatExcessShortage = (
+	adjustedBalance: string | number | null,
+	unitOfMeasurement?: string,
+) => {
+	if (adjustedBalance == null) return EMPTY_CELL;
+	const num = Number(adjustedBalance);
+	if (num === 0) return EMPTY_CELL;
+	const formatted = formatQuantity({
+		unitOfMeasurement,
+		quantity: Math.abs(num),
+	});
+	return num < 0 ? `(${formatted})` : formatted;
+};
+
 export const formatRemoveCommas = (x) => x?.toString()?.replace(/,/g, '') || '';
 
 export const convertToBulk = (pieces, piecesInBulk) =>

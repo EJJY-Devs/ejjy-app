@@ -2,6 +2,7 @@ import { Button, Input, message, Modal, Spin } from 'antd';
 import Table, { ColumnsType } from 'antd/lib/table';
 import { RequestErrors } from 'components';
 import {
+	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	pageSizeOptions,
@@ -13,7 +14,7 @@ import {
 } from 'global';
 import { useAuditLogCreate, useBranchProductsForAudit } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { convertIntoArray } from 'utils';
+import { convertIntoArray, getAppType } from 'utils';
 
 interface Props {
 	type: string;
@@ -23,6 +24,8 @@ interface Props {
 }
 
 export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
+	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
+
 	// STATES
 	const [quantities, setQuantities] = useState<Record<number, string>>({});
 	const [submitting, setSubmitting] = useState<Record<number, boolean>>({});
@@ -107,12 +110,16 @@ export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 			align: 'center',
 			width: 140,
 		},
-		{
-			title: 'Action',
-			dataIndex: 'action',
-			align: 'center',
-			width: 100,
-		},
+		...(isHeadOffice
+			? []
+			: [
+					{
+						title: 'Action',
+						dataIndex: 'action',
+						align: 'center',
+						width: 100,
+					} as ColumnsType[number],
+			  ]),
 	];
 
 	const eligibleProducts =
@@ -157,15 +164,19 @@ export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 					}}
 				/>
 			),
-			action: (
-				<Button
-					loading={submitting[bp.id]}
-					type="link"
-					onClick={() => handleSubmit(bp)}
-				>
-					Submit
-				</Button>
-			),
+			...(isHeadOffice
+				? {}
+				: {
+						action: (
+							<Button
+								loading={submitting[bp.id]}
+								type="link"
+								onClick={() => handleSubmit(bp)}
+							>
+								Submit
+							</Button>
+						),
+				  }),
 		};
 	});
 

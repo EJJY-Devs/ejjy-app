@@ -17,7 +17,7 @@ const columns: ColumnsType = [
 	{ title: 'Name', dataIndex: 'name' },
 	{ title: 'Captured QTY', dataIndex: 'current', align: 'center' },
 	{ title: 'Inputted QTY', dataIndex: 'fulfilled', align: 'center' },
-	{ title: 'Adjusted Balance', dataIndex: 'adjustedBalance', align: 'center' },
+	{ title: 'Adjustment', dataIndex: 'adjustedBalance', align: 'center' },
 	{ title: 'Status', dataIndex: 'status', align: 'center' },
 ];
 

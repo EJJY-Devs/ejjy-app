@@ -94,6 +94,17 @@ export const Expenses = () => {
 		},
 	});
 
+	const { data: withoutJeData } = useExpenses({
+		params: {
+			page: DEFAULT_PAGE,
+			pageSize: 1,
+			branchId: isHeadOffice ? params.branchId : undefined,
+			timeRange: params.timeRange,
+			journalEntryStatus: 'without',
+		},
+	});
+	const withoutJeCount = withoutJeData?.total || 0;
+
 	const {
 		mutateAsync: createExpense,
 		isLoading: isCreating,
@@ -197,10 +208,6 @@ export const Expenses = () => {
 
 				<Row className="Expenses_toolbar" gutter={[16, 16]}>
 					<Col span={24}>
-						<TimeRangeFilter disabled={isFetching} />
-					</Col>
-
-					<Col lg={12} span={24}>
 						<Label label="Search" spacing />
 						<Input
 							prefix={<SearchOutlined />}
@@ -240,24 +247,38 @@ export const Expenses = () => {
 					)}
 
 					<Col span={24}>
-						<Label label="Journal Entry" spacing />
-						<Radio.Group
-							buttonStyle="solid"
-							options={[
-								{ label: 'Without JE', value: 'without' },
-								{ label: 'With JE', value: 'with' },
-								{ label: 'All', value: 'all' },
-							]}
-							optionType="button"
-							value={(params.journalEntryStatus as string) ?? 'without'}
-							onChange={(e) =>
-								setQueryParams({
-									journalEntryStatus: e.target.value,
-									page: DEFAULT_PAGE,
-									pageSize: params.pageSize,
-								})
-							}
-						/>
+						<Row gutter={[16, 0]}>
+							<Col flex="none">
+								<TimeRangeFilter disabled={isFetching} />
+							</Col>
+							<Col flex="none">
+								<Label label="Journal Entry" spacing />
+								<Radio.Group
+									buttonStyle="solid"
+									optionType="button"
+									value={(params.journalEntryStatus as string) ?? 'without'}
+									onChange={(e) =>
+										setQueryParams({
+											journalEntryStatus: e.target.value,
+											page: DEFAULT_PAGE,
+											pageSize: params.pageSize,
+										})
+									}
+								>
+									<Radio.Button
+										className="Expenses_withoutJeBtn"
+										value="without"
+									>
+										Without JE
+										{withoutJeCount > 0 && (
+											<span className="Expenses_jeCount">{withoutJeCount}</span>
+										)}
+									</Radio.Button>
+									<Radio.Button value="with">With JE</Radio.Button>
+									<Radio.Button value="all">All</Radio.Button>
+								</Radio.Group>
+							</Col>
+						</Row>
 					</Col>
 				</Row>
 

@@ -18,7 +18,7 @@ import {
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
-import { convertIntoArray } from 'utils';
+import { convertIntoArray, formatQuantity } from 'utils';
 import { ViewAdjustmentSlipModal } from 'components/modals/ViewAdjustmentSlipModal';
 import { AuditModal } from './AuditModal';
 import { PendingAuditModal } from './PendingAuditModal';
@@ -28,7 +28,7 @@ const columns: ColumnsType = [
 	{ title: 'Name', dataIndex: 'name' },
 	{ title: 'Captured QTY', dataIndex: 'capturedQty', align: 'center' },
 	{ title: 'Inputted QTY', dataIndex: 'inputtedQty', align: 'center' },
-	{ title: 'Adjusted Balance', dataIndex: 'adjustedBalance', align: 'center' },
+	{ title: 'Adjustment', dataIndex: 'adjustedBalance', align: 'center' },
 	{ title: 'Status', dataIndex: 'status', align: 'center' },
 ];
 
@@ -99,6 +99,7 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 				adjusted_balance,
 				status,
 				adjustment_slip_id,
+				unit_of_measurement,
 			} = auditLog;
 
 			let statusTag = <Tag color="yellow">Pending</Tag>;
@@ -121,12 +122,25 @@ export const BranchCheckings = ({ serverUrl, branchId }: Props) => {
 				referenceNumber: reference_number || id,
 				name,
 				capturedQty:
-					captured_qty != null ? Number(captured_qty).toFixed(3) : EMPTY_CELL,
+					captured_qty != null
+						? formatQuantity({
+								unitOfMeasurement: unit_of_measurement,
+								quantity: captured_qty,
+						  })
+						: EMPTY_CELL,
 				inputtedQty:
-					inputted_qty != null ? Number(inputted_qty).toFixed(3) : EMPTY_CELL,
+					inputted_qty != null
+						? formatQuantity({
+								unitOfMeasurement: unit_of_measurement,
+								quantity: inputted_qty,
+						  })
+						: EMPTY_CELL,
 				adjustedBalance:
 					adjusted_balance != null
-						? Number(adjusted_balance).toFixed(3)
+						? formatQuantity({
+								unitOfMeasurement: unit_of_measurement,
+								quantity: adjusted_balance,
+						  })
 						: EMPTY_CELL,
 				status: statusTag,
 			};

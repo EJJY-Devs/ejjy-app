@@ -24,6 +24,8 @@ const usePurchases = ({ params }: Query) =>
 			params?.pageSize,
 			params?.timeRange,
 			params?.branchId,
+			params?.journalEntryStatus,
+			params?.search,
 		],
 		() =>
 			wrapServiceWithCatch(
@@ -33,6 +35,8 @@ const usePurchases = ({ params }: Query) =>
 						page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 						time_range: params?.timeRange,
 						branch_id: params?.branchId,
+						journal_entry_status: params?.journalEntryStatus ?? 'without',
+						search: params?.search,
 					},
 					getLocalApiUrl(),
 				),

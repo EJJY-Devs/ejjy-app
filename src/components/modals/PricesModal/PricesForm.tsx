@@ -57,7 +57,7 @@ const validationSchema = Yup.array(
 			.label('Regular Price (Piece)')
 			.test(
 				'greater-than-cost',
-				'Regular Price must be at least the cost',
+				'Regular Price must be more than the cost',
 				function testPricePerPiece(value) {
 					return priceAboveCostTest.call(
 						this,
@@ -73,7 +73,7 @@ const validationSchema = Yup.array(
 			.label('Regular Price (Bulk)')
 			.test(
 				'greater-than-cost',
-				'Regular Price (Bulk) must be at least the cost',
+				'Regular Price (Bulk) must be more than the cost',
 				function testPricePerBulk(value) {
 					return priceAboveCostTest.call(
 						this,
@@ -89,7 +89,7 @@ const validationSchema = Yup.array(
 			.label('Wholesale Price')
 			.test(
 				'greater-than-cost',
-				'Wholesale Price must be at least the cost',
+				'Wholesale Price must be more than the cost',
 				function testWholeSalePrice(value) {
 					return priceAboveCostTest.call(
 						this,
@@ -105,7 +105,7 @@ const validationSchema = Yup.array(
 			.label('Special Price')
 			.test(
 				'greater-than-cost',
-				'Special Price must be at least the cost',
+				'Special Price must be more than the cost',
 				function testSpecialPrice(value) {
 					return priceAboveCostTest.call(
 						this,
@@ -121,7 +121,7 @@ const validationSchema = Yup.array(
 			.label('Credit Price')
 			.test(
 				'greater-than-cost',
-				'Credit Price must be at least the cost',
+				'Credit Price must be more than the cost',
 				function testCreditPrice(value) {
 					return priceAboveCostTest.call(
 						this,
@@ -137,7 +137,7 @@ const validationSchema = Yup.array(
 			.label('PO Price')
 			.test(
 				'greater-than-cost',
-				'PO Price must be at least the cost',
+				'PO Price must be more than the cost',
 				function testPoPrice(value) {
 					return priceAboveCostTest.call(
 						this,

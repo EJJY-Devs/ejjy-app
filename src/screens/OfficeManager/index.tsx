@@ -4,6 +4,7 @@ import {
 	useSalesTrackerCount,
 	useBranchProducts,
 	usePurchaseCostNotifications,
+	usePurchaseOrderQtyNotifications,
 	useProductSyncStatus,
 	useVoidedTransactionsCount,
 } from 'hooks';
@@ -109,6 +110,12 @@ const OfficeManager = () => {
 		params: { isResolved: false, pageSize: 1 },
 		options: { notifyOnChangeProps: ['data'] },
 	});
+	const {
+		data: { total: poQtyCount },
+	} = usePurchaseOrderQtyNotifications({
+		params: { isResolved: false, pageSize: 1 },
+		options: { notifyOnChangeProps: ['data'] },
+	});
 
 	useEffect(() => {
 		const newLogsCount = cancelledTransactionsCount > 0 ? 1 : 0;
@@ -126,7 +133,8 @@ const OfficeManager = () => {
 			(branchProductsNegativeBalanceCount > 0 ? 1 : 0) +
 			(unsyncedProductsCount > 0 ? 1 : 0) +
 			(voidedTransactionsCount > 0 ? 1 : 0) +
-			(purchaseCostChangesCount > 0 ? 1 : 0);
+			(purchaseCostChangesCount > 0 ? 1 : 0) +
+			(poQtyCount > 0 ? 1 : 0);
 		if (newNotificationsCount !== notificationsCount) {
 			setNotificationsCount(newNotificationsCount);
 		}
@@ -138,6 +146,7 @@ const OfficeManager = () => {
 		unsyncedProductsCount,
 		voidedTransactionsCount,
 		purchaseCostChangesCount,
+		poQtyCount,
 	]);
 
 	const getSidebarItems = useCallback(() => {

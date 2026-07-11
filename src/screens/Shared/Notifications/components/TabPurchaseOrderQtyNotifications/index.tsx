@@ -143,7 +143,7 @@ export const TabPurchaseOrderQtyNotifications = ({ branchId }: Props) => {
 					difference: (
 						<Tag color={getDiffColor(diff)}>
 							{diff > 0 ? '+' : ''}
-							{diff}
+							{diff.toFixed(2)}
 						</Tag>
 					),
 					...(showActionsColumn && {

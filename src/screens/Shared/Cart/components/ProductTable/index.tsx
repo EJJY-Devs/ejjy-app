@@ -23,7 +23,11 @@ import {
 	PRODUCT_LENGTH_PER_PAGE,
 } from 'screens/Shared/Cart/data';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
-import { formatQuantity, getBranchProductStatus } from 'utils';
+import {
+	formatExcessShortage,
+	formatQuantity,
+	getBranchProductStatus,
+} from 'utils';
 import shallow from 'zustand/shallow';
 import './style.scss';
 
@@ -65,6 +69,9 @@ export const ProductTable = ({
 
 	// Ref to store unit input references
 	const unitInputRefs = useRef<{ [key: string]: any }>({});
+	// Ref to store Qty/Unit Cost input references (Purchase type)
+	const qtyInputRefs = useRef<{ [key: string]: HTMLInputElement }>({});
+	const hasAutoFocusedPurchaseQty = useRef(false);
 
 	const {
 		products,
@@ -88,17 +95,34 @@ export const ProductTable = ({
 		shallow,
 	);
 
+	// Adjustment slips created from an Inventory Audit pending record carry
+	// captured/inputted qty data. Show those instead of "Current Balance".
+	const isAuditAdjustment =
+		type === 'Adjustment Slip' && products[0]?.product?.captured_qty != null;
+
 	let baseColumns: { name: string; width?: string; alignment?: string }[];
 	if (type === 'Adjustment Slip') {
-		baseColumns = [
-			{ name: '', width: '1px' },
-			{ name: 'Barcode', width: '40px' },
-			{ name: 'Description', alignment: 'center' },
-			{ name: 'Current Balance', alignment: 'center' },
-			{ name: 'Action', alignment: 'center' },
-			{ name: 'Value', alignment: 'center' },
-			{ name: 'Remarks', alignment: 'center', width: '275px' },
-		];
+		baseColumns = isAuditAdjustment
+			? [
+					{ name: '', width: '1px' },
+					{ name: 'Barcode', width: '40px' },
+					{ name: 'Description', alignment: 'center' },
+					{ name: 'Captured QTY', alignment: 'center' },
+					{ name: 'Inputted QTY', alignment: 'center' },
+					{ name: 'Excess / Shortage', alignment: 'center' },
+					{ name: 'Action', alignment: 'center' },
+					{ name: 'Adjustment', alignment: 'center' },
+					{ name: 'Remarks', alignment: 'center', width: '275px' },
+			  ]
+			: [
+					{ name: '', width: '1px' },
+					{ name: 'Barcode', width: '40px' },
+					{ name: 'Description', alignment: 'center' },
+					{ name: 'Current Balance', alignment: 'center' },
+					{ name: 'Action', alignment: 'center' },
+					{ name: 'Adjustment', alignment: 'center' },
+					{ name: 'Remarks', alignment: 'center', width: '275px' },
+			  ];
 	} else if (type === 'Purchase') {
 		baseColumns = [
 			{ name: '', width: '1px' },
@@ -170,6 +194,27 @@ export const ProductTable = ({
 		}
 		setPreviousProductCount(products.length);
 	}, [products.length, type, previousProductCount]);
+
+	// Auto-focus and select the first Qty input when the Purchase cart opens
+	useEffect(() => {
+		if (
+			type === 'Purchase' &&
+			!hasAutoFocusedPurchaseQty.current &&
+			products.length > 0
+		) {
+			const firstKey = products[0]?.product?.key;
+			if (firstKey) {
+				setTimeout(() => {
+					const inputEl = qtyInputRefs.current[firstKey];
+					if (inputEl) {
+						inputEl.focus();
+						inputEl.select();
+						hasAutoFocusedPurchaseQty.current = true;
+					}
+				}, 100);
+			}
+		}
+	}, [type, products]);
 
 	// Cleanup refs when products are removed
 	useEffect(() => {
@@ -250,23 +295,59 @@ export const ProductTable = ({
 						{name}
 					</Tooltip>,
 
-					<Tooltip
-						key={`tooltip-current-balance-${key}`}
-						placement="top"
-						title={`Current Balance: ${formatQuantity({
-							unitOfMeasurement: product.unit_of_measurement,
-							quantity:
-								product.current_balance || branchProduct.current_balance || 0,
-						})}`}
-					>
-						<div style={{ textAlign: 'center' }}>
-							{formatQuantity({
-								unitOfMeasurement: product.unit_of_measurement,
-								quantity:
-									product.current_balance || branchProduct.current_balance || 0,
-							})}
-						</div>
-					</Tooltip>,
+					...(isAuditAdjustment
+						? [
+								<div
+									key={`div-captured-qty-${key}`}
+									style={{ textAlign: 'center' }}
+								>
+									{formatQuantity({
+										unitOfMeasurement: product.unit_of_measurement,
+										quantity: product.captured_qty,
+									})}
+								</div>,
+								<div
+									key={`div-inputted-qty-${key}`}
+									style={{ textAlign: 'center' }}
+								>
+									{formatQuantity({
+										unitOfMeasurement: product.unit_of_measurement,
+										quantity: product.inputted_qty,
+									})}
+								</div>,
+								<div
+									key={`div-excess-shortage-${key}`}
+									style={{ textAlign: 'center' }}
+								>
+									{formatExcessShortage(
+										Number(product.inputted_qty) - Number(product.captured_qty),
+										product.unit_of_measurement,
+									)}
+								</div>,
+						  ]
+						: [
+								<Tooltip
+									key={`tooltip-current-balance-${key}`}
+									placement="top"
+									title={`Current Balance: ${formatQuantity({
+										unitOfMeasurement: product.unit_of_measurement,
+										quantity:
+											product.current_balance ||
+											branchProduct.current_balance ||
+											0,
+									})}`}
+								>
+									<div style={{ textAlign: 'center' }}>
+										{formatQuantity({
+											unitOfMeasurement: product.unit_of_measurement,
+											quantity:
+												product.current_balance ||
+												branchProduct.current_balance ||
+												0,
+										})}
+									</div>
+								</Tooltip>,
+						  ]),
 
 					<Tooltip
 						key={`tooltip-action-${key}`}
@@ -505,6 +586,11 @@ export const ProductTable = ({
 				type === 'Purchase' ? (
 					<InputNumber
 						key={`input-qty-${key}`}
+						ref={(el: HTMLInputElement) => {
+							if (el) {
+								qtyInputRefs.current[key] = el;
+							}
+						}}
 						bordered={false}
 						className="ProductTable_costInput"
 						controls={false}
@@ -527,6 +613,11 @@ export const ProductTable = ({
 						}}
 						onChange={(value) => {
 							setLocalQtys((prev) => ({ ...prev, [key]: value ?? 0 }));
+						}}
+						onFocus={(e) => e.target.select()}
+						onMouseUp={(e) => {
+							e.preventDefault();
+							(e.target as HTMLInputElement).select();
 						}}
 					/>
 				) : (
@@ -695,6 +786,7 @@ export const ProductTable = ({
 									[key]: value ?? 0,
 								}));
 							}}
+							onFocus={(e) => e.target.select()}
 							onKeyDown={(e) => {
 								const allowed = [
 									'Backspace',
@@ -708,6 +800,10 @@ export const ProductTable = ({
 								if (!allowed.includes(e.key) && !/^[0-9.]$/.test(e.key)) {
 									e.preventDefault();
 								}
+							}}
+							onMouseUp={(e) => {
+								e.preventDefault();
+								(e.target as HTMLInputElement).select();
 							}}
 						/>,
 					);

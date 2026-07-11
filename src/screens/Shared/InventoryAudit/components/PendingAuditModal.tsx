@@ -11,7 +11,13 @@ import {
 import useAuditLogs, { useAuditLogMarkAdjusted } from 'hooks/useAuditLogs';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Cart } from 'screens/Shared/Cart';
-import { convertIntoArray, getAppType, getLocalBranchId } from 'utils';
+import {
+	convertIntoArray,
+	formatExcessShortage,
+	formatQuantity,
+	getAppType,
+	getLocalBranchId,
+} from 'utils';
 
 interface Props {
 	serverUrl: string;
@@ -71,14 +77,6 @@ export const PendingAuditModal = ({ serverUrl, branchId, onClose }: Props) => {
 	}, [pendingAdjust, selectedAuditLog]);
 
 	// METHODS
-	const formatExcessShortage = (adjustedBalance: string | null) => {
-		if (adjustedBalance == null) return EMPTY_CELL;
-		const num = Number(adjustedBalance);
-		if (num === 0) return EMPTY_CELL;
-		const formatted = Math.abs(num).toFixed(3);
-		return num < 0 ? `(${formatted})` : formatted;
-	};
-
 	const buildPrePopulatedProduct = (auditLog: any) => ({
 		branch_product: {
 			id: auditLog.branch_product_id,
@@ -93,6 +91,8 @@ export const PendingAuditModal = ({ serverUrl, branchId, onClose }: Props) => {
 		value: auditLog.captured_qty,
 		// signed excess/shortage: negative = shortage (decrease), positive = excess (increase)
 		adjustedBalance: auditLog.adjusted_balance,
+		capturedQty: auditLog.captured_qty,
+		inputtedQty: auditLog.inputted_qty,
 	});
 
 	// Memoize so the Cart's useEffect only re-fires when the selected audit log
@@ -139,13 +139,22 @@ export const PendingAuditModal = ({ serverUrl, branchId, onClose }: Props) => {
 		name: auditLog.name,
 		capturedQty:
 			auditLog.captured_qty != null
-				? Number(auditLog.captured_qty).toFixed(3)
+				? formatQuantity({
+						unitOfMeasurement: auditLog.unit_of_measurement,
+						quantity: auditLog.captured_qty,
+				  })
 				: EMPTY_CELL,
 		inputtedQty:
 			auditLog.inputted_qty != null
-				? Number(auditLog.inputted_qty).toFixed(3)
+				? formatQuantity({
+						unitOfMeasurement: auditLog.unit_of_measurement,
+						quantity: auditLog.inputted_qty,
+				  })
 				: EMPTY_CELL,
-		excessShortage: formatExcessShortage(auditLog.adjusted_balance),
+		excessShortage: formatExcessShortage(
+			auditLog.adjusted_balance,
+			auditLog.unit_of_measurement,
+		),
 		action: (
 			<Tooltip
 				title={!isHeadOffice ? 'Only HO can adjust pending products' : ''}

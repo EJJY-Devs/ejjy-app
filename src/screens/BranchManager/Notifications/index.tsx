@@ -56,19 +56,15 @@ export const Notifications = () => {
 		options: { notifyOnChangeProps: ['data'] },
 	});
 	const {
-		data: { notifications: poQtyNotifications },
+		data: { total: poQtyCount },
 	} = usePurchaseOrderQtyNotifications({
 		params: {
 			branchId: Number(getLocalBranchId()) || undefined,
 			isResolved: false,
-			pageSize: MAX_PAGE_SIZE,
+			pageSize: 1,
 		},
 		options: { notifyOnChangeProps: ['data'] },
 	});
-	const poQtyCount = poQtyNotifications.filter((n: any) => {
-		const diff = Number(n.purchase_quantity ?? 0) - Number(n.po_quantity ?? 0);
-		return diff !== 0;
-	}).length;
 
 	// METHODS
 	const handleTabClick = (selectedTab) => {

@@ -12,7 +12,6 @@ import {
 	usePurchaseOrderQtyNotifications,
 	useUploadData,
 	useSalesTrackerCount,
-	useVoidedTransactionsCount,
 } from 'hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Redirect, Route, Switch, useLocation } from 'react-router-dom';
@@ -128,9 +127,6 @@ const BranchManager = () => {
 	}, [cancelledTransactionsCount]);
 
 	const salesTrackerCount = useSalesTrackerCount();
-	const { data: voidedTransactionsCount } = useVoidedTransactionsCount(
-		Number(getLocalBranchId()) || undefined,
-	);
 	const {
 		data: { total: purchaseCostChangesCount },
 	} = usePurchaseCostNotifications({
@@ -157,7 +153,6 @@ const BranchManager = () => {
 			(branchProductsNegativeBalanceCount > 0 ? 1 : 0) +
 			(salesTrackerCount > 0 ? 1 : 0) +
 			(dtrCount > 0 ? 1 : 0) +
-			(voidedTransactionsCount > 0 ? 1 : 0) +
 			(purchaseCostChangesCount > 0 ? 1 : 0) +
 			(poQtyCount > 0 ? 1 : 0);
 
@@ -168,7 +163,6 @@ const BranchManager = () => {
 		salesTrackerCount,
 		branchProductsNegativeBalanceCount,
 		dtrCount,
-		voidedTransactionsCount,
 		purchaseCostChangesCount,
 		poQtyCount,
 	]);

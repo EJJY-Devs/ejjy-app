@@ -6,6 +6,7 @@ interface List extends IListRequest {
 	branch_id?: number;
 	time_range?: string;
 	journal_entry_status?: string;
+	supplier_account_id?: number;
 }
 
 interface Create {
@@ -15,6 +16,7 @@ interface Create {
 	received_by?: string;
 	authorizer_id?: number | null;
 	branch_id?: number;
+	supplier_account_id?: number | null;
 }
 
 interface Update {

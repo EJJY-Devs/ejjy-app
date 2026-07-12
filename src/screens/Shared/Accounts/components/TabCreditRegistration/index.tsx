@@ -1,4 +1,9 @@
-import { EditFilled, EyeFilled, SearchOutlined } from '@ant-design/icons';
+import {
+	EditFilled,
+	EyeFilled,
+	FileTextOutlined,
+	SearchOutlined,
+} from '@ant-design/icons';
 import { Button, Col, Input, Row, Space, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
@@ -6,6 +11,7 @@ import {
 	RequestErrors,
 	TableHeader,
 	ViewAccountModal,
+	ViewStatementOfAccountModal,
 } from 'components';
 import { Label } from 'components/elements';
 import { getFullName } from 'ejjy-global';
@@ -43,6 +49,10 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 	const [selectedCreditRegistration, setSelectedCreditRegistration] = useState(
 		null,
 	);
+	const [
+		statementCreditRegistration,
+		setStatementCreditRegistration,
+	] = useState(null);
 	const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
 	// CUSTOM HOOKS
@@ -97,6 +107,17 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 										{ shouldResetPage: true },
 									);
 								}}
+							/>
+						</Tooltip>
+						<Tooltip title="View Statement of Account">
+							<Button
+								disabled={disabled}
+								icon={<FileTextOutlined />}
+								type="primary"
+								ghost
+								onClick={() =>
+									setStatementCreditRegistration(creditRegistration)
+								}
 							/>
 						</Tooltip>
 					</Space>
@@ -164,6 +185,13 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 						setIsCreateModalVisible(false);
 						setSelectedCreditRegistration(null);
 					}}
+				/>
+			)}
+
+			{statementCreditRegistration && (
+				<ViewStatementOfAccountModal
+					creditRegistration={statementCreditRegistration}
+					onClose={() => setStatementCreditRegistration(null)}
 				/>
 			)}
 		</div>

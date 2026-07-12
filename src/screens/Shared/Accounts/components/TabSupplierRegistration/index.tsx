@@ -1,11 +1,26 @@
-import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
-import { Button, Col, Input, Popconfirm, Row, Table, Tooltip } from 'antd';
+import {
+	DeleteOutlined,
+	EyeFilled,
+	FileTextOutlined,
+	SearchOutlined,
+} from '@ant-design/icons';
+import {
+	Button,
+	Col,
+	Input,
+	Popconfirm,
+	Row,
+	Space,
+	Table,
+	Tooltip,
+} from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
 	CreateSupplierRegistrationModal,
 	RequestErrors,
 	TableHeader,
 	ViewAccountModal,
+	ViewSupplierStatementOfAccountModal,
 } from 'components';
 import { Label } from 'components/elements';
 import { getFullName } from 'ejjy-global';
@@ -24,6 +39,7 @@ import {
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { TabSupplierPurchases } from 'screens/Shared/Accounts/components/TabSupplierPurchases';
 import { convertIntoArray, formatDate, getAppType } from 'utils';
 
 const columns: ColumnsType = [
@@ -41,6 +57,10 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedAccount, setSelectedAccount] = useState(null);
+	const [
+		statementSupplierRegistration,
+		setStatementSupplierRegistration,
+	] = useState(null);
 	const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
 	// CUSTOM HOOKS
@@ -69,7 +89,32 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 				clientName: getFullName(account),
 				datetimeCreated: formatDate(account.datetime_created),
 				actions: (
-					<>
+					<Space>
+						<Tooltip title="View Purchases">
+							<Button
+								disabled={disabled}
+								icon={<EyeFilled />}
+								type="primary"
+								ghost
+								onClick={() => {
+									setQueryParams(
+										{ supplierAccountId: account.id },
+										{ shouldResetPage: true },
+									);
+								}}
+							/>
+						</Tooltip>
+						<Tooltip title="View Statement of Account">
+							<Button
+								disabled={disabled}
+								icon={<FileTextOutlined />}
+								type="primary"
+								ghost
+								onClick={() =>
+									setStatementSupplierRegistration(supplierRegistration)
+								}
+							/>
+						</Tooltip>
 						{getAppType() === appTypes.HEAD_OFFICE && (
 							<Popconfirm
 								cancelText="No"
@@ -91,13 +136,26 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 								</Tooltip>
 							</Popconfirm>
 						)}
-					</>
+					</Space>
 				),
 			};
 		});
 
 		setDataSource(data);
 	}, [supplierRegistrations, disabled]);
+
+	if (params.supplierAccountId) {
+		return (
+			<TabSupplierPurchases
+				onBack={() =>
+					setQueryParams(
+						{ supplierAccountId: undefined },
+						{ shouldResetPage: true },
+					)
+				}
+			/>
+		);
+	}
 
 	return (
 		<div>
@@ -159,6 +217,13 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 					onClose={() => {
 						setIsCreateModalVisible(false);
 					}}
+				/>
+			)}
+
+			{statementSupplierRegistration && (
+				<ViewSupplierStatementOfAccountModal
+					supplierRegistration={statementSupplierRegistration}
+					onClose={() => setStatementSupplierRegistration(null)}
 				/>
 			)}
 		</div>

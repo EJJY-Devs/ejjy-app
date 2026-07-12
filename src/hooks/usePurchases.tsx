@@ -16,7 +16,7 @@ export const usePurchaseById = (id: number) =>
 		},
 	);
 
-const usePurchases = ({ params }: Query) =>
+const usePurchases = ({ params, options }: Query) =>
 	useQuery<any>(
 		[
 			'usePurchases',
@@ -26,6 +26,7 @@ const usePurchases = ({ params }: Query) =>
 			params?.branchId,
 			params?.journalEntryStatus,
 			params?.search,
+			params?.supplierAccountId,
 		],
 		() =>
 			wrapServiceWithCatch(
@@ -37,6 +38,7 @@ const usePurchases = ({ params }: Query) =>
 						branch_id: params?.branchId,
 						journal_entry_status: params?.journalEntryStatus ?? 'without',
 						search: params?.search,
+						supplier_account_id: params?.supplierAccountId,
 					},
 					getLocalApiUrl(),
 				),
@@ -47,6 +49,7 @@ const usePurchases = ({ params }: Query) =>
 				purchases: query.data.results,
 				total: query.data.count,
 			}),
+			...options,
 		},
 	);
 
@@ -75,6 +78,7 @@ export const usePurchaseCreate = () => {
 		({
 			products,
 			supplierName,
+			supplierAccountId,
 			encodedById,
 			authorizerId,
 			overallRemarks,
@@ -86,6 +90,7 @@ export const usePurchaseCreate = () => {
 				{
 					products,
 					supplier_name: supplierName,
+					supplier_account_id: supplierAccountId,
 					encoded_by_id: encodedById,
 					authorizer_id: authorizerId,
 					overall_remarks: overallRemarks,
@@ -97,9 +102,11 @@ export const usePurchaseCreate = () => {
 			),
 		{
 			onSuccess: () => {
+				queryClient.invalidateQueries('usePurchases');
 				queryClient.invalidateQueries('useRequisitionSlips');
 				queryClient.invalidateQueries('useBranchProductBalances');
 				queryClient.invalidateQueries('useBranchProducts');
+				queryClient.invalidateQueries('useAccounts');
 			},
 		},
 	);

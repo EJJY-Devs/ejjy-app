@@ -1,7 +1,7 @@
-import { AutoComplete, Button, Col, Input, Modal, Row } from 'antd';
+import { Button, Col, Input, Modal, Row, Select } from 'antd';
 import { ErrorMessage, Form, Formik } from 'formik';
 import * as Yup from 'yup';
-import React, { useState } from 'react';
+import React from 'react';
 import { MAX_PAGE_SIZE } from 'global';
 import useAccounts from 'hooks/useAccounts';
 import { FieldError, Label } from '../../elements';
@@ -14,22 +14,25 @@ type ModalProps = {
 
 const formDetails = {
 	defaultValues: {
+		supplierAccountId: null,
 		supplierName: '',
 		overallRemarks: '',
 	},
 	schema: Yup.object().shape({
-		supplierName: Yup.string().required().label('Supplier Name').trim(),
+		supplierAccountId: Yup.number().required().nullable().label('Supplier'),
 		overallRemarks: Yup.string().nullable().label('Remarks').trim(),
 	}),
 };
+
+const getSupplierName = (account: any) =>
+	account.business_name ||
+	`${account.first_name || ''} ${account.last_name || ''}`.trim();
 
 export const CreatePurchaseModal = ({
 	isLoading,
 	onSubmit,
 	onClose,
 }: ModalProps) => {
-	const [supplierSearch, setSupplierSearch] = useState('');
-
 	const { data: accountsData } = useAccounts({
 		params: {
 			withSupplierRegistration: true,
@@ -37,17 +40,7 @@ export const CreatePurchaseModal = ({
 		},
 	});
 
-	const supplierOptions = (accountsData?.accounts || [])
-		.map((account: any) => {
-			const name =
-				account.business_name ||
-				`${account.first_name || ''} ${account.last_name || ''}`.trim();
-			return name ? { value: name } : null;
-		})
-		.filter(Boolean)
-		.filter((opt: any) =>
-			opt.value.toLowerCase().includes(supplierSearch.toLowerCase()),
-		);
+	const supplierAccounts = accountsData?.accounts || [];
 
 	return (
 		<Modal
@@ -71,20 +64,28 @@ export const CreatePurchaseModal = ({
 					<Form>
 						<Row gutter={[16, 16]}>
 							<Col span={24}>
-								<Label label="Supplier Name" spacing />
-								<AutoComplete
+								<Label label="Supplier" spacing />
+								<Select
 									className="w-100"
-									options={supplierOptions}
-									placeholder="Type or select supplier"
-									value={values['supplierName']}
-									onSearch={(text) => {
-										setSupplierSearch(text);
-										setFieldValue('supplierName', text);
+									filterOption={(input, option) =>
+										(option?.label as string)
+											?.toLowerCase()
+											.includes(input.toLowerCase())
+									}
+									options={supplierAccounts.map((account: any) => ({
+										value: account.id,
+										label: getSupplierName(account),
+									}))}
+									placeholder="Select supplier"
+									value={values['supplierAccountId']}
+									showSearch
+									onChange={(value, option: any) => {
+										setFieldValue('supplierAccountId', value);
+										setFieldValue('supplierName', option?.label || '');
 									}}
-									onSelect={(value) => setFieldValue('supplierName', value)}
 								/>
 								<ErrorMessage
-									name="supplierName"
+									name="supplierAccountId"
 									render={(error) => <FieldError error={error} />}
 								/>
 							</Col>

@@ -42,6 +42,8 @@ export * from './ViewProductModal';
 export * from './ViewReceivingVoucherModal';
 export * from './ViewRequisitionSlipModal';
 export * from './ViewReturnItemSlipModal';
+export * from './ViewStatementOfAccountModal';
+export * from './ViewSupplierStatementOfAccountModal';
 export * from './ViewUserModal';
 export * from './ViewXReportsModal';
 export * from './ViewZReportsModal';

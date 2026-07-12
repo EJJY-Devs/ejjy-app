@@ -4,7 +4,7 @@ import { Query } from 'hooks/inteface';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { ExpensesService } from 'services';
 
-const useExpenses = ({ params }: Query) =>
+const useExpenses = ({ params, options }: Query) =>
 	useQuery<any>(
 		[
 			'useExpenses',
@@ -14,6 +14,7 @@ const useExpenses = ({ params }: Query) =>
 			params?.branchId,
 			params?.timeRange,
 			params?.journalEntryStatus,
+			params?.supplierAccountId,
 		],
 		async () => {
 			const baseURL = getLocalApiUrl();
@@ -26,6 +27,7 @@ const useExpenses = ({ params }: Query) =>
 					branch_id: params?.branchId,
 					time_range: params?.timeRange,
 					journal_entry_status: params?.journalEntryStatus ?? 'without',
+					supplier_account_id: params?.supplierAccountId,
 				},
 				baseURL,
 			);
@@ -38,6 +40,7 @@ const useExpenses = ({ params }: Query) =>
 				expenses: query.data.results,
 				total: query.data.count,
 			}),
+			...options,
 		},
 	);
 
@@ -45,7 +48,15 @@ export const useExpenseCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ payee, particulars, amount, receivedBy, authorizerId, branchId }: any) =>
+		({
+			payee,
+			particulars,
+			amount,
+			receivedBy,
+			authorizerId,
+			branchId,
+			supplierAccountId,
+		}: any) =>
 			ExpensesService.create(
 				{
 					payee,
@@ -54,12 +65,14 @@ export const useExpenseCreate = () => {
 					received_by: receivedBy,
 					authorizer_id: authorizerId,
 					branch_id: branchId,
+					supplier_account_id: supplierAccountId,
 				},
 				getLocalApiUrl(),
 			),
 		{
 			onSuccess: () => {
 				queryClient.invalidateQueries('useExpenses');
+				queryClient.invalidateQueries('useAccounts');
 			},
 		},
 	);

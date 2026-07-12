@@ -9,6 +9,8 @@ import { getLocalApiUrl, formatNumberWithCommas } from 'utils';
 interface Props {
 	isSubmitting: boolean;
 	open: boolean;
+	initialPayee?: string;
+	supplierAccountId?: number;
 	onClose: () => void;
 	onCreate: (values: {
 		payee: string;
@@ -16,12 +18,15 @@ interface Props {
 		amount: number;
 		receivedBy: string;
 		authorizerId: number;
+		supplierAccountId?: number;
 	}) => Promise<void>;
 }
 
 export const CreateExpenseModal = ({
 	isSubmitting,
 	open,
+	initialPayee,
+	supplierAccountId,
 	onClose,
 	onCreate,
 }: Props) => {
@@ -34,8 +39,10 @@ export const CreateExpenseModal = ({
 	useEffect(() => {
 		if (!open) {
 			form.resetFields();
+		} else if (initialPayee) {
+			form.setFieldsValue({ payee: initialPayee });
 		}
-	}, [open]);
+	}, [open, initialPayee]);
 
 	const handleSubmit = async () => {
 		const values = await form.validateFields();
@@ -51,6 +58,7 @@ export const CreateExpenseModal = ({
 					amount: values.amount,
 					receivedBy: values.receivedBy || '',
 					authorizerId: authorizedUser.id,
+					supplierAccountId,
 				});
 				form.resetFields();
 			},

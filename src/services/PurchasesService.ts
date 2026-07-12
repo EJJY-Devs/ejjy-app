@@ -12,11 +12,13 @@ interface List extends IListRequest {
 	branch_id?: number;
 	journal_entry_status?: string;
 	search?: string;
+	supplier_account_id?: number;
 }
 
 interface Modify {
 	products: Product[];
 	supplier_name: string;
+	supplier_account_id?: number;
 	encoded_by_id?: number;
 	authorizer_id?: number;
 	overall_remarks?: string;

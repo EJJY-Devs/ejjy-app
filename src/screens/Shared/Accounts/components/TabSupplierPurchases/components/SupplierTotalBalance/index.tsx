@@ -1,3 +1,4 @@
+import { FileTextOutlined } from '@ant-design/icons';
 import { Button, Col, Row, Statistic } from 'antd';
 import { getFullName } from 'ejjy-global';
 import { accountTypes, appTypes } from 'global';
@@ -10,6 +11,7 @@ type Props = {
 	totalBalance: string;
 	disabled: boolean;
 	onClick: () => void;
+	onViewStatement: () => void;
 };
 
 export const getSupplierLabel = (account: any) => {
@@ -25,6 +27,7 @@ export const SupplierTotalBalance = ({
 	totalBalance,
 	disabled,
 	onClick,
+	onViewStatement,
 }: Props) => (
 	<div className="SupplierTotalBalance mb-4">
 		<Row gutter={[16, 16]}>
@@ -39,10 +42,25 @@ export const SupplierTotalBalance = ({
 				)}
 			</Col>
 			<Col md={12}>
-				<Statistic
-					title="Outstanding Balance"
-					value={formatInPeso(totalBalance)}
-				/>
+				<Row align="middle" gutter={[16, 16]} justify="space-between">
+					<Col>
+						<Statistic
+							title="Outstanding Balance"
+							value={formatInPeso(totalBalance)}
+						/>
+					</Col>
+					<Col>
+						<Button
+							disabled={disabled}
+							icon={<FileTextOutlined />}
+							size="large"
+							type="primary"
+							onClick={onViewStatement}
+						>
+							View Statement of Account
+						</Button>
+					</Col>
+				</Row>
 				{getAppType() === appTypes.BACK_OFFICE && (
 					<Button
 						className="mt-3"
@@ -50,7 +68,7 @@ export const SupplierTotalBalance = ({
 						type="primary"
 						onClick={onClick}
 					>
-						Create Disbursement Voucher
+						Create Expense Voucher
 					</Button>
 				)}
 			</Col>

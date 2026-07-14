@@ -7,8 +7,8 @@ import {
 } from 'ejjy-global/dist/print/helper-receipt';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
-import { ReceiptHeaderV2 } from 'components/Printing';
-import { formatDateTime, formatInPeso } from 'utils';
+import { PurchaseVoucherDocument, ReceiptHeaderV2 } from 'components/Printing';
+import { formatDateTime } from 'utils';
 
 interface PrintPurchaseProps {
 	purchase: any;
@@ -25,98 +25,11 @@ export const printPurchase = ({
 			className="container"
 			style={getPageStyleObject({ lineHeight: '1.5' })}
 		>
-			<div style={{ textAlign: 'center' }}>
-				<ReceiptHeaderV2
-					branchHeader={purchase.branch}
-					branchName={purchase.branch?.name}
-					title="PURCHASES"
-				/>
-			</div>
-			<br />
-			<table style={{ width: '100%', fontSize: '12px', lineHeight: '1' }}>
-				<tbody>
-					<tr>
-						<td>Reference #:</td>
-						<td style={{ textAlign: 'right' }}>
-							{purchase.reference_number || EMPTY_CELL}
-						</td>
-					</tr>
-					<tr>
-						<td>Supplier:</td>
-						<td style={{ textAlign: 'right' }}>
-							{purchase.supplier_name || EMPTY_CELL}
-						</td>
-					</tr>
-					<tr>
-						<td>Authorizer:</td>
-						<td style={{ textAlign: 'right' }}>
-							{purchase.authorizer
-								? `${purchase.authorizer.first_name} ${purchase.authorizer.last_name}`
-								: EMPTY_CELL}
-						</td>
-					</tr>
-					<tr>
-						<td>Date:</td>
-						<td style={{ textAlign: 'right' }}>
-							{formatDateTime(purchase.datetime_created)}
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<hr />
-			<table
-				style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}
-			>
-				<thead>
-					<tr
-						style={{
-							borderBottom: '1px solid black',
-							paddingBottom: '4px',
-						}}
-					>
-						<th style={{ textAlign: 'left', paddingBottom: '4px' }}>Product</th>
-						<th style={{ textAlign: 'right', paddingBottom: '4px' }}>Qty</th>
-						<th style={{ textAlign: 'right', paddingBottom: '4px' }}>Cost</th>
-						<th style={{ textAlign: 'right', paddingBottom: '4px' }}>Amount</th>
-					</tr>
-				</thead>
-				<tbody>
-					{purchase.purchase_products?.map((item: any) => (
-						<tr key={item.id}>
-							<td>{item.product?.name}</td>
-							<td style={{ textAlign: 'right' }}>{item.quantity}</td>
-							<td style={{ textAlign: 'right' }}>
-								{formatInPeso(item.cost_per_piece)}
-							</td>
-							<td style={{ textAlign: 'right' }}>
-								{formatInPeso(
-									Number(item.quantity) * Number(item.cost_per_piece),
-								)}
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-			<hr />
-			<table style={{ width: '100%', fontSize: '12px' }}>
-				<tbody>
-					<tr>
-						<td />
-						<td style={{ textAlign: 'right', fontWeight: 'bold' }}>
-							Total: {formatInPeso(purchase.total_amount)}
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<PurchaseVoucherDocument purchase={purchase} />
 			<br />
 			<div style={{ textAlign: 'center' }}>
 				<div>Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}</div>
 			</div>
-			{purchase.overall_remarks && (
-				<div style={{ textAlign: 'center', marginTop: '8px' }}>
-					<div>Remarks: {purchase.overall_remarks}</div>
-				</div>
-			)}
 		</div>,
 	);
 

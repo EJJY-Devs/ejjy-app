@@ -1,11 +1,9 @@
-import { Button, Col, Row, Select, Spin, Table } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
+import { Button, Col, Row, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
-import { Label } from 'components/elements';
 import {
-	getFullName,
 	ServiceType,
-	useAccounts,
 	useOrderOfPayments,
 	ViewOrderOfPaymentModal,
 	ViewTransactionModal,
@@ -16,13 +14,11 @@ import {
 	EMPTY_CELL,
 	orderOfPaymentPurposes,
 	pageSizeOptions,
-	SEARCH_DEBOUNCE_TIME,
 	timeRangeTypes,
 	appTypes,
 } from 'global';
-import { useQueryParams, useSiteSettingsNew } from 'hooks';
-import _ from 'lodash';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useAccountRetrieve, useQueryParams, useSiteSettingsNew } from 'hooks';
+import React, { useEffect, useState } from 'react';
 import {
 	convertIntoArray,
 	formatDateTime,
@@ -30,11 +26,11 @@ import {
 	getAppType,
 	getLocalApiUrl,
 } from 'utils';
+import { PayorSummary } from '../PayorSummary';
 
 const getColumns = (isHeadOffice: boolean): ColumnsType => [
 	{ title: 'OP #', dataIndex: 'referenceNumber' },
 	{ title: 'Date & Time Created', dataIndex: 'datetime' },
-	{ title: 'Payor', dataIndex: 'payor' },
 	{ title: 'Address', dataIndex: 'address' },
 	{ title: 'Amount of Payment', dataIndex: 'amountOfPayment' },
 	{ title: 'Purpose', dataIndex: 'purpose' },
@@ -42,7 +38,11 @@ const getColumns = (isHeadOffice: boolean): ColumnsType => [
 	...(isHeadOffice ? [{ title: 'Branch', dataIndex: 'branch' }] : []),
 ];
 
-export const TabOrderOfPayments = () => {
+type Props = {
+	onBack?: () => void;
+};
+
+export const TabOrderOfPayments = ({ onBack }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -53,6 +53,10 @@ export const TabOrderOfPayments = () => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
 	const { data: siteSettings } = useSiteSettingsNew();
+	const { data: payorAccount } = useAccountRetrieve({
+		id: Number(params.payorId),
+		options: { enabled: !!params.payorId },
+	});
 	const {
 		data: orderOfPaymentsData,
 		isFetching: isFetchingOrderOfPayments,
@@ -103,7 +107,6 @@ export const TabOrderOfPayments = () => {
 						</Button>
 					),
 					datetime: formatDateTime(datetime_created),
-					payor: getFullName(payor),
 					address: payor.home_address,
 					amountOfPayment: formatInPeso(amount),
 					purpose: purposeDescription,
@@ -137,7 +140,21 @@ export const TabOrderOfPayments = () => {
 
 	return (
 		<div>
+			{onBack && (
+				<Button
+					className="pa-0 mb-2"
+					icon={<ArrowLeftOutlined />}
+					style={{ display: 'inline-flex', alignItems: 'center' }}
+					type="link"
+					onClick={onBack}
+				>
+					Back to Credit Accounts
+				</Button>
+			)}
+
 			<TableHeader title="Order of Payments" wrapperClassName="pt-2 px-0" />
+
+			{payorAccount && <PayorSummary account={payorAccount} />}
 
 			<RequestErrors
 				errors={convertIntoArray(orderOfPaymentsError)}
@@ -190,52 +207,10 @@ type FilterProps = {
 	isLoading: boolean;
 };
 
-const Filter = ({ isLoading }: FilterProps) => {
-	// STATES
-	const [accountSearch, setAccountSearch] = useState('');
-
-	// CUSTOM HOOKS
-	const { params, setQueryParams } = useQueryParams();
-	const { data: accountsData, isFetching: isFetchingAccounts } = useAccounts({
-		params: { search: accountSearch },
-		serviceOptions: { baseURL: getLocalApiUrl() },
-	});
-
-	// METHODS
-	const handleSearchDebounced = useCallback(
-		_.debounce((search) => {
-			setAccountSearch(search);
-		}, SEARCH_DEBOUNCE_TIME),
-		[],
-	);
-
-	return (
-		<Row className="mb-4" gutter={[16, 16]}>
-			<Col lg={12} span={24}>
-				<Label label="Payor" spacing />
-				<Select
-					className="w-100"
-					defaultActiveFirstOption={false}
-					filterOption={false}
-					notFoundContent={isFetchingAccounts ? <Spin size="small" /> : null}
-					value={params.payorId ? Number(params.payorId) : null}
-					allowClear
-					showSearch
-					onChange={(value) => {
-						setQueryParams({ payorId: value }, { shouldResetPage: true });
-					}}
-					onSearch={handleSearchDebounced}
-				>
-					{accountsData?.list?.map((account) => (
-						<Select.Option key={account.id} value={account.id}>
-							{getFullName(account)}
-						</Select.Option>
-					))}
-				</Select>
-			</Col>
-			<Col lg={12} span={24}>
-				<TimeRangeFilter disabled={isLoading} />
-			</Col>
-		</Row>
-	);
-};
+const Filter = ({ isLoading }: FilterProps) => (
+	<Row className="mb-4" gutter={[16, 16]}>
+		<Col span={24}>
+			<TimeRangeFilter disabled={isLoading} />
+		</Col>
+	</Row>
+);

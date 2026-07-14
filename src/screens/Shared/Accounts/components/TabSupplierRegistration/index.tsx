@@ -1,9 +1,4 @@
-import {
-	DeleteOutlined,
-	EyeFilled,
-	FileTextOutlined,
-	SearchOutlined,
-} from '@ant-design/icons';
+import { DeleteOutlined, EyeFilled, SearchOutlined } from '@ant-design/icons';
 import {
 	Button,
 	Col,
@@ -20,7 +15,6 @@ import {
 	RequestErrors,
 	TableHeader,
 	ViewAccountModal,
-	ViewSupplierStatementOfAccountModal,
 } from 'components';
 import { Label } from 'components/elements';
 import { getFullName } from 'ejjy-global';
@@ -57,10 +51,6 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedAccount, setSelectedAccount] = useState(null);
-	const [
-		statementSupplierRegistration,
-		setStatementSupplierRegistration,
-	] = useState(null);
 	const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
 	// CUSTOM HOOKS
@@ -102,17 +92,6 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 										{ shouldResetPage: true },
 									);
 								}}
-							/>
-						</Tooltip>
-						<Tooltip title="View Statement of Account">
-							<Button
-								disabled={disabled}
-								icon={<FileTextOutlined />}
-								type="primary"
-								ghost
-								onClick={() =>
-									setStatementSupplierRegistration(supplierRegistration)
-								}
 							/>
 						</Tooltip>
 						{getAppType() === appTypes.HEAD_OFFICE && (
@@ -217,13 +196,6 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 					onClose={() => {
 						setIsCreateModalVisible(false);
 					}}
-				/>
-			)}
-
-			{statementSupplierRegistration && (
-				<ViewSupplierStatementOfAccountModal
-					supplierRegistration={statementSupplierRegistration}
-					onClose={() => setStatementSupplierRegistration(null)}
 				/>
 			)}
 		</div>

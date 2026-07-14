@@ -9,11 +9,16 @@ interface List extends IListRequest {
 	supplier_account_id?: number;
 }
 
+interface Particular {
+	description: string;
+	amount: number;
+}
+
 interface Create {
 	payee: string;
-	particulars?: string;
+	particulars?: Particular[];
 	amount: number;
-	received_by?: string;
+	remarks?: string;
 	authorizer_id?: number | null;
 	branch_id?: number;
 	supplier_account_id?: number | null;
@@ -25,19 +30,19 @@ interface Update {
 
 const service = {
 	list: async (params: List, baseURL: string) =>
-		axios.get('/expenses/', { baseURL, params }),
+		axios.get('/expense-vouchers/', { baseURL, params }),
 
 	create: async (body: Create, baseURL: string) =>
-		axios.post('/expenses/', body, { baseURL }),
+		axios.post('/expense-vouchers/', body, { baseURL }),
 
 	retrieve: async (id: number, baseURL: string) =>
-		axios.get(`/expenses/${id}/`, { baseURL }),
+		axios.get(`/expense-vouchers/${id}/`, { baseURL }),
 
 	update: async (id: number, body: Update, baseURL: string) =>
-		axios.patch(`/expenses/${id}/`, body, { baseURL }),
+		axios.patch(`/expense-vouchers/${id}/`, body, { baseURL }),
 
 	delete: async (id: number, baseURL: string) =>
-		axios.delete(`/expenses/${id}/`, { baseURL }),
+		axios.delete(`/expense-vouchers/${id}/`, { baseURL }),
 };
 
 export default service;

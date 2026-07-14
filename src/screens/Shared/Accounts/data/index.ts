@@ -4,7 +4,10 @@ export const accountTabs = {
 	USERS: 'Users',
 	CREDIT_ACCOUNTS: 'Credit Accounts',
 	SUPPLIER_ACCOUNTS: 'Supplier Accounts',
-	CREDIT_TRANSACTIONS: 'Credit Transactions',
-	ORDER_OF_PAYMENTS: 'Order of Payments',
-	COLLECTION_RECEIPTS: 'Collection Receipts',
+};
+
+export const accountViews = {
+	TRANSACTIONS: 'transactions',
+	ORDER_OF_PAYMENTS: 'orderOfPayments',
+	COLLECTION_RECEIPTS: 'collectionReceipts',
 };

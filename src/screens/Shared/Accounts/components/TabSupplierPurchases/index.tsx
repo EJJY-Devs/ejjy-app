@@ -6,20 +6,21 @@ import {
 	TableHeader,
 	TimeRangeFilter,
 	ViewPurchaseModal,
+	ViewSupplierStatementOfAccountModal,
 } from 'components';
 import { getFullName } from 'ejjy-global';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, pageSizeOptions } from 'global';
 import { timeRangeTypes, appTypes } from 'global/types';
 import {
 	useAccounts,
-	useExpenseCreate,
-	useExpenses,
+	useExpenseVoucherCreate,
+	useExpenseVouchers,
 	usePurchases,
 	useQueryParams,
 } from 'hooks';
 import React, { useEffect, useMemo, useState } from 'react';
-import { CreateExpenseModal } from 'screens/Shared/Accounting/Expenses/modals/CreateExpenseModal';
-import { ViewDisbursementVoucherModal } from 'screens/Shared/Accounting/Expenses/modals/ViewDisbursementVoucherModal';
+import { CreateExpenseVoucherModal } from 'screens/Shared/Accounting/ExpenseVouchers/modals/CreateExpenseVoucherModal';
+import { ViewExpenseVoucherModal } from 'screens/Shared/Accounting/ExpenseVouchers/modals/ViewExpenseVoucherModal';
 import {
 	convertIntoArray,
 	formatInPeso,
@@ -42,6 +43,7 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 	const [selectedPurchase, setSelectedPurchase] = useState(null);
 	const [selectedExpense, setSelectedExpense] = useState(null);
 	const [isCreateDvModalVisible, setIsCreateDvModalVisible] = useState(false);
+	const [isStatementModalVisible, setIsStatementModalVisible] = useState(false);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -68,7 +70,7 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 		data: expensesData,
 		isFetching: isFetchingExpenses,
 		error: expensesError,
-	} = useExpenses({
+	} = useExpenseVouchers({
 		params: {
 			supplierAccountId: params.supplierAccountId,
 			timeRange: params?.timeRange || timeRangeTypes.DAILY,
@@ -81,7 +83,7 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 	const {
 		mutateAsync: createExpense,
 		isLoading: isCreatingExpense,
-	} = useExpenseCreate();
+	} = useExpenseVoucherCreate();
 
 	// TABLE COLUMNS
 	const columns: ColumnsType = useMemo(
@@ -161,7 +163,7 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 		}
 
 		const purchases = purchasesData?.purchases || [];
-		const expenses = expensesData?.expenses || [];
+		const expenses = expensesData?.expenseVouchers || [];
 
 		const combinedData = [
 			...purchases.map((purchase: any) => ({
@@ -182,7 +184,9 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 				rawDatetime: expense.datetime_created,
 				referenceNumber: expense.reference_number,
 				referenceData: expense,
-				description: expense.particulars || '',
+				description: (expense.particulars || [])
+					.map((item: any) => item.description)
+					.join(', '),
 				amount: formatInPeso(expense.amount),
 				authorizer: getFullName(expense.authorizer),
 				type: 'expense',
@@ -230,7 +234,11 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 		);
 
 		setDataSource(sortedData as any);
-	}, [purchasesData?.purchases, expensesData?.expenses, selectedAccount]);
+	}, [
+		purchasesData?.purchases,
+		expensesData?.expenseVouchers,
+		selectedAccount,
+	]);
 
 	const isLoading = isFetchingPurchases || isFetchingExpenses;
 
@@ -246,7 +254,7 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 				Back to Supplier Accounts
 			</Button>
 
-			<TableHeader title="Supplier Purchases" wrapperClassName="pt-2 px-0" />
+			<TableHeader title="Supplier Transactions" wrapperClassName="pt-2 px-0" />
 
 			{selectedAccount && (
 				<SupplierTotalBalance
@@ -256,13 +264,14 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 						selectedAccount?.['supplier_registration']?.total_balance || '0'
 					}
 					onClick={() => setIsCreateDvModalVisible(true)}
+					onViewStatement={() => setIsStatementModalVisible(true)}
 				/>
 			)}
 
 			<RequestErrors
 				errors={[
 					...convertIntoArray(purchasesError, 'Purchases'),
-					...convertIntoArray(expensesError, 'Disbursement Vouchers'),
+					...convertIntoArray(expensesError, 'Expense Vouchers'),
 				]}
 				withSpaceBottom
 			/>
@@ -296,8 +305,8 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 			)}
 
 			{selectedExpense && (
-				<ViewDisbursementVoucherModal
-					expense={selectedExpense}
+				<ViewExpenseVoucherModal
+					expenseVoucher={selectedExpense}
 					open={!!selectedExpense}
 					onClose={() => setSelectedExpense(null)}
 				/>
@@ -306,7 +315,7 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 			{getAppType() === appTypes.BACK_OFFICE &&
 				isCreateDvModalVisible &&
 				selectedAccount && (
-					<CreateExpenseModal
+					<CreateExpenseVoucherModal
 						initialPayee={getSupplierLabel(selectedAccount)}
 						isSubmitting={isCreatingExpense}
 						open={isCreateDvModalVisible}
@@ -318,6 +327,18 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 						}}
 					/>
 				)}
+
+			{isStatementModalVisible && selectedAccount && (
+				<ViewSupplierStatementOfAccountModal
+					supplierRegistration={{
+						id: selectedAccount['supplier_registration']?.id,
+						total_balance:
+							selectedAccount['supplier_registration']?.total_balance || '0',
+						account: selectedAccount,
+					}}
+					onClose={() => setIsStatementModalVisible(false)}
+				/>
+			)}
 		</div>
 	);
 };

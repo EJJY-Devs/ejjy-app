@@ -45,7 +45,7 @@ import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
 import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
-import { Expenses } from 'screens/Shared/Accounting/Expenses';
+import { ExpenseVouchers } from 'screens/Shared/Accounting/ExpenseVouchers';
 import { InventoryAudit } from 'screens/Shared/InventoryAudit';
 import { ViewChecking } from 'screens/Shared/InventoryAudit/ViewChecking';
 import { RequisitionSlips } from 'screens/Shared/RequisitionSlips';
@@ -329,8 +329,8 @@ const OfficeManager = () => {
 						path="/office-manager/accounting/transaction-list"
 					/>
 					<Route
-						component={Expenses}
-						path="/office-manager/accounting/expenses"
+						component={ExpenseVouchers}
+						path="/office-manager/accounting/expense-vouchers"
 					/>
 					<Route
 						component={Purchases}

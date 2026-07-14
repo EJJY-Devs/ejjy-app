@@ -1,7 +1,8 @@
 import {
+	DollarOutlined,
 	EditFilled,
 	EyeFilled,
-	FileTextOutlined,
+	FileDoneOutlined,
 	SearchOutlined,
 } from '@ant-design/icons';
 import { Button, Col, Input, Row, Space, Table, Tooltip } from 'antd';
@@ -11,7 +12,6 @@ import {
 	RequestErrors,
 	TableHeader,
 	ViewAccountModal,
-	ViewStatementOfAccountModal,
 } from 'components';
 import { Label } from 'components/elements';
 import { getFullName } from 'ejjy-global';
@@ -26,7 +26,10 @@ import { useCreditRegistrations, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { accountTabs } from 'screens/Shared/Accounts/data';
+import { TabCollectionReceipts } from 'screens/Shared/Accounts/components/TabCollectionReceipts';
+import { TabCreditTransactions } from 'screens/Shared/Accounts/components/TabCreditTransactions';
+import { TabOrderOfPayments } from 'screens/Shared/Accounts/components/TabOrderOfPayments';
+import { accountViews } from 'screens/Shared/Accounts/data';
 import { convertIntoArray, formatDate, formatInPeso, getAppType } from 'utils';
 
 const columns: ColumnsType = [
@@ -49,10 +52,6 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 	const [selectedCreditRegistration, setSelectedCreditRegistration] = useState(
 		null,
 	);
-	const [
-		statementCreditRegistration,
-		setStatementCreditRegistration,
-	] = useState(null);
 	const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
 	// CUSTOM HOOKS
@@ -101,23 +100,46 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 								onClick={() => {
 									setQueryParams(
 										{
-											tab: accountTabs.CREDIT_TRANSACTIONS,
 											payorId: creditRegistration.account.id,
+											accountView: accountViews.TRANSACTIONS,
 										},
 										{ shouldResetPage: true },
 									);
 								}}
 							/>
 						</Tooltip>
-						<Tooltip title="View Statement of Account">
+						<Tooltip title="View Order of Payments">
 							<Button
 								disabled={disabled}
-								icon={<FileTextOutlined />}
+								icon={<DollarOutlined />}
 								type="primary"
 								ghost
-								onClick={() =>
-									setStatementCreditRegistration(creditRegistration)
-								}
+								onClick={() => {
+									setQueryParams(
+										{
+											payorId: creditRegistration.account.id,
+											accountView: accountViews.ORDER_OF_PAYMENTS,
+										},
+										{ shouldResetPage: true },
+									);
+								}}
+							/>
+						</Tooltip>
+						<Tooltip title="View Collection Receipts">
+							<Button
+								disabled={disabled}
+								icon={<FileDoneOutlined />}
+								type="primary"
+								ghost
+								onClick={() => {
+									setQueryParams(
+										{
+											payorId: creditRegistration.account.id,
+											accountView: accountViews.COLLECTION_RECEIPTS,
+										},
+										{ shouldResetPage: true },
+									);
+								}}
 							/>
 						</Tooltip>
 					</Space>
@@ -127,6 +149,24 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 
 		setDataSource(data);
 	}, [creditRegistrations, disabled]);
+
+	if (params.payorId) {
+		const onBack = () =>
+			setQueryParams(
+				{ payorId: undefined, accountView: undefined },
+				{ shouldResetPage: true },
+			);
+
+		if (params.accountView === accountViews.ORDER_OF_PAYMENTS) {
+			return <TabOrderOfPayments onBack={onBack} />;
+		}
+
+		if (params.accountView === accountViews.COLLECTION_RECEIPTS) {
+			return <TabCollectionReceipts onBack={onBack} />;
+		}
+
+		return <TabCreditTransactions onBack={onBack} />;
+	}
 
 	return (
 		<div>
@@ -185,13 +225,6 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 						setIsCreateModalVisible(false);
 						setSelectedCreditRegistration(null);
 					}}
-				/>
-			)}
-
-			{statementCreditRegistration && (
-				<ViewStatementOfAccountModal
-					creditRegistration={statementCreditRegistration}
-					onClose={() => setStatementCreditRegistration(null)}
 				/>
 			)}
 		</div>

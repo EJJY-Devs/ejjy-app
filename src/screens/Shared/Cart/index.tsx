@@ -23,7 +23,7 @@ import {
 import { Label } from 'components/elements';
 import { CreateRequisitionSlipModal } from 'components/modals/CreateRequisitionSlipModal';
 import { CreateAdjustmentSlipModal } from 'components/modals/CreateAdjustmentSlipModal';
-import { CreatePurchaseModal } from 'components/modals/CreatePurchaseModal';
+import { CreatePurchaseVoucherModal } from 'components/modals/CreatePurchaseVoucherModal';
 import { BarcodeScanner } from './components/BarcodeScanner';
 import { FooterButtons } from './components/FooterButtons';
 import { ProductSearch } from './components/ProductSearch';
@@ -812,7 +812,7 @@ export const Cart = ({
 				)}
 
 				{isCreatePurchaseVisible && (
-					<CreatePurchaseModal
+					<CreatePurchaseVoucherModal
 						isLoading={isLoading}
 						onClose={() => {
 							setIsCreatePurchaseVisible(false);

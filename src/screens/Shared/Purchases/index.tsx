@@ -10,16 +10,17 @@ import {
 	message,
 	Radio,
 	Row,
+	Select,
 	Space,
 	Table,
 	Tooltip,
 } from 'antd';
-import { Content, TimeRangeFilter } from 'components';
+import { Content, RequestErrors, TimeRangeFilter } from 'components';
 import { Box, Label } from 'components/elements';
 import { ViewPurchaseModal, ViewPurchaseOrderModal } from 'components/modals';
-import { EMPTY_CELL } from 'ejjy-global';
-import { pageSizeOptions, DEFAULT_PAGE, appTypes } from 'global';
-import { useQueryParams } from 'hooks';
+import { EMPTY_CELL, filterOption } from 'ejjy-global';
+import { pageSizeOptions, DEFAULT_PAGE, MAX_PAGE_SIZE, appTypes } from 'global';
+import { useBranches, useQueryParams } from 'hooks';
 import usePurchases, { usePurchaseUpdate } from 'hooks/usePurchases';
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -27,7 +28,12 @@ import { JournalEntriesService } from 'services';
 import { Cart } from 'screens/Shared/Cart';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
 import { CreateJournalEntryModal } from 'screens/Shared/Accounting/modals/CreateJournalEntryModal';
-import { formatDateTime, getLocalApiUrl, getAppType } from 'utils';
+import {
+	convertIntoArray,
+	formatDateTime,
+	getLocalApiUrl,
+	getAppType,
+} from 'utils';
 import { ViewPurchaseJournalEntriesModal } from './ViewPurchaseJournalEntriesModal';
 
 import './style.scss';
@@ -50,11 +56,27 @@ export const Purchases = () => {
 	const { params, setQueryParams } = useQueryParams();
 	const { mutateAsync: updatePurchase } = usePurchaseUpdate();
 
+	const showBranchColumn = isHeadOffice;
+
+	const {
+		data: { branches },
+		isFetching: isFetchingBranches,
+		error: branchesError,
+	} = useBranches({
+		params: { pageSize: MAX_PAGE_SIZE },
+		options: { enabled: showBranchColumn },
+	});
+
 	const {
 		data: { purchases = [], total },
 		isFetching,
 		refetch,
-	} = usePurchases({ params });
+	} = usePurchases({
+		params: {
+			...params,
+			branchId: params.branchId ? Number(params.branchId) : undefined,
+		},
+	});
 
 	const { data: withoutJeData, refetch: refetchCount } = usePurchases({
 		params: {
@@ -62,6 +84,7 @@ export const Purchases = () => {
 			pageSize: 1,
 			timeRange: params.timeRange,
 			journalEntryStatus: 'without',
+			branchId: params.branchId ? Number(params.branchId) : undefined,
 		},
 	});
 	const withoutJeCount = withoutJeData?.total || 0;
@@ -73,6 +96,7 @@ export const Purchases = () => {
 				purchase: item,
 				datetime: formatDateTime(item.datetime_created),
 				referenceNumber: item.reference_number || EMPTY_CELL,
+				branch: item.branch?.name || EMPTY_CELL,
 				supplierName: item.supplier_name || EMPTY_CELL,
 				encodedBy: item.encoded_by
 					? `${item.encoded_by.first_name} ${item.encoded_by.last_name}`
@@ -110,6 +134,7 @@ export const Purchases = () => {
 			),
 		},
 		{ title: 'Date/Time', dataIndex: 'datetime' },
+		...(showBranchColumn ? [{ title: 'Branch', dataIndex: 'branch' }] : []),
 		{ title: 'Supplier', dataIndex: 'supplierName' },
 		{ title: 'Authorizer', dataIndex: 'authorizer' },
 		{ title: 'Remarks', dataIndex: 'remarks' },
@@ -165,7 +190,7 @@ export const Purchases = () => {
 	];
 
 	return (
-		<Content title="Purchases">
+		<Content title="Purchase Vouchers">
 			<Box padding>
 				{isBackOffice && (
 					<Row className="mb-4" justify="end">
@@ -174,10 +199,17 @@ export const Purchases = () => {
 								type="primary"
 								onClick={() => setIsCartModalVisible(true)}
 							>
-								Create Purchase
+								Create Purchase Voucher
 							</Button>
 						</Col>
 					</Row>
+				)}
+
+				{showBranchColumn && (
+					<RequestErrors
+						errors={convertIntoArray(branchesError, 'Branches')}
+						withSpaceBottom
+					/>
 				)}
 
 				<Row className="Purchases_toolbar" gutter={[16, 16]}>
@@ -202,6 +234,34 @@ export const Purchases = () => {
 							<Col flex="none">
 								<TimeRangeFilter disabled={isFetching} />
 							</Col>
+							{showBranchColumn && (
+								<Col flex="none">
+									<Label label="Branch" spacing />
+									<Select
+										className="w-100"
+										filterOption={filterOption}
+										loading={isFetchingBranches}
+										optionFilterProp="children"
+										style={{ minWidth: 200 }}
+										value={params.branchId ? Number(params.branchId) : null}
+										allowClear
+										showSearch
+										onChange={(value) =>
+											setQueryParams({
+												branchId: value,
+												page: DEFAULT_PAGE,
+												pageSize: params.pageSize,
+											})
+										}
+									>
+										{branches.map((branch: any) => (
+											<Select.Option key={branch.id} value={branch.id}>
+												{branch.name}
+											</Select.Option>
+										))}
+									</Select>
+								</Col>
+							)}
 							<Col flex="none">
 								<Label label="Journal Entry" spacing />
 								<Radio.Group

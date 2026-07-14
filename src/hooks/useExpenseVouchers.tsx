@@ -2,12 +2,12 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
 import { getLocalApiUrl } from 'utils';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { ExpensesService } from 'services';
+import { ExpenseVoucherService } from 'services';
 
-const useExpenses = ({ params, options }: Query) =>
+const useExpenseVouchers = ({ params, options }: Query) =>
 	useQuery<any>(
 		[
-			'useExpenses',
+			'useExpenseVouchers',
 			params?.page,
 			params?.pageSize,
 			params?.search,
@@ -19,7 +19,7 @@ const useExpenses = ({ params, options }: Query) =>
 		async () => {
 			const baseURL = getLocalApiUrl();
 
-			const response = await ExpensesService.list(
+			const response = await ExpenseVoucherService.list(
 				{
 					page: params?.page || DEFAULT_PAGE,
 					page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
@@ -37,14 +37,14 @@ const useExpenses = ({ params, options }: Query) =>
 		{
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => ({
-				expenses: query.data.results,
+				expenseVouchers: query.data.results,
 				total: query.data.count,
 			}),
 			...options,
 		},
 	);
 
-export const useExpenseCreate = () => {
+export const useExpenseVoucherCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
@@ -52,17 +52,17 @@ export const useExpenseCreate = () => {
 			payee,
 			particulars,
 			amount,
-			receivedBy,
+			remarks,
 			authorizerId,
 			branchId,
 			supplierAccountId,
 		}: any) =>
-			ExpensesService.create(
+			ExpenseVoucherService.create(
 				{
 					payee,
 					particulars,
 					amount,
-					received_by: receivedBy,
+					remarks,
 					authorizer_id: authorizerId,
 					branch_id: branchId,
 					supplier_account_id: supplierAccountId,
@@ -71,42 +71,42 @@ export const useExpenseCreate = () => {
 			),
 		{
 			onSuccess: () => {
-				queryClient.invalidateQueries('useExpenses');
+				queryClient.invalidateQueries('useExpenseVouchers');
 				queryClient.invalidateQueries('useAccounts');
 			},
 		},
 	);
 };
 
-export const useExpenseUpdate = () => {
+export const useExpenseVoucherUpdate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
 		({ id, journalEntryId }: { id: number; journalEntryId: number }) =>
-			ExpensesService.update(
+			ExpenseVoucherService.update(
 				id,
 				{ journal_entry_id: journalEntryId },
 				getLocalApiUrl(),
 			),
 		{
 			onSuccess: () => {
-				queryClient.invalidateQueries('useExpenses');
+				queryClient.invalidateQueries('useExpenseVouchers');
 			},
 		},
 	);
 };
 
-export const useExpenseDelete = () => {
+export const useExpenseVoucherDelete = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		(id: number) => ExpensesService.delete(id, getLocalApiUrl()),
+		(id: number) => ExpenseVoucherService.delete(id, getLocalApiUrl()),
 		{
 			onSuccess: () => {
-				queryClient.invalidateQueries('useExpenses');
+				queryClient.invalidateQueries('useExpenseVouchers');
 			},
 		},
 	);
 };
 
-export default useExpenses;
+export default useExpenseVouchers;

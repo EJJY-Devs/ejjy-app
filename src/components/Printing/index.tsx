@@ -5,3 +5,4 @@ export * from './ReceiptUnderlinedValue';
 export * from './ReceiptReportSummary';
 export * from './ReceiptHeaderV2';
 export * from './StatementOfAccount';
+export * from './PurchaseVoucherDocument';

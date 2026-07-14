@@ -116,6 +116,7 @@ export const ViewSupplierStatementOfAccountModal = ({
 			filenamePrefix="SupplierStatementOfAccount"
 			history={history}
 			isLoading={isLoading}
+			isSupplier
 			period={period}
 			title="[View] Statement of Account"
 			onChangePeriod={() => setStep('period')}

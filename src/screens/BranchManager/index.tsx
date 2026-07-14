@@ -24,7 +24,7 @@ import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
 import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
-import { Expenses } from 'screens/Shared/Accounting/Expenses';
+import { ExpenseVouchers } from 'screens/Shared/Accounting/ExpenseVouchers';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { Purchases } from 'screens/Shared/Purchases';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
@@ -342,8 +342,8 @@ const BranchManager = () => {
 						path="/branch-manager/accounting/transaction-list"
 					/>
 					<Route
-						component={Expenses}
-						path="/branch-manager/accounting/expenses"
+						component={ExpenseVouchers}
+						path="/branch-manager/accounting/expense-vouchers"
 					/>
 					<Route
 						component={Purchases}

@@ -26,10 +26,10 @@ import {
 	pageSizeOptions,
 } from 'global';
 import { useQueryParams, useBranches } from 'hooks';
-import useExpenses, {
-	useExpenseCreate,
-	useExpenseUpdate,
-} from 'hooks/useExpenses';
+import useExpenseVouchers, {
+	useExpenseVoucherCreate,
+	useExpenseVoucherUpdate,
+} from 'hooks/useExpenseVouchers';
 import React, { useMemo, useState } from 'react';
 import { JournalEntriesService } from 'services';
 import {
@@ -40,40 +40,54 @@ import {
 } from 'utils';
 import { getAppType } from 'utils/localStorage';
 import { CreateJournalEntryModal } from '../modals/CreateJournalEntryModal';
-import { CreateExpenseModal } from './modals/CreateExpenseModal';
-import { ViewDisbursementVoucherModal } from './modals/ViewDisbursementVoucherModal';
+import { CreateExpenseVoucherModal } from './modals/CreateExpenseVoucherModal';
+import { ViewExpenseVoucherModal } from './modals/ViewExpenseVoucherModal';
 import { ViewExpenseJournalEntriesModal } from './modals/ViewExpenseJournalEntriesModal';
 import './style.scss';
 
-export interface ExpenseAuthorizer {
+export interface ExpenseVoucherAuthorizer {
 	id: number;
 	first_name: string;
 	last_name: string;
 	middle_name?: string;
 }
 
-export interface Expense {
+export interface ExpenseVoucherParticular {
+	description: string;
+	amount: string;
+}
+
+export interface ExpenseVoucher {
 	id: number;
 	reference_number: string | null;
 	datetime_created: string;
 	payee: string;
-	particulars: string;
+	particulars: ExpenseVoucherParticular[];
 	amount: string;
-	received_by: string;
-	authorizer: ExpenseAuthorizer | null;
+	remarks: string;
+	authorizer: ExpenseVoucherAuthorizer | null;
 	branch: number | null;
 	branch_name: string | null;
 	journal_entry: number | null;
 	journal_entry_reference_number: string | null;
 }
 
-export const Expenses = () => {
+export const ExpenseVouchers = () => {
 	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
-	const [dvExpense, setDvExpense] = useState<Expense | null>(null);
-	const [jeExpense, setJeExpense] = useState<Expense | null>(null);
-	const [viewJeExpense, setViewJeExpense] = useState<Expense | null>(null);
+	const [
+		dvExpenseVoucher,
+		setDvExpenseVoucher,
+	] = useState<ExpenseVoucher | null>(null);
+	const [
+		jeExpenseVoucher,
+		setJeExpenseVoucher,
+	] = useState<ExpenseVoucher | null>(null);
+	const [
+		viewJeExpenseVoucher,
+		setViewJeExpenseVoucher,
+	] = useState<ExpenseVoucher | null>(null);
 	const [isJeSubmitting, setIsJeSubmitting] = useState(false);
 
 	const { params, setQueryParams } = useQueryParams();
@@ -83,7 +97,7 @@ export const Expenses = () => {
 	});
 	const branches = branchesData?.branches || [];
 
-	const { data, isFetching } = useExpenses({
+	const { data, isFetching } = useExpenseVouchers({
 		params: {
 			page: Number(params.page) || DEFAULT_PAGE,
 			pageSize: Number(params.pageSize) || DEFAULT_PAGE_SIZE,
@@ -94,7 +108,7 @@ export const Expenses = () => {
 		},
 	});
 
-	const { data: withoutJeData } = useExpenses({
+	const { data: withoutJeData } = useExpenseVouchers({
 		params: {
 			page: DEFAULT_PAGE,
 			pageSize: 1,
@@ -106,22 +120,25 @@ export const Expenses = () => {
 	const withoutJeCount = withoutJeData?.total || 0;
 
 	const {
-		mutateAsync: createExpense,
+		mutateAsync: createExpenseVoucher,
 		isLoading: isCreating,
-	} = useExpenseCreate();
-	const { mutateAsync: updateExpense } = useExpenseUpdate();
+	} = useExpenseVoucherCreate();
+	const { mutateAsync: updateExpenseVoucher } = useExpenseVoucherUpdate();
 
-	const expenses: Expense[] = useMemo(() => data?.expenses || [], [data]);
+	const expenseVouchers: ExpenseVoucher[] = useMemo(
+		() => data?.expenseVouchers || [],
+		[data],
+	);
 
-	const columns: ColumnsType<Expense> = useMemo(() => {
-		const cols: ColumnsType<Expense> = [
+	const columns: ColumnsType<ExpenseVoucher> = useMemo(() => {
+		const cols: ColumnsType<ExpenseVoucher> = [
 			{
 				title: 'Reference #',
 				dataIndex: 'reference_number',
 				key: 'reference_number',
-				render: (value: string | null, record: Expense) => (
-					<Button type="link" onClick={() => setDvExpense(record)}>
-						{value || `E-${record.id}`}
+				render: (value: string | null, record: ExpenseVoucher) => (
+					<Button type="link" onClick={() => setDvExpenseVoucher(record)}>
+						{value || `EV-${record.id}`}
 					</Button>
 				),
 			},
@@ -140,6 +157,8 @@ export const Expenses = () => {
 				title: 'Particulars',
 				dataIndex: 'particulars',
 				key: 'particulars',
+				render: (value: ExpenseVoucherParticular[]) =>
+					(value || []).map((item) => item.description).join(', '),
 			},
 			{
 				title: 'Amount',
@@ -153,7 +172,7 @@ export const Expenses = () => {
 				key: 'journal_entry',
 				width: 130,
 				align: 'center',
-				render: (_: any, record: Expense) => (
+				render: (_: any, record: ExpenseVoucher) => (
 					<Space size={4}>
 						<Tooltip title="View Journal Entries">
 							<Button
@@ -161,7 +180,7 @@ export const Expenses = () => {
 								icon={<EyeOutlined />}
 								size="small"
 								type="primary"
-								onClick={() => setViewJeExpense(record)}
+								onClick={() => setViewJeExpenseVoucher(record)}
 							/>
 						</Tooltip>
 						<Tooltip title="Create Journal Entry">
@@ -170,7 +189,7 @@ export const Expenses = () => {
 								icon={<BookOutlined />}
 								size="small"
 								type="primary"
-								onClick={() => setJeExpense(record)}
+								onClick={() => setJeExpenseVoucher(record)}
 							/>
 						</Tooltip>
 					</Space>
@@ -190,7 +209,7 @@ export const Expenses = () => {
 	}, [isHeadOffice]);
 
 	return (
-		<Content title="Expenses">
+		<Content title="Expense Vouchers">
 			<Box padding>
 				{!isHeadOffice && (
 					<Row className="mb-4" justify="end">
@@ -200,13 +219,13 @@ export const Expenses = () => {
 								type="primary"
 								onClick={() => setIsCreateOpen(true)}
 							>
-								Add Expense
+								Add Expense Voucher
 							</Button>
 						</Col>
 					</Row>
 				)}
 
-				<Row className="Expenses_toolbar" gutter={[16, 16]}>
+				<Row className="ExpenseVouchers_toolbar" gutter={[16, 16]}>
 					<Col span={24}>
 						<Label label="Search" spacing />
 						<Input
@@ -266,12 +285,14 @@ export const Expenses = () => {
 									}
 								>
 									<Radio.Button
-										className="Expenses_withoutJeBtn"
+										className="ExpenseVouchers_withoutJeBtn"
 										value="without"
 									>
 										Without JE
 										{withoutJeCount > 0 && (
-											<span className="Expenses_jeCount">{withoutJeCount}</span>
+											<span className="ExpenseVouchers_jeCount">
+												{withoutJeCount}
+											</span>
 										)}
 									</Radio.Button>
 									<Radio.Button value="with">With JE</Radio.Button>
@@ -284,7 +305,7 @@ export const Expenses = () => {
 
 				<Table
 					columns={columns}
-					dataSource={expenses}
+					dataSource={expenseVouchers}
 					loading={isFetching}
 					pagination={{
 						current: Number(params.page) || DEFAULT_PAGE,
@@ -296,7 +317,7 @@ export const Expenses = () => {
 								pageSize: newPageSize,
 								search: params.search,
 							}),
-						disabled: !expenses.length,
+						disabled: !expenseVouchers.length,
 						position: ['bottomCenter'],
 						pageSizeOptions,
 					}}
@@ -305,60 +326,64 @@ export const Expenses = () => {
 				/>
 			</Box>
 
-			<CreateExpenseModal
+			<CreateExpenseVoucherModal
 				isSubmitting={isCreating}
 				open={isCreateOpen}
 				onClose={() => setIsCreateOpen(false)}
 				onCreate={async (values) => {
-					await createExpense({
+					await createExpenseVoucher({
 						payee: values.payee,
 						particulars: values.particulars,
 						amount: values.amount,
-						receivedBy: values.receivedBy,
+						remarks: values.remarks,
 						authorizerId: values.authorizerId,
 						branchId: getLocalBranchId()
 							? Number(getLocalBranchId())
 							: undefined,
 					});
-					message.success('Expense created successfully');
+					message.success('Expense voucher created successfully');
 					setIsCreateOpen(false);
 				}}
 			/>
 
-			<ViewDisbursementVoucherModal
-				expense={dvExpense}
-				open={!!dvExpense}
-				onClose={() => setDvExpense(null)}
+			<ViewExpenseVoucherModal
+				expenseVoucher={dvExpenseVoucher}
+				open={!!dvExpenseVoucher}
+				onClose={() => setDvExpenseVoucher(null)}
 			/>
 
 			<ViewExpenseJournalEntriesModal
-				expense={viewJeExpense}
-				open={!!viewJeExpense}
-				onClose={() => setViewJeExpense(null)}
+				expenseVoucher={viewJeExpenseVoucher}
+				open={!!viewJeExpenseVoucher}
+				onClose={() => setViewJeExpenseVoucher(null)}
 			/>
 
 			<CreateJournalEntryModal
 				isSubmitting={isJeSubmitting}
-				open={!!jeExpense}
-				onClose={() => setJeExpense(null)}
+				open={!!jeExpenseVoucher}
+				onClose={() => setJeExpenseVoucher(null)}
 				onSubmit={async (values) => {
 					setIsJeSubmitting(true);
 					try {
 						const baseURL = getLocalApiUrl();
-						const expenseId = jeExpense?.id;
-						const expenseParticulars = jeExpense?.particulars || '';
+						const expenseVoucherId = jeExpenseVoucher?.id;
+						const expenseVoucherParticulars = (
+							jeExpenseVoucher?.particulars || []
+						)
+							.map((item) => item.description)
+							.join(', ');
 						const results = await values.entries.reduce(async (acc, entry) => {
 							const prev = await acc;
 							const result = await JournalEntriesService.create(
 								{
-									branch_id: jeExpense?.branch ?? undefined,
-									expense_id: expenseId,
+									branch_id: jeExpenseVoucher?.branch ?? undefined,
+									expense_id: expenseVoucherId,
 									entry_type: 'manual',
 									debit_account: entry.debitAccount,
 									credit_account: entry.creditAccount,
 									amount: entry.amount,
 									remarks: values.remarks || '',
-									description: expenseParticulars,
+									description: expenseVoucherParticulars,
 									datetime_created: values.datetimeCreated,
 								},
 								baseURL,
@@ -367,15 +392,15 @@ export const Expenses = () => {
 						}, Promise.resolve([] as any[]));
 
 						const firstJeId = results[0]?.data?.id;
-						if (expenseId && firstJeId) {
-							await updateExpense({
-								id: expenseId,
+						if (expenseVoucherId && firstJeId) {
+							await updateExpenseVoucher({
+								id: expenseVoucherId,
 								journalEntryId: firstJeId,
 							});
 						}
 
 						message.success('Journal entry created successfully');
-						setJeExpense(null);
+						setJeExpenseVoucher(null);
 					} catch {
 						message.error('Failed to create journal entry');
 					} finally {

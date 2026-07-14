@@ -1,3 +1,4 @@
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { Button, Col, Row, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
@@ -5,6 +6,7 @@ import {
 	RequestErrors,
 	TableHeader,
 	TimeRangeFilter,
+	ViewStatementOfAccountModal,
 } from 'components';
 import {
 	CollectionReceipt,
@@ -40,9 +42,13 @@ import {
 } from 'utils';
 import { Payor } from 'utils/type';
 import { AccountTotalBalance } from './components/AccountTotalBalance';
-import { accountTabs } from '../../data';
+import { accountViews } from '../../data';
 
-export const TabCreditTransactions = () => {
+type Props = {
+	onBack?: () => void;
+};
+
+export const TabCreditTransactions = ({ onBack }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -61,6 +67,7 @@ export const TabCreditTransactions = () => {
 		isCreateOrderOfPaymentModalVisible,
 		setIsCreateOrderOfPaymentModalVisible,
 	] = useState(false);
+	const [isStatementModalVisible, setIsStatementModalVisible] = useState(false);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -546,8 +553,8 @@ export const TabCreditTransactions = () => {
 
 	const handleCreateOrderOfPaymentsSuccess = () => {
 		setQueryParams(
-			{ tab: accountTabs.ORDER_OF_PAYMENTS },
-			{ shouldResetPage: true, shouldIncludeCurrentParams: false },
+			{ accountView: accountViews.ORDER_OF_PAYMENTS },
+			{ shouldResetPage: true },
 		);
 	};
 
@@ -559,6 +566,18 @@ export const TabCreditTransactions = () => {
 
 	return (
 		<div>
+			{onBack && (
+				<Button
+					className="pa-0 mb-2"
+					icon={<ArrowLeftOutlined />}
+					style={{ display: 'inline-flex', alignItems: 'center' }}
+					type="link"
+					onClick={onBack}
+				>
+					Back to Credit Accounts
+				</Button>
+			)}
+
 			<TableHeader
 				title={
 					params.payorId ? 'Account Transaction History' : 'Credit Transactions'
@@ -574,6 +593,7 @@ export const TabCreditTransactions = () => {
 						selectedAccount.credit_registration?.total_balance || '0'
 					}
 					onClick={() => setIsCreateOrderOfPaymentModalVisible(true)}
+					onViewStatement={() => setIsStatementModalVisible(true)}
 				/>
 			)}
 
@@ -662,6 +682,20 @@ export const TabCreditTransactions = () => {
 						onSuccess={handleCreateOrderOfPaymentsSuccess}
 					/>
 				)}
+
+			{isStatementModalVisible && selectedAccount && (
+				<ViewStatementOfAccountModal
+					creditRegistration={
+						{
+							id: selectedAccount.credit_registration?.id,
+							total_balance:
+								selectedAccount.credit_registration?.total_balance || '0',
+							account: selectedAccount,
+						} as any
+					}
+					onClose={() => setIsStatementModalVisible(false)}
+				/>
+			)}
 		</div>
 	);
 };

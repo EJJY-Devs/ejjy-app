@@ -1,5 +1,5 @@
 export * from './AppSettingsModal';
-export * from './CreatePurchaseModal';
+export * from './CreatePurchaseVoucherModal';
 export * from './ViewPurchaseModal';
 export * from './ViewPurchaseOrderModal';
 export * from './ViewPOInternalModal';

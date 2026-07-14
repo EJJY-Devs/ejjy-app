@@ -1,5 +1,14 @@
 import { CalendarOutlined, PrinterOutlined } from '@ant-design/icons';
-import { Button, Col, DatePicker, Modal, Row, Table, Typography } from 'antd';
+import {
+	Button,
+	Col,
+	DatePicker,
+	Modal,
+	Radio,
+	Row,
+	Table,
+	Typography,
+} from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { getFullName } from 'ejjy-global';
 import { MAIN_BRANCH_ID } from 'global';
@@ -101,8 +110,8 @@ const printStatementOfAccount = ({
 	statementNumber,
 	period,
 	dateIssued,
-	paymentDueDate,
 	currentOutstandingBalance,
+	isSupplier,
 }: {
 	branch: any;
 	account: any;
@@ -110,9 +119,21 @@ const printStatementOfAccount = ({
 	statementNumber: string;
 	period: [Moment, Moment];
 	dateIssued: Moment;
-	paymentDueDate: Moment;
 	currentOutstandingBalance: string | number;
+	isSupplier?: boolean;
 }) => {
+	const headerName = isSupplier
+		? account?.business_name || getFullName(account)
+		: branch?.store_name;
+	let headerSubtext = branch?.store_address;
+	if (isSupplier) {
+		headerSubtext = account?.business_name ? getFullName(account) : '';
+	}
+	const clientName = isSupplier ? branch?.store_name : getFullName(account);
+	const clientAddress = isSupplier
+		? branch?.store_address
+		: account?.business_address || account?.home_address;
+
 	const rowsHtml = statement.rows
 		.map(
 			(row) => `
@@ -139,13 +160,13 @@ const printStatementOfAccount = ({
 			<tr>
 				<td style="vertical-align: top;">
 					${
-						branch?.store_name
-							? `<div style="font-weight: bold; font-size: 16px; text-transform: uppercase;">${branch.store_name}</div>`
+						headerName
+							? `<div style="font-weight: bold; font-size: 16px; text-transform: uppercase;">${headerName}</div>`
 							: ''
 					}
 					${
-						branch?.store_address
-							? `<div style="font-size: 11px; margin-top: 2px;">${branch.store_address}</div>`
+						headerSubtext
+							? `<div style="font-size: 11px; margin-top: 2px;">${headerSubtext}</div>`
 							: ''
 					}
 				</td>
@@ -161,10 +182,13 @@ const printStatementOfAccount = ({
 		<table style="width: 100%; border-collapse: collapse;">
 			<tr>
 				<td style="vertical-align: top; width: 50%;">
-					<div><b>Client Name:</b> ${getFullName(account) || '—'}</div>
-					<div><b>Address:</b> ${
-						account?.business_address || account?.home_address || '—'
-					}</div>
+					<div><b>Client Name:</b> ${clientName || '—'}</div>
+					${
+						!isSupplier && account?.business_name
+							? `<div><b>Agency/Business Name:</b> ${account.business_name}</div>`
+							: ''
+					}
+					<div><b>Address:</b> ${clientAddress || '—'}</div>
 					<div><b>Client Code:</b> ${account?.account_code}</div>
 					<div><b>Statement Period:</b> ${period[0].format(
 						'MMMM D, YYYY',
@@ -210,9 +234,7 @@ const printStatementOfAccount = ({
 			</tbody>
 		</table>
 
-		<div style="margin-top: 12px;">Payment Due Date: ${paymentDueDate.format(
-			'MMMM D, YYYY',
-		)}</div>
+		<div style="margin-top: 12px;">Payment Due Date: _________________________</div>
 		<div>Statement Number: ${statementNumber}</div>
 		<div style="margin-top: 4px; font-weight: bold;">Current Outstanding Balance: ${formatInPeso(
 			currentOutstandingBalance,
@@ -235,6 +257,7 @@ export const StatementPeriodModal = ({
 	onConfirm,
 	onClose,
 }: StatementPeriodModalProps) => {
+	const [periodType, setPeriodType] = useState<'month' | 'range'>('month');
 	const [period, setPeriod] = useState<[Moment, Moment]>(defaultPeriod);
 
 	return (
@@ -261,21 +284,48 @@ export const StatementPeriodModal = ({
 		>
 			<Text strong>Statement Period</Text>
 			<br />
-			<DatePicker.RangePicker
-				allowClear={false}
-				className="w-100 mt-1"
-				format="MMMM D, YYYY"
-				picker="month"
-				value={period}
-				onChange={(dates) => {
-					if (dates?.[0] && dates?.[1]) {
-						setPeriod([
-							dates[0].clone().startOf('month'),
-							dates[1].clone().endOf('month'),
-						]);
-					}
-				}}
-			/>
+			<Radio.Group
+				className="mt-1"
+				value={periodType}
+				onChange={(e) => setPeriodType(e.target.value)}
+			>
+				<Radio value="month">Month</Radio>
+				<Radio value="range">Date Range</Radio>
+			</Radio.Group>
+			<br />
+
+			{periodType === 'month' ? (
+				<DatePicker
+					allowClear={false}
+					className="w-100 mt-1"
+					format="MMMM YYYY"
+					picker="month"
+					value={period[0]}
+					onChange={(date) => {
+						if (date) {
+							setPeriod([
+								date.clone().startOf('month'),
+								date.clone().endOf('month'),
+							]);
+						}
+					}}
+				/>
+			) : (
+				<DatePicker.RangePicker
+					allowClear={false}
+					className="w-100 mt-1"
+					format="MMMM D, YYYY"
+					value={period}
+					onChange={(dates) => {
+						if (dates?.[0] && dates?.[1]) {
+							setPeriod([
+								dates[0].clone().startOf('day'),
+								dates[1].clone().endOf('day'),
+							]);
+						}
+					}}
+				/>
+			)}
 		</Modal>
 	);
 };
@@ -288,6 +338,7 @@ interface Props {
 	history: StatementHistoryItem[];
 	isLoading: boolean;
 	period: [Moment, Moment];
+	isSupplier?: boolean;
 	onChangePeriod: () => void;
 	onClose: () => void;
 }
@@ -300,11 +351,24 @@ export const StatementOfAccountModal = ({
 	history,
 	isLoading,
 	period,
+	isSupplier,
 	onChangePeriod,
 	onClose,
 }: Props) => {
 	// CUSTOM HOOKS
 	const { data: branch } = useBranchRetrieve({ id: MAIN_BRANCH_ID });
+
+	const headerName = isSupplier
+		? account?.business_name || getFullName(account)
+		: branch?.store_name;
+	let headerSubtext = branch?.store_address;
+	if (isSupplier) {
+		headerSubtext = account?.business_name ? getFullName(account) : '';
+	}
+	const clientName = isSupplier ? branch?.store_name : getFullName(account);
+	const clientAddress = isSupplier
+		? branch?.store_address
+		: account?.business_address || account?.home_address;
 
 	const statement = useMemo(() => buildStatement(history, period[0]), [
 		history,
@@ -321,7 +385,6 @@ export const StatementOfAccountModal = ({
 		account?.account_code
 	}`;
 	const dateIssued = moment();
-	const paymentDueDate = period[1].clone().add(15, 'day');
 
 	const printData = {
 		branch,
@@ -330,8 +393,8 @@ export const StatementOfAccountModal = ({
 		statementNumber,
 		period,
 		dateIssued,
-		paymentDueDate,
 		currentOutstandingBalance,
+		isSupplier,
 	};
 
 	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
@@ -376,16 +439,16 @@ export const StatementOfAccountModal = ({
 		>
 			<Row justify="space-between">
 				<Col>
-					{branch?.store_name && (
+					{headerName && (
 						<Title
 							level={4}
 							style={{ marginBottom: 0, textTransform: 'uppercase' }}
 						>
-							{branch.store_name}
+							{headerName}
 						</Title>
 					)}
-					{branch?.store_address && (
-						<Text style={{ fontSize: 12 }}>{branch.store_address}</Text>
+					{headerSubtext && (
+						<Text style={{ fontSize: 12 }}>{headerSubtext}</Text>
 					)}
 				</Col>
 				<Col className="text-right">
@@ -406,11 +469,17 @@ export const StatementOfAccountModal = ({
 				<Col span={12}>
 					<div>
 						<Text strong>Client Name: </Text>
-						{getFullName(account)}
+						{clientName || '—'}
 					</div>
+					{!isSupplier && account?.business_name && (
+						<div>
+							<Text strong>Agency/Business Name: </Text>
+							{account.business_name}
+						</div>
+					)}
 					<div>
 						<Text strong>Address: </Text>
-						{account?.business_address || account?.home_address || '—'}
+						{clientAddress || '—'}
 					</div>
 					<div>
 						<Text strong>Client Code: </Text>
@@ -461,7 +530,7 @@ export const StatementOfAccountModal = ({
 
 			<Row className="mt-4" gutter={[16, 16]}>
 				<Col span={12}>
-					<Text>Payment Due Date: {paymentDueDate.format('MMMM D, YYYY')}</Text>
+					<Text>Payment Due Date: _________________________</Text>
 					<br />
 					<Text>Statement Number: {statementNumber}</Text>
 				</Col>

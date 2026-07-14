@@ -3,7 +3,7 @@ import { ColumnsType } from 'antd/lib/table';
 import React, { useEffect, useState } from 'react';
 import { JournalEntriesService } from 'services';
 import { formatDateTime, formatInPeso, getLocalApiUrl } from 'utils';
-import type { Expense } from '../index';
+import type { ExpenseVoucher } from '../index';
 
 interface JournalEntryRow {
 	id: number;
@@ -50,13 +50,13 @@ const columns: ColumnsType<JournalEntryRow> = [
 ];
 
 interface Props {
-	expense: Expense | null;
+	expenseVoucher: ExpenseVoucher | null;
 	open: boolean;
 	onClose: () => void;
 }
 
 export const ViewExpenseJournalEntriesModal = ({
-	expense,
+	expenseVoucher,
 	open,
 	onClose,
 }: Props) => {
@@ -64,14 +64,14 @@ export const ViewExpenseJournalEntriesModal = ({
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
-		if (!open || !expense) return;
+		if (!open || !expenseVoucher) return;
 
 		const load = async () => {
 			setIsLoading(true);
 			try {
 				const baseURL = getLocalApiUrl();
 				const response = await JournalEntriesService.list(
-					{ expense_id: expense.id, page_size: 100 },
+					{ expense_id: expenseVoucher.id, page_size: 100 },
 					baseURL,
 				);
 				const results: JournalEntryRow[] = (response.data?.results ?? []).map(
@@ -86,9 +86,9 @@ export const ViewExpenseJournalEntriesModal = ({
 					}),
 				);
 
-				if (results.length === 0 && expense.journal_entry) {
+				if (results.length === 0 && expenseVoucher.journal_entry) {
 					const single = await JournalEntriesService.retrieve(
-						expense.journal_entry,
+						expenseVoucher.journal_entry,
 						baseURL,
 					);
 					const je = single.data;
@@ -114,15 +114,15 @@ export const ViewExpenseJournalEntriesModal = ({
 		};
 
 		load();
-	}, [open, expense]);
+	}, [open, expenseVoucher]);
 
 	return (
 		<Modal
 			className="Modal__large Modal__hasFooter"
 			footer={null}
 			open={open}
-			title={`Journal Entries - Expenses : ${
-				expense?.reference_number ?? `E-${expense?.id ?? ''}`
+			title={`Journal Entries - Expense Vouchers : ${
+				expenseVoucher?.reference_number ?? `EV-${expenseVoucher?.id ?? ''}`
 			}`}
 			destroyOnClose
 			onCancel={onClose}

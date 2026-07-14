@@ -9,12 +9,12 @@ import { useHistory } from 'react-router-dom';
 import { getLocalApiUrl, getLocalBranchId } from 'utils';
 import { getAppType } from 'utils/localStorage';
 import {
-	ExpensesService,
+	ExpenseVoucherService,
 	JournalEntriesService,
 	PurchasesService,
 } from 'services';
-import { Expense } from 'screens/Shared/Accounting/Expenses';
-import { ViewDisbursementVoucherModal } from 'screens/Shared/Accounting/Expenses/modals/ViewDisbursementVoucherModal';
+import { ExpenseVoucher } from 'screens/Shared/Accounting/ExpenseVouchers';
+import { ViewExpenseVoucherModal } from 'screens/Shared/Accounting/ExpenseVouchers/modals/ViewExpenseVoucherModal';
 import { ViewPurchaseModal } from 'components/modals';
 import { GeneralLedgerTab } from './components/GeneralLedgerTab';
 import { TrialBalanceTab } from './components/TrialBalanceTab';
@@ -48,7 +48,7 @@ export const BooksOfAccounts = () => {
 		null,
 	);
 	const [viewTransactionRemarks, setViewTransactionRemarks] = useState('');
-	const [viewExpense, setViewExpense] = useState<Expense | null>(null);
+	const [viewExpense, setViewExpense] = useState<ExpenseVoucher | null>(null);
 	const [viewPurchase, setViewPurchase] = useState<any>(null);
 
 	const {
@@ -65,13 +65,13 @@ export const BooksOfAccounts = () => {
 
 	const handleViewExpense = useCallback(async (expenseId: number) => {
 		try {
-			const response = await ExpensesService.retrieve(
+			const response = await ExpenseVoucherService.retrieve(
 				expenseId,
 				getLocalApiUrl(),
 			);
 			setViewExpense(response.data);
 		} catch {
-			message.error('Failed to load expense');
+			message.error('Failed to load expense voucher');
 		}
 	}, []);
 
@@ -292,8 +292,8 @@ export const BooksOfAccounts = () => {
 				}}
 				onViewTransaction={handleViewTransaction}
 			/>
-			<ViewDisbursementVoucherModal
-				expense={viewExpense}
+			<ViewExpenseVoucherModal
+				expenseVoucher={viewExpense}
 				open={!!viewExpense}
 				onClose={() => setViewExpense(null)}
 			/>

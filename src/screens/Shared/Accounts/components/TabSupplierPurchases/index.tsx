@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { Button, Col, Row, Table } from 'antd';
+import { Button, Col, message, Row, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
 	RequestErrors,
@@ -13,20 +13,20 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, pageSizeOptions } from 'global';
 import { timeRangeTypes, appTypes } from 'global/types';
 import {
 	useAccounts,
-	useExpenseVoucherCreate,
-	useExpenseVouchers,
+	useDisbursementVoucherCreate,
+	useDisbursementVouchers,
 	usePurchases,
 	useQueryParams,
 } from 'hooks';
 import React, { useEffect, useMemo, useState } from 'react';
-import { CreateExpenseVoucherModal } from 'screens/Shared/Accounting/ExpenseVouchers/modals/CreateExpenseVoucherModal';
-import { ViewExpenseVoucherModal } from 'screens/Shared/Accounting/ExpenseVouchers/modals/ViewExpenseVoucherModal';
 import {
 	convertIntoArray,
 	formatInPeso,
 	getAppType,
 	formatDateTime,
 } from 'utils';
+import { CreateDisbursementVoucherModal } from './modals/CreateDisbursementVoucherModal';
+import { ViewDisbursementVoucherModal } from './modals/ViewDisbursementVoucherModal';
 import {
 	getSupplierLabel,
 	SupplierTotalBalance,
@@ -41,7 +41,10 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedAccount, setSelectedAccount] = useState(null);
 	const [selectedPurchase, setSelectedPurchase] = useState(null);
-	const [selectedExpense, setSelectedExpense] = useState(null);
+	const [
+		selectedDisbursementVoucher,
+		setSelectedDisbursementVoucher,
+	] = useState(null);
 	const [isCreateDvModalVisible, setIsCreateDvModalVisible] = useState(false);
 	const [isStatementModalVisible, setIsStatementModalVisible] = useState(false);
 
@@ -67,23 +70,22 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 	});
 
 	const {
-		data: expensesData,
-		isFetching: isFetchingExpenses,
-		error: expensesError,
-	} = useExpenseVouchers({
+		data: disbursementVouchersData,
+		isFetching: isFetchingDisbursementVouchers,
+		error: disbursementVouchersError,
+	} = useDisbursementVouchers({
 		params: {
 			supplierAccountId: params.supplierAccountId,
 			timeRange: params?.timeRange || timeRangeTypes.DAILY,
 			pageSize: DEFAULT_PAGE_SIZE * 3,
-			journalEntryStatus: 'all',
 		},
 		options: { enabled: !!params.supplierAccountId },
 	});
 
 	const {
-		mutateAsync: createExpense,
-		isLoading: isCreatingExpense,
-	} = useExpenseVoucherCreate();
+		mutateAsync: createDisbursementVoucher,
+		isLoading: isCreatingDisbursementVoucher,
+	} = useDisbursementVoucherCreate();
 
 	// TABLE COLUMNS
 	const columns: ColumnsType = useMemo(
@@ -109,14 +111,14 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 							</Button>
 						);
 					}
-					if (record.type === 'expense') {
+					if (record.type === 'disbursement') {
 						return (
 							<Button
 								className="pa-0"
 								type="link"
 								onClick={() =>
 									record.referenceData &&
-									setSelectedExpense(record.referenceData)
+									setSelectedDisbursementVoucher(record.referenceData)
 								}
 							>
 								{text}
@@ -163,7 +165,8 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 		}
 
 		const purchases = purchasesData?.purchases || [];
-		const expenses = expensesData?.expenseVouchers || [];
+		const disbursementVouchers =
+			disbursementVouchersData?.disbursementVouchers || [];
 
 		const combinedData = [
 			...purchases.map((purchase: any) => ({
@@ -178,18 +181,18 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 				type: 'purchase',
 				balance: formatInPeso(0),
 			})),
-			...expenses.map((expense: any) => ({
-				key: `expense-${expense.id}`,
-				datetime: formatDateTime(expense.datetime_created),
-				rawDatetime: expense.datetime_created,
-				referenceNumber: expense.reference_number,
-				referenceData: expense,
-				description: (expense.particulars || [])
+			...disbursementVouchers.map((disbursementVoucher: any) => ({
+				key: `disbursement-${disbursementVoucher.id}`,
+				datetime: formatDateTime(disbursementVoucher.datetime_created),
+				rawDatetime: disbursementVoucher.datetime_created,
+				referenceNumber: disbursementVoucher.reference_number,
+				referenceData: disbursementVoucher,
+				description: (disbursementVoucher.particulars || [])
 					.map((item: any) => item.description)
 					.join(', '),
-				amount: formatInPeso(expense.amount),
-				authorizer: getFullName(expense.authorizer),
-				type: 'expense',
+				amount: formatInPeso(disbursementVoucher.amount),
+				authorizer: getFullName(disbursementVoucher.authorizer),
+				type: 'disbursement',
 				balance: formatInPeso(0),
 			})),
 		];
@@ -208,7 +211,7 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 			const amount = parseFloat(item.amount.replace(/[₱,]/g, ''));
 			if (item.type === 'purchase') {
 				netTotal += amount;
-			} else if (item.type === 'expense') {
+			} else if (item.type === 'disbursement') {
 				netTotal -= amount;
 			}
 		});
@@ -221,7 +224,7 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 
 			if (item.type === 'purchase') {
 				runningBalance += amount;
-			} else if (item.type === 'expense') {
+			} else if (item.type === 'disbursement') {
 				runningBalance -= amount;
 			}
 
@@ -236,11 +239,11 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 		setDataSource(sortedData as any);
 	}, [
 		purchasesData?.purchases,
-		expensesData?.expenseVouchers,
+		disbursementVouchersData?.disbursementVouchers,
 		selectedAccount,
 	]);
 
-	const isLoading = isFetchingPurchases || isFetchingExpenses;
+	const isLoading = isFetchingPurchases || isFetchingDisbursementVouchers;
 
 	return (
 		<div>
@@ -271,7 +274,10 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 			<RequestErrors
 				errors={[
 					...convertIntoArray(purchasesError, 'Purchases'),
-					...convertIntoArray(expensesError, 'Expense Vouchers'),
+					...convertIntoArray(
+						disbursementVouchersError,
+						'Disbursement Vouchers',
+					),
 				]}
 				withSpaceBottom
 			/>
@@ -304,26 +310,31 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 				/>
 			)}
 
-			{selectedExpense && (
-				<ViewExpenseVoucherModal
-					expenseVoucher={selectedExpense}
-					open={!!selectedExpense}
-					onClose={() => setSelectedExpense(null)}
+			{selectedDisbursementVoucher && (
+				<ViewDisbursementVoucherModal
+					disbursementVoucher={selectedDisbursementVoucher}
+					open={!!selectedDisbursementVoucher}
+					onClose={() => setSelectedDisbursementVoucher(null)}
 				/>
 			)}
 
 			{getAppType() === appTypes.BACK_OFFICE &&
 				isCreateDvModalVisible &&
 				selectedAccount && (
-					<CreateExpenseVoucherModal
+					<CreateDisbursementVoucherModal
 						initialPayee={getSupplierLabel(selectedAccount)}
-						isSubmitting={isCreatingExpense}
+						isSubmitting={isCreatingDisbursementVoucher}
 						open={isCreateDvModalVisible}
 						supplierAccountId={selectedAccount?.['id']}
 						onClose={() => setIsCreateDvModalVisible(false)}
 						onCreate={async (values) => {
-							await createExpense(values);
-							setIsCreateDvModalVisible(false);
+							try {
+								await createDisbursementVoucher(values);
+								message.success('Disbursement voucher created successfully');
+								setIsCreateDvModalVisible(false);
+							} catch {
+								message.error('Failed to create disbursement voucher');
+							}
 						}}
 					/>
 				)}

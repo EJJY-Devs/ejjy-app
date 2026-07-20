@@ -6,6 +6,7 @@ export const NO_VERIFICATION_CONFIG = { params: NO_VERIFICATION_NEEDED };
 
 export { default as AccountingTransactionsService } from './AccountingTransactionsService';
 export { default as ExpenseVoucherService } from './ExpenseVoucherService';
+export { default as DisbursementVoucherService } from './DisbursementVoucherService';
 export { default as AccountsService } from './AccountsService';
 export { default as AdjustmentSlipsService } from './AdjustmentSlipsService';
 export { default as AttendanceLogsService } from './AttendanceLogsService';

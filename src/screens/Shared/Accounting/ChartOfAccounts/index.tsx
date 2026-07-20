@@ -102,7 +102,9 @@ export const ChartOfAccounts = () => {
 		() =>
 			isSpecialAccountsVisible
 				? ACCOUNT_CATEGORY_OPTIONS
-				: ACCOUNT_CATEGORY_OPTIONS.filter((option) => option.value !== 'special'),
+				: ACCOUNT_CATEGORY_OPTIONS.filter(
+						(option) => option.value !== 'special',
+				  ),
 		[isSpecialAccountsVisible],
 	);
 	const {
@@ -350,8 +352,7 @@ export const ChartOfAccounts = () => {
 										baseURL: getLocalApiUrl(),
 										userTypes: [userTypes.ADMIN],
 										title: 'View Special Accounts',
-										description:
-											'Authorize to view special accounts',
+										description: 'Authorize to view special accounts',
 										onSuccess: () => {
 											setAuthorizeConfig(null);
 											setIsSpecialAccountsVisible(true);

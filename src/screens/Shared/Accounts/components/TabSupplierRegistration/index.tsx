@@ -1,4 +1,9 @@
-import { DeleteOutlined, EyeFilled, SearchOutlined } from '@ant-design/icons';
+import {
+	DeleteOutlined,
+	DollarOutlined,
+	EyeFilled,
+	SearchOutlined,
+} from '@ant-design/icons';
 import {
 	Button,
 	Col,
@@ -33,7 +38,9 @@ import {
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { TabSupplierDisbursementVouchers } from 'screens/Shared/Accounts/components/TabSupplierDisbursementVouchers';
 import { TabSupplierPurchases } from 'screens/Shared/Accounts/components/TabSupplierPurchases';
+import { accountViews } from 'screens/Shared/Accounts/data';
 import { convertIntoArray, formatDate, getAppType } from 'utils';
 
 const columns: ColumnsType = [
@@ -88,7 +95,27 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 								ghost
 								onClick={() => {
 									setQueryParams(
-										{ supplierAccountId: account.id },
+										{
+											supplierAccountId: account.id,
+											accountView: undefined,
+										},
+										{ shouldResetPage: true },
+									);
+								}}
+							/>
+						</Tooltip>
+						<Tooltip title="View Disbursement Vouchers">
+							<Button
+								disabled={disabled}
+								icon={<DollarOutlined />}
+								type="primary"
+								ghost
+								onClick={() => {
+									setQueryParams(
+										{
+											supplierAccountId: account.id,
+											accountView: accountViews.DISBURSEMENT_VOUCHERS,
+										},
 										{ shouldResetPage: true },
 									);
 								}}
@@ -124,16 +151,22 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 	}, [supplierRegistrations, disabled]);
 
 	if (params.supplierAccountId) {
-		return (
-			<TabSupplierPurchases
-				onBack={() =>
-					setQueryParams(
-						{ supplierAccountId: undefined },
-						{ shouldResetPage: true },
-					)
-				}
-			/>
-		);
+		const onBack = () =>
+			setQueryParams(
+				{ supplierAccountId: undefined, accountView: undefined },
+				{ shouldResetPage: true },
+			);
+
+		if (params.accountView === accountViews.DISBURSEMENT_VOUCHERS) {
+			return (
+				<TabSupplierDisbursementVouchers
+					supplierAccountId={Number(params.supplierAccountId)}
+					onBack={onBack}
+				/>
+			);
+		}
+
+		return <TabSupplierPurchases onBack={onBack} />;
 	}
 
 	return (

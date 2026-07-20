@@ -10,4 +10,5 @@ export const accountViews = {
 	TRANSACTIONS: 'transactions',
 	ORDER_OF_PAYMENTS: 'orderOfPayments',
 	COLLECTION_RECEIPTS: 'collectionReceipts',
+	DISBURSEMENT_VOUCHERS: 'disbursementVouchers',
 };

@@ -29,6 +29,8 @@ export { default as useBranchProducts } from './useBranchProducts';
 export { default as useCashBreakdowns } from './useCashBreakdowns';
 export * from './useExpenseVouchers';
 export { default as useExpenseVouchers } from './useExpenseVouchers';
+export * from './useDisbursementVouchers';
+export { default as useDisbursementVouchers } from './useDisbursementVouchers';
 export * from './useCashieringAssignments';
 export { default as useCashieringAssignments } from './useCashieringAssignments';
 export { default as useCashieringSessions } from './useCashieringSessions';

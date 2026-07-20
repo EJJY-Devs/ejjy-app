@@ -3,31 +3,38 @@ import {
 	AuthorizationModal,
 	Props as AuthorizationModalProps,
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
-import { AutoComplete, Button, Form, Input, InputNumber, Modal } from 'antd';
+import { Button, Form, Input, InputNumber, Modal, Select } from 'antd';
 import { Label } from 'components/elements';
-import { useAccounts } from 'hooks';
+import { usePurchases } from 'hooks';
 import React, { useEffect, useMemo, useState } from 'react';
-import { getSupplierLabel } from 'screens/Shared/Accounts/components/TabSupplierPurchases/components/SupplierTotalBalance';
-import { getLocalApiUrl, formatNumberWithCommas } from 'utils';
+import { getLocalApiUrl, formatNumberWithCommas, formatInPeso } from 'utils';
 
 interface Particular {
 	description: string;
 	amount: number;
 }
 
+const PAYMENT_METHOD_OPTIONS = [
+	{ label: 'Cash', value: 'cash' },
+	{ label: 'Check', value: 'check' },
+	{ label: 'E-Payment', value: 'e_payment' },
+];
+
 interface Props {
 	isSubmitting: boolean;
 	open: boolean;
-	initialPayee?: string;
-	supplierAccountId?: number;
+	initialPayee: string;
+	supplierAccountId: number;
 	onClose: () => void;
 	onCreate: (values: {
 		payee: string;
 		particulars: Particular[];
 		amount: number;
+		paymentMethod: string;
 		remarks: string;
 		authorizerId: number;
-		supplierAccountId?: number;
+		supplierAccountId: number;
+		purchaseId?: number;
 	}) => Promise<void>;
 }
 
@@ -38,7 +45,7 @@ const pesoFormatter = (value: any) =>
 const pesoParser = (value: any) =>
 	Number((value || '').replace(/₱\s?|,/g, '')) as any;
 
-export const CreateExpenseVoucherModal = ({
+export const CreateDisbursementVoucherModal = ({
 	isSubmitting,
 	open,
 	initialPayee,
@@ -51,33 +58,30 @@ export const CreateExpenseVoucherModal = ({
 		authorizeConfig,
 		setAuthorizeConfig,
 	] = useState<AuthorizationModalProps | null>(null);
-	const [autoSupplierAccountId, setAutoSupplierAccountId] = useState<
-		number | null
-	>(null);
 
-	const isSupplierAccountFixed = !!supplierAccountId;
-	const effectiveSupplierAccountId = isSupplierAccountFixed
-		? supplierAccountId
-		: autoSupplierAccountId;
-
-	const { data: accountsData } = useAccounts({
-		params: { withSupplierRegistration: true },
-		options: { enabled: open && !isSupplierAccountFixed },
+	const { data: purchasesData } = usePurchases({
+		params: {
+			supplierAccountId,
+			journalEntryStatus: 'all',
+			pageSize: 100,
+		},
+		options: { enabled: open && !!supplierAccountId },
 	});
-	const supplierOptions = useMemo(
+	const purchaseOptions = useMemo(
 		() =>
-			(accountsData?.accounts || []).map((account: any) => ({
-				id: account.id,
-				value: getSupplierLabel(account),
+			(purchasesData?.purchases || []).map((purchase: any) => ({
+				label: `${
+					purchase.reference_number || `PV-${purchase.id}`
+				} — ${formatInPeso(purchase.total_amount)}`,
+				value: purchase.id,
 			})),
-		[accountsData?.accounts],
+		[purchasesData?.purchases],
 	);
 
 	useEffect(() => {
 		if (!open) {
 			form.resetFields();
-			setAutoSupplierAccountId(null);
-		} else if (initialPayee) {
+		} else {
 			form.setFieldsValue({ payee: initialPayee });
 		}
 	}, [open, initialPayee]);
@@ -91,28 +95,23 @@ export const CreateExpenseVoucherModal = ({
 		form.setFieldsValue({ amount: total });
 	};
 
-	const handlePayeeChange = (value: string) => {
-		if (isSupplierAccountFixed) return;
-
-		const matched = supplierOptions.find((option) => option.value === value);
-		setAutoSupplierAccountId(matched ? matched.id : null);
-	};
-
 	const handleSubmit = async () => {
 		const values = await form.validateFields();
 
 		setAuthorizeConfig({
 			baseURL: getLocalApiUrl(),
-			title: 'Authorize Expense Voucher',
+			title: 'Authorize Disbursement Voucher',
 			onSuccess: async (authorizedUser) => {
 				setAuthorizeConfig(null);
 				await onCreate({
 					payee: values.payee,
 					particulars: values.particulars || [],
 					amount: values.amount,
+					paymentMethod: values.paymentMethod,
 					remarks: values.remarks || '',
 					authorizerId: authorizedUser.id,
-					supplierAccountId: effectiveSupplierAccountId,
+					supplierAccountId,
+					purchaseId: values.purchaseId,
 				});
 				form.resetFields();
 			},
@@ -126,7 +125,7 @@ export const CreateExpenseVoucherModal = ({
 				footer={null}
 				maskClosable={false}
 				open={open}
-				title="Expense Voucher"
+				title="Disbursement Voucher"
 				width={560}
 				centered
 				closable
@@ -135,24 +134,25 @@ export const CreateExpenseVoucherModal = ({
 			>
 				<Form
 					form={form}
-					initialValues={{ particulars: [{ description: '', amount: 0 }] }}
+					initialValues={{
+						particulars: [{ description: '', amount: 0 }],
+						paymentMethod: 'cash',
+					}}
 					layout="vertical"
 				>
-					<Form.Item
-						label="Payee"
-						name="payee"
-						rules={[{ required: true, message: 'Payee is required' }]}
-					>
-						<AutoComplete
-							disabled={isSupplierAccountFixed}
-							filterOption={(inputValue, option) =>
-								(option?.value as string)
-									.toLowerCase()
-									.includes(inputValue.toLowerCase())
-							}
-							options={supplierOptions}
-							placeholder="Select a supplier or type a payee name"
-							onChange={handlePayeeChange}
+					<Form.Item label="Payee" name="payee">
+						<Input disabled />
+					</Form.Item>
+
+					<Form.Item label="Payment Method" name="paymentMethod">
+						<Select options={PAYMENT_METHOD_OPTIONS} />
+					</Form.Item>
+
+					<Form.Item label="Purchase Voucher (optional)" name="purchaseId">
+						<Select
+							options={purchaseOptions}
+							placeholder="Select a purchase voucher to settle (optional)"
+							allowClear
 						/>
 					</Form.Item>
 

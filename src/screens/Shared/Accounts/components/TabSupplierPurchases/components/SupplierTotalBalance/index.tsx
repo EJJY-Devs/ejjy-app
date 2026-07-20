@@ -68,7 +68,7 @@ export const SupplierTotalBalance = ({
 						type="primary"
 						onClick={onClick}
 					>
-						Create Expense Voucher
+						Create Disbursement Voucher
 					</Button>
 				)}
 			</Col>

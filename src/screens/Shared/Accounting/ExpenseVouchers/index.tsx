@@ -339,18 +339,22 @@ export const ExpenseVouchers = () => {
 				open={isCreateOpen}
 				onClose={() => setIsCreateOpen(false)}
 				onCreate={async (values) => {
-					await createExpenseVoucher({
-						payee: values.payee,
-						particulars: values.particulars,
-						amount: values.amount,
-						remarks: values.remarks,
-						authorizerId: values.authorizerId,
-						branchId: getLocalBranchId()
-							? Number(getLocalBranchId())
-							: undefined,
-					});
-					message.success('Expense voucher created successfully');
-					setIsCreateOpen(false);
+					try {
+						await createExpenseVoucher({
+							payee: values.payee,
+							particulars: values.particulars,
+							amount: values.amount,
+							remarks: values.remarks,
+							authorizerId: values.authorizerId,
+							branchId: getLocalBranchId()
+								? Number(getLocalBranchId())
+								: undefined,
+						});
+						message.success('Expense voucher created successfully');
+						setIsCreateOpen(false);
+					} catch {
+						message.error('Failed to create expense voucher');
+					}
 				}}
 			/>
 

@@ -121,6 +121,20 @@ export const TabCreditTransactions = ({ onBack }: Props) => {
 								</Button>
 							);
 						}
+						if (record.type === 'collection_receipt') {
+							return (
+								<Button
+									className="pa-0"
+									type="link"
+									onClick={() =>
+										record.referenceData &&
+										setSelectedCollectionReceipt(record.referenceData)
+									}
+								>
+									{text}
+								</Button>
+							);
+						}
 						return text;
 					},
 				},
@@ -276,7 +290,9 @@ export const TabCreditTransactions = ({ onBack }: Props) => {
 		},
 	});
 
-	// Fetch Collection Receipts - only when account is selected
+	// Fetch Collection Receipts - filtered by account when one is selected,
+	// otherwise fetched for all accounts so they show up in the general
+	// Credit Transactions list
 	const {
 		data: collectionReceiptsData,
 		isFetching: isFetchingCollectionReceipts,
@@ -287,9 +303,6 @@ export const TabCreditTransactions = ({ onBack }: Props) => {
 			timeRange: (params?.timeRange || timeRangeTypes.DAILY) as string,
 			pageSize: DEFAULT_PAGE_SIZE * 3,
 			...params,
-		},
-		options: {
-			enabled: !!params.payorId, // Only fetch when account is selected
 		},
 		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
@@ -390,9 +403,43 @@ export const TabCreditTransactions = ({ onBack }: Props) => {
 			combinedData.push(...deliveryInvoiceData);
 		}
 
-		// Only process Order of Payments and Collection Receipts when account is selected
+		// Process Collection Receipts - always shown, whether or not an
+		// account is selected, so they appear in the general transactions list
+		if (collectionReceiptsData?.list) {
+			const collectionReceiptData = collectionReceiptsData.list.map(
+				(collectionReceipt) => {
+					const {
+						id,
+						reference_number,
+						amount,
+						order_of_payment,
+						datetime_created,
+						created_by,
+					} = collectionReceipt;
+
+					return {
+						key: `cr-${id}`,
+						datetime: formatDateTime(datetime_created),
+						rawDatetime: datetime_created,
+						clientCode: order_of_payment?.payor?.account_code || '',
+						clientName: getFullName(order_of_payment?.payor) || '',
+						invoiceNumber: reference_number || EMPTY_CELL,
+						referenceNumber: reference_number || EMPTY_CELL,
+						referenceData: collectionReceipt,
+						amount: formatInPeso(amount),
+						cashier: getFullName(created_by),
+						authorizer: getFullName(created_by),
+						remarks: 'Collection Receipt',
+						type: 'collection_receipt',
+						outstandingBalance: formatInPeso(0), // Will be calculated later
+					};
+				},
+			);
+			combinedData.push(...collectionReceiptData);
+		}
+
+		// Only process Order of Payments when account is selected
 		if (hasSelectedAccount) {
-			// Process Order of Payments
 			if (orderOfPaymentsData?.list) {
 				const orderOfPaymentData = orderOfPaymentsData.list.map(
 					(orderOfPayment) => {
@@ -424,40 +471,6 @@ export const TabCreditTransactions = ({ onBack }: Props) => {
 					},
 				);
 				combinedData.push(...orderOfPaymentData);
-			}
-
-			// Process Collection Receipts
-			if (collectionReceiptsData?.list) {
-				const collectionReceiptData = collectionReceiptsData.list.map(
-					(collectionReceipt) => {
-						const {
-							id,
-							reference_number,
-							amount,
-							order_of_payment,
-							datetime_created,
-							created_by,
-						} = collectionReceipt;
-
-						return {
-							key: `cr-${id}`,
-							datetime: formatDateTime(datetime_created),
-							rawDatetime: datetime_created,
-							clientCode: order_of_payment?.payor?.account_code || '',
-							clientName: getFullName(order_of_payment?.payor) || '',
-							invoiceNumber: '',
-							referenceNumber: reference_number || EMPTY_CELL,
-							referenceData: collectionReceipt,
-							amount: formatInPeso(amount),
-							cashier: getFullName(created_by),
-							authorizer: getFullName(created_by),
-							remarks: 'Collection Receipt',
-							type: 'collection_receipt',
-							outstandingBalance: formatInPeso(0), // Will be calculated later
-						};
-					},
-				);
-				combinedData.push(...collectionReceiptData);
 			}
 		}
 

@@ -206,8 +206,18 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 			selectedAccount?.['supplier_registration']?.total_balance || '0',
 		);
 
+		// Only "On Account" purchases add to the supplier's outstanding balance;
+		// "Pay" purchases are settled immediately and have no effect on
+		// total_balance (see purchases views.py), so they're excluded here to
+		// keep the running balance in sync with the account's actual balance.
+		const affectsBalance = (item: any) =>
+			item.type === 'disbursement' ||
+			(item.type === 'purchase' &&
+				item.referenceData?.payment_type === 'on_account');
+
 		let netTotal = 0;
 		sortedForCalculation.forEach((item) => {
+			if (!affectsBalance(item)) return;
 			const amount = parseFloat(item.amount.replace(/[₱,]/g, ''));
 			if (item.type === 'purchase') {
 				netTotal += amount;
@@ -220,6 +230,10 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 
 		let runningBalance = initialBalance;
 		const dataWithBalance = sortedForCalculation.map((item) => {
+			if (!affectsBalance(item)) {
+				return { ...item, balance: formatInPeso(runningBalance) };
+			}
+
 			const amount = parseFloat(item.amount.replace(/[₱,]/g, ''));
 
 			if (item.type === 'purchase') {

@@ -202,12 +202,12 @@ const printStatementOfAccount = ({
 							statement.previousBalance,
 							'P',
 						)}</td></tr>
-						<tr><td>Payments:</td><td style="text-align: right;">${formatInPeso(
-							statement.payments,
-							'P',
-						)}</td></tr>
 						<tr><td>New Charges:</td><td style="text-align: right;">${formatInPeso(
 							statement.newCharges,
+							'P',
+						)}</td></tr>
+						<tr><td>Payments:</td><td style="text-align: right;">${formatInPeso(
+							statement.payments,
 							'P',
 						)}</td></tr>
 						<tr><td>Total Balance Due:</td><td style="text-align: right;">${formatInPeso(
@@ -505,12 +505,12 @@ export const StatementOfAccountModal = ({
 						<Text>{formatInPeso(statement.previousBalance)}</Text>
 					</Row>
 					<Row justify="space-between">
-						<Text>Payments</Text>
-						<Text>{formatInPeso(statement.payments)}</Text>
-					</Row>
-					<Row justify="space-between">
 						<Text>New Charges</Text>
 						<Text>{formatInPeso(statement.newCharges)}</Text>
+					</Row>
+					<Row justify="space-between">
+						<Text>Payments</Text>
+						<Text>{formatInPeso(statement.payments)}</Text>
 					</Row>
 					<Row justify="space-between">
 						<Text>Total Balance Due</Text>

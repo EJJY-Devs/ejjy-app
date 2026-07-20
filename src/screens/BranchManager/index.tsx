@@ -50,14 +50,9 @@ import { Tags } from 'screens/Shared/Tags';
 import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
 import { RequisitionSlips } from 'screens/Shared/RequisitionSlips';
 import { Accounts } from '../Shared/Accounts';
-import { BackOrders } from './BackOrders';
-import { CreateBackOrder } from './BackOrders/CreateBackOrder';
 import { BranchMachines } from './BranchMachines';
 import { Dashboard } from './Dashboard';
 import { Notifications } from './Notifications';
-import { OrderSlips } from './OrderSlips/OrderSlips';
-import { CreateReturnItemSlip } from './ReturnItemSlips/CreateReturnItemSlip';
-import { ReturnItemSlips } from './ReturnItemSlips';
 
 const PING_BRANCH_INTERVAL_MS = 10_000;
 
@@ -237,27 +232,6 @@ const BranchManager = () => {
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
 				link: '/branch-manager/adjustment-slips',
-			},
-			{
-				key: 'return-item-slips',
-				name: 'Return Item Slips',
-				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
-				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
-				link: '/branch-manager/return-item-slips',
-			},
-			{
-				key: 'back-orders',
-				name: 'Back Orders',
-				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
-				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
-				link: '/branch-manager/back-orders',
-			},
-			{
-				key: 'order-slips',
-				name: 'Order Slips',
-				activeIcon: require('../../assets/images/icon-order-slips-active.svg'),
-				defaultIcon: require('../../assets/images/icon-order-slips.svg'),
-				link: '/branch-manager/order-slips',
 			},
 			{
 				key: 'checkings',
@@ -442,27 +416,6 @@ const BranchManager = () => {
 						path="/branch-manager/adjustment-slips"
 						exact
 					/>
-					<Route
-						component={ReturnItemSlips}
-						path="/branch-manager/return-item-slips"
-						exact
-					/>
-					<Route
-						component={CreateReturnItemSlip}
-						path="/branch-manager/return-item-slips/create"
-						exact
-					/>
-					<Route
-						component={BackOrders}
-						path="/branch-manager/back-orders"
-						exact
-					/>
-					<Route
-						component={CreateBackOrder}
-						path="/branch-manager/back-orders/create"
-						exact
-					/>
-					<Route component={OrderSlips} path="/branch-manager/order-slips" />
 					<Route
 						component={InventoryAudit}
 						path="/branch-manager/checkings"

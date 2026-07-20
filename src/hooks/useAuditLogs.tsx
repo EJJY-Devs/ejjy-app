@@ -71,16 +71,19 @@ export const useAuditLogCreate = (serverUrl: string) => {
 			branchProductId,
 			type,
 			inputtedQty,
+			authorizerId,
 		}: {
 			branchProductId: number;
 			type: 'daily' | 'random';
 			inputtedQty: number;
+			authorizerId?: number;
 		}) =>
 			AuditLogsService.create(
 				{
 					branch_product_id: branchProductId,
 					type,
 					inputted_qty: inputtedQty,
+					authorizer_id: authorizerId,
 				},
 				serverUrl || getLocalApiUrl(),
 			),

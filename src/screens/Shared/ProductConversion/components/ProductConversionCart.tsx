@@ -2,6 +2,7 @@ import { Modal, Button, Table, message, Spin } from 'antd';
 import { CloseCircleFilled } from '@ant-design/icons';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ControlledInput, MainButton } from 'components/elements';
+import InputNumberQuantity from 'components/elements/InputNumberQuantity';
 import { useBranchProducts, useProductConversion } from 'hooks';
 import { getLocalBranchId, convertIntoArray, getLocalApiUrl } from 'utils';
 import { RequestErrors } from 'components';
@@ -10,10 +11,11 @@ import {
 	AuthorizationModal,
 	Props as AuthorizationModalProps,
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
+import { unitOfMeasurementTypes } from 'global';
 import { Scrollbars } from 'react-custom-scrollbars';
 import cn from 'classnames';
 import KeyboardEventHandler from 'react-keyboard-event-handler';
-import { debounce } from 'lodash';
+import { debounce, isInteger } from 'lodash';
 import BarcodeReader from 'react-barcode-reader';
 
 interface ProductConversionCartProps {
@@ -25,6 +27,10 @@ const searchModes = [
 	{ key: 'sku', label: 'SKU' },
 	{ key: 'barcode', label: 'Barcode' },
 ];
+
+const isWeighingProduct = (branchProduct: any) =>
+	branchProduct?.product?.unit_of_measurement ===
+	unitOfMeasurementTypes.WEIGHING;
 
 const SEARCH_DEBOUNCE_TIME = 250;
 const SCANNED_BARCODE_THRESHOLD = 8;
@@ -218,7 +224,7 @@ export const ProductConversionCart = ({
 			return;
 		}
 
-		// Disallow negatives; allow decimals and zero
+		// Disallow negatives; allow decimals only for weighing products
 		if (
 			stockOutProduct.qty === undefined ||
 			stockOutProduct.qty === null ||
@@ -230,12 +236,28 @@ export const ProductConversionCart = ({
 		}
 
 		if (
+			!isWeighingProduct(stockOutProduct) &&
+			!isInteger(Number(stockOutProduct.qty))
+		) {
+			message.error('Non-weighing items require whole number quantity');
+			return;
+		}
+
+		if (
 			stockInProduct.qty === undefined ||
 			stockInProduct.qty === null ||
 			Number.isNaN(Number(stockInProduct.qty)) ||
 			Number(stockInProduct.qty) < 0
 		) {
 			message.error('Invalid Stock In quantity');
+			return;
+		}
+
+		if (
+			!isWeighingProduct(stockInProduct) &&
+			!isInteger(Number(stockInProduct.qty))
+		) {
+			message.error('Non-weighing items require whole number quantity');
 			return;
 		}
 
@@ -318,11 +340,11 @@ export const ProductConversionCart = ({
 
 	const handleStockOutQtyChange = (raw: string) => {
 		// Prevent typing negative sign
-		if (raw.startsWith('-')) {
+		if (raw === null || raw === undefined || raw.toString().startsWith('-')) {
 			return;
 		}
-		setStockOutQtyInput(raw);
-		const num = parseFloat(raw);
+		setStockOutQtyInput(raw.toString());
+		const num = parseFloat(raw.toString());
 		if (!Number.isNaN(num) && num >= 0) {
 			setStockOutProduct((prev) => ({
 				...prev,
@@ -333,11 +355,11 @@ export const ProductConversionCart = ({
 
 	const handleStockInQtyChange = (raw: string) => {
 		// Prevent typing negative sign
-		if (raw.startsWith('-')) {
+		if (raw === null || raw === undefined || raw.toString().startsWith('-')) {
 			return;
 		}
-		setStockInQtyInput(raw);
-		const num = parseFloat(raw);
+		setStockInQtyInput(raw.toString());
+		const num = parseFloat(raw.toString());
 		if (!Number.isNaN(num) && num >= 0) {
 			setStockInProduct((prev) => ({
 				...prev,
@@ -398,20 +420,14 @@ export const ProductConversionCart = ({
 			width: '40%',
 			align: 'center' as const,
 			render: () => (
-				<input
+				<InputNumberQuantity
+					className="w-100"
 					disabled={!stockOutProduct}
+					isWeighing={isWeighingProduct(stockOutProduct)}
 					min={0}
-					step="any"
-					style={{
-						width: '100%',
-						padding: '4px 12px',
-						border: '1px solid #d9d9d9',
-						borderRadius: '2px',
-						textAlign: 'center',
-					}}
-					type="number"
+					style={{ textAlign: 'center' }}
 					value={stockOutProduct ? stockOutQtyInput : ''}
-					onChange={(e) => handleStockOutQtyChange(e.target.value)}
+					onChange={handleStockOutQtyChange}
 				/>
 			),
 		},
@@ -435,20 +451,14 @@ export const ProductConversionCart = ({
 			width: '40%',
 			align: 'center' as const,
 			render: () => (
-				<input
+				<InputNumberQuantity
+					className="w-100"
 					disabled={!stockInProduct}
+					isWeighing={isWeighingProduct(stockInProduct)}
 					min={0}
-					step="any"
-					style={{
-						width: '100%',
-						padding: '4px 11px',
-						border: '1px solid #d9d9d9',
-						borderRadius: '2px',
-						textAlign: 'center',
-					}}
-					type="number"
+					style={{ textAlign: 'center' }}
 					value={stockInProduct ? stockInQtyInput : ''}
-					onChange={(e) => handleStockInQtyChange(e.target.value)}
+					onChange={handleStockInQtyChange}
 				/>
 			),
 		},

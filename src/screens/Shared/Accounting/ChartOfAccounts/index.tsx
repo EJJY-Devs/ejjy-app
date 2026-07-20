@@ -3,7 +3,9 @@ import {
 	DeleteOutlined,
 	EditFilled,
 	ExclamationCircleOutlined,
+	LockOutlined,
 	SearchOutlined,
+	UnlockOutlined,
 } from '@ant-design/icons';
 import {
 	Button,
@@ -20,10 +22,15 @@ import { ColumnsType } from 'antd/lib/table';
 import { Content } from 'components';
 import { Box } from 'components/elements';
 import {
+	AuthorizationModal,
+	Props as AuthorizationModalProps,
+} from 'ejjy-global/dist/components/modals/AuthorizationModal';
+import {
 	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
 	pageSizeOptions,
+	userTypes,
 } from 'global';
 import React, { useMemo, useState } from 'react';
 import useChartOfAccounts, {
@@ -32,7 +39,7 @@ import useChartOfAccounts, {
 	useChartOfAccountEdit,
 } from 'hooks/useChartOfAccounts';
 import { useQueryParams } from 'hooks';
-import { getAppType } from 'utils/localStorage';
+import { getAppType, getLocalApiUrl } from 'utils/localStorage';
 import { showErrorMessages } from 'utils';
 import { CreateAccountModal } from '../modals/CreateAccountModal';
 import { EditAccountModal } from '../modals/EditAccountModal';
@@ -60,6 +67,13 @@ export const ChartOfAccounts = () => {
 	const [classificationFilter, setClassificationFilter] = useState('');
 	const [selectedAccount, setSelectedAccount] = useState<any>(null);
 	const [viewAccount, setViewAccount] = useState<any>(null);
+	const [isSpecialAccountsVisible, setIsSpecialAccountsVisible] = useState(
+		false,
+	);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 	const { params, setQueryParams } = useQueryParams();
 	const { data, isFetching } = useChartOfAccounts({
@@ -75,6 +89,22 @@ export const ChartOfAccounts = () => {
 		chartOfAccounts: [],
 		total: 0,
 	};
+	const visibleChartOfAccounts = useMemo(
+		() =>
+			isSpecialAccountsVisible
+				? chartOfAccounts
+				: chartOfAccounts.filter(
+						(account: any) => account.account_category !== 'special',
+				  ),
+		[chartOfAccounts, isSpecialAccountsVisible],
+	);
+	const categoryOptions = useMemo(
+		() =>
+			isSpecialAccountsVisible
+				? ACCOUNT_CATEGORY_OPTIONS
+				: ACCOUNT_CATEGORY_OPTIONS.filter((option) => option.value !== 'special'),
+		[isSpecialAccountsVisible],
+	);
 	const {
 		mutateAsync: createAccount,
 		isLoading: isCreating,
@@ -265,7 +295,7 @@ export const ChartOfAccounts = () => {
 						<Select
 							className="ChartOfAccounts_categoryFilter"
 							defaultValue=""
-							options={ACCOUNT_CATEGORY_OPTIONS}
+							options={categoryOptions}
 							placeholder="Filter by category"
 							value={categoryFilter}
 							onChange={(value) => {
@@ -291,15 +321,56 @@ export const ChartOfAccounts = () => {
 							}}
 						/>
 					</div>
-					{isHeadOffice && (
-						<Button type="primary" onClick={() => setIsCreateOpen(true)}>
-							Create Account
-						</Button>
-					)}
+					<Space>
+						<Tooltip
+							title={
+								isSpecialAccountsVisible
+									? 'Hide special accounts'
+									: 'Show special accounts'
+							}
+						>
+							<Button
+								icon={
+									isSpecialAccountsVisible ? (
+										<UnlockOutlined />
+									) : (
+										<LockOutlined />
+									)
+								}
+								onClick={() => {
+									if (isSpecialAccountsVisible) {
+										setIsSpecialAccountsVisible(false);
+										if (categoryFilter === 'special') {
+											setCategoryFilter('');
+										}
+										return;
+									}
+
+									setAuthorizeConfig({
+										baseURL: getLocalApiUrl(),
+										userTypes: [userTypes.ADMIN],
+										title: 'View Special Accounts',
+										description:
+											'Authorize to view special accounts',
+										onSuccess: () => {
+											setAuthorizeConfig(null);
+											setIsSpecialAccountsVisible(true);
+										},
+										onCancel: () => setAuthorizeConfig(null),
+									});
+								}}
+							/>
+						</Tooltip>
+						{isHeadOffice && (
+							<Button type="primary" onClick={() => setIsCreateOpen(true)}>
+								Create Account
+							</Button>
+						)}
+					</Space>
 				</div>
 				<Table
 					columns={columns}
-					dataSource={chartOfAccounts}
+					dataSource={visibleChartOfAccounts}
 					loading={isFetching}
 					pagination={{
 						current: Number(params.page) || DEFAULT_PAGE,
@@ -347,6 +418,7 @@ export const ChartOfAccounts = () => {
 					setViewAccount(null);
 				}}
 			/>
+			{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
 		</Content>
 	);
 };

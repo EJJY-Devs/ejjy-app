@@ -3,19 +3,16 @@
 import { Badge, Layout } from 'antd';
 import iconAccount from 'assets/images/icon-account.svg';
 import iconDashboard from 'assets/images/icon-dashboard.svg';
-import iconLogout from 'assets/images/icon-logout.svg';
 import iconReport from 'assets/images/icon-report.svg';
 import sampleAvatar from 'assets/images/sample-avatar.png';
 import cn from 'classnames';
-import { getFullName } from 'ejjy-global';
-import { appTypes, userTypes } from 'global';
-import { useAuthLogout, useSiteSettings } from 'hooks';
+import { appTypes } from 'global';
+import { useSiteSettings } from 'hooks';
 import { useUI } from 'hooks/useUI';
 import React, { useState } from 'react';
 import { useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
-import { useUserStore } from 'stores';
-import { getAppType, getUserTypeName } from 'utils';
+import { getAppType } from 'utils';
 import './style.scss';
 
 interface Props {
@@ -27,18 +24,15 @@ export const Sidebar = ({ items }: Props) => {
 	const [popupVisible, setPopupVisible] = useState(false);
 
 	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
 	const { pathname } = useLocation();
 	const isBackOffice = getAppType() === appTypes.BACK_OFFICE;
-	let displayName = getFullName(user);
-	if (user?.user_type === userTypes.ADMIN) {
-		displayName = 'Emman Fineza';
-	}
-	const displayRole = getUserTypeName(user?.user_type);
 	const {
 		accountingLink,
 		wetMarketLink,
 		isInAccounting,
+		appModeSwitchLink,
+		appModeSwitchLabel,
+		currentAppModeLabel,
 	} = React.useMemo(() => {
 		const officeManagerBase = pathname.startsWith('/office-manager/')
 			? '/office-manager'
@@ -46,6 +40,7 @@ export const Sidebar = ({ items }: Props) => {
 		const branchManagerBase = pathname.startsWith('/branch-manager/')
 			? '/branch-manager'
 			: null;
+		const adminBase = pathname.startsWith('/admin/') ? '/admin' : null;
 
 		const basePath = officeManagerBase || branchManagerBase;
 		const inAccounting = pathname.includes('/accounting');
@@ -57,14 +52,33 @@ export const Sidebar = ({ items }: Props) => {
 			wetMarket = '/branch-manager/branch-machines';
 		}
 
+		let modeSwitchLink: string | null = null;
+		let modeSwitchLabel = '';
+		let currentModeLabel = '';
+		if (adminBase) {
+			modeSwitchLink = '/office-manager/dashboard';
+			modeSwitchLabel = 'Office Manager';
+			currentModeLabel = 'Admin';
+		} else if (officeManagerBase) {
+			modeSwitchLink = '/admin/dashboard';
+			modeSwitchLabel = 'Admin';
+			currentModeLabel = 'Office Manager';
+		}
+
 		return {
 			accountingLink: accounting,
 			wetMarketLink: wetMarket,
 			isInAccounting: inAccounting,
+			appModeSwitchLink: modeSwitchLink,
+			appModeSwitchLabel: modeSwitchLabel,
+			currentAppModeLabel: currentModeLabel,
 		};
 	}, [pathname]);
-	const hasAppSwitchLinks = !!(accountingLink || wetMarketLink);
-	const { mutateAsync: logout } = useAuthLogout();
+	const hasAppSwitchLinks = !!(
+		accountingLink ||
+		wetMarketLink ||
+		(!isBackOffice && appModeSwitchLink)
+	);
 	const { data: siteSettings } = useSiteSettings();
 	// TODO: Create a reducer for this which will be updated everytime network check is done
 	// const { hasInternetConnection } = useNetwork();
@@ -130,7 +144,7 @@ export const Sidebar = ({ items }: Props) => {
 			<div
 				className={cn('bottom', { active: popupVisible })}
 				onClick={() => {
-					if (isBackOffice && !hasAppSwitchLinks) {
+					if (!hasAppSwitchLinks) {
 						return;
 					}
 					setPopupVisible((value) => !value);
@@ -149,19 +163,11 @@ export const Sidebar = ({ items }: Props) => {
 							<span className="name">Operations</span>
 						</Link>
 					)}
-
-					{!isBackOffice && (
-						<>
-							<div className="item">
-								<img alt="icon" className="icon" src={iconAccount} />
-								<span className="name">Account</span>
-							</div>
-
-							<div className="item" onClick={() => logout(user.id)}>
-								<img alt="icon" className="icon" src={iconLogout} />
-								<span className="name">Logout</span>
-							</div>
-						</>
+					{!isBackOffice && appModeSwitchLink && (
+						<Link className="item" tabIndex={-1} to={appModeSwitchLink}>
+							<img alt="icon" className="icon" src={iconAccount} />
+							<span className="name">{appModeSwitchLabel}</span>
+						</Link>
 					)}
 				</div>
 
@@ -176,8 +182,8 @@ export const Sidebar = ({ items }: Props) => {
 						)}
 						{!isBackOffice && (
 							<>
-								<span className="name">{displayName}</span>
-								<span className="role">{displayRole}</span>
+								<span className="name">{currentAppModeLabel || 'Menu'}</span>
+								<span className="role">Switch App</span>
 							</>
 						)}
 					</div>

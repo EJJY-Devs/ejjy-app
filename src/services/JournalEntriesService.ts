@@ -21,6 +21,7 @@ interface Create {
 	description?: string;
 	entry_type?: string;
 	datetime_created?: string;
+	authorizer_id?: number;
 }
 
 const service = {

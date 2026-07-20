@@ -19,6 +19,10 @@ import { Content, RequestErrors, TimeRangeFilter } from 'components';
 import { Box, Label } from 'components/elements';
 import { ViewPurchaseModal, ViewPurchaseOrderModal } from 'components/modals';
 import { EMPTY_CELL, filterOption } from 'ejjy-global';
+import {
+	AuthorizationModal,
+	Props as AuthorizationModalProps,
+} from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { pageSizeOptions, DEFAULT_PAGE, MAX_PAGE_SIZE, appTypes } from 'global';
 import { useBranches, useQueryParams } from 'hooks';
 import usePurchases, { usePurchaseUpdate } from 'hooks/usePurchases';
@@ -51,6 +55,10 @@ export const Purchases = () => {
 	const [purchaseForJE, setPurchaseForJE] = useState<any>(null);
 	const [viewJePurchase, setViewJePurchase] = useState<any>(null);
 	const [isJeSubmitting, setIsJeSubmitting] = useState(false);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 
 	const { refetchData, setRefetchData } = useBoundStore();
 	const { params, setQueryParams } = useQueryParams();
@@ -342,48 +350,59 @@ export const Purchases = () => {
 					open={!!purchaseForJE}
 					onClose={() => setPurchaseForJE(null)}
 					onSubmit={async (values) => {
-						setIsJeSubmitting(true);
-						try {
-							const baseURL = getLocalApiUrl();
-							const results = await values.entries.reduce(
-								async (acc, entry) => {
-									const prev = await acc;
-									const result = await JournalEntriesService.create(
-										{
-											branch_id: purchaseForJE?.branch?.id ?? undefined,
-											purchase_id: purchaseForJE?.id,
-											entry_type: 'manual',
-											debit_account: entry.debitAccount,
-											credit_account: entry.creditAccount,
-											amount: entry.amount,
-											remarks: values.remarks || '',
-											description: purchaseForJE?.reference_number ?? '',
-											datetime_created: values.datetimeCreated,
+						setAuthorizeConfig({
+							baseURL: getLocalApiUrl(),
+							title: 'Authorize Journal Entry',
+							onSuccess: async (authorizer) => {
+								setAuthorizeConfig(null);
+								setIsJeSubmitting(true);
+								try {
+									const baseURL = getLocalApiUrl();
+									const results = await values.entries.reduce(
+										async (acc, entry) => {
+											const prev = await acc;
+											const result = await JournalEntriesService.create(
+												{
+													branch_id: purchaseForJE?.branch?.id ?? undefined,
+													purchase_id: purchaseForJE?.id,
+													entry_type: 'manual',
+													debit_account: entry.debitAccount,
+													credit_account: entry.creditAccount,
+													amount: entry.amount,
+													remarks: values.remarks || '',
+													description: purchaseForJE?.reference_number ?? '',
+													datetime_created: values.datetimeCreated,
+													authorizer_id: authorizer?.id,
+												},
+												baseURL,
+											);
+											return [...prev, result];
 										},
-										baseURL,
+										Promise.resolve([] as any[]),
 									);
-									return [...prev, result];
-								},
-								Promise.resolve([] as any[]),
-							);
 
-							const firstJeId = results[0]?.data?.id;
-							if (purchaseForJE?.id && firstJeId) {
-								await updatePurchase({
-									id: purchaseForJE.id,
-									journalEntryId: firstJeId,
-								});
-							}
+									const firstJeId = results[0]?.data?.id;
+									if (purchaseForJE?.id && firstJeId) {
+										await updatePurchase({
+											id: purchaseForJE.id,
+											journalEntryId: firstJeId,
+										});
+									}
 
-							message.success('Journal entry created successfully');
-							setPurchaseForJE(null);
-						} catch {
-							message.error('Failed to create journal entry');
-						} finally {
-							setIsJeSubmitting(false);
-						}
+									message.success('Journal entry created successfully');
+									setPurchaseForJE(null);
+								} catch {
+									message.error('Failed to create journal entry');
+								} finally {
+									setIsJeSubmitting(false);
+								}
+							},
+							onCancel: () => setAuthorizeConfig(null),
+						});
 					}}
 				/>
+
+				{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
 			</Box>
 		</Content>
 	);

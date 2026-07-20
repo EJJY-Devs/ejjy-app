@@ -373,7 +373,7 @@ export const Products = () => {
 					<TableHeader
 						buttonName="Create Product"
 						buttons={
-							isUserFromOffice(user.user_type) && (
+							isUserFromOffice() && (
 								<Upload
 									accept=".csv"
 									beforeUpload={handleReinitialize}

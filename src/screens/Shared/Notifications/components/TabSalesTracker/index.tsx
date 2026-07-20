@@ -10,7 +10,6 @@ import {
 	useSiteSettings,
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
 import { convertIntoArray, formatInPeso, isUserFromOffice } from 'utils';
 
 export const TabSalesTracker = () => {
@@ -137,14 +136,13 @@ const SalesTrackerInvoiceNotification = ({
 const Filter = () => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
 		error: branchErrors,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: isUserFromOffice(user.user_type) },
+		options: { enabled: isUserFromOffice() },
 	});
 
 	return (
@@ -155,7 +153,7 @@ const Filter = () => {
 			/>
 
 			<Row gutter={[16, 16]}>
-				{isUserFromOffice(user.user_type) && (
+				{isUserFromOffice() && (
 					<Col lg={12} span={24}>
 						<Label label="Branch" spacing />
 						<Select

@@ -20,6 +20,10 @@ import { ColumnsType } from 'antd/lib/table';
 import { Content, TimeRangeFilter } from 'components';
 import { Box, Label } from 'components/elements';
 import {
+	AuthorizationModal,
+	Props as AuthorizationModalProps,
+} from 'ejjy-global/dist/components/modals/AuthorizationModal';
+import {
 	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
@@ -89,6 +93,10 @@ export const ExpenseVouchers = () => {
 		setViewJeExpenseVoucher,
 	] = useState<ExpenseVoucher | null>(null);
 	const [isJeSubmitting, setIsJeSubmitting] = useState(false);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 
 	const { params, setQueryParams } = useQueryParams();
 
@@ -363,51 +371,65 @@ export const ExpenseVouchers = () => {
 				open={!!jeExpenseVoucher}
 				onClose={() => setJeExpenseVoucher(null)}
 				onSubmit={async (values) => {
-					setIsJeSubmitting(true);
-					try {
-						const baseURL = getLocalApiUrl();
-						const expenseVoucherId = jeExpenseVoucher?.id;
-						const expenseVoucherParticulars = (
-							jeExpenseVoucher?.particulars || []
-						)
-							.map((item) => item.description)
-							.join(', ');
-						const results = await values.entries.reduce(async (acc, entry) => {
-							const prev = await acc;
-							const result = await JournalEntriesService.create(
-								{
-									branch_id: jeExpenseVoucher?.branch ?? undefined,
-									expense_id: expenseVoucherId,
-									entry_type: 'manual',
-									debit_account: entry.debitAccount,
-									credit_account: entry.creditAccount,
-									amount: entry.amount,
-									remarks: values.remarks || '',
-									description: expenseVoucherParticulars,
-									datetime_created: values.datetimeCreated,
-								},
-								baseURL,
-							);
-							return [...prev, result];
-						}, Promise.resolve([] as any[]));
+					setAuthorizeConfig({
+						baseURL: getLocalApiUrl(),
+						title: 'Authorize Journal Entry',
+						onSuccess: async (authorizer) => {
+							setAuthorizeConfig(null);
+							setIsJeSubmitting(true);
+							try {
+								const baseURL = getLocalApiUrl();
+								const expenseVoucherId = jeExpenseVoucher?.id;
+								const expenseVoucherParticulars = (
+									jeExpenseVoucher?.particulars || []
+								)
+									.map((item) => item.description)
+									.join(', ');
+								const results = await values.entries.reduce(
+									async (acc, entry) => {
+										const prev = await acc;
+										const result = await JournalEntriesService.create(
+											{
+												branch_id: jeExpenseVoucher?.branch ?? undefined,
+												expense_id: expenseVoucherId,
+												entry_type: 'manual',
+												debit_account: entry.debitAccount,
+												credit_account: entry.creditAccount,
+												amount: entry.amount,
+												remarks: values.remarks || '',
+												description: expenseVoucherParticulars,
+												datetime_created: values.datetimeCreated,
+												authorizer_id: authorizer?.id,
+											},
+											baseURL,
+										);
+										return [...prev, result];
+									},
+									Promise.resolve([] as any[]),
+								);
 
-						const firstJeId = results[0]?.data?.id;
-						if (expenseVoucherId && firstJeId) {
-							await updateExpenseVoucher({
-								id: expenseVoucherId,
-								journalEntryId: firstJeId,
-							});
-						}
+								const firstJeId = results[0]?.data?.id;
+								if (expenseVoucherId && firstJeId) {
+									await updateExpenseVoucher({
+										id: expenseVoucherId,
+										journalEntryId: firstJeId,
+									});
+								}
 
-						message.success('Journal entry created successfully');
-						setJeExpenseVoucher(null);
-					} catch {
-						message.error('Failed to create journal entry');
-					} finally {
-						setIsJeSubmitting(false);
-					}
+								message.success('Journal entry created successfully');
+								setJeExpenseVoucher(null);
+							} catch {
+								message.error('Failed to create journal entry');
+							} finally {
+								setIsJeSubmitting(false);
+							}
+						},
+						onCancel: () => setAuthorizeConfig(null),
+					});
 				}}
 			/>
+
+			{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
 		</Content>
 	);
 };

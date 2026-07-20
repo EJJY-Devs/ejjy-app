@@ -5,6 +5,7 @@ import { Label } from 'components/elements';
 import { MAX_PAGE_SIZE, timeRangeTypes } from 'global';
 import {
 	useBranches,
+	useChartOfAccounts,
 	useMultipleTrialBalanceDetails,
 	useQueryParams,
 	useTrialBalance,
@@ -119,6 +120,20 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 			pageSize: isAllBranches ? MAX_PAGE_SIZE : currentPageSize,
 		},
 	});
+
+	const { data: chartOfAccountsData } = useChartOfAccounts({
+		params: { pageSize: MAX_PAGE_SIZE },
+	});
+
+	const specialAccountCodes = useMemo(
+		() =>
+			new Set(
+				(chartOfAccountsData?.chartOfAccounts || [])
+					.filter((account: any) => account.account_category === 'special')
+					.map((account: any) => String(account.account_code)),
+			),
+		[chartOfAccountsData],
+	);
 
 	const { data: detailDataRaw = null } = useTrialBalanceDetails({
 		params: {
@@ -345,17 +360,20 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 			storeAddress: detailData.store_address || '',
 			branchName: detailData.branch_name || '',
 			storeTin: detailData.store_tin || '',
-			entries: (detailData.entries || []).map(
-				(detail: TrialBalanceDetailApiRow, index: number) => ({
+			entries: (detailData.entries || [])
+				.filter(
+					(detail: TrialBalanceDetailApiRow) =>
+						!specialAccountCodes.has(String(detail.account_code)),
+				)
+				.map((detail: TrialBalanceDetailApiRow, index: number) => ({
 					id: index + 1,
 					accountCode: detail.account_code || '',
 					accountName: detail.account_name,
 					debitAmount: formatEntryPeso(detail.debit_amount),
 					creditAmount: formatEntryPeso(detail.credit_amount),
-				}),
-			),
+				})),
 		};
-	}, [detailData]);
+	}, [detailData, specialAccountCodes]);
 
 	const allBranchesModalEntry = useMemo(() => {
 		if (!isAllBranches || !selectedAllDateKey) {
@@ -388,6 +406,10 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 		(allBranchDetailData as TrialBalanceDetailApi[]).forEach(
 			(detail: TrialBalanceDetailApi) => {
 				(detail.entries || []).forEach((entry: TrialBalanceDetailApiRow) => {
+					if (specialAccountCodes.has(String(entry.account_code))) {
+						return;
+					}
+
 					const accountName = entry.account_name || '-';
 					const existing = aggregatedEntriesMap.get(accountName);
 					const debitAmount = Number(entry.debit_amount || 0);
@@ -433,6 +455,7 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 		isAllBranches,
 		mainBranch,
 		selectedAllDateKey,
+		specialAccountCodes,
 		summaryRows,
 	]);
 

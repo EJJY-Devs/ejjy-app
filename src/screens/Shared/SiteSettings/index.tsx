@@ -27,12 +27,21 @@ import {
 } from 'components/elements';
 import dayjs from 'dayjs';
 import { DATE_FORMAT_API, useSiteSettingsEdit } from 'ejjy-global';
+import {
+	AuthorizationModal,
+	Props as AuthorizationModalProps,
+} from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { ErrorMessage, Form, Formik } from 'formik';
-import { appTypes, inputTypes } from 'global';
+import { appTypes, inputTypes, userTypes } from 'global';
 import { usePingOnlineServer, useSiteSettingsNew } from 'hooks';
 import moment from 'moment';
 import React, { useCallback, useState } from 'react';
-import { convertIntoArray, getAppType, getOnlineApiUrl } from 'utils';
+import {
+	convertIntoArray,
+	getAppType,
+	getLocalApiUrl,
+	getOnlineApiUrl,
+} from 'utils';
 import * as Yup from 'yup';
 
 const getBase64 = (img: RcFile, callback: (url: string) => void) => {
@@ -75,6 +84,10 @@ export const SiteSettings = () => {
 
 	// STATES
 	const [isDisabled] = useState(getAppType() !== appTypes.HEAD_OFFICE);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 
 	// METHODS
 	const getFormDetails = useCallback(
@@ -356,22 +369,34 @@ export const SiteSettings = () => {
 		</>
 	);
 
-	const handleSubmit = async (formData) => {
-		await editSiteSettings({
-			...formData,
-			closeSessionDeadline: formData.closeSessionDeadline.format('HH:mm:ss'),
-			closeDayDeadline: formData.closeDayDeadline.format('HH:mm:ss'),
-			posAccreditationDate: formData.posAccreditationDate.format(
-				DATE_FORMAT_API,
-			),
-			posAccreditationValidUntilDate: formData.posAccreditationValidUntilDate.format(
-				DATE_FORMAT_API,
-			),
-			// ptuDate: formData.ptuDate.format(DATE_FORMAT_API),
-			ptuValidUntilDate: formData.ptuValidUntilDate.format(DATE_FORMAT_API),
-		});
+	const handleSubmit = (formData) => {
+		setAuthorizeConfig({
+			baseURL: getLocalApiUrl(),
+			title: 'Authorize Settings Update',
+			userTypes: [userTypes.ADMIN],
+			onSuccess: async () => {
+				setAuthorizeConfig(null);
 
-		message.success('Settings updated successfully');
+				await editSiteSettings({
+					...formData,
+					closeSessionDeadline: formData.closeSessionDeadline.format(
+						'HH:mm:ss',
+					),
+					closeDayDeadline: formData.closeDayDeadline.format('HH:mm:ss'),
+					posAccreditationDate: formData.posAccreditationDate.format(
+						DATE_FORMAT_API,
+					),
+					posAccreditationValidUntilDate: formData.posAccreditationValidUntilDate.format(
+						DATE_FORMAT_API,
+					),
+					// ptuDate: formData.ptuDate.format(DATE_FORMAT_API),
+					ptuValidUntilDate: formData.ptuValidUntilDate.format(DATE_FORMAT_API),
+				});
+
+				message.success('Settings updated successfully');
+			},
+			onCancel: () => setAuthorizeConfig(null),
+		});
 	};
 
 	return (
@@ -782,6 +807,8 @@ export const SiteSettings = () => {
 					</Formik>
 				</Spin>
 			</Box>
+
+			{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
 		</Content>
 	);
 };

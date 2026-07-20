@@ -1,10 +1,7 @@
-import { Button, Col, Input, Modal, Row, Select } from 'antd';
+import { Button, Col, Input, Modal, Row } from 'antd';
 import { ErrorMessage, Form, Formik } from 'formik';
 import * as Yup from 'yup';
-import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
 import React from 'react';
-import { MAX_PAGE_SIZE } from 'global';
-import { getLocalApiUrl } from 'utils';
 import { FieldError, Label } from '../../elements';
 
 type ModalProps = {
@@ -19,14 +16,12 @@ const formDetails = {
 		supplierName: '',
 		supplierAddress: '',
 		supplierTin: '',
-		encodedById: null,
 		checkedById: null,
 		overallRemarks: '',
 	},
 	schema: Yup.object().shape({
 		supplierName: Yup.string().required().label('Vendor Name').trim(),
 		supplierAddress: Yup.string().label('Vendor Address').trim(),
-		encodedById: Yup.number().nullable().required().label('Encoded By Id'),
 		checkedById: Yup.number().nullable().label('Checked By Id'),
 		overallRemarks: Yup.string().nullable().label('Remarks').trim(),
 	}),
@@ -38,20 +33,10 @@ export const CreateInventoryTransferModal = ({
 	onSubmit,
 	onClose,
 }: ModalProps) => {
-	// CUSTOM HOOKS
-	const { data: usersData, isFetching: isFetchingUsers } = useUsers({
-		params: { pageSize: MAX_PAGE_SIZE },
-		serviceOptions: {
-			baseURL: getLocalApiUrl(),
-			type: ServiceType.ONLINE,
-		},
-	});
-
 	// Conditional schema based on `type`
 	const formSchema =
 		type === 'Delivery Receipt'
 			? Yup.object().shape({
-					encodedById: Yup.number().nullable().required().label('Encoder'),
 					overallRemarks: Yup.string().nullable().label('Remarks').trim(),
 					customerName: Yup.string().required().label('Customer Name').trim(),
 					customerAddress: Yup.string().label('Customer Address').trim(),
@@ -62,7 +47,6 @@ export const CreateInventoryTransferModal = ({
 	const initialValues =
 		type === 'Delivery Receipt'
 			? {
-					encodedById: null,
 					customerName: '',
 					customerAddress: '',
 					customerTin: '',
@@ -95,34 +79,6 @@ export const CreateInventoryTransferModal = ({
 							{/* Render different fields based on `type` */}
 							{type === 'Delivery Receipt' ? (
 								<>
-									<Col span={24}>
-										<Label id="encodedById" label="Encoder" spacing />
-										<Select
-											className="w-100"
-											disabled={isFetchingUsers}
-											filterOption={filterOption}
-											optionFilterProp="children"
-											value={values['encodedById']}
-											showSearch
-											onChange={(value) => {
-												setFieldValue('encodedById', value);
-											}}
-										>
-											{usersData?.list.map((user) => {
-												const { id } = user;
-												return id ? (
-													<Select.Option key={id} value={id}>
-														{getFullName(user)}
-													</Select.Option>
-												) : null;
-											})}
-										</Select>
-										<ErrorMessage
-											name="encodedById"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
-
 									<Col span={24}>
 										<Label label="Customer Name" spacing />
 										<Input
@@ -168,33 +124,6 @@ export const CreateInventoryTransferModal = ({
 								</>
 							) : (
 								<>
-									<Col span={24}>
-										<Label id="encodedById" label="Encoder" spacing />
-										<Select
-											className="w-100"
-											disabled={isFetchingUsers}
-											filterOption={filterOption}
-											optionFilterProp="children"
-											value={values['encodedById']}
-											showSearch
-											onChange={(value) => {
-												setFieldValue('encodedById', value);
-											}}
-										>
-											{usersData?.list.map((user) => {
-												const { id } = user;
-												return id ? (
-													<Select.Option key={id} value={id}>
-														{getFullName(user)}
-													</Select.Option>
-												) : null;
-											})}
-										</Select>
-										<ErrorMessage
-											name="encodedById"
-											render={(error) => <FieldError error={error} />}
-										/>
-									</Col>
 									<Col span={24}>
 										<Label label="Vendor Name" spacing />
 										<Input

@@ -6,6 +6,7 @@ import { Label } from 'components/elements';
 import { EMPTY_CELL, MAX_PAGE_SIZE, timeRangeTypes } from 'global';
 import {
 	useBranches,
+	useChartOfAccounts,
 	useGeneralLedger,
 	useGeneralLedgerDetails,
 	useJournalEntries,
@@ -168,6 +169,20 @@ export const GeneralLedgerTab = ({
 		},
 	});
 
+	const { data: chartOfAccountsData } = useChartOfAccounts({
+		params: { pageSize: MAX_PAGE_SIZE },
+	});
+
+	const specialAccountCodes = useMemo(
+		() =>
+			new Set(
+				(chartOfAccountsData?.chartOfAccounts || [])
+					.filter((account: any) => account.account_category === 'special')
+					.map((account: any) => String(account.account_code)),
+			),
+		[chartOfAccountsData],
+	);
+
 	const {
 		data: { journalEntries: allJournalEntries = [] } = {},
 	} = useJournalEntries({
@@ -240,17 +255,20 @@ export const GeneralLedgerTab = ({
 
 	const generalLedgerEntries = useMemo(
 		() =>
-			(summaryRows || []).map(
-				(row: GeneralLedgerSummaryRow, index: number) => ({
+			(summaryRows || [])
+				.filter(
+					(row: GeneralLedgerSummaryRow) =>
+						!specialAccountCodes.has(String(row.account_code)),
+				)
+				.map((row: GeneralLedgerSummaryRow, index: number) => ({
 					id: index + 1,
 					accountCode: row.account_code,
 					accountName: row.account_name,
 					debitAmount: formatPeso(row.debit_amount),
 					creditAmount: formatPeso(row.credit_amount),
 					entries: [],
-				}),
-			),
-		[summaryRows],
+				})),
+		[specialAccountCodes, summaryRows],
 	);
 
 	const selectedLedgerEntry = useMemo(() => {

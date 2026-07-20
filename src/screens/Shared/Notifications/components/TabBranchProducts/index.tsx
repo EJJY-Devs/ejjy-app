@@ -18,7 +18,6 @@ import {
 import { useBranchProducts, useBranches, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
 import { convertIntoArray, formatQuantity, isUserFromOffice } from 'utils';
 
 const columns: ColumnsType = [
@@ -121,14 +120,13 @@ export const TabBranchProducts = () => {
 const Filter = () => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
 		error: branchErrors,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: isUserFromOffice(user.user_type) },
+		options: { enabled: isUserFromOffice() },
 	});
 
 	// METHODS
@@ -159,7 +157,7 @@ const Filter = () => {
 					/>
 				</Col>
 
-				{isUserFromOffice(user.user_type) && (
+				{isUserFromOffice() && (
 					<Col lg={12} span={24}>
 						<Label label="Branch" spacing />
 						<Select

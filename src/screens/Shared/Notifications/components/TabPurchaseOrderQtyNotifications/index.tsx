@@ -33,7 +33,6 @@ import {
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { Cart } from 'screens/Shared/Cart';
-import { useUserStore } from 'stores';
 import { convertIntoArray, getLocalApiUrl, isUserFromOffice } from 'utils';
 
 interface Props {
@@ -54,9 +53,8 @@ export const TabPurchaseOrderQtyNotifications = ({ branchId }: Props) => {
 	] = useState<AuthorizationModalProps | null>(null);
 
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
-	const showBranchColumn = isUserFromOffice(user.user_type) && !branchId;
-	const showActionsColumn = isUserFromOffice(user.user_type);
+	const showBranchColumn = isUserFromOffice() && !branchId;
+	const showActionsColumn = isUserFromOffice();
 
 	const {
 		mutateAsync: resolveNotification,

@@ -29,7 +29,6 @@ import {
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
-import { useUserStore } from 'stores';
 import { convertIntoArray, formatInPeso, isUserFromOffice } from 'utils';
 
 interface Props {
@@ -42,9 +41,8 @@ export const TabPurchaseCostNotifications = ({ branchId }: Props) => {
 	const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
 	const queryClient = useQueryClient();
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
-	const showBranchColumn = isUserFromOffice(user.user_type) && !branchId;
-	const showActionsColumn = isUserFromOffice(user.user_type);
+	const showBranchColumn = isUserFromOffice() && !branchId;
+	const showActionsColumn = isUserFromOffice();
 
 	const {
 		mutateAsync: resolveNotification,

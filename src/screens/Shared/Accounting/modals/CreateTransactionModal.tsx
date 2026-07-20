@@ -47,10 +47,12 @@ export const CreateTransactionModal = ({
 
 	const accountOptions = useMemo(
 		() =>
-			(data?.chartOfAccounts || []).map((account: any) => ({
-				label: `${account.account_code} - ${account.account_name}`,
-				value: `${account.account_code} - ${account.account_name}`,
-			})),
+			(data?.chartOfAccounts || [])
+				.filter((account: any) => account.account_category !== 'special')
+				.map((account: any) => ({
+					label: `${account.account_code} - ${account.account_name}`,
+					value: `${account.account_code} - ${account.account_name}`,
+				})),
 		[data],
 	);
 

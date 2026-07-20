@@ -13,7 +13,6 @@ import {
 } from 'global';
 import { useBranchAssignments, useBranches, useQueryParams } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	formatDateTime,
@@ -105,14 +104,13 @@ const Filter = () => {
 	const { params, setQueryParams } = useQueryParams();
 	const branchId = params.branchId ? Number(params.branchId) : undefined;
 
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
 		error: branchesError,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: isUserFromOffice(user.user_type) },
+		options: { enabled: isUserFromOffice() },
 	});
 	const {
 		data: usersData,
@@ -143,7 +141,7 @@ const Filter = () => {
 			/>
 
 			<Row className="mb-4" gutter={[16, 16]}>
-				{isUserFromOffice(user.user_type) && (
+				{isUserFromOffice() && (
 					<Col lg={12} span={24}>
 						<Label label="Branch" spacing />
 						<Select

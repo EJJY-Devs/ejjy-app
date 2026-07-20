@@ -19,7 +19,6 @@ import { useNotificationStore } from 'screens/OfficeManager/Notifications/stores
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { Accounts } from 'screens/Shared/Accounts';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
-import { Assignments } from 'screens/Shared/Assignments';
 import { Branches } from 'screens/Shared/Branches';
 import { ViewBranch } from 'screens/Shared/Branches/ViewBranch';
 import { DTR } from 'screens/Shared/DTR';
@@ -180,13 +179,6 @@ const OfficeManager = () => {
 				link: '/office-manager/products',
 			},
 			{
-				key: 'assignments',
-				name: 'Assignments',
-				activeIcon: require('../../assets/images/icon-users-active.svg'),
-				defaultIcon: require('../../assets/images/icon-users.svg'),
-				link: '/office-manager/assignments',
-			},
-			{
 				key: 'dtr',
 				name: 'DTR',
 				activeIcon: require('../../assets/images/icon-users-active.svg'),
@@ -234,13 +226,6 @@ const OfficeManager = () => {
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
 				link: '/office-manager/adjustment-slips',
-			},
-			{
-				key: 'return-item-slips',
-				name: 'Return Item Slips',
-				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
-				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
-				link: '/office-manager/return-item-slips',
 			},
 			// {
 			// 	key: 'back-orders',
@@ -417,12 +402,6 @@ const OfficeManager = () => {
 					<Route
 						component={ViewAccount}
 						path="/office-manager/accounts/:id"
-						exact
-					/>
-
-					<Route
-						component={Assignments}
-						path="/office-manager/assignments"
 						exact
 					/>
 

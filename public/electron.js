@@ -474,6 +474,13 @@ function initStore() {
 const NGROK_RESTART_INTERVAL_MS = 60_000;
 
 let spawnRun = null;
+let ngrokProcess = null;
+function killNgrok() {
+	if (ngrokProcess && ngrokProcess.pid) {
+		kill(ngrokProcess.pid);
+		ngrokProcess = null;
+	}
+}
 function startServer() {
 	if (!isDev) {
 		const selectedAppType = store.get('appType');
@@ -531,20 +538,21 @@ function startServer() {
 			);
 
 			const startNgrok = () => {
-				exec(
-					'ngrok http --domain=headoffice.ngrok.app 8001',
-					(error, stdout, stderr) => {
-						if (error) {
-							logStatus(`Ngrok error: ${error.message}`);
-							return;
-						}
-						if (stderr) {
-							logStatus(`Ngrok stderr: ${stderr}`);
-							return;
-						}
-						logStatus(`Ngrok stdout: ${stdout}`);
-					},
+				killNgrok();
+				ngrokProcess = spawn(
+					'ngrok',
+					['http', '--domain=headoffice.ngrok.app', '8001'],
+					{ windowsHide: true, detached: false },
 				);
+				ngrokProcess.stdout.on('data', (data) => {
+					logStatus(`Ngrok stdout: ${data}`);
+				});
+				ngrokProcess.stderr.on('data', (data) => {
+					logStatus(`Ngrok stderr: ${data}`);
+				});
+				ngrokProcess.on('error', (error) => {
+					logStatus(`Ngrok error: ${error.message}`);
+				});
 			};
 
 			startNgrok();
@@ -555,6 +563,7 @@ function startServer() {
 
 		mainWindow.once('closed', () => {
 			if (spawnRun) kill(Number(spawnRun.pid));
+			killNgrok();
 		});
 	}
 }

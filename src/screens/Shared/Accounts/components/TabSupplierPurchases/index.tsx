@@ -18,7 +18,9 @@ import {
 	usePurchases,
 	useQueryParams,
 } from 'hooks';
+import useExpenseVouchers from 'hooks/useExpenseVouchers';
 import React, { useEffect, useMemo, useState } from 'react';
+import { ViewExpenseVoucherModal } from 'screens/Shared/Accounting/ExpenseVouchers/modals/ViewExpenseVoucherModal';
 import {
 	convertIntoArray,
 	formatInPeso,
@@ -45,6 +47,7 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 		selectedDisbursementVoucher,
 		setSelectedDisbursementVoucher,
 	] = useState(null);
+	const [selectedExpenseVoucher, setSelectedExpenseVoucher] = useState(null);
 	const [isCreateDvModalVisible, setIsCreateDvModalVisible] = useState(false);
 	const [isStatementModalVisible, setIsStatementModalVisible] = useState(false);
 
@@ -78,6 +81,20 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 			supplierAccountId: params.supplierAccountId,
 			timeRange: params?.timeRange || timeRangeTypes.DAILY,
 			pageSize: DEFAULT_PAGE_SIZE * 3,
+		},
+		options: { enabled: !!params.supplierAccountId },
+	});
+
+	const {
+		data: expenseVouchersData,
+		isFetching: isFetchingExpenseVouchers,
+		error: expenseVouchersError,
+	} = useExpenseVouchers({
+		params: {
+			supplierAccountId: params.supplierAccountId,
+			timeRange: params?.timeRange || timeRangeTypes.DAILY,
+			pageSize: DEFAULT_PAGE_SIZE * 3,
+			journalEntryStatus: 'all',
 		},
 		options: { enabled: !!params.supplierAccountId },
 	});
@@ -119,6 +136,20 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 								onClick={() =>
 									record.referenceData &&
 									setSelectedDisbursementVoucher(record.referenceData)
+								}
+							>
+								{text}
+							</Button>
+						);
+					}
+					if (record.type === 'expense') {
+						return (
+							<Button
+								className="pa-0"
+								type="link"
+								onClick={() =>
+									record.referenceData &&
+									setSelectedExpenseVoucher(record.referenceData)
 								}
 							>
 								{text}
@@ -167,6 +198,9 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 		const purchases = purchasesData?.purchases || [];
 		const disbursementVouchers =
 			disbursementVouchersData?.disbursementVouchers || [];
+		const onAccountExpenseVouchers = (
+			expenseVouchersData?.expenseVouchers || []
+		).filter((expenseVoucher: any) => expenseVoucher.payment_type === 'on_account');
 
 		const combinedData = [
 			...purchases.map((purchase: any) => ({
@@ -195,6 +229,20 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 				type: 'disbursement',
 				balance: formatInPeso(0),
 			})),
+			...onAccountExpenseVouchers.map((expenseVoucher: any) => ({
+				key: `expense-${expenseVoucher.id}`,
+				datetime: formatDateTime(expenseVoucher.datetime_created),
+				rawDatetime: expenseVoucher.datetime_created,
+				referenceNumber: expenseVoucher.reference_number,
+				referenceData: expenseVoucher,
+				description: (expenseVoucher.particulars || [])
+					.map((item: any) => item.description)
+					.join(', '),
+				amount: formatInPeso(expenseVoucher.amount),
+				authorizer: getFullName(expenseVoucher.authorizer),
+				type: 'expense',
+				balance: formatInPeso(0),
+			})),
 		];
 
 		const sortedForCalculation = combinedData.sort(
@@ -206,20 +254,13 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 			selectedAccount?.['supplier_registration']?.total_balance || '0',
 		);
 
-		// Only "On Account" purchases add to the supplier's outstanding balance;
-		// "Pay" purchases are settled immediately and have no effect on
-		// total_balance (see purchases views.py), so they're excluded here to
-		// keep the running balance in sync with the account's actual balance.
-		const affectsBalance = (item: any) =>
-			item.type === 'disbursement' ||
-			(item.type === 'purchase' &&
-				item.referenceData?.payment_type === 'on_account');
-
+		// Every purchase and "on account" expense voucher adds to the supplier's
+		// outstanding balance; every disbursement voucher pays it down (see
+		// purchases/accounting views.py).
 		let netTotal = 0;
 		sortedForCalculation.forEach((item) => {
-			if (!affectsBalance(item)) return;
 			const amount = parseFloat(item.amount.replace(/[₱,]/g, ''));
-			if (item.type === 'purchase') {
+			if (item.type === 'purchase' || item.type === 'expense') {
 				netTotal += amount;
 			} else if (item.type === 'disbursement') {
 				netTotal -= amount;
@@ -230,13 +271,9 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 
 		let runningBalance = initialBalance;
 		const dataWithBalance = sortedForCalculation.map((item) => {
-			if (!affectsBalance(item)) {
-				return { ...item, balance: formatInPeso(runningBalance) };
-			}
-
 			const amount = parseFloat(item.amount.replace(/[₱,]/g, ''));
 
-			if (item.type === 'purchase') {
+			if (item.type === 'purchase' || item.type === 'expense') {
 				runningBalance += amount;
 			} else if (item.type === 'disbursement') {
 				runningBalance -= amount;
@@ -254,10 +291,14 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 	}, [
 		purchasesData?.purchases,
 		disbursementVouchersData?.disbursementVouchers,
+		expenseVouchersData?.expenseVouchers,
 		selectedAccount,
 	]);
 
-	const isLoading = isFetchingPurchases || isFetchingDisbursementVouchers;
+	const isLoading =
+		isFetchingPurchases ||
+		isFetchingDisbursementVouchers ||
+		isFetchingExpenseVouchers;
 
 	return (
 		<div>
@@ -292,6 +333,7 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 						disbursementVouchersError,
 						'Disbursement Vouchers',
 					),
+					...convertIntoArray(expenseVouchersError, 'Expense Vouchers'),
 				]}
 				withSpaceBottom
 			/>
@@ -331,6 +373,12 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 					onClose={() => setSelectedDisbursementVoucher(null)}
 				/>
 			)}
+
+			<ViewExpenseVoucherModal
+				expenseVoucher={selectedExpenseVoucher}
+				open={!!selectedExpenseVoucher}
+				onClose={() => setSelectedExpenseVoucher(null)}
+			/>
 
 			{getAppType() === appTypes.BACK_OFFICE &&
 				isCreateDvModalVisible &&

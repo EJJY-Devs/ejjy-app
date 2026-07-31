@@ -6,6 +6,7 @@ import {
 } from 'components/Printing';
 import { DATE_FORMAT, MAX_PAGE_SIZE } from 'global';
 import { useDisbursementVouchers, usePurchases } from 'hooks';
+import useExpenseVouchers from 'hooks/useExpenseVouchers';
 import moment, { Moment } from 'moment';
 import React, { useMemo, useState } from 'react';
 
@@ -64,22 +65,50 @@ export const ViewSupplierStatementOfAccountModal = ({
 		options: { enabled: !!account?.id },
 	});
 
-	const isLoading = isFetchingPurchases || isFetchingDisbursementVouchers;
+	const {
+		data: expenseVouchersData,
+		isFetching: isFetchingExpenseVouchers,
+	} = useExpenseVouchers({
+		params: {
+			supplierAccountId: account?.id,
+			timeRange: historyRange,
+			pageSize: MAX_PAGE_SIZE,
+			journalEntryStatus: 'all',
+		},
+		options: { enabled: !!account?.id },
+	});
+
+	const isLoading =
+		isFetchingPurchases ||
+		isFetchingDisbursementVouchers ||
+		isFetchingExpenseVouchers;
 
 	const history: StatementHistoryItem[] = useMemo(() => {
 		const items: StatementHistoryItem[] = [];
 
-		// Only "On Account" purchases add to the supplier's outstanding
-		// balance; "Pay" purchases are settled immediately (see purchases
-		// views.py) and must be excluded to keep this in sync with total_balance.
-		(purchasesData?.purchases || [])
-			.filter((purchase: any) => purchase.payment_type === 'on_account')
-			.forEach((purchase: any) => {
+		// Every purchase linked to this supplier account adds to the supplier's
+		// outstanding balance (see purchases views.py).
+		(purchasesData?.purchases || []).forEach((purchase: any) => {
+			items.push({
+				rawDatetime: purchase.datetime_created,
+				referenceNumber: purchase.reference_number || '',
+				description: 'Purchases',
+				amount: Number(purchase.total_amount),
+				direction: 1,
+			});
+		});
+
+		// Only "On Account" expense vouchers add to the supplier's outstanding
+		// balance; "Pay" expense vouchers are settled immediately in cash (see
+		// accounting views.py).
+		(expenseVouchersData?.expenseVouchers || [])
+			.filter((expenseVoucher: any) => expenseVoucher.payment_type === 'on_account')
+			.forEach((expenseVoucher: any) => {
 				items.push({
-					rawDatetime: purchase.datetime_created,
-					referenceNumber: purchase.reference_number || '',
-					description: 'Purchases',
-					amount: Number(purchase.total_amount),
+					rawDatetime: expenseVoucher.datetime_created,
+					referenceNumber: expenseVoucher.reference_number || '',
+					description: 'Expense Voucher',
+					amount: Number(expenseVoucher.amount),
 					direction: 1,
 				});
 			});
@@ -97,7 +126,7 @@ export const ViewSupplierStatementOfAccountModal = ({
 		);
 
 		return items;
-	}, [purchasesData, disbursementVouchersData]);
+	}, [purchasesData, expenseVouchersData, disbursementVouchersData]);
 
 	if (step === 'period') {
 		return (

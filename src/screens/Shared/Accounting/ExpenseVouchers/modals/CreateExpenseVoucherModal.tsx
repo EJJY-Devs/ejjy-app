@@ -3,7 +3,16 @@ import {
 	AuthorizationModal,
 	Props as AuthorizationModalProps,
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
-import { AutoComplete, Button, Form, Input, InputNumber, Modal } from 'antd';
+import {
+	AutoComplete,
+	Button,
+	Form,
+	Input,
+	InputNumber,
+	Modal,
+	Radio,
+	Select,
+} from 'antd';
 import { Label } from 'components/elements';
 import { useAccounts } from 'hooks';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -23,6 +32,7 @@ interface Props {
 	onClose: () => void;
 	onCreate: (values: {
 		payee: string;
+		paymentType: 'pay' | 'on_account';
 		particulars: Particular[];
 		amount: number;
 		remarks: string;
@@ -51,20 +61,15 @@ export const CreateExpenseVoucherModal = ({
 		authorizeConfig,
 		setAuthorizeConfig,
 	] = useState<AuthorizationModalProps | null>(null);
-	const [autoSupplierAccountId, setAutoSupplierAccountId] = useState<
-		number | null
-	>(null);
 
 	const isSupplierAccountFixed = !!supplierAccountId;
-	const effectiveSupplierAccountId = isSupplierAccountFixed
-		? supplierAccountId
-		: autoSupplierAccountId;
+	const paymentType = Form.useWatch('paymentType', form) || 'pay';
 
 	const { data: accountsData } = useAccounts({
 		params: { withSupplierRegistration: true },
 		options: { enabled: open && !isSupplierAccountFixed },
 	});
-	const supplierOptions = useMemo(
+	const supplierAutoCompleteOptions = useMemo(
 		() =>
 			(accountsData?.accounts || []).map((account: any) => ({
 				id: account.id,
@@ -72,11 +77,18 @@ export const CreateExpenseVoucherModal = ({
 			})),
 		[accountsData?.accounts],
 	);
+	const supplierSelectOptions = useMemo(
+		() =>
+			(accountsData?.accounts || []).map((account: any) => ({
+				value: account.id,
+				label: getSupplierLabel(account),
+			})),
+		[accountsData?.accounts],
+	);
 
 	useEffect(() => {
 		if (!open) {
 			form.resetFields();
-			setAutoSupplierAccountId(null);
 		} else if (initialPayee) {
 			form.setFieldsValue({ payee: initialPayee });
 		}
@@ -91,15 +103,38 @@ export const CreateExpenseVoucherModal = ({
 		form.setFieldsValue({ amount: total });
 	};
 
-	const handlePayeeChange = (value: string) => {
+	const handlePaymentTypeChange = (value: string) => {
+		form.setFieldsValue({
+			paymentType: value,
+			payee: '',
+			supplierAccountId: null,
+		});
+	};
+
+	const handlePayeeAutoCompleteChange = (value: string) => {
 		if (isSupplierAccountFixed) return;
 
-		const matched = supplierOptions.find((option) => option.value === value);
-		setAutoSupplierAccountId(matched ? matched.id : null);
+		const matched = supplierAutoCompleteOptions.find(
+			(option) => option.value === value,
+		);
+		form.setFieldsValue({
+			supplierAccountId: matched ? matched.id : null,
+		});
 	};
 
 	const handleSubmit = async () => {
 		const values = await form.validateFields();
+
+		const effectiveSupplierAccountId = isSupplierAccountFixed
+			? supplierAccountId
+			: values.supplierAccountId;
+
+		const payee =
+			values.paymentType === 'on_account'
+				? supplierSelectOptions.find(
+						(option) => option.value === values.supplierAccountId,
+				  )?.label || ''
+				: values.payee;
 
 		setAuthorizeConfig({
 			baseURL: getLocalApiUrl(),
@@ -107,7 +142,8 @@ export const CreateExpenseVoucherModal = ({
 			onSuccess: async (authorizedUser) => {
 				setAuthorizeConfig(null);
 				await onCreate({
-					payee: values.payee,
+					payee,
+					paymentType: values.paymentType,
 					particulars: values.particulars || [],
 					amount: values.amount,
 					remarks: values.remarks || '',
@@ -135,26 +171,59 @@ export const CreateExpenseVoucherModal = ({
 			>
 				<Form
 					form={form}
-					initialValues={{ particulars: [{ description: '', amount: 0 }] }}
+					initialValues={{
+						paymentType: 'pay',
+						particulars: [{ description: '', amount: 0 }],
+					}}
 					layout="vertical"
 				>
-					<Form.Item
-						label="Payee"
-						name="payee"
-						rules={[{ required: true, message: 'Payee is required' }]}
-					>
-						<AutoComplete
+					<Form.Item label="Payment Type" name="paymentType">
+						<Radio.Group
 							disabled={isSupplierAccountFixed}
-							filterOption={(inputValue, option) =>
-								(option?.value as string)
-									.toLowerCase()
-									.includes(inputValue.toLowerCase())
-							}
-							options={supplierOptions}
-							placeholder="Select a supplier or type a payee name"
-							onChange={handlePayeeChange}
-						/>
+							onChange={(e) => handlePaymentTypeChange(e.target.value)}
+						>
+							<Radio value="pay">Pay</Radio>
+							<Radio value="on_account">On Account</Radio>
+						</Radio.Group>
 					</Form.Item>
+
+					{paymentType === 'on_account' ? (
+						<Form.Item
+							label="Payee"
+							name="supplierAccountId"
+							rules={[{ required: true, message: 'Supplier is required' }]}
+						>
+							<Select
+								disabled={isSupplierAccountFixed}
+								filterOption={(input, option) =>
+									(option?.label as string)
+										?.toLowerCase()
+										.includes(input.toLowerCase())
+								}
+								options={supplierSelectOptions}
+								placeholder="Select a supplier"
+								showSearch
+							/>
+						</Form.Item>
+					) : (
+						<Form.Item
+							label="Payee"
+							name="payee"
+							rules={[{ required: true, message: 'Payee is required' }]}
+						>
+							<AutoComplete
+								disabled={isSupplierAccountFixed}
+								filterOption={(inputValue, option) =>
+									(option?.value as string)
+										.toLowerCase()
+										.includes(inputValue.toLowerCase())
+								}
+								options={supplierAutoCompleteOptions}
+								placeholder="Select a supplier or type a payee name"
+								onChange={handlePayeeAutoCompleteChange}
+							/>
+						</Form.Item>
+					)}
 
 					<Form.List name="particulars">
 						{(fields, { add, remove }) => (

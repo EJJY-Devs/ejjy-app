@@ -29,8 +29,11 @@ export interface StatementHistoryItem {
 }
 
 export const getDefaultStatementPeriod = (): [Moment, Moment] => {
-	const lastMonth = moment().subtract(1, 'month');
-	return [lastMonth.clone().startOf('month'), lastMonth.clone().endOf('month')];
+	const currentMonth = moment();
+	return [
+		currentMonth.clone().startOf('month'),
+		currentMonth.clone().endOf('month'),
+	];
 };
 
 // Walks the full (account-lifetime) history chronologically so the
@@ -236,6 +239,7 @@ const printStatementOfAccount = ({
 
 		<div style="margin-top: 12px;">Payment Due Date: _________________________</div>
 		<div>Statement Number: ${statementNumber}</div>
+		<div>${branch?.store_name || ''}</div>
 		<div style="margin-top: 4px; font-weight: bold;">Current Outstanding Balance: ${formatInPeso(
 			currentOutstandingBalance,
 			'P',
@@ -381,7 +385,7 @@ export const StatementOfAccountModal = ({
 		[history, period],
 	);
 
-	const statementNumber = `SOA-${period[1].format('YYYYMM')}-${
+	const statementNumber = `SOA-${isSupplier ? 'S' : 'C'}-${
 		account?.account_code
 	}`;
 	const dateIssued = moment();
@@ -533,6 +537,8 @@ export const StatementOfAccountModal = ({
 					<Text>Payment Due Date: _________________________</Text>
 					<br />
 					<Text>Statement Number: {statementNumber}</Text>
+					<br />
+					<Text>{branch?.store_name}</Text>
 				</Col>
 				<Col className="text-right" span={12}>
 					<Text strong>

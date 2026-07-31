@@ -131,7 +131,9 @@ const printExpenseVoucher = (
 		</table>
 
 		<div style="margin-top: 10px; font-weight: bold; text-align: left; text-transform: uppercase;">Payment Method</div>
-		<div style="margin-top: 4px; text-align: left;">Payment Method: —</div>
+		<div style="margin-top: 4px; text-align: left;">Payment Type: ${
+			expenseVoucher.payment_type === 'on_account' ? 'On Account' : 'Pay'
+		}</div>
 
 		<div style="margin-top: 10px; font-weight: bold; text-align: left; text-transform: uppercase;">Details</div>
 		<table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 4px;">
@@ -290,7 +292,10 @@ export const ViewExpenseVoucherModal = ({
 			<Text style={{ textTransform: 'uppercase' }} strong>
 				Payment Method
 			</Text>
-			<div className="mt-2">Payment Method: —</div>
+			<div className="mt-2">
+				Payment Type:{' '}
+				{expenseVoucher.payment_type === 'on_account' ? 'On Account' : 'Pay'}
+			</div>
 
 			<br />
 

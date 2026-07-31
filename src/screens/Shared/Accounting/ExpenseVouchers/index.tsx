@@ -66,6 +66,7 @@ export interface ExpenseVoucher {
 	reference_number: string | null;
 	datetime_created: string;
 	payee: string;
+	payment_type: 'pay' | 'on_account';
 	particulars: ExpenseVoucherParticular[];
 	amount: string;
 	remarks: string;
@@ -342,10 +343,12 @@ export const ExpenseVouchers = () => {
 					try {
 						await createExpenseVoucher({
 							payee: values.payee,
+							paymentType: values.paymentType,
 							particulars: values.particulars,
 							amount: values.amount,
 							remarks: values.remarks,
 							authorizerId: values.authorizerId,
+							supplierAccountId: values.supplierAccountId,
 							branchId: getLocalBranchId()
 								? Number(getLocalBranchId())
 								: undefined,

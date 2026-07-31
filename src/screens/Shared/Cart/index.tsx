@@ -822,6 +822,7 @@ export const Cart = ({
 				{isCreatePurchaseVisible && (
 					<CreatePurchaseVoucherModal
 						isLoading={isLoading}
+						isPurchaseOrder={type === 'Purchase Order'}
 						onClose={() => {
 							setIsCreatePurchaseVisible(false);
 							setTimeout(() => {

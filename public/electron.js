@@ -232,6 +232,32 @@ function createWindow() {
 			: 'deny',
 	}));
 
+	// Auto-save PDF/TXT exports (triggered via <a download> + blob URLs) straight
+	// to the Downloads folder instead of showing the native "Save As" dialog.
+	mainWindow.webContents.session.on('will-download', (event, item) => {
+		const downloadsDir = app.getPath('downloads');
+		const suggestedName = item.getFilename();
+		const ext = path.extname(suggestedName);
+		const base = path.basename(suggestedName, ext);
+
+		let savePath = path.join(downloadsDir, suggestedName);
+		let counter = 1;
+		while (fs.existsSync(savePath)) {
+			savePath = path.join(downloadsDir, `${base} (${counter})${ext}`);
+			counter += 1;
+		}
+
+		item.setSavePath(savePath);
+
+		item.once('done', (doneEvent, state) => {
+			if (state === 'completed') {
+				logStatus(`Download saved: ${savePath}`);
+			} else {
+				logStatus(`Download ${state}: ${suggestedName}`);
+			}
+		});
+	});
+
 	setTimeout(() => {
 		mainWindow.loadURL(
 			isDev

@@ -16,6 +16,7 @@ interface Particular {
 
 interface Create {
 	payee: string;
+	payment_type?: 'pay' | 'on_account';
 	particulars?: Particular[];
 	amount: number;
 	remarks?: string;

@@ -105,15 +105,15 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 				<Descriptions.Item label="To">
 					{data?.supplier_name || EMPTY_CELL}
 				</Descriptions.Item>
-				<Descriptions.Item label="Account">
-					{data?.payment_type === 'pay' ? 'Pay' : 'On Account'}
-				</Descriptions.Item>
 				<Descriptions.Item label="Check No.">{EMPTY_CELL}</Descriptions.Item>
 				<Descriptions.Item label="Authorizer">
 					{getFullName(data?.authorizer)}
 				</Descriptions.Item>
 				<Descriptions.Item label="PO #">
 					{data?.purchase_order?.reference_number || EMPTY_CELL}
+				</Descriptions.Item>
+				<Descriptions.Item label="Remarks">
+					{data?.overall_remarks || 'N/A'}
 				</Descriptions.Item>
 			</Descriptions>
 
@@ -147,29 +147,6 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 				<br />
 				<Text style={{ whiteSpace: 'pre-line' }}>
 					Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}
-				</Text>
-			</Space>
-
-			<Space
-				align="center"
-				className="w-100 text-center"
-				direction="vertical"
-				size={0}
-			>
-				<Text style={{ whiteSpace: 'pre-line' }}>
-					Remarks: {data?.overall_remarks || 'N/A'}
-				</Text>
-			</Space>
-
-			<Space
-				align="center"
-				className="w-100 text-center"
-				direction="vertical"
-				size={0}
-			>
-				<br />
-				<Text style={{ whiteSpace: 'pre-line' }}>
-					Date: ____________________
 				</Text>
 			</Space>
 		</Modal>

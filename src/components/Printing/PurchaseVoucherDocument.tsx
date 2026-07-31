@@ -48,12 +48,6 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 						</td>
 					</tr>
 					<tr>
-						<td style={rowStyle}>Account:</td>
-						<td style={{ ...rowStyle, textAlign: 'right' }}>
-							{purchase?.payment_type === 'pay' ? 'Pay' : 'On Account'}
-						</td>
-					</tr>
-					<tr>
 						<td style={rowStyle}>Check No.:</td>
 						<td style={{ ...rowStyle, textAlign: 'right' }}>{EMPTY_CELL}</td>
 					</tr>
@@ -73,6 +67,12 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 							</td>
 						</tr>
 					)}
+					<tr>
+						<td style={rowStyle}>Remarks:</td>
+						<td style={{ ...rowStyle, textAlign: 'right' }}>
+							{purchase?.overall_remarks || 'N/A'}
+						</td>
+					</tr>
 				</tbody>
 			</table>
 
@@ -121,16 +121,6 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 					</tr>
 				</tbody>
 			</table>
-
-			{purchase?.overall_remarks && (
-				<div style={{ textAlign: 'center', marginTop: '8px' }}>
-					Remarks: {purchase.overall_remarks}
-				</div>
-			)}
-
-			<div style={{ textAlign: 'left', marginTop: '20px' }}>
-				Date: ____________________
-			</div>
 		</div>
 	);
 };

@@ -34,6 +34,7 @@ interface GeneralLedgerEntry {
 interface Props {
 	columns: ColumnsType<GeneralLedgerDetail>;
 	entry: GeneralLedgerEntry | null;
+	filter?: React.ReactNode;
 	open: boolean;
 	onClose: () => void;
 	summary: {
@@ -45,6 +46,7 @@ interface Props {
 export const GeneralLedgerModal = ({
 	columns,
 	entry,
+	filter,
 	open,
 	onClose,
 	summary,
@@ -55,7 +57,7 @@ export const GeneralLedgerModal = ({
 
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [entry?.id, open]);
+	}, [entry?.id, entry?.entries, open]);
 
 	const paginatedEntries = useMemo(() => {
 		const allEntries = entry?.entries || [];
@@ -131,6 +133,7 @@ export const GeneralLedgerModal = ({
 					? `${entry.accountCode} - ${entry.accountName.toUpperCase()}`
 					: '-'}
 			</h2>
+			{filter && <div className="BooksOfAccounts_tAccountFilter">{filter}</div>}
 			<Table
 				columns={columns}
 				dataSource={paginatedEntries}

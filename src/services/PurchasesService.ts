@@ -19,6 +19,7 @@ interface Modify {
 	products: Product[];
 	supplier_name: string;
 	supplier_account_id?: number;
+	payment_type?: 'pay' | 'on_account';
 	encoded_by_id?: number;
 	authorizer_id?: number;
 	overall_remarks?: string;

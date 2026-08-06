@@ -91,14 +91,15 @@ const printStatementOfFinancialPosition = ({
 				.title { text-align: center; margin-bottom: 14px; }
 				.title h1 { margin: 0; font-size: 24px; }
 				.title h2 { margin: 4px 0 0; font-size: 20px; font-weight: 600; }
-				.sides { display: flex; gap: 12px; }
-				.side { flex: 1; min-width: 0; }
+				.sides { display: flex; flex-direction: column; }
+				.side { min-width: 0; }
+				.side + .side { margin-top: 14px; }
 				.side-title { font-weight: 700; font-size: 12px; margin-bottom: 6px; }
 				table { width: 100%; border-collapse: collapse; }
-				th, td { border: 1px solid #d9d9d9; padding: 3px 4px; text-align: left; font-size: 9px; word-break: break-word; }
+				th, td { border: 1px solid #d9d9d9; padding: 4px 6px; text-align: left; font-size: 11px; word-break: break-word; }
 				th { background: #fafafa; font-weight: 700; }
-				th:nth-child(1), td:nth-child(1) { width: 32px; }
-				th:nth-child(3), td:nth-child(3) { width: 80px; text-align: right; }
+				th:nth-child(1), td:nth-child(1) { width: 50px; }
+				th:nth-child(3), td:nth-child(3) { width: 130px; text-align: right; }
 				.section-row td { font-weight: 700; }
 				.total-row td { font-weight: 700; }
 				.grand-total-row td { font-weight: 700; }
@@ -317,7 +318,7 @@ export const StatementOfFinancialPositionModal = ({
 			]}
 			open={open}
 			title="View - Statement of Financial Position"
-			width={1100}
+			width={650}
 			centered
 			closable
 			destroyOnClose
@@ -338,35 +339,27 @@ export const StatementOfFinancialPositionModal = ({
 						AS OF {entry?.snapshotDate || '-'}
 					</div>
 				</div>
-				<div
-					style={{
-						display: 'flex',
-						gap: 16,
-						marginTop: 12,
-					}}
-				>
-					<div style={{ flex: 1, minWidth: 0 }}>
-						<Table
-							className="TrialBalanceModal_table"
-							columns={assetsColumns}
-							dataSource={entry?.assetsRows || []}
-							pagination={false}
-							rowKey="id"
-							size="small"
-							bordered
-						/>
-					</div>
-					<div style={{ flex: 1, minWidth: 0 }}>
-						<Table
-							className="TrialBalanceModal_table"
-							columns={liabilitiesColumns}
-							dataSource={entry?.liabilitiesEquityRows || []}
-							pagination={false}
-							rowKey="id"
-							size="small"
-							bordered
-						/>
-					</div>
+				<div style={{ marginTop: 12 }}>
+					<Table
+						className="TrialBalanceModal_table"
+						columns={assetsColumns}
+						dataSource={entry?.assetsRows || []}
+						pagination={false}
+						rowKey="id"
+						size="small"
+						bordered
+					/>
+				</div>
+				<div style={{ marginTop: 16 }}>
+					<Table
+						className="TrialBalanceModal_table"
+						columns={liabilitiesColumns}
+						dataSource={entry?.liabilitiesEquityRows || []}
+						pagination={false}
+						rowKey="id"
+						size="small"
+						bordered
+					/>
 				</div>
 			</Spin>
 		</Modal>

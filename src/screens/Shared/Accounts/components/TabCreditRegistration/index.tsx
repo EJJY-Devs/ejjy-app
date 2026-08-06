@@ -29,7 +29,7 @@ import { Link } from 'react-router-dom';
 import { TabCollectionReceipts } from 'screens/Shared/Accounts/components/TabCollectionReceipts';
 import { TabCreditTransactions } from 'screens/Shared/Accounts/components/TabCreditTransactions';
 import { TabOrderOfPayments } from 'screens/Shared/Accounts/components/TabOrderOfPayments';
-import { accountViews } from 'screens/Shared/Accounts/data';
+import { accountTabs, accountViews } from 'screens/Shared/Accounts/data';
 import { convertIntoArray, formatDate, formatInPeso, getAppType } from 'utils';
 
 const columns: ColumnsType = [
@@ -70,7 +70,14 @@ export const TabCreditRegistrations = ({ disabled }: Props) => {
 			return {
 				key: id,
 				clientCode: (
-					<Link to={`accounts/${account.id}`}>{account.account_code}</Link>
+					<Link
+						to={{
+							pathname: `accounts/${account.id}`,
+							search: `?tab=${accountTabs.CREDIT_ACCOUNTS}`,
+						}}
+					>
+						{account.account_code}
+					</Link>
 				),
 				clientName: getFullName(account),
 				creditLimit: formatInPeso(credit_limit),

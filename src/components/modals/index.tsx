@@ -3,7 +3,6 @@ export * from './CreatePurchaseVoucherModal';
 export * from './ViewPurchaseModal';
 export * from './ViewPurchaseOrderModal';
 export * from './ViewPOInternalModal';
-export * from './AssignReturnItemSlipModal';
 export * from './BranchAssignmentUserModal';
 export * from './CreateBalanceAdjustmentLogModal';
 export * from './CreateOrderOfPaymentModal';

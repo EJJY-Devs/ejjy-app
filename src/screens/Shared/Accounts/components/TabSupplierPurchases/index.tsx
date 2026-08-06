@@ -200,7 +200,9 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 			disbursementVouchersData?.disbursementVouchers || [];
 		const onAccountExpenseVouchers = (
 			expenseVouchersData?.expenseVouchers || []
-		).filter((expenseVoucher: any) => expenseVoucher.payment_type === 'on_account');
+		).filter(
+			(expenseVoucher: any) => expenseVoucher.payment_type === 'on_account',
+		);
 
 		const combinedData = [
 			...purchases.map((purchase: any) => ({

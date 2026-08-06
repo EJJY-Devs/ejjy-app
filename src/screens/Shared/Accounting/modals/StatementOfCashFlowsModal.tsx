@@ -19,29 +19,20 @@ const escapeHtml = (value: string) =>
 
 export interface CashFlowRow {
 	id: number;
-	note?: string;
+	code?: string;
 	label: string;
-	year1Amount?: string;
-	year2Amount?: string;
+	amount: string;
 	isSection?: boolean;
 	isTotal?: boolean;
 	isGrandTotal?: boolean;
-	isBoldPlain?: boolean;
 	isSpacer?: boolean;
-	indentLevel?: number;
-	// Rule lines are positioned independently of bold/total styling: some
-	// subtotals are ruled on the row directly above them (with a blank
-	// spacer in between), rather than on the subtotal row itself.
-	amountTopRule?: boolean;
-	amountBottomRule?: boolean;
+	amountBottomBold?: boolean;
 }
 
 export type CashFlowPeriodType = 'daily' | 'monthly' | 'annual' | 'range';
 
 export interface CashFlowEntry {
-	periodEndMonthDay: string;
-	year1Label: string;
-	year2Label: string;
+	snapshotDate: string;
 	periodType?: CashFlowPeriodType;
 	storeName: string;
 	storeAddress: string;
@@ -51,40 +42,36 @@ export interface CashFlowEntry {
 }
 
 const getPeriodPrefix = (periodType?: CashFlowPeriodType) => {
-	if (periodType === 'monthly') return 'For the months ended';
-	if (periodType === 'annual') return 'For the years ended';
-	if (periodType === 'range') return 'For the periods ended';
-	return 'As of';
+	if (periodType === 'monthly') return 'FOR THE MONTH ENDED';
+	if (periodType === 'annual') return 'FOR THE YEAR ENDED';
+	if (periodType === 'range') return 'FOR THE PERIOD ENDED';
+	return 'AS OF';
 };
 
 const buildRowsHtml = (rows: Omit<CashFlowRow, 'id'>[]) =>
 	rows
 		.map((row) => {
 			if (row.isSpacer) {
-				return `<tr><td colspan="4" style="border:none; height:10px; padding:0;"></td></tr>`;
+				return `<tr><td colspan="3" style="border:none; height:8px;"></td></tr>`;
 			}
 
 			const rowClass = [
 				row.isSection ? 'section-row' : '',
 				row.isTotal ? 'total-row' : '',
 				row.isGrandTotal ? 'grand-total-row' : '',
-				row.isBoldPlain ? 'bold-row' : '',
-				row.amountTopRule ? 'top-rule' : '',
-				row.amountBottomRule ? 'bottom-rule' : '',
 			]
 				.filter(Boolean)
 				.join(' ');
 
-			const indentPadding = 4 + (row.indentLevel || 0) * 20;
+			const amountClass = row.amountBottomBold ? 'amount-bottom-bold' : '';
 
 			return `
 			<tr class="${rowClass}">
-				<td class="label-cell" style="padding-left:${indentPadding}px;">${escapeHtml(
-				row.label || '',
+				<td style="width:80px;">${escapeHtml(row.code || '')}</td>
+				<td>${escapeHtml(row.label || '')}</td>
+				<td class="${amountClass}" style="text-align:right; width:180px;">${escapeHtml(
+				row.amount || '',
 			)}</td>
-				<td class="note-cell">${escapeHtml(row.note || '')}</td>
-				<td class="amount-cell">${escapeHtml(row.year1Amount || '')}</td>
-				<td class="amount-cell">${escapeHtml(row.year2Amount || '')}</td>
 			</tr>`;
 		})
 		.join('');
@@ -97,55 +84,55 @@ const printStatementOfCashFlows = ({
 	if (!entry) return '';
 
 	const rowsHtml = buildRowsHtml(entry.rows || []);
-	const periodHeader = `${getPeriodPrefix(entry.periodType)} ${
-		entry.periodEndMonthDay || '-'
-	}`;
+	const periodPrefix = getPeriodPrefix(entry.periodType);
 
 	return `
 		<!DOCTYPE html>
 		<html>
 		<head>
-			<title>Statements of Cash Flows</title>
+			<title>Statement of Cash Flows</title>
 			<style>
-				body { font-family: Arial, sans-serif; padding: 0; color: #111; }
-				.header { margin-bottom: 4px; line-height: 1.35; font-size: 12px; }
-				.header .company-name { font-weight: 700; font-size: 13px; }
-				.title { text-align: center; margin: 12px 0 16px; }
-				.title h1 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.4px; }
-				table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 10px; }
-				th, td { padding: 3px 6px; font-size: 11px; text-align: left; vertical-align: top; }
-				thead th { border-bottom: 1px solid #000; font-weight: 700; }
-				th.note-col, td.note-cell { width: 36px; }
-				th.amount-col, td.amount-cell { width: 108px; text-align: right; }
-				.section-row td, .total-row td, .grand-total-row td, .bold-row td { font-weight: 700; }
-				.top-rule td.amount-cell, .grand-total-row td.amount-cell { border-top: 1px solid #000; }
-				.bottom-rule td.amount-cell { border-bottom: 1px solid #000; }
-				.grand-total-row td.amount-cell {
-					box-shadow: 0 3px 0 0 #000, 0 5px 0 0 #000;
-				}
+				body { font-family: Arial, sans-serif; padding: 24px; color: #222; }
+				.header { margin-bottom: 14px; line-height: 1.35; font-size: 16px; text-align: center; }
+				.title { text-align: center; margin-bottom: 14px; }
+				.title h1 { margin: 0; font-size: 24px; }
+				.title h2 { margin: 4px 0 0; font-size: 20px; font-weight: 600; }
+				.table-wrap { width: 780px; max-width: 100%; margin: 0 auto 16px; }
+				table { width: 100%; border-collapse: collapse; }
+				th, td { border: 1px solid #d9d9d9; padding: 6px 8px; text-align: left; font-size: 13px; }
+				th { background: #fafafa; font-weight: 700; }
+				th:nth-child(3) { text-align: right; }
+				.section-row td { font-weight: 700; background: #fafafa; }
+				.total-row td { font-weight: 700; }
+				.grand-total-row td { font-weight: 700; background: #e6f4ff; }
+				.amount-bottom-bold { border-bottom: 2px solid #111; }
 			</style>
 		</head>
 		<body>
 			<div class="header">
-				<div class="company-name">${escapeHtml(entry.storeName || '-')}</div>
+				<div>${escapeHtml(entry.storeName || '-')}</div>
 				<div>${escapeHtml(entry.storeAddress || '-')}</div>
+				<div>${escapeHtml(entry.branchName || '-')}</div>
+				<div>${escapeHtml(entry.storeTin || '-')}</div>
 			</div>
 			<div class="title">
-				<h1>STATEMENTS OF CASH FLOWS</h1>
+				<h1>STATEMENT OF CASH FLOWS</h1>
+				<h2>${escapeHtml(periodPrefix)} ${escapeHtml(entry.snapshotDate || '-')}</h2>
 			</div>
-			<table>
-				<thead>
-					<tr>
-						<th>${escapeHtml(periodHeader)}</th>
-						<th class="note-col">Note</th>
-						<th class="amount-col">${escapeHtml(entry.year1Label || '-')}</th>
-						<th class="amount-col">${escapeHtml(entry.year2Label || '-')}</th>
-					</tr>
-				</thead>
-				<tbody>
-					${rowsHtml}
-				</tbody>
-			</table>
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th style="width:80px;">Code</th>
+							<th>Description</th>
+							<th style="text-align:right; width:180px;">Amount</th>
+						</tr>
+					</thead>
+					<tbody>
+						${rowsHtml}
+					</tbody>
+				</table>
+			</div>
 		</body>
 		</html>
 	`;
@@ -167,65 +154,62 @@ export const StatementOfCashFlowsModal = ({
 	const [isLoadingPdf, setIsLoadingPdf] = useState(false);
 
 	const getCellStyle = (record: CashFlowRow, isAmountColumn = false) => {
-		if (!isAmountColumn) return undefined;
+		if (record.isSection) {
+			return { fontWeight: 700, background: '#fafafa' };
+		}
 
 		if (record.isGrandTotal) {
-			return { borderTop: '1px solid #000', borderBottom: '3px double #000' };
+			return { fontWeight: 700, background: '#e6f4ff' };
 		}
 
-		if (record.amountTopRule) {
-			return { borderTop: '1px solid #000' };
+		if (record.isTotal) {
+			return { fontWeight: 700 };
 		}
 
-		if (record.amountBottomRule) {
-			return { borderBottom: '1px solid #000' };
+		if (isAmountColumn && record.amountBottomBold) {
+			return { borderBottom: '2px solid #111' };
 		}
 
 		return undefined;
 	};
 
-	const isBoldRow = (record: CashFlowRow) =>
-		record.isSection ||
-		record.isTotal ||
-		record.isGrandTotal ||
-		record.isBoldPlain;
-
 	const columns: ColumnsType<CashFlowRow> = useMemo(
 		() => [
 			{
-				title: `${getPeriodPrefix(entry?.periodType)} ${
-					entry?.periodEndMonthDay || '-'
-				}`,
+				title: 'Code',
+				dataIndex: 'code',
+				key: 'code',
+				width: 80,
+				onCell: (record: CashFlowRow) => ({
+					style: getCellStyle(record),
+				}),
+				render: (value: string, record: CashFlowRow) => {
+					if (record.isSpacer) return null;
+					if (record.isSection || record.isTotal || record.isGrandTotal)
+						return <strong>{value || ''}</strong>;
+					return value || '';
+				},
+			},
+			{
+				title: 'Description',
 				dataIndex: 'label',
 				key: 'label',
 				onCell: (record: CashFlowRow) => ({
-					style: {
-						paddingLeft: 8 + (record.indentLevel || 0) * 20,
-					},
-					colSpan: record.isSpacer ? 4 : 1,
+					style: getCellStyle(record),
+					colSpan: record.isSpacer ? 3 : 1,
 				}),
 				render: (value: string, record: CashFlowRow) => {
 					if (record.isSpacer) return null;
-					const content = <span>{value}</span>;
-					return isBoldRow(record) ? <strong>{content}</strong> : content;
+					if (record.isSection || record.isTotal || record.isGrandTotal)
+						return <strong>{value}</strong>;
+					return value || '';
 				},
 			},
 			{
-				title: 'Note',
-				dataIndex: 'note',
-				key: 'note',
-				width: 60,
-				onCell: (record: CashFlowRow) => ({
-					colSpan: record.isSpacer ? 0 : 1,
-				}),
-				render: (value: string, record: CashFlowRow) =>
-					record.isSpacer ? null : value || '',
-			},
-			{
-				title: entry?.year1Label || '-',
-				dataIndex: 'year1Amount',
-				key: 'year1Amount',
-				width: 150,
+				title: 'Amount',
+				dataIndex: 'amount',
+				key: 'amount',
+				width: 180,
 				align: 'right',
 				onCell: (record: CashFlowRow) => ({
 					style: getCellStyle(record, true),
@@ -233,33 +217,13 @@ export const StatementOfCashFlowsModal = ({
 				}),
 				render: (value: string, record: CashFlowRow) => {
 					if (record.isSpacer) return null;
-					const content = <span>{value || ''}</span>;
-					return isBoldRow(record) ? <strong>{content}</strong> : content;
-				},
-			},
-			{
-				title: entry?.year2Label || '-',
-				dataIndex: 'year2Amount',
-				key: 'year2Amount',
-				width: 150,
-				align: 'right',
-				onCell: (record: CashFlowRow) => ({
-					style: getCellStyle(record, true),
-					colSpan: record.isSpacer ? 0 : 1,
-				}),
-				render: (value: string, record: CashFlowRow) => {
-					if (record.isSpacer) return null;
-					const content = <span>{value || ''}</span>;
-					return isBoldRow(record) ? <strong>{content}</strong> : content;
+					if (record.isSection || record.isTotal || record.isGrandTotal)
+						return <strong>{value || ''}</strong>;
+					return value || '';
 				},
 			},
 		],
-		[
-			entry?.periodType,
-			entry?.periodEndMonthDay,
-			entry?.year1Label,
-			entry?.year2Label,
-		],
+		[],
 	);
 
 	const buildPdfHtml = () => {
@@ -326,8 +290,9 @@ export const StatementOfCashFlowsModal = ({
 					<div>{entry?.storeTin || '-'}</div>
 				</div>
 				<div className="TrialBalanceModal_titleBlock">
-					<div className="TrialBalanceModal_title">
-						STATEMENTS OF CASH FLOWS
+					<div className="TrialBalanceModal_title">STATEMENT OF CASH FLOWS</div>
+					<div className="TrialBalanceModal_asOf">
+						{getPeriodPrefix(entry?.periodType)} {entry?.snapshotDate || '-'}
 					</div>
 				</div>
 				<div style={{ marginTop: 12 }}>
@@ -338,6 +303,7 @@ export const StatementOfCashFlowsModal = ({
 						pagination={false}
 						rowKey="id"
 						size="small"
+						bordered
 					/>
 				</div>
 			</Spin>

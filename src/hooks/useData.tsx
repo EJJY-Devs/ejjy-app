@@ -1,6 +1,6 @@
 import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
-import { useQuery, useQueryClient } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { DataService, ProductSyncStatusService } from 'services';
 import {
 	APP_PRODUCTS_IDS,
@@ -291,3 +291,31 @@ export const useProductSyncStatus = ({ params, options }: Query) =>
 			...options,
 		},
 	);
+
+export const useProductSyncStatusResolve = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation<any, any, any>(
+		({
+			id,
+			field,
+			source,
+		}: {
+			id: number;
+			field: string;
+			source: 'head_office' | 'branch';
+		}) =>
+			wrapServiceWithCatch(
+				ProductSyncStatusService.resolve(
+					id,
+					{ field, source },
+					getLocalApiUrl(),
+				),
+			),
+		{
+			onSuccess: () => {
+				queryClient.invalidateQueries('useProductSyncStatus');
+			},
+		},
+	);
+};

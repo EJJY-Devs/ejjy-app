@@ -29,7 +29,8 @@ export const useProductsData = ({ params, user }) => {
 			...params,
 			branchId: getLocalBranchId(),
 			ordering: 'product__name',
-			searchBy: 'name',
+			// No searchBy: lets the backend match the search term against
+			// the product's name or any of its codes (barcode, SKU).
 			serviceType: serviceTypes.OFFLINE,
 		},
 		options: {

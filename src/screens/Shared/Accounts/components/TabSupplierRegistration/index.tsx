@@ -40,7 +40,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TabSupplierDisbursementVouchers } from 'screens/Shared/Accounts/components/TabSupplierDisbursementVouchers';
 import { TabSupplierPurchases } from 'screens/Shared/Accounts/components/TabSupplierPurchases';
-import { accountViews } from 'screens/Shared/Accounts/data';
+import { accountTabs, accountViews } from 'screens/Shared/Accounts/data';
 import { convertIntoArray, formatDate, getAppType } from 'utils';
 
 const columns: ColumnsType = [
@@ -81,7 +81,14 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 			return {
 				key: id,
 				clientCode: (
-					<Link to={`accounts/${account.id}`}>{account.account_code}</Link>
+					<Link
+						to={{
+							pathname: `accounts/${account.id}`,
+							search: `?tab=${accountTabs.SUPPLIER_ACCOUNTS}`,
+						}}
+					>
+						{account.account_code}
+					</Link>
 				),
 				clientName: getFullName(account),
 				datetimeCreated: formatDate(account.datetime_created),

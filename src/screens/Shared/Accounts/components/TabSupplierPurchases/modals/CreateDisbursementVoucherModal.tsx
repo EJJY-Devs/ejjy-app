@@ -38,10 +38,17 @@ interface Props {
 	}) => Promise<void>;
 }
 
-const pesoFormatter = (value: any) =>
-	value || value === 0
-		? `₱ ${formatNumberWithCommas(Number(value).toFixed(2))}`
-		: '₱ ';
+const pesoFormatter = (
+	value: any,
+	info?: { userTyping: boolean; input: string },
+) => {
+	if (!value && value !== 0) {
+		return '₱ ';
+	}
+
+	const display = info?.userTyping ? value : Number(value).toFixed(2);
+	return `₱ ${formatNumberWithCommas(display)}`;
+};
 const pesoParser = (value: any) =>
 	Number((value || '').replace(/₱\s?|,/g, '')) as any;
 
@@ -140,15 +147,18 @@ export const CreateDisbursementVoucherModal = ({
 					}}
 					layout="vertical"
 				>
-					<Form.Item label="Payee" name="payee">
+					<Label label="Payee" spacing />
+					<Form.Item name="payee">
 						<Input disabled />
 					</Form.Item>
 
-					<Form.Item label="Payment Method" name="paymentMethod">
+					<Label label="Payment Method" spacing />
+					<Form.Item name="paymentMethod">
 						<Select options={PAYMENT_METHOD_OPTIONS} />
 					</Form.Item>
 
-					<Form.Item label="Purchase Voucher (optional)" name="purchaseId">
+					<Label label="Purchase Voucher (optional)" spacing />
+					<Form.Item name="purchaseId">
 						<Select
 							options={purchaseOptions}
 							placeholder="Select a purchase voucher to settle (optional)"
@@ -183,7 +193,7 @@ export const CreateDisbursementVoucherModal = ({
 												className="w-100"
 												controls={false}
 												formatter={pesoFormatter}
-												min={0.01}
+												min={0}
 												parser={pesoParser}
 												placeholder="0.00"
 												precision={2}
@@ -218,7 +228,8 @@ export const CreateDisbursementVoucherModal = ({
 						)}
 					</Form.List>
 
-					<Form.Item label="Amount" name="amount">
+					<Label label="Amount" spacing />
+					<Form.Item name="amount">
 						<InputNumber
 							className="w-100"
 							controls={false}
@@ -229,7 +240,8 @@ export const CreateDisbursementVoucherModal = ({
 						/>
 					</Form.Item>
 
-					<Form.Item label="Remarks" name="remarks">
+					<Label label="Remarks" spacing />
+					<Form.Item name="remarks">
 						<Input placeholder="Enter remarks" />
 					</Form.Item>
 

@@ -742,7 +742,7 @@ export const Cart = ({
 		<Modal
 			className="CartModal"
 			footer={null}
-			title={`Create ${type}`}
+			title={type === 'Purchase' ? 'Create Purchase Voucher' : `Create ${type}`}
 			width={1400}
 			centered
 			closable

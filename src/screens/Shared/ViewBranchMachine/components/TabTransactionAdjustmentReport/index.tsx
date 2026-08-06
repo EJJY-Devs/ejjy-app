@@ -31,7 +31,7 @@ import {
 } from 'hooks';
 import _ from 'lodash';
 import moment from 'moment';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useUserStore } from 'stores';
 import { convertIntoArray, formatDateTime, formatInPeso } from 'utils';
 
@@ -237,6 +237,14 @@ interface FilterProps {
 const Filter = ({ isLoading }: FilterProps) => {
 	const { params, setQueryParams } = useQueryParams();
 
+	const value = useMemo(
+		() =>
+			_.toString(params.timeRange).split(',')?.length === 2
+				? moment(_.toString(params.timeRange).split(',')[0])
+				: moment(),
+		[params.timeRange],
+	);
+
 	return (
 		<Row className="mb-4" gutter={[16, 16]}>
 			<Col lg={12} span={24}>
@@ -245,11 +253,7 @@ const Filter = ({ isLoading }: FilterProps) => {
 					allowClear={false}
 					disabled={isLoading}
 					format="MM/DD/YY"
-					value={
-						_.toString(params.timeRange).split(',')?.length === 2
-							? moment(_.toString(params.timeRange).split(',')[0])
-							: moment()
-					}
+					value={value}
 					onChange={(date, dateString) => {
 						setQueryParams(
 							{ timeRange: [dateString, dateString].join(',') },

@@ -4,7 +4,11 @@ import {
 	request,
 	timeRangeTypes,
 } from 'global';
-import { getBaseUrl, wrapServiceWithCatch } from 'hooks/helper';
+import {
+	getBaseUrl,
+	triggerProductSyncIfBackoffice,
+	wrapServiceWithCatch,
+} from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
@@ -414,6 +418,7 @@ export const useBranchProductEdit = () => {
 			onSuccess: () => {
 				queryClient.invalidateQueries('useBranchProducts');
 				queryClient.invalidateQueries('useBranchProductRetrieve');
+				triggerProductSyncIfBackoffice();
 			},
 		},
 	);
@@ -481,6 +486,7 @@ export const useBranchProductEditPriceCost = () => {
 			onSuccess: () => {
 				queryClient.invalidateQueries('useBranchProducts');
 				queryClient.invalidateQueries('useBranchProductRetrieve');
+				triggerProductSyncIfBackoffice();
 			},
 		},
 	);
@@ -517,39 +523,6 @@ export const useBranchProductDelete = () => {
 			onSuccess: () => {
 				queryClient.invalidateQueries('useBranchProducts');
 				queryClient.invalidateQueries('useBranchProductRetrieve');
-			},
-		},
-	);
-};
-
-export const useBranchProductEditLocal = () => {
-	const queryClient = useQueryClient();
-
-	return useMutation<any, any, any>(
-		async ({
-			branchId,
-			productId,
-			actingUserId,
-		}: {
-			branchId: number;
-			productId: number;
-			actingUserId: number;
-		}) => {
-			return wrapServiceWithCatch(
-				BranchProductsService.editLocal(
-					{
-						branch_id: branchId,
-						product_id: productId,
-						acting_user_id: actingUserId,
-					},
-					getLocalApiUrl(),
-				),
-			);
-		},
-		{
-			onSuccess: () => {
-				queryClient.invalidateQueries('useBranchProducts');
-				queryClient.invalidateQueries('useProductSyncStatus');
 			},
 		},
 	);

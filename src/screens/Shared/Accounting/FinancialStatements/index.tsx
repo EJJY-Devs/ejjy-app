@@ -164,34 +164,6 @@ export const FinancialStatements = () => {
 			: selectedTimeRangeLabel;
 	}, [params.financialStatementsTimeRange, selectedTimeRangeLabel]);
 
-	// Month/day only (no year) for the Statement of Cash Flows comparative
-	// header, e.g. "December 31" — the two years are shown as separate columns.
-	const cashFlowPeriodEndMonthDay = useMemo(() => {
-		const formatMonthDay = (dateValue: moment.Moment) =>
-			dateValue.format('MMMM D');
-
-		const value = String(
-			params.financialStatementsTimeRange || timeRangeTypes.DAILY,
-		);
-
-		if (value === timeRangeTypes.DAILY) {
-			return formatMonthDay(moment());
-		}
-
-		const timeRangeValues = value.split(',').map((item) => item.trim());
-		if (timeRangeValues.length === 2) {
-			const endDate = moment(timeRangeValues[1], DATE_FORMAT, true);
-			return endDate.isValid()
-				? formatMonthDay(endDate)
-				: selectedTimeRangeLabel;
-		}
-
-		const singleDate = moment(value, DATE_FORMAT, true);
-		return singleDate.isValid()
-			? formatMonthDay(singleDate)
-			: selectedTimeRangeLabel;
-	}, [params.financialStatementsTimeRange, selectedTimeRangeLabel]);
-
 	const mainBranch = useMemo(
 		() => branches.find((branch: any) => branch.is_main),
 		[branches],
@@ -888,27 +860,20 @@ export const FinancialStatements = () => {
 	}, [params.financialStatementsTimeRange]);
 
 	const cashFlowsModalEntry = useMemo(() => {
-		const formatAmount = (value: number | string) => formatInPeso(value, '');
-		const formatAmountWithPeso = (value: number | string) =>
-			formatInPeso(value, 'P ');
+		const formatAmount = (value: number | string) => formatInPeso(value, '₱ ');
 
 		const current = cashFlowsData?.current_period;
-		const prior = cashFlowsData?.prior_period;
 
 		const rows: Array<{
 			id: number;
-			note?: string;
+			code?: string;
 			label: string;
-			year1Amount?: string;
-			year2Amount?: string;
+			amount: string;
 			isSection?: boolean;
 			isTotal?: boolean;
 			isGrandTotal?: boolean;
-			isBoldPlain?: boolean;
 			isSpacer?: boolean;
-			indentLevel?: number;
-			amountTopRule?: boolean;
-			amountBottomRule?: boolean;
+			amountBottomBold?: boolean;
 		}> = [];
 
 		const pushRow = (row: Omit<typeof rows[number], 'id'>) => {
@@ -917,138 +882,103 @@ export const FinancialStatements = () => {
 
 		// Operating Activities
 		pushRow({
-			label: 'Cash flows from operating activities',
+			label: 'Cash Flows from Operating Activities',
+			amount: '',
 			isSection: true,
 		});
 		pushRow({
-			label: 'Net Income for the year',
-			year1Amount: formatAmountWithPeso(current?.net_income),
-			year2Amount: formatAmountWithPeso(prior?.net_income),
+			code: '9006',
+			label: 'Net Income / (Loss)',
+			amount: formatAmount(current?.net_income),
 		});
 		pushRow({
-			label: 'Adjustment for depreciation',
-			note: '6',
-			year1Amount: formatAmount(current?.depreciation_expense),
-			year2Amount: formatAmount(prior?.depreciation_expense),
+			code: '6400',
+			label: 'Add: Depreciation Expense',
+			amount: formatAmount(current?.depreciation_expense),
 		});
 		pushRow({
-			label: 'Operating income before working capital changes',
-			year1Amount: formatAmount(
-				current?.operating_income_before_working_capital,
-			),
-			year2Amount: formatAmount(prior?.operating_income_before_working_capital),
-			isTotal: true,
-			amountTopRule: true,
-		});
-		pushRow({ label: 'Decrease (increase) in:' });
-		pushRow({
-			label: 'Accounts receivable',
-			note: '4',
-			year1Amount: formatAmount(current?.accounts_receivable_change),
-			year2Amount: formatAmount(prior?.accounts_receivable_change),
-			indentLevel: 1,
+			code: '9015',
+			label: 'Increase in Accounts Receivable',
+			amount: formatAmount(current?.accounts_receivable_change),
 		});
 		pushRow({
-			label: 'Inventories',
-			note: '5',
-			year1Amount: formatAmount(current?.inventory_change),
-			year2Amount: formatAmount(prior?.inventory_change),
-			indentLevel: 1,
+			code: '9016',
+			label: 'Increase in Inventory',
+			amount: formatAmount(current?.inventory_change),
 		});
-		pushRow({ label: 'Increase (decrease) in' });
 		pushRow({
-			label: 'Accounts payable and accrued expenses',
-			note: '7',
-			year1Amount: formatAmount(
+			code: '9019',
+			label: 'Increase in Accounts Payable and Accrued Expenses',
+			amount: formatAmount(
 				current?.accounts_payable_and_accrued_expenses_change,
 			),
-			year2Amount: formatAmount(
-				prior?.accounts_payable_and_accrued_expenses_change,
-			),
-			indentLevel: 1,
+			amountBottomBold: true,
 		});
 		pushRow({
-			label: 'Net cash generated from operations',
-			year1Amount: formatAmount(current?.net_cash_from_operating_activities),
-			year2Amount: formatAmount(prior?.net_cash_from_operating_activities),
+			code: '9023',
+			label: 'Net Cash from Operating Activities',
+			amount: formatAmount(current?.net_cash_from_operating_activities),
 			isTotal: true,
-			amountTopRule: true,
 		});
 
-		pushRow({ label: '', isSpacer: true });
+		pushRow({ label: '', amount: '', isSpacer: true });
 
 		// Investing Activities
 		pushRow({
-			label: 'Cash flows from investing activities',
+			label: 'Cash Flows from Investing Activities',
+			amount: '',
 			isSection: true,
 		});
 		pushRow({
-			label: 'Acquisition of property and equipment',
-			note: '6',
-			year1Amount: formatAmount(current?.acquisition_of_property_and_equipment),
-			year2Amount: formatAmount(prior?.acquisition_of_property_and_equipment),
-			amountBottomRule: true,
+			code: '9024',
+			label: 'Acquisition of Property and Equipment',
+			amount: formatAmount(current?.acquisition_of_property_and_equipment),
+			amountBottomBold: true,
 		});
-
-		pushRow({ label: '', isSpacer: true });
-
 		pushRow({
-			label: 'Net cash used for investing activities',
-			year1Amount: formatAmount(current?.net_cash_used_in_investing_activities),
-			year2Amount: formatAmount(prior?.net_cash_used_in_investing_activities),
+			code: '9029',
+			label: 'Net Cash Used in Investing Activities',
+			amount: formatAmount(current?.net_cash_used_in_investing_activities),
 			isTotal: true,
 		});
+
+		pushRow({ label: '', amount: '', isSpacer: true });
 
 		// Financing Activities
 		pushRow({
-			label: 'Cash flows from financing activities',
+			label: 'Cash Flows from Financing Activities',
+			amount: '',
 			isSection: true,
 		});
 		pushRow({
-			label: 'Long term loan',
-			year1Amount: formatAmount(current?.long_term_loan_proceeds),
-			year2Amount: formatAmount(prior?.long_term_loan_proceeds),
+			code: '2600',
+			label: 'Long-term Loan Proceeds',
+			amount: formatAmount(current?.long_term_loan_proceeds),
 		});
 		pushRow({
-			label: 'Personal drawing',
-			year1Amount: formatAmount(current?.personal_drawings),
-			year2Amount: formatAmount(prior?.personal_drawings),
+			code: '3100',
+			label: 'Owner Drawings',
+			amount: formatAmount(current?.personal_drawings),
+			amountBottomBold: true,
 		});
 		pushRow({
-			label: 'Net Cash Used in Financing Activities',
-			year1Amount: formatAmount(current?.net_cash_from_financing_activities),
-			year2Amount: formatAmount(prior?.net_cash_from_financing_activities),
+			code: '9030',
+			label: 'Net Cash from Financing Activities',
+			amount: formatAmount(current?.net_cash_from_financing_activities),
 			isTotal: true,
-			amountTopRule: true,
 		});
 
-		pushRow({ label: '', isSpacer: true });
+		pushRow({ label: '', amount: '', isSpacer: true });
 
 		pushRow({
-			label: 'NET INCREASE (DECREASE) IN CASH',
-			year1Amount: formatAmount(current?.net_increase_decrease_in_cash),
-			year2Amount: formatAmount(prior?.net_increase_decrease_in_cash),
-			isTotal: true,
-			amountTopRule: true,
-		});
-		pushRow({
-			label: 'CASH AT BEGINNING OF YEAR',
-			year1Amount: formatAmount(current?.cash_at_beginning),
-			year2Amount: formatAmount(prior?.cash_at_beginning),
-			isBoldPlain: true,
-		});
-		pushRow({
-			label: 'CASH AT END OF YEAR',
-			note: '3',
-			year1Amount: formatAmountWithPeso(current?.cash_at_end),
-			year2Amount: formatAmountWithPeso(prior?.cash_at_end),
+			code: '9031',
+			label: 'Net Increase (Decrease) in Cash',
+			amount: formatAmount(current?.net_increase_decrease_in_cash),
 			isGrandTotal: true,
 		});
 
 		return {
-			periodEndMonthDay: cashFlowPeriodEndMonthDay,
-			year1Label: current?.year != null ? String(current.year) : '-',
-			year2Label: prior?.year != null ? String(prior.year) : '-',
+			snapshotDate: financialStatementAsOfLabel,
 			storeName:
 				cashFlowsData?.store_name ||
 				mainBranch?.store_name ||
@@ -1071,9 +1001,9 @@ export const FinancialStatements = () => {
 			rows,
 		};
 	}, [
-		cashFlowPeriodEndMonthDay,
 		cashFlowPeriodType,
 		cashFlowsData,
+		financialStatementAsOfLabel,
 		headerBranch,
 		mainBranch,
 		selectedBranchLabel,

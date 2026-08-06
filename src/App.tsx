@@ -15,6 +15,7 @@ import {
 } from 'global';
 import {
 	useBranches,
+	useDownloadStatusListener,
 	useInitializeData,
 	useInitializeIds,
 	useNetwork,
@@ -49,6 +50,8 @@ const NETWORK_RETRY_DELAY_MS = 1000;
 
 const App = () => {
 	const history = useHistory();
+
+	useDownloadStatusListener();
 
 	const {
 		isFetching: isConnectingNetwork,
@@ -236,7 +239,11 @@ const App = () => {
 		},
 	});
 
-	// Trigger product sync every 10 seconds for backoffice
+	// Periodic safety-net: re-report this branch's product prices to Head
+	// Office every 60 seconds. Price edits also trigger this immediately on
+	// save (see triggerProductSyncIfBackoffice in hooks/helper.ts) - this
+	// poll exists to catch anything that mechanism misses (e.g. a mismatch
+	// that originates on the Head Office side).
 	useTriggerProductSync({
 		params: {
 			branchId,

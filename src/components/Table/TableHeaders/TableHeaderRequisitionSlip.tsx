@@ -14,7 +14,6 @@ interface Props {
 	statuses?: Option[];
 	branches?: Option[];
 	onStatusSelect?: any;
-	pending?: number;
 
 	onBranchSelect?: any;
 	onSearch?: any;
@@ -28,7 +27,6 @@ export const TableHeaderRequisitionSlip = ({
 	branches,
 	onBranchSelect,
 	onSearch,
-	pending,
 }: Props) => {
 	const debounceSearchedChange = useCallback(
 		debounce((keyword) => onSearch(keyword), SEARCH_DEBOUNCE_TIME),
@@ -84,5 +82,4 @@ TableHeaderRequisitionSlip.defaultProps = {
 	title: null,
 	onSearch: null,
 	searchPlaceholder: 'Search',
-	pending: null,
 };

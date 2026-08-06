@@ -28,7 +28,8 @@ import {
 	APP_GOOGLE_API_URL_KEY,
 } from 'global';
 
-export const getAppType = () => localStorage.getItem(APP_APP_TYPE_KEY);
+export const getAppType = () =>
+	localStorage.getItem(APP_APP_TYPE_KEY) || appTypes.HEAD_OFFICE;
 
 export const getHeadOfficeType = () =>
 	Number(localStorage.getItem(APP_HEAD_OFFICE_TYPE));

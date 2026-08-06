@@ -47,6 +47,8 @@ interface GeneralLedgerEntry {
 	accountName: string;
 	debitAmount: string;
 	creditAmount: string;
+	balanceSide: string;
+	balanceAmount: string;
 	entries: GeneralLedgerDetail[];
 }
 
@@ -74,6 +76,8 @@ interface SelectedLedgerMeta {
 	accountName: string;
 	debitAmount: string;
 	creditAmount: string;
+	balanceSide: string;
+	balanceAmount: string;
 }
 
 interface Props {
@@ -105,6 +109,8 @@ export const GeneralLedgerTab = ({
 
 	const selectedTimeRange =
 		(params?.generalLedgerTimeRange as string) || timeRangeTypes.DAILY;
+	const selectedDetailTimeRange =
+		(params?.generalLedgerDetailTimeRange as string) || timeRangeTypes.DAILY;
 	const selectedBranchId = useMemo(() => {
 		if (!isHeadOffice) {
 			return localBranchId || undefined;
@@ -160,7 +166,7 @@ export const GeneralLedgerTab = ({
 		params: {
 			accountCode: selectedLedgerMeta?.accountCode,
 			branchId: branchFilter,
-			timeRange: selectedTimeRange,
+			timeRange: selectedDetailTimeRange,
 			page: 1,
 			pageSize: MAX_PAGE_SIZE,
 		},
@@ -266,6 +272,8 @@ export const GeneralLedgerTab = ({
 					accountName: row.account_name,
 					debitAmount: formatPeso(row.debit_amount),
 					creditAmount: formatPeso(row.credit_amount),
+					balanceSide: row.balance_side,
+					balanceAmount: formatPeso(row.balance_amount),
 					entries: [],
 				})),
 		[specialAccountCodes, summaryRows],
@@ -329,8 +337,16 @@ export const GeneralLedgerTab = ({
 								accountName: record.accountName,
 								debitAmount: record.debitAmount,
 								creditAmount: record.creditAmount,
+								balanceSide: record.balanceSide,
+								balanceAmount: record.balanceAmount,
 							});
 							setIsLedgerViewOpen(true);
+							// Always reopen the T-Accounts view starting from the
+							// Daily filter, independent of any previous selection.
+							setQueryParams(
+								{ generalLedgerDetailTimeRange: timeRangeTypes.DAILY },
+								{ shouldResetPage: false },
+							);
 						}}
 					>
 						{value}
@@ -432,27 +448,16 @@ export const GeneralLedgerTab = ({
 		return tableColumns;
 	}, [allEntriesById, onOpenJournalEntry]);
 
-	const ledgerBalanceSummary = useMemo(() => {
-		const parseAmount = (value: string) =>
-			Number(String(value || '').replace(/[^0-9.-]+/g, '')) || 0;
-
-		const totals = (selectedLedgerEntry?.entries || []).reduce(
-			(accumulator, current) => ({
-				debit: accumulator.debit + parseAmount(current.debitAmount),
-				credit: accumulator.credit + parseAmount(current.creditAmount),
-			}),
-			{ debit: 0, credit: 0 },
-		);
-
-		const isDebitLarger = totals.debit >= totals.credit;
-		const balanceType = isDebitLarger ? 'Debit' : 'Credit';
-		const balanceValue = Math.abs(totals.debit - totals.credit);
-
-		return {
-			label: balanceType,
-			value: formatInPeso(balanceValue, '₱ '),
-		};
-	}, [selectedLedgerEntry]);
+	// The account balance shown in the T-Accounts view is fixed to the
+	// account's overall balance at the time the modal was opened - it does
+	// NOT change when the Date Filter changes which transactions are listed.
+	const ledgerBalanceSummary = useMemo(
+		() => ({
+			label: selectedLedgerMeta?.balanceSide || 'Debit',
+			value: selectedLedgerMeta?.balanceAmount || formatPeso(0),
+		}),
+		[selectedLedgerMeta],
+	);
 
 	return (
 		<>
@@ -541,6 +546,14 @@ export const GeneralLedgerTab = ({
 			<GeneralLedgerModal
 				columns={generalLedgerDetailColumns}
 				entry={selectedLedgerEntry}
+				filter={
+					<TimeRangeFilter
+						dailyLabel="Daily"
+						dateRangeLabel="Select Date"
+						queryName="generalLedgerDetailTimeRange"
+						useSingleDateForDateRange
+					/>
+				}
 				open={isLedgerViewOpen}
 				summary={ledgerBalanceSummary}
 				onClose={() => {

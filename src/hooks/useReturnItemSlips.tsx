@@ -70,24 +70,6 @@ export const useReturnItemSlipCreate = () => {
 	);
 };
 
-export const useReturnItemSlipEdit = () => {
-	const queryClient = useQueryClient();
-
-	return useMutation<any, any, any>(
-		({ id, receiverId }: any) =>
-			ReturnItemSlipsService.edit(
-				id,
-				{ receiver_id: receiverId },
-				getLocalApiUrl(),
-			),
-		{
-			onSuccess: () => {
-				queryClient.invalidateQueries('useReturnItemSlips');
-			},
-		},
-	);
-};
-
 export const useReturnItemSlipReceive = () => {
 	const queryClient = useQueryClient();
 

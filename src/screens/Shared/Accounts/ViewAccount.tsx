@@ -2,12 +2,13 @@ import { Spin } from 'antd';
 import { Breadcrumb, Content, RequestErrors } from 'components';
 import { Box } from 'components/elements';
 import { getFullName } from 'ejjy-global';
-import { useAccountRetrieve } from 'hooks';
+import { useAccountRetrieve, useQueryParams } from 'hooks';
 import React, { useCallback } from 'react';
 import { useUserStore } from 'stores';
 import { convertIntoArray, getUrlPrefix } from 'utils';
 import { AccountDetails } from './components/ViewAccount/AccountDetails';
 import { PointTransactions } from './components/ViewAccount/PointTransactions';
+import { accountTabs } from './data';
 
 interface Props {
 	match: any;
@@ -19,6 +20,7 @@ export const ViewAccount = ({ match }: Props) => {
 
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
+	const { params } = useQueryParams();
 	const {
 		data: account,
 		isFetching: isFetchingAccount,
@@ -29,16 +31,30 @@ export const ViewAccount = ({ match }: Props) => {
 	});
 
 	// METHODS
-	const getBreadcrumbItems = useCallback(
-		() => [
-			{
-				name: 'Accounts',
-				link: `${getUrlPrefix(user.user_type)}/accounts`,
-			},
+	const getBreadcrumbItems = useCallback(() => {
+		const accountsLink =
+			match?.url?.split('/').slice(0, -1).join('/') ||
+			`${getUrlPrefix(user.user_type)}/accounts`;
+
+		if (
+			params.tab === accountTabs.SUPPLIER_ACCOUNTS ||
+			params.tab === accountTabs.CREDIT_ACCOUNTS
+		) {
+			return [
+				{ name: 'Accounts', link: accountsLink },
+				{
+					name: params.tab,
+					link: `${accountsLink}?tab=${params.tab}`,
+				},
+				{ name: getFullName(account) },
+			];
+		}
+
+		return [
+			{ name: 'Accounts', link: accountsLink },
 			{ name: getFullName(account) },
-		],
-		[account],
-	);
+		];
+	}, [account, match, params.tab]);
 
 	return (
 		<Content

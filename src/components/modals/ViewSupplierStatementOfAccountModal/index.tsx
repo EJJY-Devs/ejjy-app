@@ -102,7 +102,9 @@ export const ViewSupplierStatementOfAccountModal = ({
 		// balance; "Pay" expense vouchers are settled immediately in cash (see
 		// accounting views.py).
 		(expenseVouchersData?.expenseVouchers || [])
-			.filter((expenseVoucher: any) => expenseVoucher.payment_type === 'on_account')
+			.filter(
+				(expenseVoucher: any) => expenseVoucher.payment_type === 'on_account',
+			)
 			.forEach((expenseVoucher: any) => {
 				items.push({
 					rawDatetime: expenseVoucher.datetime_created,

@@ -524,6 +524,7 @@ const Filter = () => {
 					<Label label="Search" spacing />
 					<Input
 						defaultValue={params.search}
+						placeholder="Search by name or barcode"
 						prefix={<SearchOutlined />}
 						allowClear
 						onChange={(event) =>

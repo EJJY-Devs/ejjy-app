@@ -121,6 +121,7 @@ export const CreateJournalEntryModal = ({
 		}
 
 		return chartOfAccounts
+			.filter((account: any) => account.account_category !== 'special')
 			.map((account: any) => {
 				const label = `${account.account_code} - ${account.account_name}`;
 				return { label, value: label };

@@ -64,13 +64,13 @@ export const printGeneralLedgerTAccounts = ({
 		<head>
 			<title>View - T Accounts</title>
 			<style>
-				body { font-family: Arial, sans-serif; padding: 24px; color: #222; }
-				h1 { margin: 0 0 24px; font-size: 22px; }
-				h2 { margin: 0 0 18px; text-align: center; font-size: 36px; }
-				table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-				th, td { border: 1px solid #d9d9d9; padding: 10px 12px; text-align: left; }
-				th { background: #fafafa; }
-				.summary { text-align: center; font-size: 44px; font-weight: 700; margin-top: 18px; }
+				body { font-family: Arial, sans-serif; padding: 0; color: #222; }
+				h1 { margin: 0 0 10px; font-size: 16px; }
+				h2 { margin: 0 0 12px; text-align: center; font-size: 15px; }
+				table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+				th, td { border: 1px solid #d9d9d9; padding: 5px 6px; text-align: left; font-size: 10px; }
+				th { background: #fafafa; font-weight: 700; }
+				.summary { text-align: center; font-size: 15px; font-weight: 700; margin-top: 12px; }
 			</style>
 		</head>
 		<body>

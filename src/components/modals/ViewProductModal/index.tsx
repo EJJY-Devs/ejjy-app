@@ -250,72 +250,64 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 										>
 											<Descriptions.Item label="Sync Status" span={2}>
 												{!syncStatus && <Tag color="default">Unknown</Tag>}
-												{syncStatus && syncStatus.is_synced && (
+												{syncStatus?.status === 'in_sync' && (
 													<Tag color="green">Synced</Tag>
 												)}
-												{syncStatus && !syncStatus.is_synced && (
+												{syncStatus?.status === 'not_found_on_head_office' && (
+													<Tag color="orange">Not Found on Head Office</Tag>
+												)}
+												{syncStatus?.status === 'mismatch' && (
 													<>
 														<Tag color="red">Out of Sync</Tag>
-														{syncStatus.sync_details?.mismatches &&
-															syncStatus.sync_details.mismatches.length > 0 && (
-																<div style={{ marginTop: 8 }}>
-																	<Table
-																		columns={[
-																			{
-																				title: 'Price Type',
-																				dataIndex: 'priceType',
-																				key: 'priceType',
-																			},
-																			{
-																				title: 'Expected',
-																				dataIndex: 'expected',
-																				key: 'expected',
-																			},
-																			{
-																				title: 'Current',
-																				dataIndex: 'current',
-																				key: 'current',
-																			},
-																		]}
-																		dataSource={syncStatus.sync_details.mismatches.map(
-																			(field: string) => {
-																				const fieldLabel =
-																					{
-																						price_per_piece: 'Price (Piece)',
-																						wholesale_price: 'Wholesale Price',
-																						special_price: 'Special Price',
-																						credit_price: 'Credit Price',
-																					}[field] || field;
+														{syncStatus.sync_details?.mismatches?.length >
+															0 && (
+															<div style={{ marginTop: 8 }}>
+																<Table
+																	columns={[
+																		{
+																			title: 'Price Type',
+																			dataIndex: 'priceType',
+																			key: 'priceType',
+																		},
+																		{
+																			title: 'Head Office',
+																			dataIndex: 'headOfficeValue',
+																			key: 'headOfficeValue',
+																		},
+																		{
+																			title: 'Branch',
+																			dataIndex: 'branchValue',
+																			key: 'branchValue',
+																		},
+																	]}
+																	dataSource={syncStatus.sync_details.mismatches.map(
+																		(mismatch) => {
+																			const fieldLabel =
+																				{
+																					price_per_piece: 'Price (Piece)',
+																					wholesale_price: 'Wholesale Price',
+																					special_price: 'Special Price',
+																					credit_price: 'Credit Price',
+																				}[mismatch.field] || mismatch.field;
 
-																				const expected =
-																					syncStatus.sync_details.expected?.[
-																						field.replace('_', '')
-																					] ||
-																					syncStatus.sync_details.expected?.[
-																						field
-																					];
-																				const current =
-																					syncStatus.sync_details.current?.[
-																						field.replace('_', '')
-																					] ||
-																					syncStatus.sync_details.current?.[
-																						field
-																					];
-
-																				return {
-																					key: field,
-																					priceType: fieldLabel,
-																					expected: formatInPeso(expected),
-																					current: formatInPeso(current),
-																				};
-																			},
-																		)}
-																		pagination={false}
-																		size="small"
-																		style={{ marginTop: 8 }}
-																	/>
-																</div>
-															)}
+																			return {
+																				key: mismatch.field,
+																				priceType: fieldLabel,
+																				headOfficeValue: formatInPeso(
+																					mismatch.head_office_value,
+																				),
+																				branchValue: formatInPeso(
+																					mismatch.branch_value,
+																				),
+																			};
+																		},
+																	)}
+																	pagination={false}
+																	size="small"
+																	style={{ marginTop: 8 }}
+																/>
+															</div>
+														)}
 													</>
 												)}
 											</Descriptions.Item>

@@ -6,7 +6,12 @@ import {
 	useBranchProductBalanceTypeUpdateLogs,
 	useBranches,
 } from 'hooks';
-import { formatDateTime, getAppType, getLocalBranchId } from 'utils';
+import {
+	formatDateTime,
+	formatQuantity,
+	getAppType,
+	getLocalBranchId,
+} from 'utils';
 import React, { useState } from 'react';
 import { EMPTY_CELL, getFullName, filterOption } from 'ejjy-global';
 import { pageSizeOptions, DEFAULT_PAGE, appTypes, MAX_PAGE_SIZE } from 'global';
@@ -81,10 +86,22 @@ export const ProductConversion = () => {
 				branchName: getBranchName(),
 				stockOutProductName:
 					stockOut?.branch_product?.product?.name || EMPTY_CELL,
-				stockOutQty: stockOut ? Math.abs(stockOut.value) : EMPTY_CELL,
+				stockOutQty: stockOut
+					? formatQuantity({
+							unitOfMeasurement:
+								stockOut.branch_product?.product?.unit_of_measurement,
+							quantity: Math.abs(stockOut.value),
+					  })
+					: EMPTY_CELL,
 				stockInProductName:
 					stockIn?.branch_product?.product?.name || EMPTY_CELL,
-				stockInQty: stockIn?.value || EMPTY_CELL,
+				stockInQty: stockIn
+					? formatQuantity({
+							unitOfMeasurement:
+								stockIn.branch_product?.product?.unit_of_measurement,
+							quantity: stockIn.value,
+					  })
+					: EMPTY_CELL,
 				authorizer:
 					getFullName(stockOut?.authorizer) ||
 					getFullName(stockIn?.authorizer) ||

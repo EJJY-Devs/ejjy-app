@@ -60,7 +60,6 @@ import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
 import { Link } from 'react-router-dom';
-import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	getId,
@@ -382,14 +381,13 @@ export const Users = () => {
 const Filter = () => {
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
-	const user = useUserStore((state) => state.user);
 	const {
 		data: branchesData,
 		isFetching: isFetchingBranches,
 		error: branchErrors,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: isUserFromOffice(user.user_type) },
+		options: { enabled: isUserFromOffice() },
 		serviceOptions: {
 			baseURL: getLocalApiUrl(),
 			type: isStandAlone() ? ServiceType.ONLINE : ServiceType.OFFLINE,
@@ -422,7 +420,7 @@ const Filter = () => {
 					/>
 				</Col>
 
-				{isUserFromOffice(user.user_type) && (
+				{isUserFromOffice() && (
 					<Col lg={12} span={24}>
 						<Label label="Branch" spacing />
 						<Select

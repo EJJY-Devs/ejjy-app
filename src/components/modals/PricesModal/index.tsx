@@ -99,7 +99,7 @@ export const PricesModal = ({
 	} = useProductEdit();
 
 	// METHODS
-	const handleSubmit = async ({
+	const performSubmit = async ({
 		branchProductFormData,
 		priceMarkdownFormData,
 		isBulkEdit: isBulkEditFromForm,
@@ -132,6 +132,25 @@ export const PricesModal = ({
 		message.success(`Prices for ${product.name} was set successfully`);
 		onSuccess?.();
 		onClose();
+	};
+
+	const handleSubmit = async (formData: any) => {
+		// Require authorization before applying a purchase cost change on head office
+		if (costDiffInfo && appType === appTypes.HEAD_OFFICE) {
+			setAuthorizeConfig({
+				baseURL: getGoogleApiUrl(),
+				title: 'Authorize Purchase Cost Change',
+				userTypes: [userTypes.ADMIN, userTypes.BRANCH_MANAGER],
+				onSuccess: async () => {
+					setAuthorizeConfig(null);
+					await performSubmit(formData);
+				},
+				onCancel: () => setAuthorizeConfig(null),
+			});
+			return;
+		}
+
+		await performSubmit(formData);
 	};
 
 	const handleShowPriceForm = () => {
@@ -167,141 +186,147 @@ export const PricesModal = ({
 	}
 
 	return (
-		<Modal
-			footer={null}
-			title={
-				<>
-					<span>Prices</span>
-					<span className="ModalTitleMainInfo">{product.name}</span>
-				</>
-			}
-			width={600}
-			centered
-			closable
-			open
-			onCancel={onClose}
-		>
-			<RequestErrors
-				errors={[
-					...convertIntoArray(branchProductError, 'Branch Product'),
-					...convertIntoArray(editProductError, 'Product'),
-					...convertIntoArray(
-						editBranchProductPricCostError?.errors,
-						'Branch Product Price Cost',
-					),
-					...convertIntoArray(
-						createPriceMarkdownError?.errors,
-						'Price Markdown',
-					),
-				]}
-				withSpaceBottom
-			/>
+		<>
+			<Modal
+				footer={null}
+				title={
+					<>
+						<span>Prices</span>
+						<span className="ModalTitleMainInfo">{product.name}</span>
+					</>
+				}
+				width={600}
+				centered
+				closable
+				open
+				onCancel={onClose}
+			>
+				<RequestErrors
+					errors={[
+						...convertIntoArray(branchProductError, 'Branch Product'),
+						...convertIntoArray(editProductError, 'Product'),
+						...convertIntoArray(
+							editBranchProductPricCostError?.errors,
+							'Branch Product Price Cost',
+						),
+						...convertIntoArray(
+							createPriceMarkdownError?.errors,
+							'Price Markdown',
+						),
+					]}
+					withSpaceBottom
+				/>
 
-			{costDiffInfo && (
-				<Row
-					className="mb-4"
-					gutter={16}
-					style={{
-						background: '#f5f5f5',
-						borderRadius: 6,
-						padding: '10px 16px',
-					}}
-				>
-					<Col span={8}>
-						<div style={{ fontSize: 11, color: '#8c8c8c' }}>Current Cost</div>
-						<div style={{ fontWeight: 600 }}>
-							{formatInPeso(costDiffInfo.oldCost)}
-						</div>
-					</Col>
-					<Col span={8}>
-						<div style={{ fontSize: 11, color: '#8c8c8c' }}>Purchase Cost</div>
-						<div style={{ fontWeight: 600 }}>
-							{formatInPeso(costDiffInfo.newCost)}
-						</div>
-					</Col>
-					<Col span={8}>
-						<div style={{ fontSize: 11, color: '#8c8c8c' }}>Difference</div>
-						<Tag color={costDiffInfo.diff > 0 ? 'red' : 'green'}>
-							{costDiffInfo.diff > 0 ? '+' : '-'}
-							{formatInPeso(Math.abs(costDiffInfo.diff))}
-						</Tag>
-					</Col>
-				</Row>
-			)}
-
-			<Spin spinning={isLoading}>
-				{isBulkEdit && (
-					// Force bulk edit mode when isBulkEdit prop is true
-					<PricesForm
-						branches={branches}
-						isLoading={isLoading}
-						isSubmitting={
-							isCreatingPriceMarkdown ||
-							isEditingBranchProductPriceCost ||
-							isEditingProduct
-						}
-						product={product}
-						isBulkEdit
-						onClose={onClose}
-						onSubmit={handleSubmit}
-					/>
-				)}
-				{!isBulkEdit && getAppType() === appTypes.BACK_OFFICE && (
-					<PricesForm
-						branches={branches}
-						branchProducts={branchProducts}
-						isLoading={isLoading}
-						isSubmitting={
-							isCreatingPriceMarkdown ||
-							isEditingBranchProductPriceCost ||
-							isEditingProduct
-						}
-						onClose={onClose}
-						onSubmit={handleSubmit}
-					/>
-				)}
-				{!isBulkEdit && getAppType() === appTypes.HEAD_OFFICE && (
-					<Tabs
-						defaultActiveKey={
-							getAppType() === appTypes.HEAD_OFFICE ? tabs.ALL : tabs.BRANCHES
-						}
-						type="card"
-						destroyInactiveTabPane
+				{costDiffInfo && (
+					<Row
+						className="mb-4"
+						gutter={16}
+						style={{
+							background: '#f5f5f5',
+							borderRadius: 6,
+							padding: '10px 16px',
+						}}
 					>
-						<Tabs.TabPane key={tabs.BRANCHES} tab={tabs.BRANCHES}>
-							<PricesForm
-								branches={branches}
-								branchProducts={branchProducts}
-								isLoading={isLoading}
-								isSubmitting={
-									isCreatingPriceMarkdown ||
-									isEditingBranchProductPriceCost ||
-									isEditingProduct
-								}
-								product={product}
-								onClose={onClose}
-								onSubmit={handleSubmit}
-							/>
-						</Tabs.TabPane>
-
-						<Tabs.TabPane key={tabs.ALL} tab={tabs.ALL}>
-							<PricesForm
-								branches={branches}
-								isLoading={isLoading}
-								isSubmitting={
-									isCreatingPriceMarkdown ||
-									isEditingBranchProductPriceCost ||
-									isEditingProduct
-								}
-								product={product}
-								isBulkEdit
-								onClose={onClose}
-								onSubmit={handleSubmit}
-							/>
-						</Tabs.TabPane>
-					</Tabs>
+						<Col span={8}>
+							<div style={{ fontSize: 11, color: '#8c8c8c' }}>Current Cost</div>
+							<div style={{ fontWeight: 600 }}>
+								{formatInPeso(costDiffInfo.oldCost)}
+							</div>
+						</Col>
+						<Col span={8}>
+							<div style={{ fontSize: 11, color: '#8c8c8c' }}>
+								Purchase Cost
+							</div>
+							<div style={{ fontWeight: 600 }}>
+								{formatInPeso(costDiffInfo.newCost)}
+							</div>
+						</Col>
+						<Col span={8}>
+							<div style={{ fontSize: 11, color: '#8c8c8c' }}>Difference</div>
+							<Tag color={costDiffInfo.diff > 0 ? 'red' : 'green'}>
+								{costDiffInfo.diff > 0 ? '+' : '-'}
+								{formatInPeso(Math.abs(costDiffInfo.diff))}
+							</Tag>
+						</Col>
+					</Row>
 				)}
-			</Spin>
-		</Modal>
+
+				<Spin spinning={isLoading}>
+					{isBulkEdit && (
+						// Force bulk edit mode when isBulkEdit prop is true
+						<PricesForm
+							branches={branches}
+							isLoading={isLoading}
+							isSubmitting={
+								isCreatingPriceMarkdown ||
+								isEditingBranchProductPriceCost ||
+								isEditingProduct
+							}
+							product={product}
+							isBulkEdit
+							onClose={onClose}
+							onSubmit={handleSubmit}
+						/>
+					)}
+					{!isBulkEdit && getAppType() === appTypes.BACK_OFFICE && (
+						<PricesForm
+							branches={branches}
+							branchProducts={branchProducts}
+							isLoading={isLoading}
+							isSubmitting={
+								isCreatingPriceMarkdown ||
+								isEditingBranchProductPriceCost ||
+								isEditingProduct
+							}
+							onClose={onClose}
+							onSubmit={handleSubmit}
+						/>
+					)}
+					{!isBulkEdit && getAppType() === appTypes.HEAD_OFFICE && (
+						<Tabs
+							defaultActiveKey={
+								getAppType() === appTypes.HEAD_OFFICE ? tabs.ALL : tabs.BRANCHES
+							}
+							type="card"
+							destroyInactiveTabPane
+						>
+							<Tabs.TabPane key={tabs.BRANCHES} tab={tabs.BRANCHES}>
+								<PricesForm
+									branches={branches}
+									branchProducts={branchProducts}
+									isLoading={isLoading}
+									isSubmitting={
+										isCreatingPriceMarkdown ||
+										isEditingBranchProductPriceCost ||
+										isEditingProduct
+									}
+									product={product}
+									onClose={onClose}
+									onSubmit={handleSubmit}
+								/>
+							</Tabs.TabPane>
+
+							<Tabs.TabPane key={tabs.ALL} tab={tabs.ALL}>
+								<PricesForm
+									branches={branches}
+									isLoading={isLoading}
+									isSubmitting={
+										isCreatingPriceMarkdown ||
+										isEditingBranchProductPriceCost ||
+										isEditingProduct
+									}
+									product={product}
+									isBulkEdit
+									onClose={onClose}
+									onSubmit={handleSubmit}
+								/>
+							</Tabs.TabPane>
+						</Tabs>
+					)}
+				</Spin>
+			</Modal>
+
+			{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
+		</>
 	);
 };

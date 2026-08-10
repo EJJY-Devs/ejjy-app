@@ -1,6 +1,10 @@
 import { message, Tabs } from 'antd';
 import { Content } from 'components';
 import { Box } from 'components/elements';
+import {
+	AuthorizationModal,
+	Props as AuthorizationModalProps,
+} from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { appTypes, MAX_PAGE_SIZE } from 'global';
 import { useJournalEntryCreate } from 'hooks';
 import useAccountingTransactions from 'hooks/useAccountingTransactions';
@@ -9,12 +13,12 @@ import { useHistory } from 'react-router-dom';
 import { getLocalApiUrl, getLocalBranchId } from 'utils';
 import { getAppType } from 'utils/localStorage';
 import {
-	ExpensesService,
+	ExpenseVoucherService,
 	JournalEntriesService,
 	PurchasesService,
 } from 'services';
-import { Expense } from 'screens/Shared/Accounting/Expenses';
-import { ViewDisbursementVoucherModal } from 'screens/Shared/Accounting/Expenses/modals/ViewDisbursementVoucherModal';
+import { ExpenseVoucher } from 'screens/Shared/Accounting/ExpenseVouchers';
+import { ViewExpenseVoucherModal } from 'screens/Shared/Accounting/ExpenseVouchers/modals/ViewExpenseVoucherModal';
 import { ViewPurchaseModal } from 'components/modals';
 import { GeneralLedgerTab } from './components/GeneralLedgerTab';
 import { TrialBalanceTab } from './components/TrialBalanceTab';
@@ -48,8 +52,12 @@ export const BooksOfAccounts = () => {
 		null,
 	);
 	const [viewTransactionRemarks, setViewTransactionRemarks] = useState('');
-	const [viewExpense, setViewExpense] = useState<Expense | null>(null);
+	const [viewExpense, setViewExpense] = useState<ExpenseVoucher | null>(null);
 	const [viewPurchase, setViewPurchase] = useState<any>(null);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 
 	const {
 		mutateAsync: createJournalEntry,
@@ -65,13 +73,13 @@ export const BooksOfAccounts = () => {
 
 	const handleViewExpense = useCallback(async (expenseId: number) => {
 		try {
-			const response = await ExpensesService.retrieve(
+			const response = await ExpenseVoucherService.retrieve(
 				expenseId,
 				getLocalApiUrl(),
 			);
 			setViewExpense(response.data);
 		} catch {
-			message.error('Failed to load expense');
+			message.error('Failed to load expense voucher');
 		}
 	}, []);
 
@@ -229,29 +237,38 @@ export const BooksOfAccounts = () => {
 						remarks,
 						datetimeCreated,
 					}) => {
-						try {
-							const remarksText = `${transactionName} (TXN-${transactionId})`;
-							await Promise.all(
-								entries
-									.filter((entry) => entry.amount && entry.amount > 0)
-									.map((entry) =>
-										createJournalEntry({
-											branchId: localBranchId || undefined,
-											entryType: 'transaction',
-											debitAccount: entry.debitAccount,
-											creditAccount: entry.creditAccount,
-											amount: entry.amount,
-											remarks: remarksText,
-											description: remarks,
-											datetimeCreated,
-										}),
-									),
-							);
-							message.success('Transaction entries created successfully');
-							setIsAddTransactionOpen(false);
-						} catch (error) {
-							message.error('Failed to create transaction entries');
-						}
+						setAuthorizeConfig({
+							baseURL: getLocalApiUrl(),
+							title: 'Authorize Transaction Entry',
+							onSuccess: async (authorizer) => {
+								setAuthorizeConfig(null);
+								try {
+									const remarksText = `${transactionName} (TXN-${transactionId})`;
+									await Promise.all(
+										entries
+											.filter((entry) => entry.amount && entry.amount > 0)
+											.map((entry) =>
+												createJournalEntry({
+													branchId: localBranchId || undefined,
+													entryType: 'transaction',
+													debitAccount: entry.debitAccount,
+													creditAccount: entry.creditAccount,
+													amount: entry.amount,
+													remarks: remarksText,
+													description: remarks,
+													datetimeCreated,
+													authorizerId: authorizer?.id,
+												}),
+											),
+									);
+									message.success('Transaction entries created successfully');
+									setIsAddTransactionOpen(false);
+								} catch (error) {
+									message.error('Failed to create transaction entries');
+								}
+							},
+							onCancel: () => setAuthorizeConfig(null),
+						});
 					}}
 				/>
 			)}
@@ -261,24 +278,33 @@ export const BooksOfAccounts = () => {
 					open={isCreateOpen}
 					onClose={() => setIsCreateOpen(false)}
 					onSubmit={async ({ entries, remarks, datetimeCreated }) => {
-						try {
-							await Promise.all(
-								entries.map((entry) =>
-									createJournalEntry({
-										branchId: localBranchId || undefined,
-										debitAccount: entry.debitAccount,
-										creditAccount: entry.creditAccount,
-										amount: entry.amount,
-										remarks,
-										datetimeCreated,
-									}),
-								),
-							);
-							message.success('Journal entry created successfully');
-							setIsCreateOpen(false);
-						} catch (error) {
-							message.error('Failed to create journal entry');
-						}
+						setAuthorizeConfig({
+							baseURL: getLocalApiUrl(),
+							title: 'Authorize Journal Entry',
+							onSuccess: async (authorizer) => {
+								setAuthorizeConfig(null);
+								try {
+									await Promise.all(
+										entries.map((entry) =>
+											createJournalEntry({
+												branchId: localBranchId || undefined,
+												debitAccount: entry.debitAccount,
+												creditAccount: entry.creditAccount,
+												amount: entry.amount,
+												remarks,
+												datetimeCreated,
+												authorizerId: authorizer?.id,
+											}),
+										),
+									);
+									message.success('Journal entry created successfully');
+									setIsCreateOpen(false);
+								} catch (error) {
+									message.error('Failed to create journal entry');
+								}
+							},
+							onCancel: () => setAuthorizeConfig(null),
+						});
 					}}
 				/>
 			)}
@@ -292,8 +318,8 @@ export const BooksOfAccounts = () => {
 				}}
 				onViewTransaction={handleViewTransaction}
 			/>
-			<ViewDisbursementVoucherModal
-				expense={viewExpense}
+			<ViewExpenseVoucherModal
+				expenseVoucher={viewExpense}
 				open={!!viewExpense}
 				onClose={() => setViewExpense(null)}
 			/>
@@ -313,6 +339,7 @@ export const BooksOfAccounts = () => {
 					setViewTransactionRemarks('');
 				}}
 			/>
+			{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
 		</Content>
 	);
 };

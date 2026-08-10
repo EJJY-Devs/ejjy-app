@@ -232,6 +232,50 @@ function createWindow() {
 			: 'deny',
 	}));
 
+	// Let the user pick where each PDF/TXT export (triggered via <a download> +
+	// blob URLs) gets saved, via the native "Save As" dialog, instead of
+	// silently dropping it in the Downloads folder.
+	mainWindow.webContents.session.on('will-download', (event, item) => {
+		const suggestedName = item.getFilename();
+		const ext = path.extname(suggestedName).replace('.', '');
+
+		const filePath = dialog.showSaveDialogSync(mainWindow, {
+			title: 'Save File',
+			defaultPath: path.join(app.getPath('downloads'), suggestedName),
+			filters: ext
+				? [{ name: `${ext.toUpperCase()} Files`, extensions: [ext] }]
+				: undefined,
+		});
+
+		if (!filePath) {
+			item.cancel();
+			logStatus(`Download cancelled: ${suggestedName}`);
+			mainWindow.webContents.send('download-status', {
+				status: 'cancelled',
+				fileName: suggestedName,
+			});
+			return;
+		}
+
+		item.setSavePath(filePath);
+
+		item.once('done', (doneEvent, state) => {
+			if (state === 'completed') {
+				logStatus(`Download saved: ${filePath}`);
+				mainWindow.webContents.send('download-status', {
+					status: 'completed',
+					fileName: path.basename(filePath),
+				});
+			} else {
+				logStatus(`Download ${state}: ${suggestedName}`);
+				mainWindow.webContents.send('download-status', {
+					status: 'failed',
+					fileName: suggestedName,
+				});
+			}
+		});
+	});
+
 	setTimeout(() => {
 		mainWindow.loadURL(
 			isDev
@@ -472,6 +516,17 @@ function initStore() {
 // Server
 //-------------------------------------------------------------------
 const NGROK_RESTART_INTERVAL_MS = 60_000;
+// Resolve the ngrok binary bundled via the "ngrok" npm dependency instead of
+// relying on it being on PATH (production/packaged processes don't inherit
+// the interactive shell PATH, so a plain `ngrok` command lookup can ENOENT
+// even when ngrok is installed on the machine).
+const ngrokBinDir = path
+	.join(path.dirname(require.resolve('ngrok')), 'bin')
+	.replace('app.asar', 'app.asar.unpacked');
+const ngrokBinPath = path.join(
+	ngrokBinDir,
+	process.platform === 'win32' ? 'ngrok.exe' : 'ngrok',
+);
 
 let spawnRun = null;
 let ngrokProcess = null;
@@ -534,15 +589,23 @@ function startServer() {
 			logStatus('Ngrok: Starting');
 
 			exec(
-				'ngrok config add-authtoken 1n3K1Pcfqdy2WKRk60koXTY1ZrB_7QC7rqRsspNCkayebuRUN',
+				`"${ngrokBinPath}" config add-authtoken 1n3K1Pcfqdy2WKRk60koXTY1ZrB_7QC7rqRsspNCkayebuRUN`,
 			);
 
 			const startNgrok = () => {
-				killNgrok();
-				ngrokProcess = spawn(
-					'ngrok',
-					['http', '--domain=headoffice.ngrok.app', '8001'],
-					{ windowsHide: true, detached: false },
+				exec(
+					`"${ngrokBinPath}" http --domain=headoffice.ngrok.app 8001`,
+					(error, stdout, stderr) => {
+						if (error) {
+							logStatus(`Ngrok error: ${error.message}`);
+							return;
+						}
+						if (stderr) {
+							logStatus(`Ngrok stderr: ${stderr}`);
+							return;
+						}
+						logStatus(`Ngrok stdout: ${stdout}`);
+					},
 				);
 				ngrokProcess.stdout.on('data', (data) => {
 					logStatus(`Ngrok stdout: ${data}`);

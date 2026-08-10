@@ -178,13 +178,13 @@ export const AppSettingsModal = ({ onSuccess, onClose }: Props) => {
 					appType={getAppType()}
 					branchId={getOnlineBranchId()}
 					headOfficeType={getHeadOfficeType()}
-					startNgrok={getStartNgrok()}
 					localApiUrl={localApiUrl}
 					onlineApiUrl={onlineApiUrl}
 					printerFontFamily={getAppReceiptPrinterFontFamily()}
 					printerFontSize={getAppReceiptPrinterFontSize()}
 					printerName={getAppReceiptPrinterName()}
 					printingType={getAppReceiptPrintingType()}
+					startNgrok={getStartNgrok()}
 					tagPrinterFontSize={getAppTagPrinterFontSize()}
 					tagPrinterPaperHeight={getAppTagPrinterPaperHeight()}
 					tagPrinterPaperWidth={getAppTagPrinterPaperWidth()}

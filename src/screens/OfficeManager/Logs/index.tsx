@@ -25,7 +25,7 @@ export const tabs = {
 	BRANCH_DAYS: 'Branch Days',
 	BRANCH_CONNECTIVITY_LOGS: 'Branch Connectivity Logs',
 	CASHIERING_ASSIGNMENTS: 'Cashiering Assignments',
-	CASH_BREAKDOWNS: 'Cash Breakdowns',
+	CASH_BREAKDOWNS: 'Cash Drawer',
 	CASHIERING_SESSIONS: 'Cashiering Sessions',
 	USERS: 'Users',
 	CANCELLED_TRANSACTIONS: 'Cancelled Transactions',

@@ -2,30 +2,30 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
 import { getLocalApiUrl } from 'utils';
 import { Query } from 'hooks/inteface';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { ExpensesService } from 'services';
+import { DisbursementVoucherService } from 'services';
 
-const useExpenses = ({ params }: Query) =>
+const useDisbursementVouchers = ({ params, options }: Query) =>
 	useQuery<any>(
 		[
-			'useExpenses',
+			'useDisbursementVouchers',
 			params?.page,
 			params?.pageSize,
 			params?.search,
 			params?.branchId,
 			params?.timeRange,
-			params?.journalEntryStatus,
+			params?.supplierAccountId,
 		],
 		async () => {
 			const baseURL = getLocalApiUrl();
 
-			const response = await ExpensesService.list(
+			const response = await DisbursementVoucherService.list(
 				{
 					page: params?.page || DEFAULT_PAGE,
 					page_size: params?.pageSize || DEFAULT_PAGE_SIZE,
 					search: params?.search,
 					branch_id: params?.branchId,
 					time_range: params?.timeRange,
-					journal_entry_status: params?.journalEntryStatus ?? 'without',
+					supplier_account_id: params?.supplierAccountId,
 				},
 				baseURL,
 			);
@@ -35,65 +35,63 @@ const useExpenses = ({ params }: Query) =>
 		{
 			initialData: { data: { results: [], count: 0 } },
 			select: (query) => ({
-				expenses: query.data.results,
+				disbursementVouchers: query.data.results,
 				total: query.data.count,
 			}),
+			...options,
 		},
 	);
 
-export const useExpenseCreate = () => {
+export const useDisbursementVoucherCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ payee, particulars, amount, receivedBy, authorizerId, branchId }: any) =>
-			ExpensesService.create(
+		({
+			payee,
+			particulars,
+			amount,
+			paymentMethod,
+			remarks,
+			authorizerId,
+			branchId,
+			supplierAccountId,
+			purchaseId,
+		}: any) =>
+			DisbursementVoucherService.create(
 				{
 					payee,
 					particulars,
 					amount,
-					received_by: receivedBy,
+					payment_method: paymentMethod,
+					remarks,
 					authorizer_id: authorizerId,
 					branch_id: branchId,
+					supplier_account_id: supplierAccountId,
+					purchase_id: purchaseId,
 				},
 				getLocalApiUrl(),
 			),
 		{
 			onSuccess: () => {
-				queryClient.invalidateQueries('useExpenses');
+				queryClient.invalidateQueries('useDisbursementVouchers');
+				queryClient.invalidateQueries('useAccounts');
 			},
 		},
 	);
 };
 
-export const useExpenseUpdate = () => {
+export const useDisbursementVoucherDelete = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ id, journalEntryId }: { id: number; journalEntryId: number }) =>
-			ExpensesService.update(
-				id,
-				{ journal_entry_id: journalEntryId },
-				getLocalApiUrl(),
-			),
+		(id: number) => DisbursementVoucherService.delete(id, getLocalApiUrl()),
 		{
 			onSuccess: () => {
-				queryClient.invalidateQueries('useExpenses');
+				queryClient.invalidateQueries('useDisbursementVouchers');
+				queryClient.invalidateQueries('useAccounts');
 			},
 		},
 	);
 };
 
-export const useExpenseDelete = () => {
-	const queryClient = useQueryClient();
-
-	return useMutation<any, any, any>(
-		(id: number) => ExpensesService.delete(id, getLocalApiUrl()),
-		{
-			onSuccess: () => {
-				queryClient.invalidateQueries('useExpenses');
-			},
-		},
-	);
-};
-
-export default useExpenses;
+export default useDisbursementVouchers;

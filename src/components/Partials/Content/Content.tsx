@@ -34,7 +34,7 @@ const AppContextTag = () => {
 	if (isBackOffice) {
 		if (!branch?.name) return null;
 		return (
-			<Tag color="green" className="ContentLayout_header_contextTag">
+			<Tag className="ContentLayout_header_contextTag" color="green">
 				{branch.name}
 			</Tag>
 		);
@@ -44,7 +44,7 @@ const AppContextTag = () => {
 	const hoInfo = hoTypeLabels[hoType];
 	if (!hoInfo) return null;
 	return (
-		<Tag color={hoInfo.color} className="ContentLayout_header_contextTag">
+		<Tag className="ContentLayout_header_contextTag" color={hoInfo.color}>
 			{hoInfo.label}
 		</Tag>
 	);

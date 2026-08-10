@@ -224,6 +224,15 @@
 	margin-top: 24px;
 }
 
+.BooksOfAccounts_tAccountFilter {
+	max-width: 260px;
+	margin-bottom: 16px;
+}
+
+.BooksOfAccounts_tAccountFilter .ant-space {
+	display: flex;
+}
+
 .BooksOfAccounts_ledgerHeader {
 	display: flex;
 	justify-content: space-between;

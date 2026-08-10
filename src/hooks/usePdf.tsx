@@ -1,8 +1,6 @@
 import jsPDF, { jsPDFOptions } from 'jspdf';
 import { useState } from 'react';
 
-const TIMEOUT_MS = 2000;
-
 const JSPDF_SETTINGS: jsPDFOptions = {
 	orientation: 'p',
 	unit: 'px',
@@ -17,64 +15,70 @@ const usePdf = ({ title = '', print, jsPdfSettings = {}, image = null }) => {
 	const [htmlPdf, setHtmlPdf] = useState('');
 	const [isLoadingPdf, setLoadingPdf] = useState(false);
 
-	const previewPdf = (data = null) => {
+	const previewPdf = async (data = null) => {
 		setLoadingPdf(true);
 
-		const pdfTitle = data?.title || title;
-		// eslint-disable-next-line new-cap
-		const pdf = new jsPDF({ ...JSPDF_SETTINGS, ...jsPdfSettings });
-		pdf.setProperties({ title: pdfTitle });
+		try {
+			const pdfTitle = data?.title || title;
+			// eslint-disable-next-line new-cap
+			const pdf = new jsPDF({ ...JSPDF_SETTINGS, ...jsPdfSettings });
+			pdf.setProperties({ title: pdfTitle });
 
-		const dataHtml = print?.();
+			const dataHtml = print?.();
 
-		const wrappedHtml = `<div style="width: ${WRAPPER_WIDTH}px; padding: ${WRAPPER_PADDING}px; box-sizing: border-box;">${dataHtml}</div>`;
+			const wrappedHtml = `<div style="width: ${WRAPPER_WIDTH}px; padding: ${WRAPPER_PADDING}px; box-sizing: border-box;">${dataHtml}</div>`;
 
-		if (image) {
-			const img = new Image();
-			img.src = image.src;
-			pdf.addImage(img, 'png', image.x, image.y, image.w, image.h);
+			if (image) {
+				const img = new Image();
+				img.src = image.src;
+				pdf.addImage(img, 'png', image.x, image.y, image.w, image.h);
+			}
+
+			if (document.fonts?.ready) {
+				await document.fonts.ready;
+			}
+
+			await pdf.html(wrappedHtml, { margin: 5 });
+			window.open(pdf.output('bloburl').toString());
+		} catch (error) {
+			console.error('Failed to generate PDF preview', error);
+		} finally {
+			setLoadingPdf(false);
+			setHtmlPdf('');
 		}
-
-		setTimeout(() => {
-			pdf.html(wrappedHtml, {
-				margin: 5,
-				callback: (instance) => {
-					window.open(instance.output('bloburl').toString());
-					setLoadingPdf(false);
-					setHtmlPdf('');
-				},
-			});
-		}, TIMEOUT_MS);
 	};
 
-	const downloadPdf = (data = null) => {
+	const downloadPdf = async (data = null) => {
 		setLoadingPdf(true);
 
-		const pdfTitle = data?.title || title;
-		// eslint-disable-next-line new-cap
-		const pdf = new jsPDF({ ...JSPDF_SETTINGS, ...jsPdfSettings });
-		pdf.setProperties({ title: pdfTitle });
+		try {
+			const pdfTitle = data?.title || title;
+			// eslint-disable-next-line new-cap
+			const pdf = new jsPDF({ ...JSPDF_SETTINGS, ...jsPdfSettings });
+			pdf.setProperties({ title: pdfTitle });
 
-		const dataHtml = print?.(data?.printData);
+			const dataHtml = print?.(data?.printData);
 
-		const wrappedHtml = `<div style="width: ${WRAPPER_WIDTH}px; padding: ${WRAPPER_PADDING}px; box-sizing: border-box;">${dataHtml}</div>`;
+			const wrappedHtml = `<div style="width: ${WRAPPER_WIDTH}px; padding: ${WRAPPER_PADDING}px; box-sizing: border-box;">${dataHtml}</div>`;
 
-		if (image) {
-			const img = new Image();
-			img.src = image.src;
-			pdf.addImage(img, 'png', image.x, image.y, image.w, image.h);
+			if (image) {
+				const img = new Image();
+				img.src = image.src;
+				pdf.addImage(img, 'png', image.x, image.y, image.w, image.h);
+			}
+
+			if (document.fonts?.ready) {
+				await document.fonts.ready;
+			}
+
+			await pdf.html(wrappedHtml, { margin: 5 });
+			pdf.save(pdfTitle);
+		} catch (error) {
+			console.error('Failed to generate PDF download', error);
+		} finally {
+			setLoadingPdf(false);
+			setHtmlPdf('');
 		}
-
-		setTimeout(() => {
-			pdf.html(wrappedHtml, {
-				margin: 5,
-				callback: (instance) => {
-					instance.save(pdfTitle);
-					setLoadingPdf(false);
-					setHtmlPdf('');
-				},
-			});
-		}, TIMEOUT_MS);
 	};
 
 	return {

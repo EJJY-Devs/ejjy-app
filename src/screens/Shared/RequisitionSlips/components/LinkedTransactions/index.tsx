@@ -38,7 +38,7 @@ export const LinkedTransactions = ({ requisitionSlip }: Props) => {
 			items.push({
 				key: `purchase-${purchase.id}`,
 				icon: <DollarOutlined />,
-				type: 'Purchase',
+				type: 'Purchase Voucher',
 				reference: purchase.reference_number,
 				datetime: purchase.datetime_created,
 				onView: () => setSelectedPurchase(purchase),

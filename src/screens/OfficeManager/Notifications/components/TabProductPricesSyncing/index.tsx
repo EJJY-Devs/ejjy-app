@@ -1,4 +1,4 @@
-import { Col, Row, Select, Table, Tag, Button, Tooltip, message } from 'antd';
+import { Col, Row, Select, Table, Tag, Button, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors, TableHeader } from 'components';
 import { Label } from 'components/elements';
@@ -9,52 +9,44 @@ import {
 	MAX_PAGE_SIZE,
 	pageSizeOptions,
 } from 'global';
-import {
-	useBranches,
-	useProductSyncStatus,
-	useQueryParams,
-	useBranchProductEditLocal,
-} from 'hooks';
+import { useBranches, useProductSyncStatus, useQueryParams } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { useQueryClient } from 'react-query';
-import { useUserStore } from 'stores';
-import { convertIntoArray, getId } from 'utils';
-import { SyncOutlined } from '@ant-design/icons';
+import { convertIntoArray } from 'utils';
+import { ToolOutlined } from '@ant-design/icons';
+import { ResolveMismatchModal } from './ResolveMismatchModal';
+
+const getPriceTypeName = (field: string) => {
+	const mapping = {
+		price_per_piece: 'Price Per Piece',
+		wholesale_price: 'Wholesale Price',
+		special_price: 'Special Price',
+		credit_price: 'Credit Price',
+	};
+	return mapping[field] || field;
+};
 
 export const TabProductPricesSyncing = () => {
 	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
-	const { mutateAsync: editBranchProductLocal } = useBranchProductEditLocal();
 	const { params, setQueryParams } = useQueryParams();
-	const queryClient = useQueryClient();
 
-	// METHODS
-	const handleManualSync = async (
-		branchId: number,
-		productId: number,
-		productName: string,
-	) => {
-		try {
-			const actingUserId = getId(user);
+	// STATES
+	const [dataSource, setDataSource] = useState([]);
+	const [selectedSyncStatus, setSelectedSyncStatus] = useState(null);
 
-			if (!branchId || !productId || !actingUserId) {
-				message.error('Missing required information for sync.');
-				return;
-			}
-
-			await editBranchProductLocal({
-				branchId: Number(branchId),
-				productId: Number(productId),
-				actingUserId: Number(actingUserId),
-			});
-
-			message.success(`Manual sync processing for ${productName}.`);
-
-			await queryClient.invalidateQueries('useProductSyncStatus');
-		} catch (error) {
-			message.error('Failed to sync product. Please try again.');
-		}
-	};
+	const {
+		data: { productSyncStatuses, total },
+		isFetching: isFetchingProductSyncStatuses,
+		error: productSyncStatusError,
+	} = useProductSyncStatus({
+		params: {
+			...params,
+			out_of_sync_only: true,
+		},
+		options: {
+			refetchOnWindowFocus: true,
+			refetchInterval: 30000,
+		},
+	});
 
 	// VARIABLES
 	const columns: ColumnsType = [
@@ -77,76 +69,47 @@ export const TabProductPricesSyncing = () => {
 			title: 'Actions',
 			dataIndex: 'actions',
 			key: 'actions',
-			width: 300,
+			width: 150,
 			align: 'center',
 		},
 	];
 
-	// STATES
-	const [dataSource, setDataSource] = useState([]);
-	const {
-		data: { productSyncStatuses, total },
-		isFetching: isFetchingProductSyncStatuses,
-		error: productSyncStatusError,
-	} = useProductSyncStatus({
-		params: {
-			...params,
-			out_of_sync_only: true,
-		},
-		options: {
-			refetchOnWindowFocus: true,
-			refetchInterval: 30000,
-		},
-	});
-
 	// METHODS
 	useEffect(() => {
-		const getPriceTypeName = (field: string) => {
-			const mapping = {
-				price_per_piece: 'Price Per Piece',
-				wholesale_price: 'Wholesale Price',
-				special_price: 'Special Price',
-				credit_price: 'Credit Price',
-			};
-			return mapping[field] || field;
-		};
+		const data = productSyncStatuses.map((status) => {
+			const mismatches = status.sync_details?.mismatches || [];
 
-		const data = productSyncStatuses.map((status) => ({
-			key: status.id,
-			productName: status.product_name,
-			branch: status.branch_name,
-			mismatches: (
-				<div>
-					{status.sync_details?.mismatches &&
-					status.sync_details.mismatches.length > 0 ? (
-						status.sync_details.mismatches.map((mismatch, index) => (
-							<Tag key={index} color="red">
-								{getPriceTypeName(mismatch)}
-							</Tag>
-						))
-					) : (
-						<Tag color="gray">No mismatches</Tag>
-					)}
-				</div>
-			),
-			actions: (
-				<Tooltip title="Resync Product">
-					<Button
-						icon={<SyncOutlined />}
-						size="small"
-						type="primary"
-						ghost
-						onClick={() =>
-							handleManualSync(
-								status.branch_id,
-								status.product_id,
-								status.product_name,
-							)
-						}
-					/>
-				</Tooltip>
-			),
-		}));
+			return {
+				key: status.id,
+				productName: status.product_name,
+				branch: status.branch_name,
+				mismatches: (
+					<div>
+						{status.status === 'not_found_on_head_office' ? (
+							<Tag color="orange">Not Found on Head Office</Tag>
+						) : (
+							mismatches.map((mismatch) => (
+								<Tag key={mismatch.field} color="red">
+									{getPriceTypeName(mismatch.field)}
+								</Tag>
+							))
+						)}
+					</div>
+				),
+				actions: (
+					<Tooltip title="Resolve Mismatches">
+						<Button
+							disabled={status.status === 'not_found_on_head_office'}
+							icon={<ToolOutlined />}
+							size="small"
+							type="primary"
+							ghost
+							onClick={() => setSelectedSyncStatus(status)}
+						/>
+					</Tooltip>
+				),
+			};
+		});
 
 		setDataSource(data);
 	}, [productSyncStatuses]);
@@ -182,6 +145,13 @@ export const TabProductPricesSyncing = () => {
 				}}
 				bordered
 			/>
+
+			{selectedSyncStatus && (
+				<ResolveMismatchModal
+					syncStatus={selectedSyncStatus}
+					onClose={() => setSelectedSyncStatus(null)}
+				/>
+			)}
 		</>
 	);
 };

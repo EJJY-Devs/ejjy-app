@@ -5,10 +5,7 @@ import { usePingOnlineServer, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React from 'react';
 import { TabAccounts } from './components/TabAccounts';
-import { TabCollectionReceipts } from './components/TabCollectionReceipts';
 import { TabCreditRegistrations } from './components/TabCreditRegistration';
-import { TabCreditTransactions } from './components/TabCreditTransactions';
-import { TabOrderOfPayments } from './components/TabOrderOfPayments';
 import { TabEmployees } from './components/TabEmployees';
 import { TabUsers } from './components/TabUsers';
 import { TabSupplierRegistrations } from './components/TabSupplierRegistration';
@@ -64,27 +61,6 @@ export const Accounts = () => {
 						tab={accountTabs.SUPPLIER_ACCOUNTS}
 					>
 						<TabSupplierRegistrations disabled={isConnected === false} />
-					</Tabs.TabPane>
-
-					<Tabs.TabPane
-						key={accountTabs.CREDIT_TRANSACTIONS}
-						tab={accountTabs.CREDIT_TRANSACTIONS}
-					>
-						<TabCreditTransactions />
-					</Tabs.TabPane>
-
-					<Tabs.TabPane
-						key={accountTabs.ORDER_OF_PAYMENTS}
-						tab={accountTabs.ORDER_OF_PAYMENTS}
-					>
-						<TabOrderOfPayments />
-					</Tabs.TabPane>
-
-					<Tabs.TabPane
-						key={accountTabs.COLLECTION_RECEIPTS}
-						tab={accountTabs.COLLECTION_RECEIPTS}
-					>
-						<TabCollectionReceipts />
 					</Tabs.TabPane>
 				</Tabs>
 			</Box>

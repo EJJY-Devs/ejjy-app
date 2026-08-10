@@ -22,8 +22,7 @@ import {
 } from 'hooks';
 import { Label } from 'components/elements';
 import { CreateRequisitionSlipModal } from 'components/modals/CreateRequisitionSlipModal';
-import { CreateAdjustmentSlipModal } from 'components/modals/CreateAdjustmentSlipModal';
-import { CreatePurchaseModal } from 'components/modals/CreatePurchaseModal';
+import { CreatePurchaseVoucherModal } from 'components/modals/CreatePurchaseVoucherModal';
 import { BarcodeScanner } from './components/BarcodeScanner';
 import { FooterButtons } from './components/FooterButtons';
 import { ProductSearch } from './components/ProductSearch';
@@ -70,10 +69,6 @@ export const Cart = ({
 	const [
 		isCreateRequisitionSlipVisible,
 		setIsCreateRequisitionSlipVisible,
-	] = useState(false);
-	const [
-		isCreateAdjustmentSlipVisible,
-		setIsCreateAdjustmentSlipVisible,
 	] = useState(false);
 	const [isCreatePurchaseVisible, setIsCreatePurchaseVisible] = useState(false);
 	const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -422,6 +417,34 @@ export const Cart = ({
 		});
 	};
 
+	const handleInventoryTransferFormSubmit = (formData: any) => {
+		setAuthorizeConfig({
+			baseURL: getLocalApiUrl(),
+			title: `Authorize ${type}`,
+			onSuccess: async (authorizer: any) => {
+				setAuthorizeConfig(null);
+				await handleModalSubmit({ ...formData, encodedById: authorizer?.id });
+			},
+			onCancel: () => {
+				setAuthorizeConfig(null);
+			},
+		});
+	};
+
+	const handleAdjustmentSlipAuthorize = () => {
+		setAuthorizeConfig({
+			baseURL: getLocalApiUrl(),
+			title: 'Authorize Adjustment Slip',
+			onSuccess: async (authorizer: any) => {
+				setAuthorizeConfig(null);
+				await handleModalSubmit({ encodedById: authorizer?.id });
+			},
+			onCancel: () => {
+				setAuthorizeConfig(null);
+			},
+		});
+	};
+
 	const handleCreatePurchaseOrder = async (formData) => {
 		const currentProducts = useBoundStore.getState().products;
 		if (currentProducts.length > 0) {
@@ -603,7 +626,7 @@ export const Cart = ({
 				return;
 			}
 
-			setIsCreateAdjustmentSlipVisible(true);
+			handleAdjustmentSlipAuthorize();
 		} else if (type === 'Purchase') {
 			setIsCreatePurchaseVisible(true);
 		} else if (type === 'Purchase Order') {
@@ -719,7 +742,7 @@ export const Cart = ({
 		<Modal
 			className="CartModal"
 			footer={null}
-			title={`Create ${type}`}
+			title={type === 'Purchase' ? 'Create Purchase Voucher' : `Create ${type}`}
 			width={1400}
 			centered
 			closable
@@ -777,7 +800,7 @@ export const Cart = ({
 								}
 							}, 100);
 						}}
-						onSubmit={handleModalSubmit}
+						onSubmit={handleInventoryTransferFormSubmit}
 					/>
 				)}
 
@@ -796,24 +819,10 @@ export const Cart = ({
 					/>
 				)}
 
-				{isCreateAdjustmentSlipVisible && (
-					<CreateAdjustmentSlipModal
-						isLoading={isLoading}
-						onClose={() => {
-							setIsCreateAdjustmentSlipVisible(false);
-							setTimeout(() => {
-								if (cartModalRef.current) {
-									cartModalRef.current.focus();
-								}
-							}, 100);
-						}}
-						onSubmit={handleModalSubmit}
-					/>
-				)}
-
 				{isCreatePurchaseVisible && (
-					<CreatePurchaseModal
+					<CreatePurchaseVoucherModal
 						isLoading={isLoading}
+						isPurchaseOrder={type === 'Purchase Order'}
 						onClose={() => {
 							setIsCreatePurchaseVisible(false);
 							setTimeout(() => {

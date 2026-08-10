@@ -861,9 +861,9 @@ export const FinancialStatements = () => {
 
 	const cashFlowsModalEntry = useMemo(() => {
 		const formatAmount = (value: number | string) => formatInPeso(value, '₱ ');
-		// Reversed treatment: increase = deduction (negative), decrease = addition (positive)
-		const formatReversed = (value: number | undefined) =>
-			formatAmount(-(value ?? 0));
+
+		const current = cashFlowsData?.current_period;
+
 		const rows: Array<{
 			id: number;
 			code?: string;
@@ -889,62 +889,35 @@ export const FinancialStatements = () => {
 		pushRow({
 			code: '9006',
 			label: 'Net Income / (Loss)',
-			amount: formatAmount(cashFlowsData?.net_income),
+			amount: formatAmount(current?.net_income),
 		});
 		pushRow({
 			code: '6400',
 			label: 'Add: Depreciation Expense',
-			amount: formatAmount(cashFlowsData?.depreciation_expense),
+			amount: formatAmount(current?.depreciation_expense),
 		});
 		pushRow({
 			code: '9015',
 			label: 'Increase in Accounts Receivable',
-			amount: formatReversed(cashFlowsData?.increase_in_accounts_receivable),
-			isReversed: true,
+			amount: formatAmount(current?.accounts_receivable_change),
 		});
 		pushRow({
 			code: '9016',
 			label: 'Increase in Inventory',
-			amount: formatReversed(cashFlowsData?.increase_in_inventory),
-			isReversed: true,
-		});
-		pushRow({
-			code: '9017',
-			label: 'Increase in Prepaid Expenses',
-			amount: formatReversed(cashFlowsData?.increase_in_prepaid_expenses),
-			isReversed: true,
-		});
-		pushRow({
-			code: '9018',
-			label: 'Increase in Advances Receivable',
-			amount: formatReversed(cashFlowsData?.increase_in_advances_receivable),
-			isReversed: true,
+			amount: formatAmount(current?.inventory_change),
 		});
 		pushRow({
 			code: '9019',
-			label: 'Increase in Accounts Payable',
-			amount: formatAmount(cashFlowsData?.increase_in_accounts_payable),
-		});
-		pushRow({
-			code: '9020',
-			label: 'Increase in Salaries Payable',
-			amount: formatAmount(cashFlowsData?.increase_in_salaries_payable),
-		});
-		pushRow({
-			code: '9021',
-			label: 'Increase in Utilities Payable',
-			amount: formatAmount(cashFlowsData?.increase_in_utilities_payable),
-		});
-		pushRow({
-			code: '9022',
-			label: 'Increase in Accrued Expenses',
-			amount: formatAmount(cashFlowsData?.increase_in_accrued_expenses),
+			label: 'Increase in Accounts Payable and Accrued Expenses',
+			amount: formatAmount(
+				current?.accounts_payable_and_accrued_expenses_change,
+			),
 			amountBottomBold: true,
 		});
 		pushRow({
 			code: '9023',
 			label: 'Net Cash from Operating Activities',
-			amount: formatAmount(cashFlowsData?.net_cash_from_operating_activities),
+			amount: formatAmount(current?.net_cash_from_operating_activities),
 			isTotal: true,
 		});
 
@@ -958,41 +931,14 @@ export const FinancialStatements = () => {
 		});
 		pushRow({
 			code: '9024',
-			label: 'Purchase of Land',
-			amount: formatReversed(cashFlowsData?.purchase_of_land),
-			isReversed: true,
-		});
-		pushRow({
-			code: '9025',
-			label: 'Purchase of Building',
-			amount: formatReversed(cashFlowsData?.purchase_of_building),
-			isReversed: true,
-		});
-		pushRow({
-			code: '9026',
-			label: 'Purchase of Equipment',
-			amount: formatReversed(cashFlowsData?.purchase_of_equipment),
-			isReversed: true,
-		});
-		pushRow({
-			code: '9027',
-			label: 'Purchase of Vehicles',
-			amount: formatReversed(cashFlowsData?.purchase_of_vehicles),
-			isReversed: true,
-		});
-		pushRow({
-			code: '9028',
-			label: 'Increase in Leasehold Improvements',
-			amount: formatReversed(cashFlowsData?.leasehold_improvements),
+			label: 'Acquisition of Property and Equipment',
+			amount: formatAmount(current?.acquisition_of_property_and_equipment),
 			amountBottomBold: true,
-			isReversed: true,
 		});
 		pushRow({
 			code: '9029',
 			label: 'Net Cash Used in Investing Activities',
-			amount: formatAmount(
-				cashFlowsData?.net_cash_used_in_investing_activities,
-			),
+			amount: formatAmount(current?.net_cash_used_in_investing_activities),
 			isTotal: true,
 		});
 
@@ -1005,31 +951,20 @@ export const FinancialStatements = () => {
 			isSection: true,
 		});
 		pushRow({
-			code: '3000',
-			label: 'Owner Capital Investment',
-			amount: formatAmount(cashFlowsData?.owner_capital_investment),
+			code: '2600',
+			label: 'Long-term Loan Proceeds',
+			amount: formatAmount(current?.long_term_loan_proceeds),
 		});
 		pushRow({
 			code: '3100',
 			label: 'Owner Drawings',
-			amount: formatReversed(cashFlowsData?.owner_drawings),
-			isReversed: true,
-		});
-		pushRow({
-			code: '2400',
-			label: 'Short-term Loan Proceeds',
-			amount: formatAmount(cashFlowsData?.short_term_loan_proceeds),
-		});
-		pushRow({
-			code: '2600',
-			label: 'Long-term Loan Proceeds',
-			amount: formatAmount(cashFlowsData?.long_term_loan_proceeds),
+			amount: formatAmount(current?.personal_drawings),
 			amountBottomBold: true,
 		});
 		pushRow({
 			code: '9030',
-			label: 'Net Increase from Financing Activities',
-			amount: formatAmount(cashFlowsData?.net_cash_from_financing_activities),
+			label: 'Net Cash from Financing Activities',
+			amount: formatAmount(current?.net_cash_from_financing_activities),
 			isTotal: true,
 		});
 
@@ -1038,7 +973,7 @@ export const FinancialStatements = () => {
 		pushRow({
 			code: '9031',
 			label: 'Net Increase (Decrease) in Cash',
-			amount: formatAmount(cashFlowsData?.net_increase_decrease_in_cash),
+			amount: formatAmount(current?.net_increase_decrease_in_cash),
 			isGrandTotal: true,
 		});
 
@@ -1066,9 +1001,9 @@ export const FinancialStatements = () => {
 			rows,
 		};
 	}, [
-		financialStatementAsOfLabel,
 		cashFlowPeriodType,
 		cashFlowsData,
+		financialStatementAsOfLabel,
 		headerBranch,
 		mainBranch,
 		selectedBranchLabel,

@@ -135,15 +135,7 @@ export const TransactionTab = ({ isHeadOffice, type }: Props) => {
 	}, [isHeadOffice, deleteTransaction]);
 
 	const handleAddTransaction = useCallback(() => {
-		setAuthorizeConfig({
-			baseURL: getLocalApiUrl(),
-			userTypes: [userTypes.ADMIN],
-			onSuccess: () => {
-				setAuthorizeConfig(null);
-				setIsCreateOpen(true);
-			},
-			onCancel: () => setAuthorizeConfig(null),
-		});
+		setIsCreateOpen(true);
 	}, []);
 
 	return (
@@ -209,8 +201,20 @@ export const TransactionTab = ({ isHeadOffice, type }: Props) => {
 				type={type}
 				onClose={() => setIsCreateOpen(false)}
 				onCreate={async (values) => {
-					await createTransaction(values);
-					setIsCreateOpen(false);
+					setAuthorizeConfig({
+						baseURL: getLocalApiUrl(),
+						title: 'Authorize Transaction',
+						userTypes: [userTypes.ADMIN],
+						onSuccess: async (authorizer) => {
+							setAuthorizeConfig(null);
+							await createTransaction({
+								...values,
+								authorizerId: authorizer?.id,
+							});
+							setIsCreateOpen(false);
+						},
+						onCancel: () => setAuthorizeConfig(null),
+					});
 				}}
 			/>
 			{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}

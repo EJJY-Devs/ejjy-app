@@ -42,7 +42,7 @@ export const useAccountingTransactionCreate = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation<any, any, any>(
-		({ name, information, type, entries }: any) =>
+		({ name, information, type, entries, authorizerId }: any) =>
 			AccountingTransactionsService.create(
 				{
 					name,
@@ -52,6 +52,7 @@ export const useAccountingTransactionCreate = () => {
 						debit_account: e.debitAccount || '',
 						credit_account: e.creditAccount || '',
 					})),
+					authorizer_id: authorizerId,
 				},
 				getBaseUrl(),
 			),

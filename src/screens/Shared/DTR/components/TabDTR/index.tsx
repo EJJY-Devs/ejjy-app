@@ -105,7 +105,7 @@ export const TabDTR = () => {
 			{ title: 'Description', dataIndex: 'description' },
 		];
 
-		if (isUserFromOffice(user.user_type)) {
+		if (isUserFromOffice()) {
 			columns.push({ title: 'Actions', dataIndex: 'actions' });
 		}
 

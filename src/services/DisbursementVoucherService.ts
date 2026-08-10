@@ -5,37 +5,38 @@ interface List extends IListRequest {
 	search?: string;
 	branch_id?: number;
 	time_range?: string;
-	journal_entry_status?: string;
+	supplier_account_id?: number;
+}
+
+interface Particular {
+	description: string;
+	amount: number;
 }
 
 interface Create {
 	payee: string;
-	particulars?: string;
+	particulars?: Particular[];
 	amount: number;
-	received_by?: string;
+	payment_method: string;
+	remarks?: string;
 	authorizer_id?: number | null;
 	branch_id?: number;
-}
-
-interface Update {
-	journal_entry_id?: number | null;
+	supplier_account_id: number;
+	purchase_id?: number | null;
 }
 
 const service = {
 	list: async (params: List, baseURL: string) =>
-		axios.get('/expenses/', { baseURL, params }),
+		axios.get('/disbursement-vouchers/', { baseURL, params }),
 
 	create: async (body: Create, baseURL: string) =>
-		axios.post('/expenses/', body, { baseURL }),
+		axios.post('/disbursement-vouchers/', body, { baseURL }),
 
 	retrieve: async (id: number, baseURL: string) =>
-		axios.get(`/expenses/${id}/`, { baseURL }),
-
-	update: async (id: number, body: Update, baseURL: string) =>
-		axios.patch(`/expenses/${id}/`, body, { baseURL }),
+		axios.get(`/disbursement-vouchers/${id}/`, { baseURL }),
 
 	delete: async (id: number, baseURL: string) =>
-		axios.delete(`/expenses/${id}/`, { baseURL }),
+		axios.delete(`/disbursement-vouchers/${id}/`, { baseURL }),
 };
 
 export default service;

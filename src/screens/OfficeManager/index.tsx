@@ -19,7 +19,6 @@ import { useNotificationStore } from 'screens/OfficeManager/Notifications/stores
 import { useLogsStore } from 'screens/OfficeManager/Logs/stores/useLogsStore';
 import { Accounts } from 'screens/Shared/Accounts';
 import { ViewAccount } from 'screens/Shared/Accounts/ViewAccount';
-import { Assignments } from 'screens/Shared/Assignments';
 import { Branches } from 'screens/Shared/Branches';
 import { ViewBranch } from 'screens/Shared/Branches/ViewBranch';
 import { DTR } from 'screens/Shared/DTR';
@@ -45,7 +44,7 @@ import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
 import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
-import { Expenses } from 'screens/Shared/Accounting/Expenses';
+import { ExpenseVouchers } from 'screens/Shared/Accounting/ExpenseVouchers';
 import { InventoryAudit } from 'screens/Shared/InventoryAudit';
 import { ViewChecking } from 'screens/Shared/InventoryAudit/ViewChecking';
 import { RequisitionSlips } from 'screens/Shared/RequisitionSlips';
@@ -180,13 +179,6 @@ const OfficeManager = () => {
 				link: '/office-manager/products',
 			},
 			{
-				key: 'assignments',
-				name: 'Assignments',
-				activeIcon: require('../../assets/images/icon-users-active.svg'),
-				defaultIcon: require('../../assets/images/icon-users.svg'),
-				link: '/office-manager/assignments',
-			},
-			{
 				key: 'dtr',
 				name: 'DTR',
 				activeIcon: require('../../assets/images/icon-users-active.svg'),
@@ -234,13 +226,6 @@ const OfficeManager = () => {
 				activeIcon: require('../../assets/images/icon-product-active.svg'),
 				defaultIcon: require('../../assets/images/icon-product.svg'),
 				link: '/office-manager/adjustment-slips',
-			},
-			{
-				key: 'return-item-slips',
-				name: 'Return Item Slips',
-				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
-				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
-				link: '/office-manager/return-item-slips',
 			},
 			// {
 			// 	key: 'back-orders',
@@ -329,8 +314,8 @@ const OfficeManager = () => {
 						path="/office-manager/accounting/transaction-list"
 					/>
 					<Route
-						component={Expenses}
-						path="/office-manager/accounting/expenses"
+						component={ExpenseVouchers}
+						path="/office-manager/accounting/expense-vouchers"
 					/>
 					<Route
 						component={Purchases}
@@ -417,12 +402,6 @@ const OfficeManager = () => {
 					<Route
 						component={ViewAccount}
 						path="/office-manager/accounts/:id"
-						exact
-					/>
-
-					<Route
-						component={Assignments}
-						path="/office-manager/assignments"
 						exact
 					/>
 

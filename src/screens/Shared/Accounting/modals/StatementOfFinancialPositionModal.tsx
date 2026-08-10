@@ -1,58 +1,13 @@
 import { Modal, Spin, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import robotoRegularTtf from 'assets/fonts/Roboto-Regular.ttf';
 import { PdfButtons } from 'components/Printing';
 import jsPDF from 'jspdf';
 import React, { useMemo, useState } from 'react';
-
-const TIMEOUT_MS = 2000;
-const PDF_WRAPPER_WIDTH_PX = 1120;
-const PDF_WRAPPER_PADDING_PX = 24;
-const PDF_PAGE_WIDTH_PX = 1225;
-const PDF_PAGE_HEIGHT_PX = 1800;
-const PDF_RENDER_X_PX = Math.max(
-	0,
-	Math.floor((PDF_PAGE_WIDTH_PX - PDF_WRAPPER_WIDTH_PX) / 2),
-);
-
-let robotoRegularBase64: string | null = null;
-
-const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
-	let binary = '';
-	const bytes = new Uint8Array(buffer);
-	const chunkSize = 0x8000;
-
-	for (let i = 0; i < bytes.length; i += chunkSize) {
-		const end = Math.min(i + chunkSize, bytes.length);
-		let chunk = '';
-
-		for (let j = i; j < end; j += 1) {
-			chunk += String.fromCharCode(bytes[j]);
-		}
-
-		binary += chunk;
-	}
-
-	return window.btoa(binary);
-};
-
-const ensureRobotoFont = async (pdf: jsPDF) => {
-	try {
-		if (!robotoRegularBase64) {
-			const response = await fetch(robotoRegularTtf);
-			const buffer = await response.arrayBuffer();
-			robotoRegularBase64 = arrayBufferToBase64(buffer);
-		}
-
-		if (robotoRegularBase64) {
-			pdf.addFileToVFS('Roboto-Regular.ttf', robotoRegularBase64);
-			pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-			pdf.setFont('Roboto', 'normal');
-		}
-	} catch (error) {
-		// If font loading fails, jsPDF will use its default font.
-	}
-};
+import {
+	PDF_WRAPPER_PADDING_PX,
+	PDF_WRAPPER_WIDTH_PX,
+	renderA4SinglePagePdf,
+} from '../printing/renderA4SinglePagePdf';
 
 const escapeHtml = (value: string) =>
 	String(value)
@@ -136,14 +91,15 @@ const printStatementOfFinancialPosition = ({
 				.title { text-align: center; margin-bottom: 14px; }
 				.title h1 { margin: 0; font-size: 24px; }
 				.title h2 { margin: 4px 0 0; font-size: 20px; font-weight: 600; }
-				.sides { display: flex; gap: 24px; }
-				.side { flex: 1; min-width: 0; }
-				.side-title { font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+				.sides { display: flex; flex-direction: column; }
+				.side { min-width: 0; }
+				.side + .side { margin-top: 14px; }
+				.side-title { font-weight: 700; font-size: 12px; margin-bottom: 6px; }
 				table { width: 100%; border-collapse: collapse; }
-				th, td { border: 1px solid #d9d9d9; padding: 6px 8px; text-align: left; font-size: 13px; }
+				th, td { border: 1px solid #d9d9d9; padding: 4px 6px; text-align: left; font-size: 11px; word-break: break-word; }
 				th { background: #fafafa; font-weight: 700; }
 				th:nth-child(1), td:nth-child(1) { width: 50px; }
-				th:nth-child(3), td:nth-child(3) { width: 140px; text-align: right; }
+				th:nth-child(3), td:nth-child(3) { width: 130px; text-align: right; }
 				.section-row td { font-weight: 700; }
 				.total-row td { font-weight: 700; }
 				.grand-total-row td { font-weight: 700; }
@@ -318,39 +274,22 @@ export const StatementOfFinancialPositionModal = ({
 		return `<div style="width: ${PDF_WRAPPER_WIDTH_PX}px; padding: ${PDF_WRAPPER_PADDING_PX}px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif;">${dataHtml}</div>`;
 	};
 
-	const renderPdf = (onReady: (instance: jsPDF) => void) => {
+	const renderPdf = async (onReady: (instance: jsPDF) => void) => {
 		const wrappedHtml = buildPdfHtml();
 		if (!wrappedHtml) return;
 
 		setIsLoadingPdf(true);
 		const pdfTitle = 'StatementOfFinancialPosition.pdf';
 
-		// eslint-disable-next-line new-cap
-		const pdf = new jsPDF({
-			orientation: 'l',
-			unit: 'px',
-			format: [PDF_PAGE_WIDTH_PX, PDF_PAGE_HEIGHT_PX],
-			putOnlyUsedFonts: true,
-		});
-		pdf.setProperties({ title: pdfTitle });
-
-		setTimeout(() => {
-			(async () => {
-				await ensureRobotoFont(pdf);
-
-				pdf.html(wrappedHtml, {
-					x: PDF_RENDER_X_PX,
-					y: 10,
-					margin: 0,
-					callback: (instance) => {
-						onReady(instance);
-						setIsLoadingPdf(false);
-					},
-				});
-			})().catch(() => {
-				setIsLoadingPdf(false);
+		try {
+			const pdf = await renderA4SinglePagePdf({
+				html: wrappedHtml,
+				title: pdfTitle,
 			});
-		}, TIMEOUT_MS);
+			onReady(pdf);
+		} finally {
+			setIsLoadingPdf(false);
+		}
 	};
 
 	const previewPdf = () => {
@@ -379,7 +318,7 @@ export const StatementOfFinancialPositionModal = ({
 			]}
 			open={open}
 			title="View - Statement of Financial Position"
-			width={1100}
+			width={650}
 			centered
 			closable
 			destroyOnClose
@@ -400,35 +339,27 @@ export const StatementOfFinancialPositionModal = ({
 						AS OF {entry?.snapshotDate || '-'}
 					</div>
 				</div>
-				<div
-					style={{
-						display: 'flex',
-						gap: 16,
-						marginTop: 12,
-					}}
-				>
-					<div style={{ flex: 1, minWidth: 0 }}>
-						<Table
-							className="TrialBalanceModal_table"
-							columns={assetsColumns}
-							dataSource={entry?.assetsRows || []}
-							pagination={false}
-							rowKey="id"
-							size="small"
-							bordered
-						/>
-					</div>
-					<div style={{ flex: 1, minWidth: 0 }}>
-						<Table
-							className="TrialBalanceModal_table"
-							columns={liabilitiesColumns}
-							dataSource={entry?.liabilitiesEquityRows || []}
-							pagination={false}
-							rowKey="id"
-							size="small"
-							bordered
-						/>
-					</div>
+				<div style={{ marginTop: 12 }}>
+					<Table
+						className="TrialBalanceModal_table"
+						columns={assetsColumns}
+						dataSource={entry?.assetsRows || []}
+						pagination={false}
+						rowKey="id"
+						size="small"
+						bordered
+					/>
+				</div>
+				<div style={{ marginTop: 16 }}>
+					<Table
+						className="TrialBalanceModal_table"
+						columns={liabilitiesColumns}
+						dataSource={entry?.liabilitiesEquityRows || []}
+						pagination={false}
+						rowKey="id"
+						size="small"
+						bordered
+					/>
 				</div>
 			</Spin>
 		</Modal>

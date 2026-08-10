@@ -6,7 +6,6 @@ import { appTypes, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, userTypes } from 'global';
 import { useBranches, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	getAppType,
@@ -31,14 +30,13 @@ export const Sales = () => {
 	] = useState<AuthorizationModalProps | null>(null);
 
 	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
 	const {
 		data: { branches },
 		isFetching: isFetchingBranches,
 		error: branchesErrors,
 	} = useBranches({
 		options: {
-			enabled: isUserFromOffice(user.user_type),
+			enabled: isUserFromOffice(),
 		},
 	});
 

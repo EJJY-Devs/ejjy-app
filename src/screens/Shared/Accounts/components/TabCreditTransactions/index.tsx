@@ -1,3 +1,4 @@
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { Button, Col, Row, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
@@ -5,6 +6,7 @@ import {
 	RequestErrors,
 	TableHeader,
 	TimeRangeFilter,
+	ViewStatementOfAccountModal,
 } from 'components';
 import {
 	CollectionReceipt,
@@ -40,9 +42,13 @@ import {
 } from 'utils';
 import { Payor } from 'utils/type';
 import { AccountTotalBalance } from './components/AccountTotalBalance';
-import { accountTabs } from '../../data';
+import { accountViews } from '../../data';
 
-export const TabCreditTransactions = () => {
+type Props = {
+	onBack?: () => void;
+};
+
+export const TabCreditTransactions = ({ onBack }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -61,6 +67,7 @@ export const TabCreditTransactions = () => {
 		isCreateOrderOfPaymentModalVisible,
 		setIsCreateOrderOfPaymentModalVisible,
 	] = useState(false);
+	const [isStatementModalVisible, setIsStatementModalVisible] = useState(false);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -108,6 +115,20 @@ export const TabCreditTransactions = () => {
 									onClick={() =>
 										record.referenceData &&
 										setSelectedDeliveryInvoice(record.referenceData)
+									}
+								>
+									{text}
+								</Button>
+							);
+						}
+						if (record.type === 'collection_receipt') {
+							return (
+								<Button
+									className="pa-0"
+									type="link"
+									onClick={() =>
+										record.referenceData &&
+										setSelectedCollectionReceipt(record.referenceData)
 									}
 								>
 									{text}
@@ -269,7 +290,9 @@ export const TabCreditTransactions = () => {
 		},
 	});
 
-	// Fetch Collection Receipts - only when account is selected
+	// Fetch Collection Receipts - filtered by account when one is selected,
+	// otherwise fetched for all accounts so they show up in the general
+	// Credit Transactions list
 	const {
 		data: collectionReceiptsData,
 		isFetching: isFetchingCollectionReceipts,
@@ -280,9 +303,6 @@ export const TabCreditTransactions = () => {
 			timeRange: (params?.timeRange || timeRangeTypes.DAILY) as string,
 			pageSize: DEFAULT_PAGE_SIZE * 3,
 			...params,
-		},
-		options: {
-			enabled: !!params.payorId, // Only fetch when account is selected
 		},
 		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
@@ -383,9 +403,43 @@ export const TabCreditTransactions = () => {
 			combinedData.push(...deliveryInvoiceData);
 		}
 
-		// Only process Order of Payments and Collection Receipts when account is selected
+		// Process Collection Receipts - always shown, whether or not an
+		// account is selected, so they appear in the general transactions list
+		if (collectionReceiptsData?.list) {
+			const collectionReceiptData = collectionReceiptsData.list.map(
+				(collectionReceipt) => {
+					const {
+						id,
+						reference_number,
+						amount,
+						order_of_payment,
+						datetime_created,
+						created_by,
+					} = collectionReceipt;
+
+					return {
+						key: `cr-${id}`,
+						datetime: formatDateTime(datetime_created),
+						rawDatetime: datetime_created,
+						clientCode: order_of_payment?.payor?.account_code || '',
+						clientName: getFullName(order_of_payment?.payor) || '',
+						invoiceNumber: reference_number || EMPTY_CELL,
+						referenceNumber: reference_number || EMPTY_CELL,
+						referenceData: collectionReceipt,
+						amount: formatInPeso(amount),
+						cashier: getFullName(created_by),
+						authorizer: getFullName(created_by),
+						remarks: 'Collection Receipt',
+						type: 'collection_receipt',
+						outstandingBalance: formatInPeso(0), // Will be calculated later
+					};
+				},
+			);
+			combinedData.push(...collectionReceiptData);
+		}
+
+		// Only process Order of Payments when account is selected
 		if (hasSelectedAccount) {
-			// Process Order of Payments
 			if (orderOfPaymentsData?.list) {
 				const orderOfPaymentData = orderOfPaymentsData.list.map(
 					(orderOfPayment) => {
@@ -417,40 +471,6 @@ export const TabCreditTransactions = () => {
 					},
 				);
 				combinedData.push(...orderOfPaymentData);
-			}
-
-			// Process Collection Receipts
-			if (collectionReceiptsData?.list) {
-				const collectionReceiptData = collectionReceiptsData.list.map(
-					(collectionReceipt) => {
-						const {
-							id,
-							reference_number,
-							amount,
-							order_of_payment,
-							datetime_created,
-							created_by,
-						} = collectionReceipt;
-
-						return {
-							key: `cr-${id}`,
-							datetime: formatDateTime(datetime_created),
-							rawDatetime: datetime_created,
-							clientCode: order_of_payment?.payor?.account_code || '',
-							clientName: getFullName(order_of_payment?.payor) || '',
-							invoiceNumber: '',
-							referenceNumber: reference_number || EMPTY_CELL,
-							referenceData: collectionReceipt,
-							amount: formatInPeso(amount),
-							cashier: getFullName(created_by),
-							authorizer: getFullName(created_by),
-							remarks: 'Collection Receipt',
-							type: 'collection_receipt',
-							outstandingBalance: formatInPeso(0), // Will be calculated later
-						};
-					},
-				);
-				combinedData.push(...collectionReceiptData);
 			}
 		}
 
@@ -546,8 +566,8 @@ export const TabCreditTransactions = () => {
 
 	const handleCreateOrderOfPaymentsSuccess = () => {
 		setQueryParams(
-			{ tab: accountTabs.ORDER_OF_PAYMENTS },
-			{ shouldResetPage: true, shouldIncludeCurrentParams: false },
+			{ accountView: accountViews.ORDER_OF_PAYMENTS },
+			{ shouldResetPage: true },
 		);
 	};
 
@@ -559,6 +579,18 @@ export const TabCreditTransactions = () => {
 
 	return (
 		<div>
+			{onBack && (
+				<Button
+					className="pa-0 mb-2"
+					icon={<ArrowLeftOutlined />}
+					style={{ display: 'inline-flex', alignItems: 'center' }}
+					type="link"
+					onClick={onBack}
+				>
+					Back to Credit Accounts
+				</Button>
+			)}
+
 			<TableHeader
 				title={
 					params.payorId ? 'Account Transaction History' : 'Credit Transactions'
@@ -574,6 +606,7 @@ export const TabCreditTransactions = () => {
 						selectedAccount.credit_registration?.total_balance || '0'
 					}
 					onClick={() => setIsCreateOrderOfPaymentModalVisible(true)}
+					onViewStatement={() => setIsStatementModalVisible(true)}
 				/>
 			)}
 
@@ -662,6 +695,20 @@ export const TabCreditTransactions = () => {
 						onSuccess={handleCreateOrderOfPaymentsSuccess}
 					/>
 				)}
+
+			{isStatementModalVisible && selectedAccount && (
+				<ViewStatementOfAccountModal
+					creditRegistration={
+						{
+							id: selectedAccount.credit_registration?.id,
+							total_balance:
+								selectedAccount.credit_registration?.total_balance || '0',
+							account: selectedAccount,
+						} as any
+					}
+					onClose={() => setIsStatementModalVisible(false)}
+				/>
+			)}
 		</div>
 	);
 };

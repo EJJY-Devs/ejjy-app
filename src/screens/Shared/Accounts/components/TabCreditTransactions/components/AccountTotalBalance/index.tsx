@@ -1,3 +1,4 @@
+import { FileTextOutlined } from '@ant-design/icons';
 import { Button, Col, Row, Statistic } from 'antd';
 import { Account, getFullName } from 'ejjy-global';
 import { appTypes } from 'global';
@@ -10,6 +11,7 @@ type Props = {
 	totalBalance: string;
 	disabled: boolean;
 	onClick: () => void;
+	onViewStatement: () => void;
 };
 
 export const AccountTotalBalance = ({
@@ -17,6 +19,7 @@ export const AccountTotalBalance = ({
 	totalBalance,
 	disabled,
 	onClick,
+	onViewStatement,
 }: Props) => (
 	<div className="AccountTotalBalance mb-4">
 		<Row gutter={[16, 16]}>
@@ -24,10 +27,25 @@ export const AccountTotalBalance = ({
 				<Statistic title="Client" value={getFullName(account)} />
 			</Col>
 			<Col md={12}>
-				<Statistic
-					title="Outstanding Balance"
-					value={formatInPeso(totalBalance)}
-				/>
+				<Row align="middle" gutter={[16, 16]} justify="space-between">
+					<Col>
+						<Statistic
+							title="Outstanding Balance"
+							value={formatInPeso(totalBalance)}
+						/>
+					</Col>
+					<Col>
+						<Button
+							disabled={disabled}
+							icon={<FileTextOutlined />}
+							size="large"
+							type="primary"
+							onClick={onViewStatement}
+						>
+							View Statement of Account
+						</Button>
+					</Col>
+				</Row>
 				{getAppType() === appTypes.BACK_OFFICE && (
 					<Button
 						className="mt-3"

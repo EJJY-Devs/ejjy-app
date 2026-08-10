@@ -764,7 +764,11 @@ export const ProductTable = ({
 							bordered={false}
 							className="ProductTable_costInput"
 							controls={false}
-							formatter={(value) => `₱${value}`}
+							formatter={(value, info) =>
+								info?.userTyping || value === undefined || value === null
+									? `₱${value}`
+									: `₱${Number(value).toFixed(2)}`
+							}
 							min={0}
 							parser={(value) => Number((value || '').replace(/₱/g, '')) as any}
 							precision={2}

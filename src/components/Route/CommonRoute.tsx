@@ -26,6 +26,15 @@ export const CommonRoute = ({ forUserType, isLoading, ...rest }: Props) => {
 		return <Route {...rest} />;
 	}
 
+	// Allow Head Office to access admin/office-manager routes without authentication
+	if (
+		getAppType() === appTypes.HEAD_OFFICE &&
+		(forUserType === userTypes.ADMIN ||
+			forUserType === userTypes.OFFICE_MANAGER)
+	) {
+		return <Route {...rest} />;
+	}
+
 	if (user?.user_type === forUserType) {
 		return <Route {...rest} />;
 	}

@@ -65,12 +65,6 @@ interface EditPriceCost {
 	product_id: number;
 }
 
-interface EditLocal {
-	branch_id: number;
-	product_id: number;
-	acting_user_id: number;
-}
-
 interface Delete {
 	acting_user_id: number;
 }
@@ -87,9 +81,6 @@ const service = {
 
 	editPriceCost: async (body: EditPriceCost, baseURL) =>
 		axios.patch('/branches-products/update-price-and-cost/', body, { baseURL }),
-
-	editLocal: async (body: EditLocal, baseURL) =>
-		axios.patch('/branches-products/update-local/', body, { baseURL }),
 
 	delete: async (id: number, body: Delete, baseURL) =>
 		axios.delete(`/branches-products/${id}/`, { baseURL, data: body }),

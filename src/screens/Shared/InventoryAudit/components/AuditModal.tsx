@@ -2,9 +2,14 @@ import { Button, Input, message, Modal, Spin } from 'antd';
 import Table, { ColumnsType } from 'antd/lib/table';
 import { RequestErrors } from 'components';
 import {
+	AuthorizationModal,
+	Props as AuthorizationModalProps,
+} from 'ejjy-global/dist/components/modals/AuthorizationModal';
+import {
 	appTypes,
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
+	EMPTY_CELL,
 	pageSizeOptions,
 	productCheckingTypes,
 	productStatus,
@@ -14,7 +19,7 @@ import {
 } from 'global';
 import { useAuditLogCreate, useBranchProductsForAudit } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { convertIntoArray, getAppType } from 'utils';
+import { convertIntoArray, getAppType, getLocalApiUrl } from 'utils';
 
 interface Props {
 	type: string;
@@ -27,6 +32,10 @@ export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 
 	// STATES
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 	const [quantities, setQuantities] = useState<Record<number, string>>({});
 	const [submitting, setSubmitting] = useState<Record<number, boolean>>({});
 	const [page, setPage] = useState(DEFAULT_PAGE);
@@ -69,7 +78,7 @@ export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 	);
 
 	// METHODS
-	const handleSubmit = async (branchProduct: any) => {
+	const handleSubmit = (branchProduct: any) => {
 		const qty = quantities[branchProduct.id];
 
 		if (qty === undefined || qty === '') {
@@ -77,20 +86,29 @@ export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 			return;
 		}
 
-		setSubmitting((prev) => ({ ...prev, [branchProduct.id]: true }));
+		setAuthorizeConfig({
+			baseURL: serverUrl || getLocalApiUrl(),
+			title: `Authorize ${title}`,
+			onSuccess: async (authorizer) => {
+				setAuthorizeConfig(null);
+				setSubmitting((prev) => ({ ...prev, [branchProduct.id]: true }));
 
-		try {
-			await createAuditLog({
-				branchProductId: branchProduct.id,
-				type: type as 'daily' | 'random',
-				inputtedQty: Number(qty),
-			});
+				try {
+					await createAuditLog({
+						branchProductId: branchProduct.id,
+						type: type as 'daily' | 'random',
+						inputtedQty: Number(qty),
+						authorizerId: authorizer?.id,
+					});
 
-			message.success(`${branchProduct.product.name} audit submitted.`);
-			onClose();
-		} finally {
-			setSubmitting((prev) => ({ ...prev, [branchProduct.id]: false }));
-		}
+					message.success(`${branchProduct.product.name} audit submitted.`);
+					onClose();
+				} finally {
+					setSubmitting((prev) => ({ ...prev, [branchProduct.id]: false }));
+				}
+			},
+			onCancel: () => setAuthorizeConfig(null),
+		});
 	};
 
 	const columns: ColumnsType = [
@@ -141,7 +159,9 @@ export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 			key: bp.id,
 			barcode: bp.product?.barcode || bp.product?.selling_barcode || '—',
 			name: bp.product?.name,
-			quantity: (
+			quantity: isHeadOffice ? (
+				EMPTY_CELL
+			) : (
 				<Input
 					min={0}
 					step={step}
@@ -184,46 +204,50 @@ export const AuditModal = ({ type, serverUrl, branchId, onClose }: Props) => {
 		type === productCheckingTypes.DAILY ? 'Daily Audit' : 'Random Audit';
 
 	return (
-		<Modal
-			className="Modal__large"
-			footer={<Button onClick={onClose}>Close</Button>}
-			title={title}
-			centered
-			closable
-			visible
-			onCancel={onClose}
-		>
-			<RequestErrors
-				errors={convertIntoArray(createError?.errors)}
-				withSpaceBottom
-			/>
-
-			<Input
-				className="mb-4"
-				placeholder="Search by barcode or name..."
-				value={searchInput}
-				allowClear
-				onChange={(e) => setSearchInput(e.target.value)}
-			/>
-
-			<Spin spinning={isFetching}>
-				<Table
-					columns={columns}
-					dataSource={dataSource}
-					pagination={{
-						current: page,
-						total,
-						pageSize,
-						onChange: (newPage, newPageSize) => {
-							setPage(newPage);
-							setPageSize(newPageSize);
-						},
-						position: ['bottomCenter'],
-						pageSizeOptions,
-					}}
-					bordered
+		<>
+			<Modal
+				className="Modal__large"
+				footer={<Button onClick={onClose}>Close</Button>}
+				title={title}
+				centered
+				closable
+				visible
+				onCancel={onClose}
+			>
+				<RequestErrors
+					errors={convertIntoArray(createError?.errors)}
+					withSpaceBottom
 				/>
-			</Spin>
-		</Modal>
+
+				<Input
+					className="mb-4"
+					placeholder="Search by barcode or name..."
+					value={searchInput}
+					allowClear
+					onChange={(e) => setSearchInput(e.target.value)}
+				/>
+
+				<Spin spinning={isFetching}>
+					<Table
+						columns={columns}
+						dataSource={dataSource}
+						pagination={{
+							current: page,
+							total,
+							pageSize,
+							onChange: (newPage, newPageSize) => {
+								setPage(newPage);
+								setPageSize(newPageSize);
+							},
+							position: ['bottomCenter'],
+							pageSizeOptions,
+						}}
+						bordered
+					/>
+				</Spin>
+			</Modal>
+
+			{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
+		</>
 	);
 };

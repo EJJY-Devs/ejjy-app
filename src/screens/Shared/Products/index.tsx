@@ -373,7 +373,7 @@ export const Products = () => {
 					<TableHeader
 						buttonName="Create Product"
 						buttons={
-							isUserFromOffice(user.user_type) && (
+							isUserFromOffice() && (
 								<Upload
 									accept=".csv"
 									beforeUpload={handleReinitialize}
@@ -524,6 +524,7 @@ const Filter = () => {
 					<Label label="Search" spacing />
 					<Input
 						defaultValue={params.search}
+						placeholder="Search by name or barcode"
 						prefix={<SearchOutlined />}
 						allowClear
 						onChange={(event) =>

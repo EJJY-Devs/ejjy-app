@@ -16,6 +16,7 @@ interface Create {
 	information?: string;
 	type?: string;
 	entries: Entry[];
+	authorizer_id?: number;
 }
 
 const service = {

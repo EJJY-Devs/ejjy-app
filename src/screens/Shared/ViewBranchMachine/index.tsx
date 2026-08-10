@@ -80,7 +80,7 @@ export const ViewBranchMachine = ({ match }: Props) => {
 			{ name: branchMachine?.name },
 		];
 
-		if (isUserFromOffice(user.user_type)) {
+		if (isUserFromOffice()) {
 			breadcrumbItems.unshift({
 				name: 'Branches',
 				link: `${getUrlPrefix(user.user_type)}/branches`,

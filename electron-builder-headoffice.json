@@ -1,6 +1,7 @@
 {
 	"appId": "com.ejjy.inventory.headoffice.app",
 	"productName": "Head Office",
+	"asarUnpack": ["node_modules/ngrok/bin/**/*"],
 	"extraResources": [
 		"api/**",
 		"gcs-service-key.json",

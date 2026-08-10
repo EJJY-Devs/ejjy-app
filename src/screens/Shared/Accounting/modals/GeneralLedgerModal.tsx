@@ -1,59 +1,14 @@
 import { Divider, Modal, Pagination, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import robotoRegularTtf from 'assets/fonts/Roboto-Regular.ttf';
 import { PdfButtons } from 'components/Printing';
 import jsPDF from 'jspdf';
 import React, { useEffect, useMemo, useState } from 'react';
 import { printGeneralLedgerTAccounts } from '../printing/printGeneralLedgerTAccounts';
-
-const TIMEOUT_MS = 2000;
-const PDF_WRAPPER_WIDTH_PX = 1120;
-const PDF_WRAPPER_PADDING_PX = 24;
-const PDF_PAGE_WIDTH_PX = 1225;
-const PDF_PAGE_HEIGHT_PX = 1400;
-const PDF_RENDER_X_PX = Math.max(
-	0,
-	Math.floor((PDF_PAGE_WIDTH_PX - PDF_WRAPPER_WIDTH_PX) / 2),
-);
-
-let robotoRegularBase64: string | null = null;
-
-const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
-	let binary = '';
-	const bytes = new Uint8Array(buffer);
-	const chunkSize = 0x8000;
-
-	for (let i = 0; i < bytes.length; i += chunkSize) {
-		const end = Math.min(i + chunkSize, bytes.length);
-		let chunk = '';
-
-		for (let j = i; j < end; j += 1) {
-			chunk += String.fromCharCode(bytes[j]);
-		}
-
-		binary += chunk;
-	}
-
-	return window.btoa(binary);
-};
-
-const ensureRobotoFont = async (pdf: jsPDF) => {
-	try {
-		if (!robotoRegularBase64) {
-			const response = await fetch(robotoRegularTtf);
-			const buffer = await response.arrayBuffer();
-			robotoRegularBase64 = arrayBufferToBase64(buffer);
-		}
-
-		if (robotoRegularBase64) {
-			pdf.addFileToVFS('Roboto-Regular.ttf', robotoRegularBase64);
-			pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-			pdf.setFont('Roboto', 'normal');
-		}
-	} catch (error) {
-		// If font loading fails, jsPDF will use its default font.
-	}
-};
+import {
+	PDF_WRAPPER_PADDING_PX,
+	PDF_WRAPPER_WIDTH_PX,
+	renderA4SinglePagePdf,
+} from '../printing/renderA4SinglePagePdf';
 
 interface GeneralLedgerDetail {
 	id: number;
@@ -79,6 +34,7 @@ interface GeneralLedgerEntry {
 interface Props {
 	columns: ColumnsType<GeneralLedgerDetail>;
 	entry: GeneralLedgerEntry | null;
+	filter?: React.ReactNode;
 	open: boolean;
 	onClose: () => void;
 	summary: {
@@ -90,6 +46,7 @@ interface Props {
 export const GeneralLedgerModal = ({
 	columns,
 	entry,
+	filter,
 	open,
 	onClose,
 	summary,
@@ -100,7 +57,7 @@ export const GeneralLedgerModal = ({
 
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [entry?.id, open]);
+	}, [entry?.id, entry?.entries, open]);
 
 	const paginatedEntries = useMemo(() => {
 		const allEntries = entry?.entries || [];
@@ -121,7 +78,7 @@ export const GeneralLedgerModal = ({
 		return `<div style="width: ${PDF_WRAPPER_WIDTH_PX}px; padding: ${PDF_WRAPPER_PADDING_PX}px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif;">${dataHtml}</div>`;
 	};
 
-	const renderPdf = (onReady: (instance: jsPDF) => void) => {
+	const renderPdf = async (onReady: (instance: jsPDF) => void) => {
 		const wrappedHtml = buildPdfHtml();
 		if (!wrappedHtml) {
 			return;
@@ -130,32 +87,15 @@ export const GeneralLedgerModal = ({
 		setIsLoadingPdf(true);
 		const pdfTitle = `GeneralLedger_${entry?.accountCode || 'TAccounts'}.pdf`;
 
-		// eslint-disable-next-line new-cap
-		const pdf = new jsPDF({
-			orientation: 'p',
-			unit: 'px',
-			format: [PDF_PAGE_WIDTH_PX, PDF_PAGE_HEIGHT_PX],
-			putOnlyUsedFonts: true,
-		});
-		pdf.setProperties({ title: pdfTitle });
-
-		setTimeout(() => {
-			(async () => {
-				await ensureRobotoFont(pdf);
-
-				pdf.html(wrappedHtml, {
-					x: PDF_RENDER_X_PX,
-					y: 10,
-					margin: 0,
-					callback: (instance) => {
-						onReady(instance);
-						setIsLoadingPdf(false);
-					},
-				});
-			})().catch(() => {
-				setIsLoadingPdf(false);
+		try {
+			const pdf = await renderA4SinglePagePdf({
+				html: wrappedHtml,
+				title: pdfTitle,
 			});
-		}, TIMEOUT_MS);
+			onReady(pdf);
+		} finally {
+			setIsLoadingPdf(false);
+		}
 	};
 
 	const previewPdf = () => {
@@ -193,6 +133,7 @@ export const GeneralLedgerModal = ({
 					? `${entry.accountCode} - ${entry.accountName.toUpperCase()}`
 					: '-'}
 			</h2>
+			{filter && <div className="BooksOfAccounts_tAccountFilter">{filter}</div>}
 			<Table
 				columns={columns}
 				dataSource={paginatedEntries}

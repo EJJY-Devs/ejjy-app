@@ -13,6 +13,7 @@ interface CreateAuditLog {
 	branch_product_id: number;
 	type: 'daily' | 'random';
 	inputted_qty: number;
+	authorizer_id?: number;
 }
 
 const service = {

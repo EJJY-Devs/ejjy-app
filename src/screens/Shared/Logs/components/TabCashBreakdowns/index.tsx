@@ -123,7 +123,7 @@ export const TabCashBreakdowns = () => {
 
 	return (
 		<>
-			<TableHeader title="Cash Breakdowns" wrapperClassName="pt-2 px-0" />
+			<TableHeader title="Cash Drawer" wrapperClassName="pt-2 px-0" />
 
 			<RequestErrors
 				errors={convertIntoArray(cashBreakdownsError, 'Cash Breakdowns')}

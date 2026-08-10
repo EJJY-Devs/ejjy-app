@@ -16,10 +16,10 @@ import { printPurchase } from 'utils/printPurchase';
 const { Text } = Typography;
 
 const columns: ColumnsType = [
-	{ title: 'Product Name', dataIndex: 'name' },
-	{ title: 'Qty', dataIndex: 'quantity', align: 'center' },
-	{ title: 'Cost/Piece', dataIndex: 'costPerPiece', align: 'right' },
-	{ title: 'Amount', dataIndex: 'amount', align: 'right' },
+	{ title: 'Quantity', dataIndex: 'quantity', align: 'center' },
+	{ title: 'Description', dataIndex: 'name' },
+	{ title: 'Unit Price', dataIndex: 'costPerPiece', align: 'right' },
+	{ title: 'Total', dataIndex: 'amount', align: 'right' },
 ];
 
 interface Props {
@@ -76,7 +76,7 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 					previewPdf={previewPdf}
 				/>,
 			]}
-			title="[View] Purchases"
+			title="[View] Purchase Voucher"
 			width={VIEW_PRINTING_MODAL_WIDTH}
 			centered
 			closable
@@ -86,7 +86,7 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 			<ReceiptHeaderV2
 				branchHeader={data?.branch}
 				branchName={data?.branch?.name}
-				title="PURCHASES"
+				title="PURCHASE VOUCHER"
 			/>
 
 			<Descriptions
@@ -96,20 +96,24 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 				labelStyle={{ width: 200 }}
 				size="small"
 			>
-				<Descriptions.Item label="Reference #">
+				<Descriptions.Item label="Voucher No.">
 					{data?.reference_number || EMPTY_CELL}
-				</Descriptions.Item>
-				<Descriptions.Item label="Supplier">
-					{data?.supplier_name || EMPTY_CELL}
-				</Descriptions.Item>
-				<Descriptions.Item label="Authorizer">
-					{getFullName(data?.authorizer)}
 				</Descriptions.Item>
 				<Descriptions.Item label="Date">
 					{formatDateTime(data?.datetime_created)}
 				</Descriptions.Item>
+				<Descriptions.Item label="To">
+					{data?.supplier_name || EMPTY_CELL}
+				</Descriptions.Item>
+				<Descriptions.Item label="Check No.">{EMPTY_CELL}</Descriptions.Item>
+				<Descriptions.Item label="Authorizer">
+					{getFullName(data?.authorizer)}
+				</Descriptions.Item>
 				<Descriptions.Item label="PO #">
 					{data?.purchase_order?.reference_number || EMPTY_CELL}
+				</Descriptions.Item>
+				<Descriptions.Item label="Remarks">
+					{data?.overall_remarks || 'N/A'}
 				</Descriptions.Item>
 			</Descriptions>
 
@@ -143,17 +147,6 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 				<br />
 				<Text style={{ whiteSpace: 'pre-line' }}>
 					Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}
-				</Text>
-			</Space>
-
-			<Space
-				align="center"
-				className="w-100 text-center"
-				direction="vertical"
-				size={0}
-			>
-				<Text style={{ whiteSpace: 'pre-line' }}>
-					Remarks: {data?.overall_remarks || 'N/A'}
 				</Text>
 			</Space>
 		</Modal>

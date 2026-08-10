@@ -27,7 +27,7 @@ import {
 	productTypes,
 	unitOfMeasurementTypes,
 } from 'global';
-import { useProductCategories, useSiteSettings } from 'hooks';
+import { useProductCategories } from 'hooks';
 import { isInteger } from 'lodash';
 import React, { useCallback } from 'react';
 import { formatQuantity, getId } from 'utils';
@@ -118,7 +118,6 @@ export const ModifyProductForm = ({
 	product,
 }: Props) => {
 	// CUSTOM HOOKS
-	const { data: siteSettings } = useSiteSettings();
 	const {
 		data: { productCategories },
 	} = useProductCategories({

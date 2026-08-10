@@ -1,5 +1,19 @@
-import { DeleteOutlined, SearchOutlined } from '@ant-design/icons';
-import { Button, Col, Input, Popconfirm, Row, Table, Tooltip } from 'antd';
+import {
+	DeleteOutlined,
+	DollarOutlined,
+	EyeFilled,
+	SearchOutlined,
+} from '@ant-design/icons';
+import {
+	Button,
+	Col,
+	Input,
+	Popconfirm,
+	Row,
+	Space,
+	Table,
+	Tooltip,
+} from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
 	CreateSupplierRegistrationModal,
@@ -24,6 +38,9 @@ import {
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { TabSupplierDisbursementVouchers } from 'screens/Shared/Accounts/components/TabSupplierDisbursementVouchers';
+import { TabSupplierPurchases } from 'screens/Shared/Accounts/components/TabSupplierPurchases';
+import { accountTabs, accountViews } from 'screens/Shared/Accounts/data';
 import { convertIntoArray, formatDate, getAppType } from 'utils';
 
 const columns: ColumnsType = [
@@ -64,12 +81,53 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 			return {
 				key: id,
 				clientCode: (
-					<Link to={`accounts/${account.id}`}>{account.account_code}</Link>
+					<Link
+						to={{
+							pathname: `accounts/${account.id}`,
+							search: `?tab=${accountTabs.SUPPLIER_ACCOUNTS}`,
+						}}
+					>
+						{account.account_code}
+					</Link>
 				),
 				clientName: getFullName(account),
 				datetimeCreated: formatDate(account.datetime_created),
 				actions: (
-					<>
+					<Space>
+						<Tooltip title="View Purchases">
+							<Button
+								disabled={disabled}
+								icon={<EyeFilled />}
+								type="primary"
+								ghost
+								onClick={() => {
+									setQueryParams(
+										{
+											supplierAccountId: account.id,
+											accountView: undefined,
+										},
+										{ shouldResetPage: true },
+									);
+								}}
+							/>
+						</Tooltip>
+						<Tooltip title="View Disbursement Vouchers">
+							<Button
+								disabled={disabled}
+								icon={<DollarOutlined />}
+								type="primary"
+								ghost
+								onClick={() => {
+									setQueryParams(
+										{
+											supplierAccountId: account.id,
+											accountView: accountViews.DISBURSEMENT_VOUCHERS,
+										},
+										{ shouldResetPage: true },
+									);
+								}}
+							/>
+						</Tooltip>
 						{getAppType() === appTypes.HEAD_OFFICE && (
 							<Popconfirm
 								cancelText="No"
@@ -91,13 +149,32 @@ export const TabSupplierRegistrations = ({ disabled }: Props) => {
 								</Tooltip>
 							</Popconfirm>
 						)}
-					</>
+					</Space>
 				),
 			};
 		});
 
 		setDataSource(data);
 	}, [supplierRegistrations, disabled]);
+
+	if (params.supplierAccountId) {
+		const onBack = () =>
+			setQueryParams(
+				{ supplierAccountId: undefined, accountView: undefined },
+				{ shouldResetPage: true },
+			);
+
+		if (params.accountView === accountViews.DISBURSEMENT_VOUCHERS) {
+			return (
+				<TabSupplierDisbursementVouchers
+					supplierAccountId={Number(params.supplierAccountId)}
+					onBack={onBack}
+				/>
+			);
+		}
+
+		return <TabSupplierPurchases onBack={onBack} />;
+	}
 
 	return (
 		<div>

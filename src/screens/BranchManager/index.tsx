@@ -24,7 +24,7 @@ import { ChartOfAccounts } from 'screens/Shared/Accounting/ChartOfAccounts';
 import { BooksOfAccounts } from 'screens/Shared/Accounting/BooksOfAccounts';
 import { FinancialStatements } from 'screens/Shared/Accounting/FinancialStatements';
 import { TransactionList } from 'screens/Shared/Accounting/TransactionList';
-import { Expenses } from 'screens/Shared/Accounting/Expenses';
+import { ExpenseVouchers } from 'screens/Shared/Accounting/ExpenseVouchers';
 import { InventoryTransfer } from 'screens/Shared/InventoryTransfer';
 import { Purchases } from 'screens/Shared/Purchases';
 import { ProductConversion } from 'screens/Shared/ProductConversion';
@@ -50,14 +50,9 @@ import { Tags } from 'screens/Shared/Tags';
 import { ViewRequisitionSlip } from 'screens/Shared/RequisitionSlips/ViewRequisitionSlip';
 import { RequisitionSlips } from 'screens/Shared/RequisitionSlips';
 import { Accounts } from '../Shared/Accounts';
-import { BackOrders } from './BackOrders';
-import { CreateBackOrder } from './BackOrders/CreateBackOrder';
 import { BranchMachines } from './BranchMachines';
 import { Dashboard } from './Dashboard';
 import { Notifications } from './Notifications';
-import { OrderSlips } from './OrderSlips/OrderSlips';
-import { CreateReturnItemSlip } from './ReturnItemSlips/CreateReturnItemSlip';
-import { ReturnItemSlips } from './ReturnItemSlips';
 
 const PING_BRANCH_INTERVAL_MS = 10_000;
 
@@ -239,27 +234,6 @@ const BranchManager = () => {
 				link: '/branch-manager/adjustment-slips',
 			},
 			{
-				key: 'return-item-slips',
-				name: 'Return Item Slips',
-				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
-				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
-				link: '/branch-manager/return-item-slips',
-			},
-			{
-				key: 'back-orders',
-				name: 'Back Orders',
-				activeIcon: require('../../assets/images/icon-requisition-slip-active.svg'),
-				defaultIcon: require('../../assets/images/icon-requisition-slip.svg'),
-				link: '/branch-manager/back-orders',
-			},
-			{
-				key: 'order-slips',
-				name: 'Order Slips',
-				activeIcon: require('../../assets/images/icon-order-slips-active.svg'),
-				defaultIcon: require('../../assets/images/icon-order-slips.svg'),
-				link: '/branch-manager/order-slips',
-			},
-			{
 				key: 'checkings',
 				name: 'Inventory Audit',
 				activeIcon: require('../../assets/images/icon-checking-active.svg'),
@@ -342,8 +316,8 @@ const BranchManager = () => {
 						path="/branch-manager/accounting/transaction-list"
 					/>
 					<Route
-						component={Expenses}
-						path="/branch-manager/accounting/expenses"
+						component={ExpenseVouchers}
+						path="/branch-manager/accounting/expense-vouchers"
 					/>
 					<Route
 						component={Purchases}
@@ -442,27 +416,6 @@ const BranchManager = () => {
 						path="/branch-manager/adjustment-slips"
 						exact
 					/>
-					<Route
-						component={ReturnItemSlips}
-						path="/branch-manager/return-item-slips"
-						exact
-					/>
-					<Route
-						component={CreateReturnItemSlip}
-						path="/branch-manager/return-item-slips/create"
-						exact
-					/>
-					<Route
-						component={BackOrders}
-						path="/branch-manager/back-orders"
-						exact
-					/>
-					<Route
-						component={CreateBackOrder}
-						path="/branch-manager/back-orders/create"
-						exact
-					/>
-					<Route component={OrderSlips} path="/branch-manager/order-slips" />
 					<Route
 						component={InventoryAudit}
 						path="/branch-manager/checkings"

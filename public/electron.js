@@ -529,6 +529,13 @@ const ngrokBinPath = path.join(
 );
 
 let spawnRun = null;
+let ngrokProcess = null;
+function killNgrok() {
+	if (ngrokProcess && ngrokProcess.pid) {
+		kill(ngrokProcess.pid);
+		ngrokProcess = null;
+	}
+}
 function startServer() {
 	if (!isDev) {
 		const selectedAppType = store.get('appType');
@@ -600,6 +607,15 @@ function startServer() {
 						logStatus(`Ngrok stdout: ${stdout}`);
 					},
 				);
+				ngrokProcess.stdout.on('data', (data) => {
+					logStatus(`Ngrok stdout: ${data}`);
+				});
+				ngrokProcess.stderr.on('data', (data) => {
+					logStatus(`Ngrok stderr: ${data}`);
+				});
+				ngrokProcess.on('error', (error) => {
+					logStatus(`Ngrok error: ${error.message}`);
+				});
 			};
 
 			startNgrok();
@@ -610,6 +626,7 @@ function startServer() {
 
 		mainWindow.once('closed', () => {
 			if (spawnRun) kill(Number(spawnRun.pid));
+			killNgrok();
 		});
 	}
 }

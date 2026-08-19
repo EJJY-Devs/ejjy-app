@@ -6,18 +6,20 @@ import React, { useEffect, useMemo, useState } from 'react';
 import robotoRegularTtf from 'assets/fonts/Roboto-Regular.ttf';
 import { DEFAULT_PAGE, MAX_PAGE_SIZE } from 'global';
 import { BranchProductBalancesService } from 'services';
-import { getLocalApiUrl } from 'utils';
-import { useSiteSettingsNew } from 'hooks';
+import { getLocalApiUrl, savePdf } from 'utils';
+import { useSiteSettingsNew, usePdfPreviewModal } from 'hooks';
 
 import { printConsolidatedBranchInventoryReport } from './printConsolidatedBranchInventoryReport';
 
 const TIMEOUT_MS = 2000;
 
-// Tuned for a wide, spreadsheet-like layout.
-const PDF_WRAPPER_WIDTH_PX = 1750;
+// True A4 page size at 96dpi, crosswise/landscape (297mm x 210mm). This
+// report's table is wide (16 columns), so it needs the page turned
+// sideways; rows still overflow onto additional A4CW pages as needed.
+const PDF_PAGE_WIDTH_PX = 1123;
+const PDF_PAGE_HEIGHT_PX = 794;
+const PDF_WRAPPER_WIDTH_PX = 1043;
 const PDF_WRAPPER_PADDING_PX = 24;
-const PDF_PAGE_WIDTH_PX = 1900;
-const PDF_PAGE_HEIGHT_PX = 1120;
 
 let robotoRegularBase64: string | null = null;
 
@@ -202,41 +204,6 @@ export const ViewConsolidatedBranchinventoryReportModal = ({
 		return `<div style="width: ${PDF_WRAPPER_WIDTH_PX}px; padding: ${PDF_WRAPPER_PADDING_PX}px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif;">${dataHtml}</div>`;
 	};
 
-	const previewPdf = () => {
-		setIsLoadingPdf(true);
-
-		const pdfTitle = 'ConsolidatedBranchInventoryReport.pdf';
-		const wrappedHtml = buildPdfHtml();
-		setHtmlPdf(wrappedHtml);
-
-		// eslint-disable-next-line new-cap
-		const pdf = new jsPDF({
-			orientation: 'l',
-			unit: 'px',
-			format: [PDF_PAGE_WIDTH_PX, PDF_PAGE_HEIGHT_PX],
-			putOnlyUsedFonts: true,
-		});
-		pdf.setProperties({ title: pdfTitle });
-
-		setTimeout(() => {
-			(async () => {
-				await ensureRobotoFont(pdf);
-
-				pdf.html(wrappedHtml, {
-					margin: 10,
-					callback: (instance) => {
-						window.open(instance.output('bloburl').toString());
-						setIsLoadingPdf(false);
-						setHtmlPdf('');
-					},
-				});
-			})().catch(() => {
-				setIsLoadingPdf(false);
-				setHtmlPdf('');
-			});
-		}, TIMEOUT_MS);
-	};
-
 	const downloadPdf = () => {
 		setIsLoadingPdf(true);
 
@@ -260,7 +227,48 @@ export const ViewConsolidatedBranchinventoryReportModal = ({
 				pdf.html(wrappedHtml, {
 					margin: 10,
 					callback: (instance) => {
-						instance.save(pdfTitle);
+						savePdf(instance, pdfTitle);
+						setIsLoadingPdf(false);
+						setHtmlPdf('');
+					},
+				});
+			})().catch(() => {
+				setIsLoadingPdf(false);
+				setHtmlPdf('');
+			});
+		}, TIMEOUT_MS);
+	};
+
+	// Show the generated PDF in an in-app dialog instead of a new tab/window.
+	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
+		title: 'Consolidated Branch Inventory Report',
+		onDownload: downloadPdf,
+	});
+
+	const previewPdf = () => {
+		setIsLoadingPdf(true);
+
+		const pdfTitle = 'ConsolidatedBranchInventoryReport.pdf';
+		const wrappedHtml = buildPdfHtml();
+		setHtmlPdf(wrappedHtml);
+
+		// eslint-disable-next-line new-cap
+		const pdf = new jsPDF({
+			orientation: 'l',
+			unit: 'px',
+			format: [PDF_PAGE_WIDTH_PX, PDF_PAGE_HEIGHT_PX],
+			putOnlyUsedFonts: true,
+		});
+		pdf.setProperties({ title: pdfTitle });
+
+		setTimeout(() => {
+			(async () => {
+				await ensureRobotoFont(pdf);
+
+				pdf.html(wrappedHtml, {
+					margin: 10,
+					callback: (instance) => {
+						showPreview(instance.output('bloburl').toString());
 						setIsLoadingPdf(false);
 						setHtmlPdf('');
 					},
@@ -303,6 +311,8 @@ export const ViewConsolidatedBranchinventoryReportModal = ({
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

@@ -136,6 +136,9 @@ const printStatementOfAccount = ({
 	const clientAddress = isSupplier
 		? branch?.store_address
 		: account?.business_address || account?.home_address;
+	const documentTitle = isSupplier
+		? 'Statement of<br />Accounts Payable'
+		: 'Statement<br />of Account';
 
 	const rowsHtml = statement.rows
 		.map(
@@ -175,7 +178,7 @@ const printStatementOfAccount = ({
 				</td>
 				<td style="vertical-align: top; text-align: right;">
 					<div style="font-weight: bold; text-transform: uppercase; font-size: 16px; line-height: 1.2;">
-						Statement<br />of Account
+						${documentTitle}
 					</div>
 				</td>
 			</tr>
@@ -385,10 +388,14 @@ export const StatementOfAccountModal = ({
 		[history, period],
 	);
 
-	const statementNumber = `SOA-${isSupplier ? 'S' : 'C'}-${
-		account?.account_code
-	}`;
+	// SOA (customer) / SOAP (supplier) + the issuance year-month and
+	// time-of-day, e.g. "SOA2612-131524" / "SOAP2612-131524". Timestamp-based
+	// rather than account-based so it stays unique per print/reprint without
+	// needing a backend-issued sequence.
 	const dateIssued = moment();
+	const statementNumber = `${isSupplier ? 'SOAP' : 'SOA'}${dateIssued.format(
+		'YYMM',
+	)}-${dateIssued.format('HHmmss')}`;
 
 	const printData = {
 		branch,
@@ -401,8 +408,15 @@ export const StatementOfAccountModal = ({
 		isSupplier,
 	};
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: `${filenamePrefix}_${account?.account_code}.pdf`,
+		previewInModal: true,
 		print: () => printStatementOfAccount(printData),
 	});
 
@@ -460,9 +474,19 @@ export const StatementOfAccountModal = ({
 						level={4}
 						style={{ marginBottom: 0, textTransform: 'uppercase' }}
 					>
-						Statement
-						<br />
-						of Account
+						{isSupplier ? (
+							<>
+								Statement of
+								<br />
+								Accounts Payable
+							</>
+						) : (
+							<>
+								Statement
+								<br />
+								of Account
+							</>
+						)}
 					</Title>
 				</Col>
 			</Row>
@@ -553,6 +577,8 @@ export const StatementOfAccountModal = ({
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

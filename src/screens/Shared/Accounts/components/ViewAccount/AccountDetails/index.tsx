@@ -2,6 +2,7 @@ import { QrcodeOutlined } from '@ant-design/icons';
 import { Avatar, Button, Descriptions, Tag, Divider, Card } from 'antd';
 import { getFullName, printEmployeeCode } from 'ejjy-global';
 import { accountTypes } from 'global';
+import { usePdfPreviewModal } from 'hooks';
 import JsBarcode from 'jsbarcode';
 import jsPDF from 'jspdf';
 import _ from 'lodash';
@@ -30,6 +31,11 @@ export const AccountDetails = ({ account }: Props) => {
 
 	const getQrCode = async (id) => QRCode.toDataURL(id);
 
+	// Show the generated PDF in an in-app dialog instead of a new tab/window.
+	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
+		title: 'Employee Code',
+	});
+
 	const handlePrintEmployeeCode = async (employee) => {
 		setIsPrinting(true);
 
@@ -50,7 +56,7 @@ export const AccountDetails = ({ account }: Props) => {
 		pdf.html(dataHtml, {
 			margin: 1,
 			callback: (instance) => {
-				window.open(instance.output('bloburl').toString());
+				showPreview(instance.output('bloburl').toString());
 				setIsPrinting(false);
 				setHtml('');
 			},
@@ -218,6 +224,8 @@ export const AccountDetails = ({ account }: Props) => {
 				dangerouslySetInnerHTML={{ __html: html }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</>
 	);
 };

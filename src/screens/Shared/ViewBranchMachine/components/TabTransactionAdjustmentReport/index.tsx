@@ -74,8 +74,15 @@ export const TabTransactionAdjustmentReport = ({ branchMachineId }: Props) => {
 		},
 		options: refetchOptions,
 	});
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: 'TransactionAdjustmentReport.pdf',
+		previewInModal: true,
 		jsPdfSettings: {
 			orientation: 'l',
 			unit: 'px',
@@ -226,6 +233,8 @@ export const TabTransactionAdjustmentReport = ({ branchMachineId }: Props) => {
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</>
 	);
 };

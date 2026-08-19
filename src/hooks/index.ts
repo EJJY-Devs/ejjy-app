@@ -59,6 +59,7 @@ export * from './usePayments';
 export { default as usePaymentsSummary } from './usePayments';
 export * from './usePdf';
 export { default as usePdf } from './usePdf';
+export * from './usePdfPreviewModal';
 export * from './useDownloadStatusListener';
 export { default as usePingOnlineServer } from './usePingOnlineServer';
 export * from './usePatronageSystemTags';

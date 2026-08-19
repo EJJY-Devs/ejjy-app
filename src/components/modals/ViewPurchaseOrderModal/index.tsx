@@ -30,8 +30,16 @@ export const ViewPurchaseOrderModal = ({ purchaseOrder, onClose }: Props) => {
 	const generateHtmlContent = () =>
 		printPurchaseOrder({ purchaseOrder: data, isPdf: true });
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: `PurchaseOrder_${data?.id}.pdf`,
+		paper: 'a4HalfLengthwise',
+		previewInModal: true,
 		print: generateHtmlContent,
 	});
 
@@ -157,6 +165,8 @@ export const ViewPurchaseOrderModal = ({ purchaseOrder, onClose }: Props) => {
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

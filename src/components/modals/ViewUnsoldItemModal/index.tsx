@@ -107,8 +107,16 @@ export const ViewUnsoldItemModal = ({
 		fetchProduct();
 	}, [selectedProductId]);
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: `UnsoldItemSummary_${new Date().toISOString().split('T')[0]}`,
+		paper: 'a4HalfLengthwise',
+		previewInModal: true,
 		print: () =>
 			printUnsoldItem({
 				unsoldItemSummary: filteredUnsoldItems,
@@ -310,6 +318,7 @@ export const ViewUnsoldItemModal = ({
 					dangerouslySetInnerHTML={{ __html: htmlPdf }}
 					style={{ display: 'none' }}
 				/>
+				{pdfPreviewModal}
 			</Modal>
 
 			{isEditModalVisible && product && !isFetchingProduct && (

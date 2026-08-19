@@ -42,8 +42,16 @@ export const ViewPOInternalModal = ({
 	const generateHtmlContent = () =>
 		printPOInternal({ requisitionSlip: slipWithPo, siteSettings, isPdf: true });
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: `PurchaseOrder_${requisitionSlip?.id}.pdf`,
+		paper: 'a4HalfLengthwise',
+		previewInModal: true,
 		print: generateHtmlContent,
 	});
 
@@ -151,6 +159,8 @@ export const ViewPOInternalModal = ({
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

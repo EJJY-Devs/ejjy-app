@@ -13,16 +13,17 @@ import {
 	printBirReportPWD,
 	printBirReportSC,
 	printBirReportSP,
+	renderA4SinglePagePdf,
 	timeRangeTypes,
-	usePdf,
 	useQueryParams,
 	useTransactions,
 } from 'ejjy-global';
+import type jsPDF from 'jspdf';
 import { refetchOptions } from 'global';
-import { useSiteSettingsNew } from 'hooks';
+import { useSiteSettingsNew, usePdfPreviewModal } from 'hooks';
 import { useUserStore } from 'stores';
-import { getLocalApiUrl } from 'utils';
-import React from 'react';
+import { getLocalApiUrl, savePdf } from 'utils';
+import React, { useState } from 'react';
 import { birAnnexTransactionsTabs as tabs } from 'ejjy-global/dist/components/BirAnnexTransactions/data';
 
 type Props = {
@@ -61,82 +62,99 @@ export const AnnexTransactionsTab = ({
 		},
 	});
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
-		title: (() => {
-			let title = '';
+	const [isLoadingPdf, setIsLoadingPdf] = useState(false);
 
-			if (discountCode === 'SC') {
-				title = 'AnnexE2';
-			} else if (discountCode === 'PWD') {
-				title = 'AnnexE3';
-			} else if (discountCode === 'NAAC') {
-				title = 'AnnexE4';
-			} else if (discountCode === 'SP') {
-				title = 'AnnexE5';
-			}
+	const pdfTitle = (() => {
+		if (discountCode === 'SC') return 'AnnexE2';
+		if (discountCode === 'PWD') return 'AnnexE3';
+		if (discountCode === 'NAAC') return 'AnnexE4';
+		if (discountCode === 'SP') return 'AnnexE5';
+		return '';
+	})();
 
-			return title;
-		})(),
-		print: async () => {
-			let content = '';
+	const buildPdfHtml = async () => {
+		const response = await TransactionsService.list(
+			{
+				branch_machine_id: branchMachine.id,
+				discount_code: discountCode,
+				page_size: MAX_PAGE_SIZE,
+				page: DEFAULT_PAGE,
+				time_range: params?.timeRange as string,
+			},
+			getLocalApiUrl(),
+		);
 
-			const response = await TransactionsService.list(
-				{
-					branch_machine_id: branchMachine.id,
-					discount_code: discountCode,
-					page_size: MAX_PAGE_SIZE,
-					page: DEFAULT_PAGE,
-					time_range: params?.timeRange as string,
-				},
-				getLocalApiUrl(),
+		const transactions = response.results;
+
+		if (category === tabs.NATIONAL_ATHLETES_AND_COACHES_SALES_REPORT) {
+			return printBirReportNAAC(
+				transactions,
+				siteSettings,
+				user,
+				branchMachine,
 			);
+		}
+		if (category === tabs.SOLO_PARENTS_SALES_REPORT) {
+			return printBirReportSP(transactions, siteSettings, user, branchMachine);
+		}
+		if (category === tabs.SENIOR_CITIZEN_SALES_REPORT) {
+			return printBirReportSC(transactions, siteSettings, user, branchMachine);
+		}
+		if (category === tabs.PERSONS_WITH_DISABILITY_SALES_REPORT) {
+			return printBirReportPWD(transactions, siteSettings, user, branchMachine);
+		}
 
-			const transactions = response.results;
+		return '';
+	};
 
-			if (category === tabs.NATIONAL_ATHLETES_AND_COACHES_SALES_REPORT) {
-				content = printBirReportNAAC(
-					transactions,
-					siteSettings,
-					user,
-					branchMachine,
-				);
-			} else if (category === tabs.SOLO_PARENTS_SALES_REPORT) {
-				content = printBirReportSP(
-					transactions,
-					siteSettings,
-					user,
-					branchMachine,
-				);
-			} else if (category === tabs.SENIOR_CITIZEN_SALES_REPORT) {
-				content = printBirReportSC(
-					transactions,
-					siteSettings,
-					user,
-					branchMachine,
-				);
-			} else if (category === tabs.PERSONS_WITH_DISABILITY_SALES_REPORT) {
-				content = printBirReportPWD(
-					transactions,
-					siteSettings,
-					user,
-					branchMachine,
-				);
-			}
+	// These annex transaction lists share the E1 template styles
+	// (.bir-reports-pdf, designed at 2300px wide), so they print the same way:
+	// captured at that natural width and shrunk to fit one whole A4 page turned
+	// crosswise (landscape), so nothing is clipped.
+	const renderPdf = async (): Promise<jsPDF | null> => {
+		setIsLoadingPdf(true);
+		try {
+			const html = await buildPdfHtml();
+			return await renderA4SinglePagePdf({
+				html,
+				title: pdfTitle,
+				orientation: 'l',
+				widthPx: 2300,
+			});
+		} catch (error) {
+			console.error('Failed to generate PDF', error);
+			return null;
+		} finally {
+			setIsLoadingPdf(false);
+		}
+	};
 
-			return content;
-		},
-		jsPdfSettings: {
-			orientation: 'l',
-			unit: 'px',
-			format: [1800, 840],
-			precision: 1,
-		},
+	const downloadPdf = async () => {
+		const pdf = await renderPdf();
+		if (pdf) {
+			await savePdf(pdf, `${pdfTitle}.pdf`);
+		}
+	};
+
+	// Show the generated PDF in an in-app dialog instead of a new tab/window.
+	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
+		title: pdfTitle,
+		onDownload: downloadPdf,
 	});
+
+	const previewPdf = async () => {
+		const pdf = await renderPdf();
+		if (!pdf) {
+			return;
+		}
+		showPreview(pdf.output('bloburl').toString());
+	};
 
 	// METHODS
 
 	return (
 		<>
+			{pdfPreviewModal}
 			<TableHeader
 				buttons={
 					<PdfButtons
@@ -169,12 +187,6 @@ export const AnnexTransactionsTab = ({
 				siteSettings={siteSettings}
 				transactions={transactionsData?.list}
 				transactionsTotal={transactionsData?.total}
-			/>
-
-			<div
-				// eslint-disable-next-line react/no-danger
-				dangerouslySetInnerHTML={{ __html: htmlPdf }}
-				style={{ display: 'none' }}
 			/>
 		</>
 	);

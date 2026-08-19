@@ -100,7 +100,14 @@ export const CreatePurchaseVoucherModal = ({
 				initialValues={formDetails.defaultValues}
 				validationSchema={formDetails.schema}
 				onSubmit={(formData) => {
-					onSubmit(formData);
+					// 'Pay' must never post/link to a supplier account, even if the
+					// typed supplier name happened to autocomplete-match one.
+					const supplierAccountId =
+						!isPurchaseOrder && formData.paymentType === 'pay'
+							? null
+							: formData.supplierAccountId;
+
+					onSubmit({ ...formData, supplierAccountId });
 				}}
 			>
 				{({ values, setFieldValue, isSubmitting }) => (
@@ -108,7 +115,7 @@ export const CreatePurchaseVoucherModal = ({
 						<Row gutter={[16, 16]}>
 							{!isPurchaseOrder && (
 								<Col span={24}>
-									<Label label="Payment Type" spacing />
+									<Label label="Type" spacing />
 									<Radio.Group
 										value={values['paymentType']}
 										onChange={(e) => {

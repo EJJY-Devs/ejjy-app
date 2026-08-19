@@ -23,11 +23,11 @@ export const printPurchase = ({
 	const data = ReactDOM.renderToStaticMarkup(
 		<div
 			className="container"
-			style={getPageStyleObject({ lineHeight: '1.5' })}
+			style={getPageStyleObject({ lineHeight: '1.2' })}
 		>
 			<PurchaseVoucherDocument purchase={purchase} />
 			<br />
-			<div style={{ textAlign: 'center' }}>
+			<div style={{ textAlign: 'center', fontSize: '12px' }}>
 				<div>Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}</div>
 			</div>
 		</div>,

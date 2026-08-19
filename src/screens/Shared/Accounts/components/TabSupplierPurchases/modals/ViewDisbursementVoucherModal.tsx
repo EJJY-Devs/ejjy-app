@@ -1,17 +1,8 @@
 import { PrinterOutlined } from '@ant-design/icons';
-import {
-	Button,
-	Col,
-	Descriptions,
-	Modal,
-	Row,
-	Space,
-	Table,
-	Typography,
-} from 'antd';
-import { ColumnsType } from 'antd/lib/table';
+import { Button, Col, Descriptions, Modal, Row, Space, Typography } from 'antd';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import { getFullName } from 'ejjy-global';
+import { usePdfPreviewModal } from 'hooks';
 import { useBranchRetrieve } from 'hooks/useBranches';
 import jsPDF from 'jspdf';
 import React, { useState } from 'react';
@@ -21,7 +12,7 @@ import {
 	renderA4SinglePagePdf,
 } from 'screens/Shared/Accounting/printing/renderA4SinglePagePdf';
 import { renderReceiptPdf } from 'screens/Shared/Accounting/printing/renderReceiptPdf';
-import { formatDate, formatDateTime, formatInPeso } from 'utils';
+import { formatDate, formatDateTime, formatInPeso, savePdf } from 'utils';
 
 const { Text } = Typography;
 
@@ -31,17 +22,11 @@ const SIGNATURE_LINE_WIDTH = 220;
 
 const RECEIPT_WIDTH_PX = 280;
 
-export interface DisbursementVoucherParticular {
-	description: string;
-	amount: string;
-}
-
 export interface DisbursementVoucher {
 	id: number;
 	reference_number: string | null;
 	datetime_created: string;
 	payee: string;
-	particulars: DisbursementVoucherParticular[];
 	amount: string;
 	payment_method: string;
 	purchase_reference_number: string | null;
@@ -56,17 +41,6 @@ interface Props {
 	open: boolean;
 	onClose: () => void;
 }
-
-const particularsColumns: ColumnsType<DisbursementVoucherParticular> = [
-	{ title: 'Description', dataIndex: 'description' },
-	{
-		title: 'Amount',
-		dataIndex: 'amount',
-		align: 'right',
-		width: 150,
-		render: (value: string) => formatInPeso(value),
-	},
-];
 
 const getPaymentMethodLabel = (value: string) => {
 	if (value === 'check') return 'Check';
@@ -95,22 +69,6 @@ const printDisbursementVoucherA4 = (
 	const tinHtml = branch?.tin
 		? `<div style="font-size: 12px;">${branch.tin}</div>`
 		: '';
-
-	const particularsTableHtml = (disbursementVoucher.particulars || []).length
-		? `<table style="width: 100%; border-collapse: collapse;">
-			${(disbursementVoucher.particulars || [])
-				.map(
-					(item) => `
-					<tr>
-						<td style="border: 1px solid #000; padding: 4px 8px;">${item.description}</td>
-						<td style="border: 1px solid #000; padding: 4px 8px; text-align: right; width: 120px;">${formatInPeso(
-							item.amount,
-						)}</td>
-					</tr>`,
-				)
-				.join('')}
-		</table>`
-		: '—';
 
 	const purchaseVoucherRowHtml = disbursementVoucher.purchase_reference_number
 		? `
@@ -154,22 +112,18 @@ const printDisbursementVoucherA4 = (
 					disbursementVoucher.payment_method,
 				)}</td>
 			</tr>
-			${purchaseVoucherRowHtml}
 			<tr>
-				<td style="border: 1px solid #000; padding: 4px 8px; width: 40%; font-weight: bold;">Particulars</td>
-				<td style="border: 1px solid #000; padding: 0;">${particularsTableHtml}</td>
+				<td style="border: 1px solid #000; padding: 4px 8px; width: 40%; font-weight: bold;">Purpose</td>
+				<td style="border: 1px solid #000; padding: 4px 8px;">${
+					disbursementVoucher.remarks || '—'
+				}</td>
 			</tr>
+			${purchaseVoucherRowHtml}
 			<tr>
 				<td style="border: 1px solid #000; padding: 4px 8px; width: 40%; font-weight: bold;">Amount</td>
 				<td style="border: 1px solid #000; padding: 4px 8px;">${formatInPeso(
 					disbursementVoucher.amount,
 				)}</td>
-			</tr>
-			<tr>
-				<td style="border: 1px solid #000; padding: 4px 8px; width: 40%; font-weight: bold;">Notes</td>
-				<td style="border: 1px solid #000; padding: 4px 8px;">${
-					disbursementVoucher.remarks || '—'
-				}</td>
 			</tr>
 			<tr>
 				<td style="border: 1px solid #000; padding: 4px 8px; width: 40%; font-weight: bold;">Authorizer</td>
@@ -234,16 +188,6 @@ const printDisbursementVoucherReceipt = (
 		? `<div style="font-size: 10px;">${branch.tin}</div>`
 		: '';
 
-	const particularsRowsHtml = (disbursementVoucher.particulars || [])
-		.map(
-			(item) => `
-			<div style="display: flex; justify-content: space-between; gap: 8px;">
-				<span>${item.description}</span>
-				<span>${formatInPeso(item.amount)}</span>
-			</div>`,
-		)
-		.join('');
-
 	return `
 	<div style="width: 280px; padding-bottom: 20px; font-family: Arial, sans-serif; font-size: 10px; text-align: center;">
 		${storeNameHtml}
@@ -263,6 +207,7 @@ const printDisbursementVoucherReceipt = (
 			<div>Payment Method: ${getPaymentMethodLabel(
 				disbursementVoucher.payment_method,
 			)}</div>
+			<div>Purpose: ${disbursementVoucher.remarks || '—'}</div>
 			${
 				disbursementVoucher.purchase_reference_number
 					? `<div>Purchase Voucher: ${disbursementVoucher.purchase_reference_number}</div>`
@@ -272,22 +217,9 @@ const printDisbursementVoucherReceipt = (
 
 		<div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
 
-		<div style="text-align: left; font-weight: bold;">Particulars</div>
-		<div style="text-align: left; margin-top: 2px;">
-			${particularsRowsHtml || '—'}
-		</div>
-
-		<div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
-
 		<div style="display: flex; justify-content: space-between; font-weight: bold; text-align: left;">
 			<span>Total</span>
 			<span>${formatInPeso(disbursementVoucher.amount)}</span>
-		</div>
-
-		<div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
-
-		<div style="text-align: left;">
-			<div>Notes: ${disbursementVoucher.remarks || '—'}</div>
 		</div>
 
 		<div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
@@ -370,7 +302,7 @@ export const ViewDisbursementVoucherModal = ({
 		setLoading: (value: boolean) => void,
 		build: () => Promise<jsPDF | null>,
 		onReady: (pdf: jsPDF) => void,
-	) => {
+	): Promise<jsPDF | null> => {
 		setLoading(true);
 
 		try {
@@ -378,31 +310,42 @@ export const ViewDisbursementVoucherModal = ({
 			if (pdf) {
 				onReady(pdf);
 			}
+			return pdf;
 		} catch (error) {
 			console.error('Failed to generate PDF', error);
+			return null;
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	const previewPdfA4 = () =>
-		runWithLoading(setIsLoadingPdfA4, buildA4Pdf, (pdf) => {
-			window.open(pdf.output('bloburl').toString());
+	// Show the generated PDF in an in-app dialog instead of a new tab/window.
+	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
+		title: 'Disbursement Voucher',
+	});
+
+	const previewWith = async (
+		setLoading: (value: boolean) => void,
+		build: () => Promise<jsPDF | null>,
+	) => {
+		await runWithLoading(setLoading, build, (instance) => {
+			showPreview(instance.output('bloburl').toString());
 		});
+	};
+
+	const previewPdfA4 = () => previewWith(setIsLoadingPdfA4, buildA4Pdf);
 
 	const downloadPdfA4 = () =>
 		runWithLoading(setIsLoadingPdfA4, buildA4Pdf, (pdf) => {
-			pdf.save(pdfTitleA4);
+			savePdf(pdf, pdfTitleA4);
 		});
 
 	const previewPdfReceipt = () =>
-		runWithLoading(setIsLoadingPdfReceipt, buildReceiptPdf, (pdf) => {
-			window.open(pdf.output('bloburl').toString());
-		});
+		previewWith(setIsLoadingPdfReceipt, buildReceiptPdf);
 
 	const downloadPdfReceipt = () =>
 		runWithLoading(setIsLoadingPdfReceipt, buildReceiptPdf, (pdf) => {
-			pdf.save(pdfTitleReceipt);
+			savePdf(pdf, pdfTitleReceipt);
 		});
 
 	if (!disbursementVoucher) return null;
@@ -475,27 +418,16 @@ export const ViewDisbursementVoucherModal = ({
 				<Descriptions.Item label="Payment Method">
 					{getPaymentMethodLabel(disbursementVoucher.payment_method)}
 				</Descriptions.Item>
+				<Descriptions.Item label="Purpose">
+					{disbursementVoucher.remarks || '—'}
+				</Descriptions.Item>
 				{disbursementVoucher.purchase_reference_number && (
 					<Descriptions.Item label="Purchase Voucher">
 						{disbursementVoucher.purchase_reference_number}
 					</Descriptions.Item>
 				)}
-				<Descriptions.Item label="Particulars">
-					<Table
-						columns={particularsColumns}
-						dataSource={disbursementVoucher.particulars || []}
-						pagination={false}
-						rowKey="description"
-						showHeader={false}
-						size="small"
-						bordered
-					/>
-				</Descriptions.Item>
 				<Descriptions.Item label="Amount">
 					{formatInPeso(disbursementVoucher.amount)}
-				</Descriptions.Item>
-				<Descriptions.Item label="Notes">
-					{disbursementVoucher.remarks || '—'}
 				</Descriptions.Item>
 				<Descriptions.Item label="Authorizer">
 					{disbursementVoucher.authorizer
@@ -553,6 +485,8 @@ export const ViewDisbursementVoucherModal = ({
 			<div>GDT: {formatDateTime(disbursementVoucher.datetime_created)}</div>
 
 			<br />
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

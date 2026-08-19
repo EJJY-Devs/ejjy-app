@@ -160,10 +160,22 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 				},
 			},
 			{
-				title: 'Description',
-				dataIndex: 'description',
-				width: 200,
+				title: 'Type',
+				dataIndex: 'type',
+				width: 160,
 				align: 'left',
+				render: (type: string) => {
+					if (type === 'purchase') {
+						return 'Purchase Voucher';
+					}
+					if (type === 'expense') {
+						return 'Expense Voucher';
+					}
+					if (type === 'disbursement') {
+						return 'Disbursement Voucher';
+					}
+					return type;
+				},
 			},
 			{ title: 'Amount', dataIndex: 'amount', width: 120, align: 'left' },
 			{
@@ -223,9 +235,11 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 				rawDatetime: disbursementVoucher.datetime_created,
 				referenceNumber: disbursementVoucher.reference_number,
 				referenceData: disbursementVoucher,
-				description: (disbursementVoucher.particulars || [])
-					.map((item: any) => item.description)
-					.join(', '),
+				description: (disbursementVoucher.particulars || []).length
+					? disbursementVoucher.particulars
+							.map((item: any) => item.description)
+							.join(', ')
+					: disbursementVoucher.remarks || '',
 				amount: formatInPeso(disbursementVoucher.amount),
 				authorizer: getFullName(disbursementVoucher.authorizer),
 				type: 'disbursement',

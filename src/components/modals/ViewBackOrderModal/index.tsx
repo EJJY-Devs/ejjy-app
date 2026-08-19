@@ -3,11 +3,12 @@ import { PrinterOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import dayjs from 'dayjs';
-import { getFullName, printDeliveryReceipt } from 'ejjy-global';
+import { getFullName } from 'ejjy-global';
 import { VIEW_PRINTING_MODAL_WIDTH } from 'global';
 import { useBackOrderRetrieve, usePdf, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { formatDateTime, formatQuantity } from 'utils';
+import { printDeliveryReceipt } from 'utils/printDeliveryReceipt';
 
 const { Text } = Typography;
 
@@ -37,14 +38,21 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 
 	const generateHtmlContent = () =>
 		printDeliveryReceipt({
-			deliveryReceipt: backOrder,
+			deliveryReceipt: backOrderData,
 			siteSettings,
-			user: null,
 			isPdf: true,
 		});
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: `DeliveryReceipt_${backOrder?.id}.pdf`,
+		paper: 'a4HalfLengthwise',
+		previewInModal: true,
 		print: generateHtmlContent,
 	});
 
@@ -72,7 +80,7 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 
 	const handlePrint = () => {
 		printDeliveryReceipt({
-			deliveryReceipt: backOrder,
+			deliveryReceipt: backOrderData,
 			siteSettings,
 		});
 	};
@@ -187,6 +195,8 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

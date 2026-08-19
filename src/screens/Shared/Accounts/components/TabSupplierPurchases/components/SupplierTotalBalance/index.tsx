@@ -57,7 +57,7 @@ export const SupplierTotalBalance = ({
 							type="primary"
 							onClick={onViewStatement}
 						>
-							View Statement of Account
+							View Statement of Accounts Payable
 						</Button>
 					</Col>
 				</Row>

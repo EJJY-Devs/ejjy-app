@@ -38,7 +38,7 @@ export const printPOInternal = ({
 				<strong>PURCHASE ORDER</strong>
 			</div>
 			<br />
-			<table style={{ width: '100%', fontSize: '12px', lineHeight: '1' }}>
+			<table style={{ width: '100%', fontSize: '12px', lineHeight: '1.4' }}>
 				<tbody>
 					<tr>
 						<td>Reference #:</td>
@@ -76,28 +76,57 @@ export const printPOInternal = ({
 					)}
 				</tbody>
 			</table>
-			<hr />
+			<br />
 			<table
-				style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}
+				style={{
+					width: '100%',
+					fontSize: '12px',
+					lineHeight: '1.4',
+					borderCollapse: 'collapse',
+				}}
 			>
 				<thead>
-					<tr style={{ borderBottom: '1px solid black', paddingBottom: '4px' }}>
-						<th style={{ textAlign: 'left', paddingBottom: '4px' }}>Product</th>
-						<th style={{ textAlign: 'center', paddingBottom: '4px' }}>Qty</th>
-						<th style={{ textAlign: 'center', paddingBottom: '4px' }}>Unit</th>
+					<tr>
+						<th
+							style={{
+								textAlign: 'left',
+								borderBottom: '1px solid black',
+								padding: '0 4px 4px 0',
+							}}
+						>
+							Product
+						</th>
+						<th
+							style={{
+								textAlign: 'center',
+								borderBottom: '1px solid black',
+								padding: '0 4px 4px',
+							}}
+						>
+							Qty
+						</th>
+						<th
+							style={{
+								textAlign: 'center',
+								borderBottom: '1px solid black',
+								padding: '0 0 4px 4px',
+							}}
+						>
+							Unit
+						</th>
 					</tr>
 				</thead>
 				<tbody>
 					{(requisitionSlip.products || []).map((item: any) => (
 						<tr key={item.product?.id}>
-							<td>{item.product?.name}</td>
-							<td style={{ textAlign: 'center' }}>
+							<td style={{ padding: '2px 4px 2px 0' }}>{item.product?.name}</td>
+							<td style={{ textAlign: 'center', padding: '2px 4px' }}>
 								{formatQuantity({
 									unitOfMeasurement: item.product?.unit_of_measurement,
 									quantity: item.quantity,
 								})}
 							</td>
-							<td style={{ textAlign: 'center' }}>
+							<td style={{ textAlign: 'center', padding: '2px 0 2px 4px' }}>
 								{item.unit || item.product?.unit_of_measurement || EMPTY_CELL}
 							</td>
 						</tr>

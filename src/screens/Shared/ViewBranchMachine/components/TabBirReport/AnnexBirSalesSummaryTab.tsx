@@ -7,9 +7,10 @@ import {
 	MAX_PAGE_SIZE,
 	NO_TRANSACTION_REMARK,
 	printBirReport,
+	renderA4SinglePagePdf,
 	useBirReports,
-	usePdf,
 } from 'ejjy-global';
+import type jsPDF from 'jspdf';
 import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
@@ -18,14 +19,15 @@ import {
 	refetchOptions,
 	timeRangeTypes,
 } from 'global';
-import { useQueryParams, useSiteSettings } from 'hooks';
-import React, { useEffect, useRef, useState } from 'react';
+import { useQueryParams, useSiteSettings, usePdfPreviewModal } from 'hooks';
+import React, { useEffect, useState } from 'react';
 import { useUserStore } from 'stores';
 import {
 	convertIntoArray,
 	formatDate,
 	formatInPeso,
 	getLocalApiUrl,
+	savePdf,
 } from 'utils';
 import { birAnnexTransactionsTabs as tabs } from 'ejjy-global/dist/components/BirAnnexTransactions/data';
 
@@ -103,7 +105,7 @@ const columns: ColumnsType = [
 export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
-	const containerRef = useRef<HTMLDivElement | null>(null);
+	const [isLoadingPdf, setIsLoadingPdf] = useState(false);
 
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
@@ -127,33 +129,62 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 		options: refetchOptions,
 		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const buildPdfHtml = async () => {
+		const response = await BirReportsService.list(
+			{
+				branch_machine_id: branchMachineId,
+				page_size: MAX_PAGE_SIZE,
+				page: DEFAULT_PAGE,
+				time_range: params?.timeRange as string,
+			},
+			getLocalApiUrl(),
+		);
+
+		return printBirReport(response.results, siteSettings, user);
+	};
+
+	// The E1 sales summary is a ~31-column spreadsheet; its template
+	// (.bir-reports-pdf) is designed at 2300px wide. Capture it at that natural
+	// width and shrink-to-fit onto a whole A4 page turned crosswise (landscape),
+	// which is the only orientation the full table stays legible on.
+	const renderPdf = async (): Promise<jsPDF | null> => {
+		setIsLoadingPdf(true);
+		try {
+			const html = await buildPdfHtml();
+			return await renderA4SinglePagePdf({
+				html,
+				title: 'AnnexE1.pdf',
+				orientation: 'l',
+				widthPx: 2300,
+			});
+		} catch (error) {
+			console.error('Failed to generate PDF', error);
+			return null;
+		} finally {
+			setIsLoadingPdf(false);
+		}
+	};
+
+	const downloadPdf = async () => {
+		const pdf = await renderPdf();
+		if (pdf) {
+			await savePdf(pdf, 'AnnexE1.pdf');
+		}
+	};
+
+	// Show the generated PDF in an in-app dialog instead of a new tab/window.
+	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
 		title: 'AnnexE1.pdf',
-		container: {
-			containerRef,
-			widthAdd: 30,
-			heightAdd: 30,
-		},
-		jsPdfSettings: {
-			unit: 'px',
-			putOnlyUsedFonts: true,
-		},
-		print: async () => {
-			const response = await BirReportsService.list(
-				{
-					branch_machine_id: branchMachineId,
-					page_size: MAX_PAGE_SIZE,
-					page: DEFAULT_PAGE,
-					time_range: params?.timeRange as string,
-				},
-				getLocalApiUrl(),
-			);
-
-			const birReports = response.results;
-
-			return printBirReport(birReports, siteSettings, user);
-		},
+		onDownload: downloadPdf,
 	});
+
+	const previewPdf = async () => {
+		const pdf = await renderPdf();
+		if (!pdf) {
+			return;
+		}
+		showPreview(pdf.output('bloburl').toString());
+	};
 
 	// METHODS
 	useEffect(() => {
@@ -261,6 +292,7 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 
 	return (
 		<>
+			{pdfPreviewModal}
 			<TableHeader
 				buttons={
 					<PdfButtons
@@ -318,17 +350,6 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 				scroll={{ x: 5000 }}
 				size="middle"
 				bordered
-			/>
-
-			<div
-				ref={containerRef}
-				// eslint-disable-next-line react/no-danger
-				dangerouslySetInnerHTML={{ __html: htmlPdf }}
-				style={{
-					width: 'fit-content',
-					position: 'absolute',
-					visibility: 'hidden',
-				}}
 			/>
 		</>
 	);

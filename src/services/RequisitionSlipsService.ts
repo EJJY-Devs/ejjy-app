@@ -25,7 +25,9 @@ interface Create {
 	authorizer_id?: number;
 	approved_by?: number;
 	branch_id?: number;
+	vendor_type?: string;
 	vendor_id?: number;
+	supplier_id?: number;
 	products: Product[];
 	overall_remarks?: string;
 }

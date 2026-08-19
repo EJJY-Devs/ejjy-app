@@ -67,6 +67,8 @@ export const RequisitionSlips = () => {
 				slip_type,
 				branch,
 				vendor,
+				vendor_type,
+				supplier,
 				overall_remarks,
 				linked_purchase_order,
 			} = rs;
@@ -109,7 +111,9 @@ export const RequisitionSlips = () => {
 				),
 				type: capitalize(slip_type) || EMPTY_CELL,
 				branch: branch?.name || EMPTY_CELL,
-				vendor: vendor?.name || EMPTY_CELL,
+				vendor:
+					(vendor_type === 'supplier' ? supplier?.name : vendor?.name) ||
+					EMPTY_CELL,
 				datetimeCreated: formatDateTime(datetime_created),
 				status: EMPTY_CELL,
 				overallRemarks: overall_remarks,

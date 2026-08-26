@@ -3,12 +3,11 @@ import { PrinterOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/lib/table';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import dayjs from 'dayjs';
-import { getFullName } from 'ejjy-global';
+import { getFullName, printDeliveryReceipt } from 'ejjy-global';
 import { VIEW_PRINTING_MODAL_WIDTH } from 'global';
 import { useBackOrderRetrieve, usePdf, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { formatDateTime, formatQuantity } from 'utils';
-import { printDeliveryReceipt } from 'utils/printDeliveryReceipt';
 
 const { Text } = Typography;
 

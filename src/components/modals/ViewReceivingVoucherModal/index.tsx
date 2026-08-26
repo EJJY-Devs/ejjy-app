@@ -2,13 +2,12 @@ import { PrinterOutlined } from '@ant-design/icons';
 import { Button, Modal, Space, Table, Typography, Descriptions } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
-import { getFullName } from 'ejjy-global';
+import { getFullName, printReceivingReport } from 'ejjy-global';
 import dayjs from 'dayjs';
 import { VIEW_PRINTING_MODAL_WIDTH } from 'global';
 import { usePdf, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { formatQuantity } from 'utils';
-import { printReceivingReport } from 'utils/printReceivingReport';
 
 const { Text } = Typography;
 

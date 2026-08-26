@@ -9,9 +9,9 @@ import { useUserStore } from 'stores';
 import {
 	EMPTY_CELL,
 	getFullName,
+	printAdjustmentSlip,
 	VIEW_PRINTING_MODAL_WIDTH,
 } from 'ejjy-global';
-import { printAdjustmentSlip } from 'utils/printAdjustmentSlip';
 import dayjs from 'dayjs';
 
 const { Text } = Typography;

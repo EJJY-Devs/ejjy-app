@@ -515,22 +515,22 @@ function initStore() {
 //-------------------------------------------------------------------
 // Server
 //-------------------------------------------------------------------
-const NGROK_RESTART_INTERVAL_MS = 60_000;
-// Resolve the ngrok binary bundled via the "ngrok" npm dependency instead of
-// relying on it being on PATH (production/packaged processes don't inherit
-// the interactive shell PATH, so a plain `ngrok` command lookup can ENOENT
-// even when ngrok is installed on the machine).
-const ngrokBinDir = path
-	.join(path.dirname(require.resolve('ngrok')), 'bin')
-	.replace('app.asar', 'app.asar.unpacked');
-const ngrokBinPath = path.join(
-	ngrokBinDir,
-	process.platform === 'win32' ? 'ngrok.exe' : 'ngrok',
-);
+// Delay before reconnecting after ngrok exits, so ngrok's cloud-side
+// session from the previous run has time to fully release before we try
+// to reclaim the reserved domain.
+const NGROK_RESPAWN_DELAY_MS = 5_000;
+// ngrok is NOT bundled with the app. The user must install ngrok themselves
+// and ensure it is available on the system PATH; we just invoke `ngrok`.
+const ngrokBinPath = 'ngrok';
 
 let spawnRun = null;
 let ngrokProcess = null;
+// True while ngrok is supposed to be running on this instance. Guards the
+// respawn-on-exit handler below so an intentional shutdown (killNgrok())
+// doesn't get treated as a crash and immediately restarted.
+let ngrokShouldRun = false;
 function killNgrok() {
+	ngrokShouldRun = false;
 	if (ngrokProcess && ngrokProcess.pid) {
 		kill(ngrokProcess.pid);
 		ngrokProcess = null;
@@ -589,15 +589,26 @@ function startServer() {
 			logStatus('Ngrok: Starting');
 
 			exec(
-				`"${ngrokBinPath}" config add-authtoken 1n3K1Pcfqdy2WKRk60koXTY1ZrB_7QC7rqRsspNCkayebuRUN`,
+				`${ngrokBinPath} config add-authtoken 1n3K1Pcfqdy2WKRk60koXTY1ZrB_7QC7rqRsspNCkayebuRUN`,
+				(error) => {
+					if (error) {
+						logStatus(
+							`Ngrok error: ${error.message}. Is ngrok installed and on PATH?`,
+						);
+					}
+				},
 			);
 
 			const startNgrok = () => {
-				exec(
-					`"${ngrokBinPath}" http --domain=headoffice.ngrok.app 8001`,
+				ngrokShouldRun = true;
+
+				ngrokProcess = exec(
+					`${ngrokBinPath} http --domain=headoffice.ngrok.app 8001`,
 					(error, stdout, stderr) => {
 						if (error) {
-							logStatus(`Ngrok error: ${error.message}`);
+							logStatus(
+								`Ngrok error: ${error.message}. Is ngrok installed and on PATH?`,
+							);
 							return;
 						}
 						if (stderr) {
@@ -607,6 +618,12 @@ function startServer() {
 						logStatus(`Ngrok stdout: ${stdout}`);
 					},
 				);
+
+				if (!ngrokProcess) {
+					logStatus('Ngrok: Failed to start process');
+					return;
+				}
+
 				ngrokProcess.stdout.on('data', (data) => {
 					logStatus(`Ngrok stdout: ${data}`);
 				});
@@ -616,12 +633,37 @@ function startServer() {
 				ngrokProcess.on('error', (error) => {
 					logStatus(`Ngrok error: ${error.message}`);
 				});
+				// Only reconnect when the process actually dies, never on a
+				// fixed timer. Preemptively killing a healthy tunnel just to
+				// "refresh" it races ngrok's cloud-side session teardown against
+				// the immediate reconnect attempt: if the old session hasn't
+				// been released yet, the new one fails to reclaim the reserved
+				// domain and the tunnel stays down. A short delay here gives
+				// the old session time to fully release before we retry.
+				ngrokProcess.on('exit', () => {
+					ngrokProcess = null;
+					if (ngrokShouldRun) {
+						logStatus(
+							`Ngrok: Process exited, reconnecting in ${NGROK_RESPAWN_DELAY_MS / 1000}s`,
+						);
+						setTimeout(startNgrok, NGROK_RESPAWN_DELAY_MS);
+					}
+				});
 			};
 
 			startNgrok();
-			setInterval(startNgrok, NGROK_RESTART_INTERVAL_MS);
 
 			logStatus('Ngrok: Started');
+		} else if (selectedAppType === appTypes.HEAD_OFFICE) {
+			// "Start Ngrok on Launch" is off on this instance. Clear out any
+			// ngrok.exe left running from an earlier launch where it was
+			// enabled, so it doesn't keep holding/contending for the tunnel
+			// session in the background.
+			const killStrayNgrokCmd =
+				process.platform === 'win32'
+					? 'taskkill /IM ngrok.exe /F'
+					: "pkill -f 'ngrok http'";
+			exec(killStrayNgrokCmd, () => {});
 		}
 
 		mainWindow.once('closed', () => {

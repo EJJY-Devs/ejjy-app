@@ -3,11 +3,10 @@ import { Button, Descriptions, Modal, Table, Space, Typography } from 'antd';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import dayjs from 'dayjs';
 import { ColumnsType } from 'antd/lib/table';
-import { EMPTY_CELL, getFullName } from 'ejjy-global';
-import { usePdf } from 'hooks';
+import { EMPTY_CELL, getFullName, printRequisitionSlip } from 'ejjy-global';
+import { usePdf, useSiteSettings } from 'hooks';
 import React from 'react';
 import { formatDateTime, formatQuantity } from 'utils';
-import { printRequisitionSlip } from 'utils/printRequisitionSlip';
 
 interface Props {
 	requisitionSlip: any;
@@ -20,10 +19,12 @@ export const ViewRequisitionSlipModal = ({
 }: Props) => {
 	// CUSTOM HOOKS
 	const { Text } = Typography;
+	const { data: siteSettings } = useSiteSettings();
 
 	const generateHtmlContent = () =>
 		printRequisitionSlip({
 			requisitionSlip,
+			siteSettings,
 			isPdf: true,
 		});
 
@@ -42,7 +43,7 @@ export const ViewRequisitionSlipModal = ({
 
 	// METHODS
 	const handlePrint = () => {
-		printRequisitionSlip({ requisitionSlip });
+		printRequisitionSlip({ requisitionSlip, siteSettings });
 	};
 
 	// Define table columns

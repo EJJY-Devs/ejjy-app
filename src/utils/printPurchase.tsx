@@ -1,14 +1,30 @@
 import dayjs from 'dayjs';
-import { EMPTY_CELL, getFullName, printingTypes } from 'ejjy-global';
+import {
+	EMPTY_CELL,
+	getAppReceiptPrintingType,
+	getFullName,
+	printingTypes,
+} from 'ejjy-global';
+import {
+	generateItemBlockCommands,
+	generateReceiptHeaderCommandsV2,
+	generateThreeColumnLine,
+	printCenter,
+} from 'ejjy-global/dist/print/helper-escpos';
 import {
 	appendHtmlElement,
 	getPageStyleObject,
 	print,
 } from 'ejjy-global/dist/print/helper-receipt';
+import { EscPosCommands } from 'ejjy-global/dist/print/utils/escpos.enum';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
 import { PurchaseVoucherDocument, ReceiptHeaderV2 } from 'components/Printing';
-import { formatDateTime } from 'utils';
+import { formatDateTime, formatInPeso } from 'utils';
+import {
+	DASHED_DIVIDER,
+	generateFourColumnLine,
+} from 'utils/printEscPosHelpers';
 
 interface PrintPurchaseProps {
 	purchase: any;
@@ -16,11 +32,8 @@ interface PrintPurchaseProps {
 	isPdf?: boolean;
 }
 
-export const printPurchase = ({
-	purchase,
-	isPdf = false,
-}: PrintPurchaseProps): string | undefined => {
-	const data = ReactDOM.renderToStaticMarkup(
+const renderHtml = ({ purchase }: PrintPurchaseProps): string =>
+	ReactDOM.renderToStaticMarkup(
 		<div
 			className="container"
 			style={getPageStyleObject({ lineHeight: '1.2' })}
@@ -33,19 +46,103 @@ export const printPurchase = ({
 		</div>,
 	);
 
-	if (isPdf) {
-		return appendHtmlElement(data);
-	}
+// Native (ESC/POS) renderer — see printPOInternal.tsx for why this report
+// builds its own commands instead of delegating to ejjy-global. Mirrors
+// PurchaseVoucherDocument's fields/ordering.
+const renderNative = ({ purchase }: PrintPurchaseProps): string[] => {
+	const products = purchase?.purchase_products || [];
 
-	print(appendHtmlElement(data), 'Purchase', undefined, printingTypes.HTML);
-	return data;
+	const commands: string[] = [
+		...generateReceiptHeaderCommandsV2({
+			branchHeader: purchase?.branch,
+			title: 'PURCHASE VOUCHER',
+		}),
+		EscPosCommands.LINE_BREAK,
+		EscPosCommands.LINE_BREAK,
+	];
+
+	const items = [
+		{ label: 'Voucher No.:', value: purchase?.reference_number || EMPTY_CELL },
+		{ label: 'Date:', value: formatDateTime(purchase?.datetime_created) },
+		{ label: 'To:', value: purchase?.supplier_name || EMPTY_CELL },
+		{ label: 'Check No.:', value: EMPTY_CELL },
+	];
+	if (purchase?.authorizer) {
+		items.push({
+			label: 'Authorizer:',
+			value: getFullName(purchase.authorizer),
+		});
+	}
+	if (purchase?.purchase_order?.reference_number) {
+		items.push({
+			label: 'PO #:',
+			value: purchase.purchase_order.reference_number,
+		});
+	}
+	items.push({
+		label: 'Type:',
+		value: purchase?.payment_type === 'on_account' ? 'On Account' : 'Pay',
+	});
+	items.push({
+		label: 'Remarks:',
+		value: purchase?.overall_remarks || 'N/A',
+	});
+	commands.push(...generateItemBlockCommands(items));
+
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(generateFourColumnLine('Qty', 'Description', 'Price', 'Total'));
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(printCenter(DASHED_DIVIDER));
+	commands.push(EscPosCommands.LINE_BREAK);
+
+	products.forEach((item: any) => {
+		commands.push(
+			generateFourColumnLine(
+				String(item.quantity),
+				item.product?.name || '',
+				formatInPeso(item.cost_per_piece, 'P'),
+				formatInPeso(Number(item.quantity) * Number(item.cost_per_piece), 'P'),
+			),
+		);
+		commands.push(EscPosCommands.LINE_BREAK);
+	});
+
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(
+		printCenter(`Total Amount: ${formatInPeso(purchase?.total_amount, 'P')}`),
+	);
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(
+		printCenter(`Print Details: ${dayjs().format('MM/DD/YYYY h:mmA')}`),
+	);
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(EscPosCommands.LINE_BREAK);
+
+	return commands;
 };
 
-export const printPurchaseForSupplier = ({
+export const printPurchase = ({
 	purchase,
 	isPdf = false,
 }: PrintPurchaseProps): string | undefined => {
-	const data = ReactDOM.renderToStaticMarkup(
+	if (isPdf) {
+		return appendHtmlElement(renderHtml({ purchase }));
+	}
+
+	const printingType = getAppReceiptPrintingType();
+
+	if (printingType === printingTypes.NATIVE) {
+		print(renderNative({ purchase }), 'Purchase', undefined, printingType);
+		return undefined;
+	}
+
+	const data = renderHtml({ purchase });
+	print(appendHtmlElement(data), 'Purchase', undefined, printingType);
+	return data;
+};
+
+const renderForSupplierHtml = ({ purchase }: PrintPurchaseProps): string =>
+	ReactDOM.renderToStaticMarkup(
 		<div
 			className="container"
 			style={getPageStyleObject({ lineHeight: '1.5' })}
@@ -131,10 +228,88 @@ export const printPurchaseForSupplier = ({
 		</div>,
 	);
 
-	if (isPdf) {
-		return appendHtmlElement(data);
+const renderForSupplierNative = ({
+	purchase,
+}: PrintPurchaseProps): string[] => {
+	const commands: string[] = [
+		...generateReceiptHeaderCommandsV2({
+			branchHeader: purchase.branch,
+			title: 'PURCHASE ORDER',
+		}),
+		EscPosCommands.LINE_BREAK,
+		EscPosCommands.LINE_BREAK,
+	];
+
+	commands.push(
+		...generateItemBlockCommands([
+			{
+				label: 'Datetime Requested:',
+				value: formatDateTime(purchase.datetime_created),
+			},
+			{ label: 'Reference #:', value: purchase.reference_number || EMPTY_CELL },
+			{ label: 'Vendor:', value: purchase.supplier_name || EMPTY_CELL },
+			{ label: 'Customer:', value: purchase.branch?.name || EMPTY_CELL },
+			{
+				label: 'Encoder:',
+				value: getFullName(purchase.authorizer) || EMPTY_CELL,
+			},
+		]),
+	);
+
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(generateThreeColumnLine('Product Name', 'Quantity', 'Unit'));
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(printCenter(DASHED_DIVIDER));
+	commands.push(EscPosCommands.LINE_BREAK);
+
+	(purchase.purchase_products || []).forEach((item: any) => {
+		commands.push(
+			generateThreeColumnLine(
+				item.product?.name || '',
+				String(item.quantity),
+				item.product?.unit_of_measurement || EMPTY_CELL,
+			),
+		);
+		commands.push(EscPosCommands.LINE_BREAK);
+	});
+
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(
+		printCenter(`Print Details: ${dayjs().format('MM/DD/YYYY h:mmA')}`),
+	);
+	commands.push(EscPosCommands.LINE_BREAK);
+
+	if (purchase.overall_remarks) {
+		commands.push(printCenter(`Remarks: ${purchase.overall_remarks}`));
+		commands.push(EscPosCommands.LINE_BREAK);
 	}
 
-	print(appendHtmlElement(data), 'Purchase', undefined, printingTypes.HTML);
+	commands.push(EscPosCommands.LINE_BREAK);
+
+	return commands;
+};
+
+export const printPurchaseForSupplier = ({
+	purchase,
+	isPdf = false,
+}: PrintPurchaseProps): string | undefined => {
+	if (isPdf) {
+		return appendHtmlElement(renderForSupplierHtml({ purchase }));
+	}
+
+	const printingType = getAppReceiptPrintingType();
+
+	if (printingType === printingTypes.NATIVE) {
+		print(
+			renderForSupplierNative({ purchase }),
+			'Purchase',
+			undefined,
+			printingType,
+		);
+		return undefined;
+	}
+
+	const data = renderForSupplierHtml({ purchase });
+	print(appendHtmlElement(data), 'Purchase', undefined, printingType);
 	return data;
 };

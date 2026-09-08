@@ -15,7 +15,7 @@ import {
 import _ from 'lodash';
 import { Content, TableHeader } from 'components';
 import { Box } from 'components/elements';
-import { MAX_PAGE_SIZE } from 'global';
+import { appTypes, MAX_PAGE_SIZE } from 'global';
 import {
 	useBrandNameCreate,
 	useBrandNameDelete,
@@ -47,6 +47,7 @@ import {
 	useStorageTypeEdit,
 	useStorageTypes,
 } from 'hooks';
+import { getAppType } from 'utils';
 import { ProductCategoriesTab } from './components/ProductCategoriesTab';
 import { PatronageTagsTab } from './components/PatronageTagsTab';
 import { ProductGroupsTab } from './components/ProductGroupsTab';
@@ -92,7 +93,7 @@ const tagKindLabels: Record<TagKind, { singular: string; plural: string }> = {
 
 export const Tags = ({ basePath }: Props) => {
 	const [tab, setTab] = useState(tabs.PRODUCT_CATEGORIES);
-	const allowCreate = basePath === '/office-manager';
+	const allowCreate = getAppType() === appTypes.HEAD_OFFICE;
 	const { isConnected } = usePingOnlineServer();
 
 	const {

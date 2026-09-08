@@ -175,6 +175,13 @@ export const ChartOfAccounts = () => {
 					</Tag>
 				),
 			},
+			{
+				title: 'Cash Books',
+				dataIndex: 'is_cash_book',
+				key: 'isCashBook',
+				render: (value: boolean) =>
+					value ? <Tag color="cyan">Enabled</Tag> : <Tag>—</Tag>,
+			},
 		];
 
 		if (isHeadOffice) {

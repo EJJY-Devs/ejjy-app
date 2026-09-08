@@ -13,6 +13,7 @@ const useJournalEntries = ({ params }: Query) =>
 			'useJournalEntries',
 			params?.search,
 			params?.branchId,
+			params?.branchMachineId,
 			params?.entryType,
 			params?.timeRange,
 			params?.page,
@@ -24,6 +25,7 @@ const useJournalEntries = ({ params }: Query) =>
 					{
 						search: params?.search,
 						branch_id: params?.branchId,
+						branch_machine_id: params?.branchMachineId,
 						entry_type: params?.entryType,
 						time_range: params?.timeRange,
 						page: params?.page || DEFAULT_PAGE,

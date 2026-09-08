@@ -54,6 +54,7 @@ export const useChartOfAccountCreate = () => {
 			accountType,
 			subType,
 			normalBalance,
+			isCashBook,
 		}: any) =>
 			ChartOfAccountsService.create(
 				{
@@ -64,6 +65,7 @@ export const useChartOfAccountCreate = () => {
 					account_type: accountType,
 					sub_type: subType,
 					normal_balance: normalBalance,
+					is_cash_book: !!isCashBook,
 				},
 				getBaseUrl(),
 			),
@@ -88,6 +90,7 @@ export const useChartOfAccountEdit = () => {
 			accountType,
 			subType,
 			normalBalance,
+			isCashBook,
 		}: any) =>
 			ChartOfAccountsService.edit(
 				id,
@@ -99,6 +102,7 @@ export const useChartOfAccountEdit = () => {
 					account_type: accountType,
 					sub_type: subType,
 					normal_balance: normalBalance,
+					is_cash_book: !!isCashBook,
 				},
 				getBaseUrl(),
 			),

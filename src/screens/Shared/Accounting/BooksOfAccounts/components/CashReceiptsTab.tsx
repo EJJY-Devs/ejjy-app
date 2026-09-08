@@ -11,7 +11,8 @@ export interface CashReceiptEntry {
 	payor: string;
 	tin?: string | null;
 	invoice: string;
-	account: string;
+	debitAccount: string;
+	creditAccount: string;
 	amount: number;
 	vatOutput: number;
 	salesIncomeVatExclusive: number;
@@ -31,66 +32,72 @@ export const CashReceiptsTab = () => {
 			title: 'Date',
 			dataIndex: 'date',
 			key: 'date',
-			align: 'center',
+			align: 'left',
 		},
 		{
 			title: 'Payor',
 			dataIndex: 'payor',
 			key: 'payor',
-			align: 'center',
+			align: 'left',
 		},
 		{
 			title: 'TIN',
 			dataIndex: 'tin',
 			key: 'tin',
-			align: 'center',
+			align: 'left',
 			render: (value: string | null) => value || EMPTY_CELL,
 		},
 		{
 			title: 'Invoice',
 			dataIndex: 'invoice',
 			key: 'invoice',
-			align: 'center',
+			align: 'left',
 		},
 		{
-			title: 'Account',
-			dataIndex: 'account',
-			key: 'account',
-			align: 'center',
+			title: 'Debit Account',
+			dataIndex: 'debitAccount',
+			key: 'debitAccount',
+			align: 'left',
+		},
+		{
+			title: 'Credit Account',
+			dataIndex: 'creditAccount',
+			key: 'creditAccount',
+			align: 'left',
 		},
 		{
 			title: 'Amount',
 			dataIndex: 'amount',
 			key: 'amount',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 		{
 			title: 'VAT Output',
 			dataIndex: 'vatOutput',
 			key: 'vatOutput',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 		{
 			title: 'Sales / Income - VAT Exclusive',
 			dataIndex: 'salesIncomeVatExclusive',
 			key: 'salesIncomeVatExclusive',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 		{
 			title: 'Other Receipts',
 			dataIndex: 'otherReceipts',
 			key: 'otherReceipts',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 		{
 			title: 'Total Receipts',
 			dataIndex: 'totalReceipts',
 			key: 'totalReceipts',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 	];
@@ -118,7 +125,7 @@ export const CashReceiptsTab = () => {
 					position: ['bottomCenter'],
 				}}
 				rowKey="id"
-				scroll={{ x: 1100 }}
+				scroll={{ x: 1200 }}
 				bordered
 			/>
 		</>

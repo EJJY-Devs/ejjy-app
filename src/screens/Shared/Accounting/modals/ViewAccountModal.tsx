@@ -86,6 +86,9 @@ export const ViewAccountModal = ({ account, open, onClose }: Props) => {
 				<Descriptions.Item label="Normal Balance">
 					{getOptionLabel(account?.normal_balance, normalBalanceOptions)}
 				</Descriptions.Item>
+				<Descriptions.Item label="Cash Books">
+					{account?.is_cash_book ? 'Enabled' : 'Disabled'}
+				</Descriptions.Item>
 			</Descriptions>
 		</Modal>
 	);

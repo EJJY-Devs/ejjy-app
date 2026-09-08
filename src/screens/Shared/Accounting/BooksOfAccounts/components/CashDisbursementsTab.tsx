@@ -11,7 +11,8 @@ export interface CashDisbursementEntry {
 	payee: string;
 	tin?: string | null;
 	invoiceNumber: string;
-	account: string;
+	debitAccount: string;
+	creditAccount: string;
 	amount: number;
 	vatInput: number;
 	expensePurchaseVatExclusive: number;
@@ -32,73 +33,79 @@ export const CashDisbursementsTab = () => {
 			title: 'Date',
 			dataIndex: 'date',
 			key: 'date',
-			align: 'center',
+			align: 'left',
 		},
 		{
 			title: 'Payee',
 			dataIndex: 'payee',
 			key: 'payee',
-			align: 'center',
+			align: 'left',
 		},
 		{
 			title: 'TIN',
 			dataIndex: 'tin',
 			key: 'tin',
-			align: 'center',
+			align: 'left',
 			render: (value: string | null) => value || EMPTY_CELL,
 		},
 		{
 			title: 'Invoice #',
 			dataIndex: 'invoiceNumber',
 			key: 'invoiceNumber',
-			align: 'center',
+			align: 'left',
 		},
 		{
-			title: 'Account',
-			dataIndex: 'account',
-			key: 'account',
-			align: 'center',
+			title: 'Debit Account',
+			dataIndex: 'debitAccount',
+			key: 'debitAccount',
+			align: 'left',
+		},
+		{
+			title: 'Credit Account',
+			dataIndex: 'creditAccount',
+			key: 'creditAccount',
+			align: 'left',
 		},
 		{
 			title: 'Amount',
 			dataIndex: 'amount',
 			key: 'amount',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 		{
 			title: 'VAT Input',
 			dataIndex: 'vatInput',
 			key: 'vatInput',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 		{
 			title: 'Expense / Purchase - VAT Exclusive',
 			dataIndex: 'expensePurchaseVatExclusive',
 			key: 'expensePurchaseVatExclusive',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 		{
 			title: 'EWT',
 			dataIndex: 'ewt',
 			key: 'ewt',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 		{
 			title: 'Other Deductions',
 			dataIndex: 'otherDeductions',
 			key: 'otherDeductions',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 		{
 			title: 'Total Disbursement',
 			dataIndex: 'totalDisbursement',
 			key: 'totalDisbursement',
-			align: 'center',
+			align: 'left',
 			render: (value: number) => formatInPeso(value, '₱ '),
 		},
 	];
@@ -126,7 +133,7 @@ export const CashDisbursementsTab = () => {
 					position: ['bottomCenter'],
 				}}
 				rowKey="id"
-				scroll={{ x: 1200 }}
+				scroll={{ x: 1300 }}
 				bordered
 			/>
 		</>

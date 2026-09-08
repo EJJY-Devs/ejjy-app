@@ -10,7 +10,12 @@ import {
 	MAX_PAGE_SIZE,
 	pageSizeOptions,
 } from 'global';
-import { useBranches, useJournalEntries, useQueryParams } from 'hooks';
+import {
+	useBranches,
+	useBranchMachines,
+	useJournalEntries,
+	useQueryParams,
+} from 'hooks';
 import React, { useEffect, useMemo } from 'react';
 import { formatDateTime, formatInPeso } from 'utils';
 
@@ -19,6 +24,7 @@ export interface GeneralJournalEntry {
 	entryType: string;
 	datetime: string;
 	branch?: string;
+	branchMachine?: string;
 	referenceNumber: string;
 	debitAccount: string;
 	creditAccount: string;
@@ -72,6 +78,21 @@ export const GeneralJournalTab = ({
 		return undefined;
 	}, [isHeadOffice, localBranchId, params.branchId]);
 
+	const selectedBranchMachineId = useMemo(() => {
+		if (params.branchMachineId === 'all') return undefined;
+		if (params.branchMachineId) return Number(params.branchMachineId);
+		return undefined;
+	}, [params.branchMachineId]);
+
+	const {
+		data: { branchMachines } = { branchMachines: [] },
+	} = useBranchMachines({
+		params: {
+			branchId: selectedBranchId,
+			pageSize: MAX_PAGE_SIZE,
+		},
+	});
+
 	const {
 		data: { journalEntries, total },
 		isFetching,
@@ -81,6 +102,9 @@ export const GeneralJournalTab = ({
 			pageSize: params.pageSize,
 			timeRange: params.timeRange,
 			...(selectedBranchId && { branchId: selectedBranchId }),
+			...(selectedBranchMachineId && {
+				branchMachineId: selectedBranchMachineId,
+			}),
 			...(params.entryType && { entryType: params.entryType }),
 		},
 	});
@@ -91,6 +115,7 @@ export const GeneralJournalTab = ({
 			entryType: entry.entry_type || '',
 			datetime: formatDateTime(entry.datetime_created, true),
 			branch: entry.branch_name,
+			branchMachine: entry.branch_machine_name,
 			referenceNumber: entry.reference_number,
 			debitAccount: entry.debit_account,
 			creditAccount: entry.credit_account,
@@ -205,6 +230,13 @@ export const GeneralJournalTab = ({
 			},
 		];
 
+		baseColumns.splice(2, 0, {
+			title: 'Branch Machine',
+			dataIndex: 'branchMachine',
+			key: 'branchMachine',
+			render: (value: string) => value || EMPTY_CELL,
+		});
+
 		if (isHeadOffice) {
 			baseColumns.splice(2, 0, {
 				title: 'Branch',
@@ -258,7 +290,7 @@ export const GeneralJournalTab = ({
 								showSearch
 								onChange={(value) => {
 									setQueryParams(
-										{ branchId: value },
+										{ branchId: value, branchMachineId: undefined },
 										{ shouldResetPage: true },
 									);
 								}}
@@ -272,6 +304,35 @@ export const GeneralJournalTab = ({
 							</Select>
 						</Col>
 					)}
+					<Col className="BooksOfAccounts_timeRangeFilter" lg={4}>
+						<Label label="Branch Machine" spacing />
+						<Select
+							className="w-100"
+							optionFilterProp="children"
+							placeholder="Select Branch Machine"
+							value={(() => {
+								if (params.branchMachineId === 'all') return 'all';
+								if (params.branchMachineId)
+									return Number(params.branchMachineId);
+								return undefined;
+							})()}
+							allowClear
+							showSearch
+							onChange={(value) => {
+								setQueryParams(
+									{ branchMachineId: value },
+									{ shouldResetPage: true },
+								);
+							}}
+						>
+							<Select.Option value="all">All</Select.Option>
+							{branchMachines.map(({ id, name }: any) => (
+								<Select.Option key={id} value={id}>
+									{name}
+								</Select.Option>
+							))}
+						</Select>
+					</Col>
 				</Row>
 				{!isHeadOffice && (
 					<>

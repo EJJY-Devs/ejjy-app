@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select } from 'antd';
+import { Button, Checkbox, Form, Input, Modal, Select } from 'antd';
 import React, { useEffect } from 'react';
 import { MAX_PAGE_SIZE } from 'global';
 import { useAccountSubTypes, useAccountTypes, useNormalBalances } from 'hooks';
@@ -94,6 +94,7 @@ export const EditAccountModal = ({
 				accountType: account.account_type,
 				subType: account.sub_type,
 				normalBalance: account.normal_balance,
+				isCashBook: !!account.is_cash_book,
 			});
 		}
 
@@ -195,6 +196,13 @@ export const EditAccountModal = ({
 						options={normalBalanceOptions}
 						showSearch
 					/>
+				</Form.Item>
+
+				<Form.Item name="isCashBook" valuePropName="checked">
+					<Checkbox>
+						Enable for Cash Books (debits record to Cash Receipts, credits
+						record to Cash Disbursements)
+					</Checkbox>
 				</Form.Item>
 
 				<div className="CreateAccountModal_actions d-flex justify-end gap-2">

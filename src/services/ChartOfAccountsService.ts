@@ -18,6 +18,7 @@ interface Modify {
 	account_type: number;
 	sub_type: number;
 	normal_balance: number;
+	is_cash_book?: boolean;
 }
 
 const service = {

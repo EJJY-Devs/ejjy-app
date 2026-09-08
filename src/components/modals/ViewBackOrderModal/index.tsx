@@ -37,14 +37,21 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 
 	const generateHtmlContent = () =>
 		printDeliveryReceipt({
-			deliveryReceipt: backOrder,
+			deliveryReceipt: backOrderData,
 			siteSettings,
-			user: null,
 			isPdf: true,
 		});
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: `DeliveryReceipt_${backOrder?.id}.pdf`,
+		paper: 'a4HalfLengthwise',
+		previewInModal: true,
 		print: generateHtmlContent,
 	});
 
@@ -72,7 +79,7 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 
 	const handlePrint = () => {
 		printDeliveryReceipt({
-			deliveryReceipt: backOrder,
+			deliveryReceipt: backOrderData,
 			siteSettings,
 		});
 	};
@@ -187,6 +194,8 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

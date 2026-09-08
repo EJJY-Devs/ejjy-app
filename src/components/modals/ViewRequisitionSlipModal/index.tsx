@@ -4,9 +4,8 @@ import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import dayjs from 'dayjs';
 import { ColumnsType } from 'antd/lib/table';
 import { EMPTY_CELL, getFullName, printRequisitionSlip } from 'ejjy-global';
-import { useSiteSettings, usePdf } from 'hooks';
+import { usePdf, useSiteSettings } from 'hooks';
 import React from 'react';
-import { useUserStore } from 'stores';
 import { formatDateTime, formatQuantity } from 'utils';
 
 interface Props {
@@ -19,27 +18,32 @@ export const ViewRequisitionSlipModal = ({
 	onClose,
 }: Props) => {
 	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
-	const { data: siteSettings } = useSiteSettings();
-
 	const { Text } = Typography;
+	const { data: siteSettings } = useSiteSettings();
 
 	const generateHtmlContent = () =>
 		printRequisitionSlip({
 			requisitionSlip,
 			siteSettings,
-			user,
 			isPdf: true,
 		});
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: `RequisitionSlip_${requisitionSlip.id}.pdf`,
+		paper: 'a4HalfLengthwise',
+		previewInModal: true,
 		print: generateHtmlContent,
 	});
 
 	// METHODS
 	const handlePrint = () => {
-		printRequisitionSlip({ requisitionSlip, siteSettings, user });
+		printRequisitionSlip({ requisitionSlip, siteSettings });
 	};
 
 	// Define table columns
@@ -137,8 +141,16 @@ export const ViewRequisitionSlipModal = ({
 				<Descriptions.Item label="Reference #:">
 					{requisitionSlip?.reference_number}
 				</Descriptions.Item>
-				<Descriptions.Item label="Vendor:">
-					{requisitionSlip?.vendor?.name}
+				<Descriptions.Item
+					label={
+						requisitionSlip?.vendor_type === 'supplier'
+							? 'Supplier:'
+							: 'Vendor:'
+					}
+				>
+					{requisitionSlip?.vendor_type === 'supplier'
+						? requisitionSlip?.supplier?.name
+						: requisitionSlip?.vendor?.name}
 				</Descriptions.Item>
 				<Descriptions.Item label="Customer">
 					{requisitionSlip.branch?.name}
@@ -186,6 +198,8 @@ export const ViewRequisitionSlipModal = ({
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

@@ -9,8 +9,8 @@ import { useUserStore } from 'stores';
 import {
 	EMPTY_CELL,
 	getFullName,
-	VIEW_PRINTING_MODAL_WIDTH,
 	printAdjustmentSlip,
+	VIEW_PRINTING_MODAL_WIDTH,
 } from 'ejjy-global';
 import dayjs from 'dayjs';
 
@@ -32,8 +32,16 @@ export const ViewAdjustmentSlipModal = ({
 	const user = useUserStore((state) => state.user);
 	const { data: siteSettings } = useSiteSettings();
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: `AdjustmentSlip_${adjustmentSlip?.reference_number}.pdf`,
+		paper: 'a4HalfLengthwise',
+		previewInModal: true,
 		print: () =>
 			printAdjustmentSlip({ adjustmentSlip, siteSettings, user, isPdf: true }),
 	});
@@ -185,6 +193,8 @@ export const ViewAdjustmentSlipModal = ({
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

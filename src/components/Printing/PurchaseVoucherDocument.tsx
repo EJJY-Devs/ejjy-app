@@ -8,15 +8,25 @@ interface Props {
 }
 
 const rowStyle: React.CSSProperties = {
-	borderBottom: '1px solid #000',
-	padding: '4px 0',
+	padding: '1px 0',
+};
+
+const cellStyle: React.CSSProperties = {
+	border: '1px solid #999',
+	padding: '4px 8px',
+};
+
+const headerCellStyle: React.CSSProperties = {
+	...cellStyle,
+	background: '#f5f5f5',
+	fontWeight: 'bold',
 };
 
 export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 	const products = purchase?.purchase_products || [];
 
 	return (
-		<div style={{ fontSize: '12px', lineHeight: '1.4' }}>
+		<div style={{ fontSize: '12px', lineHeight: '1.2' }}>
 			<div style={{ textAlign: 'center' }}>
 				<ReceiptHeaderV2
 					branchHeader={purchase?.branch}
@@ -47,10 +57,6 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 							{purchase?.supplier_name || EMPTY_CELL}
 						</td>
 					</tr>
-					<tr>
-						<td style={rowStyle}>Check No.:</td>
-						<td style={{ ...rowStyle, textAlign: 'right' }}>{EMPTY_CELL}</td>
-					</tr>
 					{purchase?.authorizer && (
 						<tr>
 							<td style={rowStyle}>Authorizer:</td>
@@ -68,6 +74,12 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 						</tr>
 					)}
 					<tr>
+						<td style={rowStyle}>Type:</td>
+						<td style={{ ...rowStyle, textAlign: 'right' }}>
+							{purchase?.payment_type === 'on_account' ? 'On Account' : 'Pay'}
+						</td>
+					</tr>
+					<tr>
 						<td style={rowStyle}>Remarks:</td>
 						<td style={{ ...rowStyle, textAlign: 'right' }}>
 							{purchase?.overall_remarks || 'N/A'}
@@ -82,26 +94,33 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 				style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}
 			>
 				<thead>
-					<tr style={{ borderBottom: '1px solid #000' }}>
-						<th style={{ textAlign: 'left', padding: '4px 2px' }}>Qty</th>
-						<th style={{ textAlign: 'left', padding: '4px 2px' }}>
+					<tr>
+						<th style={{ ...headerCellStyle, textAlign: 'center' }}>
+							Quantity
+						</th>
+						<th style={{ ...headerCellStyle, textAlign: 'left' }}>
 							Description
 						</th>
-						<th style={{ textAlign: 'right', padding: '4px 2px' }}>Price</th>
-						<th style={{ textAlign: 'right', padding: '4px 2px' }}>Total</th>
+						<th style={{ ...headerCellStyle, textAlign: 'right' }}>
+							Unit Price
+						</th>
+						<th style={{ ...headerCellStyle, textAlign: 'right' }}>Total</th>
 					</tr>
 				</thead>
 				<tbody>
 					{products.map((item: any) => (
 						<tr key={item.id}>
-							<td style={{ padding: '4px 2px' }}>{item.quantity}</td>
-							<td style={{ padding: '4px 2px' }}>{item.product?.name}</td>
-							<td style={{ padding: '4px 2px', textAlign: 'right' }}>
-								{formatInPeso(item.cost_per_piece)}
+							<td style={{ ...cellStyle, textAlign: 'center' }}>
+								{item.quantity}
 							</td>
-							<td style={{ padding: '4px 2px', textAlign: 'right' }}>
+							<td style={cellStyle}>{item.product?.name}</td>
+							<td style={{ ...cellStyle, textAlign: 'right' }}>
+								{formatInPeso(item.cost_per_piece, 'P')}
+							</td>
+							<td style={{ ...cellStyle, textAlign: 'right' }}>
 								{formatInPeso(
 									Number(item.quantity) * Number(item.cost_per_piece),
+									'P',
 								)}
 							</td>
 						</tr>
@@ -109,18 +128,11 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 				</tbody>
 			</table>
 
-			<hr />
-
-			<table style={{ width: '100%' }}>
-				<tbody>
-					<tr>
-						<td />
-						<td style={{ textAlign: 'right', fontWeight: 'bold' }}>
-							Total: {formatInPeso(purchase?.total_amount)}
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<div
+				style={{ textAlign: 'center', marginTop: '12px', fontWeight: 'bold' }}
+			>
+				Total Amount: {formatInPeso(purchase?.total_amount, 'P')}
+			</div>
 		</div>
 	);
 };

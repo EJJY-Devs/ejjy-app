@@ -1,23 +1,32 @@
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import {
 	AuthorizationModal,
 	Props as AuthorizationModalProps,
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
-import { Button, Form, Input, InputNumber, Modal, Select } from 'antd';
+import {
+	AutoComplete,
+	Button,
+	Form,
+	Input,
+	InputNumber,
+	Modal,
+	Select,
+} from 'antd';
 import { Label } from 'components/elements';
+import { orderOfPaymentPurposes } from 'global';
 import { usePurchases } from 'hooks';
 import React, { useEffect, useMemo, useState } from 'react';
 import { getLocalApiUrl, formatNumberWithCommas, formatInPeso } from 'utils';
-
-interface Particular {
-	description: string;
-	amount: number;
-}
 
 const PAYMENT_METHOD_OPTIONS = [
 	{ label: 'Cash', value: 'cash' },
 	{ label: 'Check', value: 'check' },
 	{ label: 'E-Payment', value: 'e_payment' },
+];
+
+const PURPOSE_OPTIONS = [
+	{ label: 'Full Payment', value: orderOfPaymentPurposes.FULL_PAYMENT },
+	{ label: 'Partial Payment', value: orderOfPaymentPurposes.PARTIAL_PAYMENT },
+	{ label: 'Others', value: orderOfPaymentPurposes.OTHERS },
 ];
 
 interface Props {
@@ -28,7 +37,7 @@ interface Props {
 	onClose: () => void;
 	onCreate: (values: {
 		payee: string;
-		particulars: Particular[];
+		particulars: never[];
 		amount: number;
 		paymentMethod: string;
 		remarks: string;
@@ -65,6 +74,7 @@ export const CreateDisbursementVoucherModal = ({
 		authorizeConfig,
 		setAuthorizeConfig,
 	] = useState<AuthorizationModalProps | null>(null);
+	const purpose = Form.useWatch('purpose', form);
 
 	const { data: purchasesData } = usePurchases({
 		params: {
@@ -74,14 +84,18 @@ export const CreateDisbursementVoucherModal = ({
 		},
 		options: { enabled: open && !!supplierAccountId },
 	});
-	const purchaseOptions = useMemo(
+	const purchaseAutoCompleteOptions = useMemo(
 		() =>
-			(purchasesData?.purchases || []).map((purchase: any) => ({
-				label: `${
-					purchase.reference_number || `PV-${purchase.id}`
-				} — ${formatInPeso(purchase.total_amount)}`,
-				value: purchase.id,
-			})),
+			(purchasesData?.purchases || []).map((purchase: any) => {
+				const referenceNumber =
+					purchase.reference_number || `PV-${purchase.id}`;
+
+				return {
+					id: purchase.id,
+					value: referenceNumber,
+					label: `${referenceNumber} — ${formatInPeso(purchase.total_amount)}`,
+				};
+			}),
 		[purchasesData?.purchases],
 	);
 
@@ -93,17 +107,21 @@ export const CreateDisbursementVoucherModal = ({
 		}
 	}, [open, initialPayee]);
 
-	const recomputeTotal = () => {
-		const particulars: Particular[] = form.getFieldValue('particulars') || [];
-		const total = particulars.reduce(
-			(sum, item) => sum + (Number(item?.amount) || 0),
-			0,
+	const handlePurchaseAutoCompleteChange = (value: string) => {
+		const matched = purchaseAutoCompleteOptions.find(
+			(option) => option.value === value,
 		);
-		form.setFieldsValue({ amount: total });
+		form.setFieldsValue({ purchaseId: matched ? matched.id : undefined });
 	};
 
 	const handleSubmit = async () => {
 		const values = await form.validateFields();
+
+		const remarks =
+			values.purpose === orderOfPaymentPurposes.OTHERS
+				? values.purposeOthers
+				: PURPOSE_OPTIONS.find((option) => option.value === values.purpose)
+						?.label || '';
 
 		setAuthorizeConfig({
 			baseURL: getLocalApiUrl(),
@@ -112,10 +130,10 @@ export const CreateDisbursementVoucherModal = ({
 				setAuthorizeConfig(null);
 				await onCreate({
 					payee: values.payee,
-					particulars: values.particulars || [],
+					particulars: [],
 					amount: values.amount,
 					paymentMethod: values.paymentMethod,
-					remarks: values.remarks || '',
+					remarks,
 					authorizerId: authorizedUser.id,
 					supplierAccountId,
 					purchaseId: values.purchaseId,
@@ -142,7 +160,6 @@ export const CreateDisbursementVoucherModal = ({
 				<Form
 					form={form}
 					initialValues={{
-						particulars: [{ description: '', amount: 0 }],
 						paymentMethod: 'cash',
 					}}
 					layout="vertical"
@@ -157,92 +174,68 @@ export const CreateDisbursementVoucherModal = ({
 						<Select options={PAYMENT_METHOD_OPTIONS} />
 					</Form.Item>
 
-					<Label label="Purchase Voucher (optional)" spacing />
-					<Form.Item name="purchaseId">
+					<Label label="Purpose" spacing />
+					<Form.Item
+						name="purpose"
+						rules={[{ required: true, message: 'Purpose is required' }]}
+					>
 						<Select
-							options={purchaseOptions}
-							placeholder="Select a purchase voucher to settle (optional)"
-							allowClear
+							options={PURPOSE_OPTIONS}
+							placeholder="Select a purpose"
+							onChange={() => form.setFieldsValue({ purposeOthers: '' })}
 						/>
 					</Form.Item>
 
-					<Form.List name="particulars">
-						{(fields, { add, remove }) => (
-							<>
-								<Label label="Particulars" spacing />
-								{fields.map((field) => (
-									<div key={field.key} className="d-flex" style={{ gap: 8 }}>
-										<Form.Item
-											name={[field.name, 'description']}
-											rules={[
-												{ required: true, message: 'Description is required' },
-											]}
-											style={{ flex: 1 }}
-										>
-											<Input placeholder="Enter particular" />
-										</Form.Item>
+					{purpose === orderOfPaymentPurposes.OTHERS && (
+						<>
+							<Label label="Purpose Description" spacing />
+							<Form.Item
+								name="purposeOthers"
+								rules={[
+									{
+										required: true,
+										message: 'Purpose description is required',
+									},
+								]}
+							>
+								<Input placeholder="Enter purpose description" />
+							</Form.Item>
+						</>
+					)}
 
-										<Form.Item
-											name={[field.name, 'amount']}
-											rules={[
-												{ required: true, message: 'Amount is required' },
-											]}
-											style={{ width: 160 }}
-										>
-											<InputNumber
-												className="w-100"
-												controls={false}
-												formatter={pesoFormatter}
-												min={0}
-												parser={pesoParser}
-												placeholder="0.00"
-												precision={2}
-												onChange={recomputeTotal}
-												onFocus={(e) => e.target.select()}
-											/>
-										</Form.Item>
-
-										<Button
-											disabled={fields.length === 1}
-											icon={<MinusCircleOutlined />}
-											type="text"
-											danger
-											onClick={() => {
-												remove(field.name);
-												recomputeTotal();
-											}}
-										/>
-									</div>
-								))}
-
-								<Button
-									className="mb-4"
-									icon={<PlusOutlined />}
-									type="dashed"
-									block
-									onClick={() => add({ description: '', amount: 0 })}
-								>
-									Add Particular
-								</Button>
-							</>
-						)}
-					</Form.List>
+					<Label label="Purchase Voucher (optional)" spacing />
+					<Form.Item name="purchaseReference">
+						<AutoComplete
+							filterOption={(inputValue, option) =>
+								(option?.value as string)
+									.toLowerCase()
+									.includes(inputValue.toLowerCase())
+							}
+							options={purchaseAutoCompleteOptions}
+							placeholder="Select a purchase voucher to settle or type a reference number (optional)"
+							allowClear
+							onChange={handlePurchaseAutoCompleteChange}
+						/>
+					</Form.Item>
+					<Form.Item name="purchaseId" hidden>
+						<Input />
+					</Form.Item>
 
 					<Label label="Amount" spacing />
-					<Form.Item name="amount">
+					<Form.Item
+						name="amount"
+						rules={[{ required: true, message: 'Amount is required' }]}
+					>
 						<InputNumber
 							className="w-100"
 							controls={false}
 							formatter={pesoFormatter}
+							min={0}
 							parser={pesoParser}
+							placeholder="0.00"
 							precision={2}
-							readOnly
+							onFocus={(e) => e.target.select()}
 						/>
-					</Form.Item>
-
-					<Label label="Remarks" spacing />
-					<Form.Item name="remarks">
-						<Input placeholder="Enter remarks" />
 					</Form.Item>
 
 					<div className="ModalCustomFooter">

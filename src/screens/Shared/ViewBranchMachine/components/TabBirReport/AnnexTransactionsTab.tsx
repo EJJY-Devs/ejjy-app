@@ -1,6 +1,7 @@
 import { Col, Row } from 'antd';
 import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import {
+	AuthorizationModal,
 	BirAnnexTransactions,
 	BranchMachine,
 	DEFAULT_PAGE,
@@ -8,21 +9,24 @@ import {
 	PdfButtons,
 	SpecialDiscountCode,
 	TransactionsService,
+	User,
 	convertIntoArray,
 	printBirReportNAAC,
 	printBirReportPWD,
 	printBirReportSC,
 	printBirReportSP,
+	renderA4SinglePagePdf,
 	timeRangeTypes,
-	usePdf,
 	useQueryParams,
 	useTransactions,
+	userTypes,
 } from 'ejjy-global';
+import { Props as AuthorizationModalProps } from 'ejjy-global/dist/components/modals/AuthorizationModal';
+import type jsPDF from 'jspdf';
 import { refetchOptions } from 'global';
-import { useSiteSettingsNew } from 'hooks';
-import { useUserStore } from 'stores';
-import { getLocalApiUrl } from 'utils';
-import React from 'react';
+import { useSiteSettingsNew, usePdfPreviewModal } from 'hooks';
+import { getLocalApiUrl, savePdf } from 'utils';
+import React, { useState } from 'react';
 import { birAnnexTransactionsTabs as tabs } from 'ejjy-global/dist/components/BirAnnexTransactions/data';
 
 type Props = {
@@ -37,7 +41,6 @@ export const AnnexTransactionsTab = ({
 	discountCode,
 }: Props) => {
 	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
 	const { params } = useQueryParams();
 	const {
 		data: siteSettings,
@@ -61,82 +64,142 @@ export const AnnexTransactionsTab = ({
 		},
 	});
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
-		title: (() => {
-			let title = '';
+	const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 
-			if (discountCode === 'SC') {
-				title = 'AnnexE2';
-			} else if (discountCode === 'PWD') {
-				title = 'AnnexE3';
-			} else if (discountCode === 'NAAC') {
-				title = 'AnnexE4';
-			} else if (discountCode === 'SP') {
-				title = 'AnnexE5';
-			}
+	const pdfTitle = (() => {
+		if (discountCode === 'SC') return 'AnnexE2';
+		if (discountCode === 'PWD') return 'AnnexE3';
+		if (discountCode === 'NAAC') return 'AnnexE4';
+		if (discountCode === 'SP') return 'AnnexE5';
+		return '';
+	})();
 
-			return title;
-		})(),
-		print: async () => {
-			let content = '';
+	const buildPdfHtml = async (authorizedUser: User) => {
+		const response = await TransactionsService.list(
+			{
+				branch_machine_id: branchMachine.id,
+				discount_code: discountCode,
+				page_size: MAX_PAGE_SIZE,
+				page: DEFAULT_PAGE,
+				time_range: params?.timeRange as string,
+			},
+			getLocalApiUrl(),
+		);
 
-			const response = await TransactionsService.list(
-				{
-					branch_machine_id: branchMachine.id,
-					discount_code: discountCode,
-					page_size: MAX_PAGE_SIZE,
-					page: DEFAULT_PAGE,
-					time_range: params?.timeRange as string,
-				},
-				getLocalApiUrl(),
+		const transactions = response.results;
+
+		if (category === tabs.NATIONAL_ATHLETES_AND_COACHES_SALES_REPORT) {
+			return printBirReportNAAC(
+				transactions,
+				siteSettings,
+				authorizedUser,
+				branchMachine,
 			);
+		}
+		if (category === tabs.SOLO_PARENTS_SALES_REPORT) {
+			return printBirReportSP(
+				transactions,
+				siteSettings,
+				authorizedUser,
+				branchMachine,
+			);
+		}
+		if (category === tabs.SENIOR_CITIZEN_SALES_REPORT) {
+			return printBirReportSC(
+				transactions,
+				siteSettings,
+				authorizedUser,
+				branchMachine,
+			);
+		}
+		if (category === tabs.PERSONS_WITH_DISABILITY_SALES_REPORT) {
+			return printBirReportPWD(
+				transactions,
+				siteSettings,
+				authorizedUser,
+				branchMachine,
+			);
+		}
 
-			const transactions = response.results;
+		return '';
+	};
 
-			if (category === tabs.NATIONAL_ATHLETES_AND_COACHES_SALES_REPORT) {
-				content = printBirReportNAAC(
-					transactions,
-					siteSettings,
-					user,
-					branchMachine,
-				);
-			} else if (category === tabs.SOLO_PARENTS_SALES_REPORT) {
-				content = printBirReportSP(
-					transactions,
-					siteSettings,
-					user,
-					branchMachine,
-				);
-			} else if (category === tabs.SENIOR_CITIZEN_SALES_REPORT) {
-				content = printBirReportSC(
-					transactions,
-					siteSettings,
-					user,
-					branchMachine,
-				);
-			} else if (category === tabs.PERSONS_WITH_DISABILITY_SALES_REPORT) {
-				content = printBirReportPWD(
-					transactions,
-					siteSettings,
-					user,
-					branchMachine,
-				);
-			}
+	// These annex transaction lists share the E1 template styles
+	// (.bir-reports-pdf, designed at 2300px wide), so they print the same way:
+	// captured at that natural width and shrunk to fit one whole A4 page turned
+	// crosswise (landscape), so nothing is clipped.
+	const renderPdf = async (authorizedUser: User): Promise<jsPDF | null> => {
+		setIsLoadingPdf(true);
+		try {
+			const html = await buildPdfHtml(authorizedUser);
+			return await renderA4SinglePagePdf({
+				html,
+				title: pdfTitle,
+				orientation: 'l',
+				widthPx: 2300,
+			});
+		} catch (error) {
+			console.error('Failed to generate PDF', error);
+			return null;
+		} finally {
+			setIsLoadingPdf(false);
+		}
+	};
 
-			return content;
-		},
-		jsPdfSettings: {
-			orientation: 'l',
-			unit: 'px',
-			format: [1800, 840],
-			precision: 1,
-		},
+	const downloadPdfAsUser = async (authorizedUser: User) => {
+		const pdf = await renderPdf(authorizedUser);
+		if (pdf) {
+			await savePdf(pdf, `${pdfTitle}.pdf`);
+		}
+	};
+
+	// The printed header's UserID is the authorizer who unlocked this PDF, not
+	// necessarily whoever is logged in — so Preview/Download must each be
+	// gated behind their own PIN prompt (see AuthorizationModal) rather than
+	// reusing the session user.
+	const authorize = (
+		onSuccess: (authorizedUser: User) => void | Promise<void>,
+	) => {
+		setAuthorizeConfig({
+			description: `Authorize Viewing of ${category}`,
+			userTypes: [
+				userTypes.ADMIN,
+				userTypes.OFFICE_MANAGER,
+				userTypes.BRANCH_MANAGER,
+			],
+			onSuccess: async (authorizedUser) => {
+				setAuthorizeConfig(null);
+				await onSuccess(authorizedUser);
+			},
+		});
+	};
+
+	// Show the generated PDF in an in-app dialog instead of a new tab/window.
+	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
+		title: pdfTitle,
+		onDownload: () => authorize(downloadPdfAsUser),
 	});
+
+	const previewPdfAsUser = async (authorizedUser: User) => {
+		const pdf = await renderPdf(authorizedUser);
+		if (!pdf) {
+			return;
+		}
+		showPreview(pdf.output('bloburl').toString());
+	};
+
+	const downloadPdf = () => authorize(downloadPdfAsUser);
+	const previewPdf = () => authorize(previewPdfAsUser);
 
 	// METHODS
 
 	return (
 		<>
+			{pdfPreviewModal}
 			<TableHeader
 				buttons={
 					<PdfButtons
@@ -171,11 +234,13 @@ export const AnnexTransactionsTab = ({
 				transactionsTotal={transactionsData?.total}
 			/>
 
-			<div
-				// eslint-disable-next-line react/no-danger
-				dangerouslySetInnerHTML={{ __html: htmlPdf }}
-				style={{ display: 'none' }}
-			/>
+			{authorizeConfig && (
+				<AuthorizationModal
+					{...authorizeConfig}
+					baseURL={getLocalApiUrl()}
+					onCancel={() => setAuthorizeConfig(null)}
+				/>
+			)}
 		</>
 	);
 };

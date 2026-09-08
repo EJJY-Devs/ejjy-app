@@ -252,7 +252,9 @@ export const useRequisitionSlipCreate = () => {
 			approvedBy,
 			products,
 			branchId,
+			vendorType,
 			vendorId,
+			supplierId,
 			overallRemarks,
 		}: any) =>
 			RequisitionSlipsService.create(
@@ -261,7 +263,9 @@ export const useRequisitionSlipCreate = () => {
 					approved_by: approvedBy,
 					products,
 					branch_id: branchId,
+					vendor_type: vendorType,
 					vendor_id: vendorId,
+					supplier_id: supplierId,
 					overall_remarks: overallRemarks,
 				},
 				getLocalApiUrl(),

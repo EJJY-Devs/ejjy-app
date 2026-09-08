@@ -2,7 +2,13 @@ import { Col, Row, Select, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
-import { filterOption, getFullName, ServiceType, useUsers } from 'ejjy-global';
+import {
+	filterOption,
+	getFullName,
+	ServiceType,
+	transactionStatuses,
+	useUsers,
+} from 'ejjy-global';
 import {
 	appTypes,
 	DEFAULT_PAGE,
@@ -16,6 +22,7 @@ import {
 	useBranches,
 	useBranchMachines,
 	useQueryParams,
+	useTransactions,
 	useUserLogs,
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
@@ -44,6 +51,12 @@ export const TabUserLogs = () => {
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
+
+	const resolvedBranchId =
+		getAppType() === appTypes.BACK_OFFICE
+			? getLocalBranchId()
+			: params?.branchId;
+
 	const {
 		data: { logs, total },
 		isFetching: isFetchingLogs,
@@ -51,33 +64,96 @@ export const TabUserLogs = () => {
 	} = useUserLogs({
 		params: {
 			...params,
-			branchId:
-				getAppType() === appTypes.BACK_OFFICE
-					? getLocalBranchId()
-					: params?.branchId,
+			branchId: resolvedBranchId,
 			serviceType: isStandAlone() ? undefined : serviceTypes.OFFLINE,
+		},
+	});
+
+	// Cancelled transactions are surfaced here so the log shows *who* cancelled
+	// them (the teller who performed the cancellation).
+	const {
+		data: { transactions: cancelledTransactions, total: cancelledTotal },
+		isFetching: isFetchingCancelled,
+		error: cancelledError,
+	} = useTransactions({
+		params: {
+			statuses: transactionStatuses.CANCELLED,
+			branchId: resolvedBranchId,
+			branchMachineId: params?.branchMachineId,
+			timeRange: params?.timeRange,
+			page: params?.page,
+			pageSize: params?.pageSize,
+		},
+	});
+
+	// Voided transactions show *who* voided them (the void authorizer), which is
+	// a different action and a different acting user than a cancellation.
+	const {
+		data: { transactions: voidedTransactions, total: voidedTotal },
+		isFetching: isFetchingVoided,
+		error: voidedError,
+	} = useTransactions({
+		params: {
+			statuses: transactionStatuses.VOID_CANCELLED,
+			branchId: resolvedBranchId,
+			branchMachineId: params?.branchMachineId,
+			timeRange: params?.timeRange,
+			page: params?.page,
+			pageSize: params?.pageSize,
 		},
 	});
 
 	// METHODS
 	useEffect(() => {
-		const data = logs.map((log) => ({
-			key: log.id,
+		const logRows = logs.map((log) => ({
+			key: `log-${log.id}`,
+			ts: new Date(log.datetime_created).getTime(),
 			branchMachine: log?.branch_machine?.name || EMPTY_CELL,
 			user: getFullName(log.acting_user),
 			description: log.description,
 			datetimeCreated: formatDateTimeExtended(log.datetime_created),
 		}));
 
+		const cancelledRows = cancelledTransactions.map((transaction) => ({
+			key: `cancelled-${transaction.id}`,
+			ts: new Date(transaction.datetime_created).getTime(),
+			branchMachine: transaction?.branch_machine?.name || EMPTY_CELL,
+			user: getFullName(transaction.teller),
+			description: `Cancelled Transaction (id = ${transaction.unique_transaction_id})`,
+			datetimeCreated: formatDateTimeExtended(transaction.datetime_created),
+		}));
+
+		const voidedRows = voidedTransactions.map((transaction) => {
+			const voidedAt =
+				transaction.void_datetime || transaction.datetime_created;
+
+			return {
+				key: `voided-${transaction.id}`,
+				ts: new Date(voidedAt).getTime(),
+				branchMachine: transaction?.branch_machine?.name || EMPTY_CELL,
+				user: getFullName(transaction.void_authorizer || transaction.teller),
+				description: `Voided Transaction (id = ${transaction.unique_transaction_id})`,
+				datetimeCreated: formatDateTimeExtended(voidedAt),
+			};
+		});
+
+		const data = [...logRows, ...cancelledRows, ...voidedRows].sort(
+			(a, b) => b.ts - a.ts,
+		);
+
 		setDataSource(data);
-	}, [logs]);
+	}, [logs, cancelledTransactions, voidedTransactions]);
 
 	return (
 		<div>
 			<TableHeader title="User Logs" wrapperClassName="pt-2 px-0" />
 
 			<RequestErrors
-				errors={convertIntoArray(logsError, 'Logs')}
+				errors={[
+					...convertIntoArray(logsError, 'Logs'),
+					...convertIntoArray(cancelledError, 'Cancelled Transactions'),
+					...convertIntoArray(voidedError, 'Voided Transactions'),
+				]}
 				withSpaceBottom
 			/>
 
@@ -86,10 +162,10 @@ export const TabUserLogs = () => {
 			<Table
 				columns={columns}
 				dataSource={dataSource}
-				loading={isFetchingLogs}
+				loading={isFetchingLogs || isFetchingCancelled || isFetchingVoided}
 				pagination={{
 					current: Number(params.page) || DEFAULT_PAGE,
-					total,
+					total: total + cancelledTotal + voidedTotal,
 					pageSize: Number(params.pageSize) || DEFAULT_PAGE_SIZE,
 					onChange: (page, newPageSize) => {
 						setQueryParams({

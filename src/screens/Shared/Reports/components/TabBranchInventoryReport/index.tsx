@@ -29,6 +29,7 @@ import {
 import {
 	useBranchProductBalances,
 	useBranches,
+	usePdfPreviewModal,
 	useProductCategories,
 	useQueryParams,
 	useSiteSettingsNew,
@@ -43,6 +44,7 @@ import {
 	getBranchProductStatus,
 	getLocalApiUrl,
 	getLocalBranchId,
+	savePdf,
 } from 'utils';
 
 import { printConsolidatedBranchInventoryReport } from 'components/modals/ViewConsolidatedBranchInventoryReportModal/printConsolidatedBranchInventoryReport';
@@ -443,39 +445,6 @@ const TabBranchInventoryReport = () => {
 		[companyName],
 	);
 
-	const previewPdf = useCallback(async () => {
-		setIsLoadingPdf(true);
-
-		try {
-			const balances = await fetchAllBalancesForPdf();
-			const pdfTitle = 'ConsolidatedBranchInventoryReport.pdf';
-			const wrappedHtml = buildPdfHtml(balances);
-			const measuredHeight = measureHtmlHeightPx(wrappedHtml);
-			const pageHeightPx = Math.max(300, measuredHeight + 40);
-
-			// eslint-disable-next-line new-cap
-			const pdf = new jsPDF({
-				orientation: 'l',
-				unit: 'px',
-				format: [PDF_PAGE_WIDTH_PX, pageHeightPx],
-				putOnlyUsedFonts: true,
-			});
-			pdf.setProperties({ title: pdfTitle });
-
-			await ensureRobotoFont(pdf);
-
-			pdf.html(wrappedHtml, {
-				margin: 10,
-				callback: (instance) => {
-					window.open(instance.output('bloburl').toString());
-					setIsLoadingPdf(false);
-				},
-			});
-		} catch (error) {
-			setIsLoadingPdf(false);
-		}
-	}, [buildPdfHtml, fetchAllBalancesForPdf]);
-
 	const downloadPdf = useCallback(async () => {
 		setIsLoadingPdf(true);
 
@@ -500,7 +469,7 @@ const TabBranchInventoryReport = () => {
 			pdf.html(wrappedHtml, {
 				margin: 10,
 				callback: (instance) => {
-					instance.save(pdfTitle);
+					savePdf(instance, pdfTitle);
 					setIsLoadingPdf(false);
 				},
 			});
@@ -509,8 +478,48 @@ const TabBranchInventoryReport = () => {
 		}
 	}, [buildPdfHtml, fetchAllBalancesForPdf]);
 
+	// Show the generated PDF in an in-app dialog instead of a new tab/window.
+	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
+		title: 'Consolidated Branch Inventory Report',
+		onDownload: downloadPdf,
+	});
+
+	const previewPdf = useCallback(async () => {
+		setIsLoadingPdf(true);
+
+		try {
+			const balances = await fetchAllBalancesForPdf();
+			const pdfTitle = 'ConsolidatedBranchInventoryReport.pdf';
+			const wrappedHtml = buildPdfHtml(balances);
+			const measuredHeight = measureHtmlHeightPx(wrappedHtml);
+			const pageHeightPx = Math.max(300, measuredHeight + 40);
+
+			// eslint-disable-next-line new-cap
+			const pdf = new jsPDF({
+				orientation: 'l',
+				unit: 'px',
+				format: [PDF_PAGE_WIDTH_PX, pageHeightPx],
+				putOnlyUsedFonts: true,
+			});
+			pdf.setProperties({ title: pdfTitle });
+
+			await ensureRobotoFont(pdf);
+
+			pdf.html(wrappedHtml, {
+				margin: 10,
+				callback: (instance) => {
+					showPreview(instance.output('bloburl').toString());
+					setIsLoadingPdf(false);
+				},
+			});
+		} catch (error) {
+			setIsLoadingPdf(false);
+		}
+	}, [buildPdfHtml, fetchAllBalancesForPdf, showPreview]);
+
 	return (
 		<Box>
+			{pdfPreviewModal}
 			<RequestErrors
 				errors={convertIntoArray(branchProductBalancesError)}
 				withSpaceBottom

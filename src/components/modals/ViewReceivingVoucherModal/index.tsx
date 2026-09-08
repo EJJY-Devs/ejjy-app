@@ -2,7 +2,7 @@ import { PrinterOutlined } from '@ant-design/icons';
 import { Button, Modal, Space, Table, Typography, Descriptions } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
-import { printReceivingReport, getFullName } from 'ejjy-global';
+import { getFullName, printReceivingReport } from 'ejjy-global';
 import dayjs from 'dayjs';
 import { VIEW_PRINTING_MODAL_WIDTH } from 'global';
 import { usePdf, useSiteSettings } from 'hooks';
@@ -32,14 +32,21 @@ export const ViewReceivingVoucherModal = ({
 		printReceivingReport({
 			receivingReport: receivingVoucher,
 			siteSettings,
-			user: undefined,
 			isPdf: true,
 		});
 
 	// CUSTOM HOOKS
 	const { data: siteSettings } = useSiteSettings();
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: `ReceivingVoucher_${receivingVoucher.id}.pdf`,
+		paper: 'a4HalfLengthwise',
+		previewInModal: true,
 		print: generateHtmlContent,
 	});
 
@@ -160,6 +167,8 @@ export const ViewReceivingVoucherModal = ({
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

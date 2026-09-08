@@ -1,5 +1,6 @@
 import {
 	APP_APP_TYPE_KEY,
+	APP_EJOURNAL_LAST_EXPORT_PREFIX,
 	APP_LOCAL_API_URL_KEY,
 	APP_LOCAL_BRANCH_ID_KEY,
 	APP_HEAD_OFFICE_TYPE,
@@ -114,3 +115,21 @@ export const getAppTagPrinterFontFamily = () =>
 
 export const getAppTagPrinterFontSize = () =>
 	localStorage.getItem(APP_TAG_PRINTER_FONT_SIZE) || TAG_DEFAULT_FONT_SIZE;
+
+// When a branch machine's e-journal export last completed successfully (ISO
+// string), or null if it has never been exported. Read by
+// useAutoEjournalExport to decide both whether a machine is eligible for
+// automatic incremental export (never-exported machines are left for the
+// one-time manual backfill in ReportTimeRangeModal) and, when it is, how far
+// back that incremental export needs to look.
+export const getEjournalLastExportedAt = (branchMachineId: string | number) =>
+	localStorage.getItem(`${APP_EJOURNAL_LAST_EXPORT_PREFIX}${branchMachineId}`);
+
+export const setEjournalLastExportedAt = (
+	branchMachineId: string | number,
+	isoDateTime: string,
+) =>
+	localStorage.setItem(
+		`${APP_EJOURNAL_LAST_EXPORT_PREFIX}${branchMachineId}`,
+		isoDateTime,
+	);

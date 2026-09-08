@@ -148,11 +148,11 @@ export const ViewSupplierStatementOfAccountModal = ({
 		<StatementOfAccountModal
 			account={account}
 			currentOutstandingBalance={supplierRegistration.total_balance}
-			filenamePrefix="SupplierStatementOfAccount"
+			filenamePrefix="StatementOfAccountsPayable"
 			history={history}
 			isLoading={isLoading}
 			period={period}
-			title="[View] Statement of Account"
+			title="[View] Statement of Accounts Payable"
 			isSupplier
 			onChangePeriod={() => setStep('period')}
 			onClose={onClose}

@@ -132,9 +132,12 @@ export const CreateExpenseVoucherModal = ({
 	const handleSubmit = async () => {
 		const values = await form.validateFields();
 
-		const effectiveSupplierAccountId = isSupplierAccountFixed
-			? supplierAccountId
-			: values.supplierAccountId;
+		let effectiveSupplierAccountId: number | undefined;
+		if (values.paymentType === 'on_account') {
+			effectiveSupplierAccountId = isSupplierAccountFixed
+				? supplierAccountId
+				: values.supplierAccountId;
+		}
 
 		const payee =
 			values.paymentType === 'on_account'
@@ -184,7 +187,7 @@ export const CreateExpenseVoucherModal = ({
 					}}
 					layout="vertical"
 				>
-					<Label label="Payment Type" spacing />
+					<Label label="Type" spacing />
 					<Form.Item name="paymentType">
 						<Radio.Group
 							disabled={isSupplierAccountFixed}

@@ -1,9 +1,10 @@
 import { Modal, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { PdfButtons } from 'components/Printing';
+import { usePdfPreviewModal } from 'hooks';
 import jsPDF from 'jspdf';
 import React, { useMemo, useState } from 'react';
-import { formatInPeso } from 'utils';
+import { formatInPeso, savePdf } from 'utils';
 import { printTrialBalance } from '../printing/printTrialBalance';
 import {
 	PDF_WRAPPER_PADDING_PX,
@@ -143,37 +144,48 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 		return `<div style="width: ${PDF_WRAPPER_WIDTH_PX}px; padding: ${PDF_WRAPPER_PADDING_PX}px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif;">${dataHtml}</div>`;
 	};
 
-	const renderPdf = async (onReady: (instance: jsPDF) => void) => {
+	const renderPdf = async (): Promise<jsPDF | null> => {
 		const wrappedHtml = buildPdfHtml();
 		if (!wrappedHtml) {
-			return;
+			return null;
 		}
 
 		setIsLoadingPdf(true);
 		const pdfTitle = `TrialBalance_${entry?.referenceNumber || 'Detail'}.pdf`;
 
 		try {
-			const pdf = await renderA4SinglePagePdf({
+			return await renderA4SinglePagePdf({
 				html: wrappedHtml,
 				title: pdfTitle,
 			});
-			onReady(pdf);
+		} catch (error) {
+			console.error('Failed to generate PDF', error);
+			return null;
 		} finally {
 			setIsLoadingPdf(false);
 		}
 	};
 
-	const previewPdf = () => {
-		renderPdf((instance) => {
-			window.open(instance.output('bloburl').toString());
-		});
+	const downloadPdf = async () => {
+		const pdf = await renderPdf();
+		const pdfTitle = `TrialBalance_${entry?.referenceNumber || 'Detail'}.pdf`;
+		if (pdf) {
+			await savePdf(pdf, pdfTitle);
+		}
 	};
 
-	const downloadPdf = () => {
-		renderPdf((instance) => {
-			const pdfTitle = `TrialBalance_${entry?.referenceNumber || 'Detail'}.pdf`;
-			instance.save(pdfTitle);
-		});
+	// Show the generated PDF in an in-app dialog instead of a new tab/window.
+	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
+		title: `View - ${entry?.referenceNumber || '-'}`,
+		onDownload: downloadPdf,
+	});
+
+	const previewPdf = async () => {
+		const pdf = await renderPdf();
+		if (!pdf) {
+			return;
+		}
+		showPreview(pdf.output('bloburl').toString());
 	};
 
 	return (
@@ -196,6 +208,7 @@ export const TrialBalanceModal = ({ entry, open, onClose }: Props) => {
 			destroyOnClose
 			onCancel={onClose}
 		>
+			{pdfPreviewModal}
 			<div className="TrialBalanceModal_header">
 				<div>{entry?.storeName || '-'}</div>
 				<div>{entry?.storeAddress || '-'}</div>

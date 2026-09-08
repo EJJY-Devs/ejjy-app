@@ -1,3 +1,4 @@
+// import { ThunderboltOutlined } from '@ant-design/icons';
 import { Button, Col, Modal, Row, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors } from 'components/RequestErrors';
@@ -18,8 +19,10 @@ import {
 } from 'ejjy-global';
 import { Props as AuthorizationModalProps } from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
+// import { GENERIC_ERROR_MESSAGE } from 'global';
 import { useQueryParams, useSiteSettingsNew } from 'hooks';
 import React, { useEffect, useState } from 'react';
+// import { XReadReportsService } from 'services';
 import { convertIntoArray, getReportsApiUrl } from 'utils';
 
 const TIME_RANGE_PARAM_KEY = 'xreadTimeRange';
@@ -54,6 +57,7 @@ export const ViewXReportsModal = ({ branchMachine, onClose }: Props) => {
 		setAuthorizeConfig,
 	] = useState<AuthorizationModalProps | null>(null);
 	const [userPrinter, setUserPrinter] = useState<User | null>(null);
+	// const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -111,11 +115,60 @@ export const ViewXReportsModal = ({ branchMachine, onClose }: Props) => {
 		}
 	}, [xReadReportsData?.list]);
 
+	// GENERATE AS OF NOW (disabled)
+	// const handleGeneratePreview = () => {
+	// 	setAuthorizeConfig({
+	// 		description: 'Authorize Generation of X-Read Report',
+	// 		userTypes: [
+	// 			userTypes.ADMIN,
+	// 			userTypes.OFFICE_MANAGER,
+	// 			userTypes.BRANCH_MANAGER,
+	// 		],
+	// 		onSuccess: async (user) => {
+	// 			setIsGeneratingPreview(true);
+	//
+	// 			try {
+	// 				const response = await XReadReportsService.create(
+	// 					{
+	// 						branch_machine_id: branchMachine.id,
+	// 						user_id: user.id,
+	// 						is_preview: true,
+	// 					} as any,
+	// 					getReportsApiUrl(),
+	// 				);
+	//
+	// 				setUserPrinter(user);
+	// 				setSelectedXReadReport(response.data);
+	// 			} catch (error) {
+	// 				message.error(GENERIC_ERROR_MESSAGE);
+	// 			} finally {
+	// 				setIsGeneratingPreview(false);
+	// 				setAuthorizeConfig(null);
+	// 			}
+	// 		},
+	// 	});
+	// };
+
 	return (
 		<Modal
 			className="Modal__hasFooter"
 			footer={<Button onClick={onClose}>Close</Button>}
 			title="X-read Reports"
+			// GENERATE AS OF NOW (disabled) — swap the title above for this to re-enable:
+			// title={
+			// 	<Space>
+			// 		<span>X-read Reports</span>
+			// 		<Tooltip title="Generate As of Now">
+			// 			<Button
+			// 				icon={<ThunderboltOutlined />}
+			// 				loading={isGeneratingPreview}
+			// 				shape="circle"
+			// 				size="small"
+			// 				onClick={handleGeneratePreview}
+			// 			/>
+			// 		</Tooltip>
+			// 	</Space>
+			// }
 			width={600}
 			centered
 			closable

@@ -1,5 +1,5 @@
 import { PrinterOutlined } from '@ant-design/icons';
-import { Button, Descriptions, Modal, Space, Table, Typography } from 'antd';
+import { Button, Modal, Space, Table, Typography } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { PdfButtons, ReceiptHeaderV2 } from 'components/Printing';
 import dayjs from 'dayjs';
@@ -34,8 +34,10 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 	const data = fullPurchase || purchase;
 
 	const { data: siteSettings } = useSiteSettings();
-	const { isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const { isLoadingPdf, previewPdf, downloadPdf, pdfPreviewModal } = usePdf({
 		title: `Purchase_${data.reference_number}.pdf`,
+		paper: 'a4HalfLengthwise',
+		previewInModal: true,
 		print: () => printPurchase({ purchase: data, siteSettings, isPdf: true }),
 	});
 
@@ -45,8 +47,11 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 			key: item.id,
 			name: item.product?.name,
 			quantity: item.quantity,
-			costPerPiece: formatInPeso(item.cost_per_piece),
-			amount: formatInPeso(Number(item.quantity) * Number(item.cost_per_piece)),
+			costPerPiece: formatInPeso(item.cost_per_piece, 'P'),
+			amount: formatInPeso(
+				Number(item.quantity) * Number(item.cost_per_piece),
+				'P',
+			),
 		}));
 		setDataSource(formatted);
 	}, [data]);
@@ -89,33 +94,69 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 				title="PURCHASE VOUCHER"
 			/>
 
-			<Descriptions
+			<table
 				className="mt-6 w-100"
-				column={1}
-				contentStyle={{ textAlign: 'right', display: 'block' }}
-				labelStyle={{ width: 200 }}
-				size="small"
+				style={{ borderCollapse: 'collapse', fontSize: 14 }}
 			>
-				<Descriptions.Item label="Voucher No.">
-					{data?.reference_number || EMPTY_CELL}
-				</Descriptions.Item>
-				<Descriptions.Item label="Date">
-					{formatDateTime(data?.datetime_created)}
-				</Descriptions.Item>
-				<Descriptions.Item label="To">
-					{data?.supplier_name || EMPTY_CELL}
-				</Descriptions.Item>
-				<Descriptions.Item label="Check No.">{EMPTY_CELL}</Descriptions.Item>
-				<Descriptions.Item label="Authorizer">
-					{getFullName(data?.authorizer)}
-				</Descriptions.Item>
-				<Descriptions.Item label="PO #">
-					{data?.purchase_order?.reference_number || EMPTY_CELL}
-				</Descriptions.Item>
-				<Descriptions.Item label="Remarks">
-					{data?.overall_remarks || 'N/A'}
-				</Descriptions.Item>
-			</Descriptions>
+				<tbody>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Voucher No.:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{data?.reference_number || EMPTY_CELL}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Date:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{formatDateTime(data?.datetime_created)}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							To:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{data?.supplier_name || EMPTY_CELL}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Authorizer:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{getFullName(data?.authorizer)}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							PO #:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{data?.purchase_order?.reference_number || EMPTY_CELL}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Type:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{data?.payment_type === 'on_account' ? 'On Account' : 'Pay'}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Remarks:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{data?.overall_remarks || 'N/A'}
+						</td>
+					</tr>
+				</tbody>
+			</table>
 
 			<Table
 				className="mt-6"
@@ -134,7 +175,7 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 			>
 				<br />
 				<Text style={{ whiteSpace: 'pre-line' }}>
-					Total Amount: {formatInPeso(data?.total_amount)}
+					Total Amount: {formatInPeso(data?.total_amount, 'P')}
 				</Text>
 			</Space>
 
@@ -149,6 +190,8 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 					Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}
 				</Text>
 			</Space>
+
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

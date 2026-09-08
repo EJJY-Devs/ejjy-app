@@ -1,8 +1,10 @@
 import { Modal, Spin, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { PdfButtons } from 'components/Printing';
+import { usePdfPreviewModal } from 'hooks';
 import jsPDF from 'jspdf';
 import React, { useMemo, useState } from 'react';
+import { savePdf } from 'utils';
 import {
 	PDF_WRAPPER_PADDING_PX,
 	PDF_WRAPPER_WIDTH_PX,
@@ -288,34 +290,45 @@ export const NotesToFinancialStatementsModal = ({
 		return `<div style="width: ${PDF_WRAPPER_WIDTH_PX}px; padding: ${PDF_WRAPPER_PADDING_PX}px; box-sizing: border-box; font-family: Roboto, Arial, sans-serif;">${dataHtml}</div>`;
 	};
 
-	const renderPdf = async (onReady: (instance: jsPDF) => void) => {
+	const renderPdf = async (): Promise<jsPDF | null> => {
 		const wrappedHtml = buildPdfHtml();
-		if (!wrappedHtml) return;
+		if (!wrappedHtml) return null;
 
 		setIsLoadingPdf(true);
 		const pdfTitle = 'NotesToFinancialStatements.pdf';
 
 		try {
-			const pdf = await renderA4SinglePagePdf({
+			return await renderA4SinglePagePdf({
 				html: wrappedHtml,
 				title: pdfTitle,
 			});
-			onReady(pdf);
+		} catch (error) {
+			console.error('Failed to generate PDF', error);
+			return null;
 		} finally {
 			setIsLoadingPdf(false);
 		}
 	};
 
-	const previewPdf = () => {
-		renderPdf((instance) => {
-			window.open(instance.output('bloburl').toString());
-		});
+	const downloadPdf = async () => {
+		const pdf = await renderPdf();
+		if (pdf) {
+			await savePdf(pdf, 'NotesToFinancialStatements.pdf');
+		}
 	};
 
-	const downloadPdf = () => {
-		renderPdf((instance) => {
-			instance.save('NotesToFinancialStatements.pdf');
-		});
+	// Show the generated PDF in an in-app dialog instead of a new tab/window.
+	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
+		title: 'View - Notes to Financial Statements',
+		onDownload: downloadPdf,
+	});
+
+	const previewPdf = async () => {
+		const pdf = await renderPdf();
+		if (!pdf) {
+			return;
+		}
+		showPreview(pdf.output('bloburl').toString());
 	};
 
 	return (
@@ -338,6 +351,7 @@ export const NotesToFinancialStatementsModal = ({
 			destroyOnClose
 			onCancel={onClose}
 		>
+			{pdfPreviewModal}
 			<Spin spinning={isLoading}>
 				<div className="TrialBalanceModal_header">
 					<div>{entry?.storeName || '-'}</div>

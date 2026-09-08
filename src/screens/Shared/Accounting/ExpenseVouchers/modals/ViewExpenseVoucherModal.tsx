@@ -1,21 +1,32 @@
 import { PrinterOutlined } from '@ant-design/icons';
-import { Button, Col, Descriptions, Modal, Row, Table, Typography } from 'antd';
+import { Button, Col, Modal, Row, Space, Table, Typography } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
+	ExpenseVoucherDocument,
 	PdfButtons,
 	ReceiptFooter,
 	ReceiptHeaderV2,
 } from 'components/Printing';
-import { getFullName } from 'ejjy-global';
-import { usePdf } from 'hooks';
+import dayjs from 'dayjs';
+import {
+	EMPTY_CELL,
+	VIEW_PRINTING_MODAL_WIDTH,
+	getFullName,
+	printingTypes,
+} from 'ejjy-global';
+import {
+	appendHtmlElement,
+	getPageStyleObject,
+	print,
+} from 'ejjy-global/dist/print/helper-receipt';
+import { usePdf, useSiteSettings } from 'hooks';
 import { useBranchRetrieve } from 'hooks/useBranches';
 import React from 'react';
+import ReactDOM from 'react-dom/server';
 import { formatDate, formatDateTime, formatInPeso } from 'utils';
 import { ExpenseVoucher, ExpenseVoucherParticular } from '../index';
 
 const { Text } = Typography;
-
-const VIEW_EXPENSE_VOUCHER_MODAL_WIDTH = 900;
 
 interface Props {
 	expenseVoucher: ExpenseVoucher | null;
@@ -42,149 +53,50 @@ const particularsColumns: ColumnsType<ExpenseVoucherParticular> = [
 
 const printExpenseVoucher = (
 	expenseVoucher: ExpenseVoucher,
-	branch?: {
-		store_name?: string;
-		store_address?: string;
-		name?: string;
-		tin?: string;
-	},
-) => {
-	const storeNameHtml = branch?.store_name
-		? `<div style="font-weight: bold; font-size: 13px;">${branch.store_name}</div>`
-		: '';
-	const storeAddressHtml = branch?.store_address
-		? `<div style="font-size: 12px;">${branch.store_address}</div>`
-		: '';
-	const branchNameHtml = branch?.name
-		? `<div style="font-size: 12px;">${branch.name}</div>`
-		: '';
-	const tinHtml = branch?.tin
-		? `<div style="font-size: 12px;">${branch.tin}</div>`
-		: '';
+	branch?: any,
+	siteSettings?: any,
+	isPdf = false,
+): string | undefined => {
+	const data = ReactDOM.renderToStaticMarkup(
+		<div
+			className="container"
+			style={getPageStyleObject({ lineHeight: '1.2' })}
+		>
+			<ExpenseVoucherDocument branch={branch} expenseVoucher={expenseVoucher} />
+			<br />
+			<div style={{ textAlign: 'center', fontSize: '12px' }}>
+				<div>Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}</div>
+			</div>
+			{siteSettings && (
+				<div
+					style={{ textAlign: 'center', fontSize: '12px', marginTop: '16px' }}
+				>
+					<div>{siteSettings.software_developer}</div>
+					<div style={{ whiteSpace: 'pre-line' }}>
+						{siteSettings.software_developer_address}
+					</div>
+					<div>{siteSettings.software_developer_tin}</div>
+					<div>Acc No: {siteSettings.pos_accreditation_number}</div>
+					<div>Date Issued: {siteSettings.pos_accreditation_date}</div>
+					<br />
+					<div>PTU No: {siteSettings.ptu_number}</div>
+					<div>Date Issued: {siteSettings.ptu_date}</div>
+				</div>
+			)}
+		</div>,
+	);
 
-	const particularsRowsHtml = (expenseVoucher.particulars || [])
-		.map(
-			(item, index) => `
-			<tr>
-				<td style="border: 1px solid #000; padding: 4px 8px; text-align: center;">${
-					index + 1
-				}</td>
-				<td style="border: 1px solid #000; padding: 4px 8px;">${item.description}</td>
-				<td style="border: 1px solid #000; padding: 4px 8px; text-align: right;">${formatInPeso(
-					item.amount,
-				)}</td>
-			</tr>`,
-		)
-		.join('');
+	if (isPdf) {
+		return appendHtmlElement(data);
+	}
 
-	const notesHtml = (expenseVoucher.remarks || '')
-		.split('\n')
-		.map((line) => line.trim())
-		.filter(Boolean)
-		.map((line) => `<li>${line}</li>`)
-		.join('');
-
-	return `
-	<div style="width: 1100px; font-family: Arial, sans-serif; font-size: 11px; text-align: center;">
-		${storeNameHtml}
-		${storeAddressHtml}
-		${branchNameHtml}
-		${tinHtml}
-		<div style="margin-bottom: 6px; font-weight: bold; text-transform: uppercase; font-size: 13px;">
-			Expense Voucher
-		</div>
-		<table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px;">
-			<tr>
-				<td style="border: 1px solid #000; padding: 4px 8px; width: 40%; font-weight: bold;">Reference #</td>
-				<td style="border: 1px solid #000; padding: 4px 8px;">${
-					expenseVoucher.reference_number || '—'
-				}</td>
-			</tr>
-			<tr>
-				<td style="border: 1px solid #000; padding: 4px 8px; width: 40%; font-weight: bold;">Datetime</td>
-				<td style="border: 1px solid #000; padding: 4px 8px;">${formatDateTime(
-					expenseVoucher.datetime_created,
-				)}</td>
-			</tr>
-		</table>
-
-		<div style="margin-top: 10px; font-weight: bold; text-align: left; text-transform: uppercase;">Bill To</div>
-		<table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 4px;">
-			<tr>
-				<td style="border: 1px solid #000; padding: 4px 8px; width: 40%; font-weight: bold;">Name</td>
-				<td style="border: 1px solid #000; padding: 4px 8px;">${
-					expenseVoucher.payee || '—'
-				}</td>
-			</tr>
-			<tr>
-				<td style="border: 1px solid #000; padding: 4px 8px; font-weight: bold;">Address</td>
-				<td style="border: 1px solid #000; padding: 4px 8px;">—</td>
-			</tr>
-			<tr>
-				<td style="border: 1px solid #000; padding: 4px 8px; font-weight: bold;">Email</td>
-				<td style="border: 1px solid #000; padding: 4px 8px;">—</td>
-			</tr>
-			<tr>
-				<td style="border: 1px solid #000; padding: 4px 8px; font-weight: bold;">Phone</td>
-				<td style="border: 1px solid #000; padding: 4px 8px;">—</td>
-			</tr>
-		</table>
-
-		<div style="margin-top: 10px; font-weight: bold; text-align: left; text-transform: uppercase;">Payment Method</div>
-		<div style="margin-top: 4px; text-align: left;">Payment Type: ${
-			expenseVoucher.payment_type === 'on_account' ? 'On Account' : 'Pay'
-		}</div>
-
-		<div style="margin-top: 10px; font-weight: bold; text-align: left; text-transform: uppercase;">Details</div>
-		<table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 4px;">
-			<tr>
-				<th style="border: 1px solid #000; padding: 4px 8px; background: #f5f5f5; text-align: center;">Item #</th>
-				<th style="border: 1px solid #000; padding: 4px 8px; background: #f5f5f5;">Description</th>
-				<th style="border: 1px solid #000; padding: 4px 8px; background: #f5f5f5; text-align: right;">Amount</th>
-			</tr>
-			${particularsRowsHtml}
-			<tr>
-				<td colspan="2" style="border: 1px solid #000; padding: 4px 8px; font-weight: bold; text-align: right;">Total</td>
-				<td style="border: 1px solid #000; padding: 4px 8px; font-weight: bold; text-align: right;">${formatInPeso(
-					expenseVoucher.amount,
-				)}</td>
-			</tr>
-		</table>
-
-		<div style="margin-top: 10px; font-weight: bold; text-align: left; text-transform: uppercase;">Notes</div>
-		<ul style="margin-top: 4px; text-align: left; padding-left: 18px;">
-			${notesHtml || '<li>—</li>'}
-		</ul>
-
-		<div style="margin-top: 10px; font-weight: bold; text-align: left; text-transform: uppercase;">Signatures</div>
-		<table style="width: 100%; border-collapse: collapse; margin-top: 14px;">
-			<tr>
-				<td style="width: 50%; text-align: left; vertical-align: top;">
-					<div style="border-bottom: 1px solid #000; height: 24px;"></div>
-					<div>${expenseVoucher.payee || '—'}, Employee</div>
-					<div>Date Signed: ${formatDate(expenseVoucher.datetime_created)}</div>
-				</td>
-				<td style="width: 50%; text-align: left; vertical-align: top;">
-					<div style="border-bottom: 1px solid #000; height: 24px;"></div>
-					<div>${
-						expenseVoucher.authorizer
-							? getFullName(expenseVoucher.authorizer)
-							: '—'
-					}, Authorizer</div>
-					<div>Date Signed: ${
-						expenseVoucher.authorizer
-							? formatDate(expenseVoucher.datetime_created)
-							: '—'
-					}</div>
-				</td>
-			</tr>
-		</table>
-
-		<div style="margin-top: 8px; text-align: left;">
-			GDT: ${formatDateTime(expenseVoucher.datetime_created)}
-		</div>
-	</div>
-`;
+	print(
+		appendHtmlElement(data),
+		'Expense Voucher',
+		undefined,
+		printingTypes.HTML,
+	);
+	return data;
 };
 
 export const ViewExpenseVoucherModal = ({
@@ -197,22 +109,26 @@ export const ViewExpenseVoucherModal = ({
 		options: { enabled: !!expenseVoucher?.branch },
 	});
 
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const { data: siteSettings } = useSiteSettings();
+
+	const { isLoadingPdf, previewPdf, downloadPdf, pdfPreviewModal } = usePdf({
 		title: `ExpenseVoucher_${
 			expenseVoucher?.reference_number || expenseVoucher?.id
 		}.pdf`,
-		jsPdfSettings: {
-			orientation: 'l',
-			unit: 'px',
-			format: [1200, 850],
-		},
+		paper: 'a4HalfLengthwise',
+		previewInModal: true,
 		print: () =>
-			printExpenseVoucher(expenseVoucher as ExpenseVoucher, branchData),
+			printExpenseVoucher(
+				expenseVoucher as ExpenseVoucher,
+				branchData,
+				siteSettings,
+				true,
+			),
 	});
 
 	const handlePrint = () => {
 		if (!expenseVoucher) return;
-		printExpenseVoucher(expenseVoucher, branchData);
+		printExpenseVoucher(expenseVoucher, branchData, siteSettings);
 	};
 
 	if (!expenseVoucher) return null;
@@ -245,65 +161,67 @@ export const ViewExpenseVoucherModal = ({
 			]}
 			open={open}
 			title="[View] Expense Voucher"
-			width={VIEW_EXPENSE_VOUCHER_MODAL_WIDTH}
+			width={VIEW_PRINTING_MODAL_WIDTH}
 			centered
 			closable
 			onCancel={onClose}
 		>
 			<ReceiptHeaderV2 branchHeader={branchData} title="EXPENSE VOUCHER" />
 
-			<br />
-
-			<Descriptions
-				className="w-100"
-				column={1}
-				labelStyle={{ width: 200 }}
-				bordered
+			<table
+				className="mt-6 w-100"
+				style={{ borderCollapse: 'collapse', fontSize: 14 }}
 			>
-				<Descriptions.Item label="Reference #">
-					{expenseVoucher.reference_number || '—'}
-				</Descriptions.Item>
-				<Descriptions.Item label="Datetime">
-					{formatDateTime(expenseVoucher.datetime_created)}
-				</Descriptions.Item>
-			</Descriptions>
+				<tbody>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Voucher No.:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{expenseVoucher.reference_number || EMPTY_CELL}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Date:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{formatDateTime(expenseVoucher.datetime_created)}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Payee:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{expenseVoucher.payee || EMPTY_CELL}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Type:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{expenseVoucher.payment_type === 'on_account'
+								? 'On Account'
+								: 'Pay'}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Authorizer:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{expenseVoucher.authorizer
+								? getFullName(expenseVoucher.authorizer)
+								: EMPTY_CELL}
+						</td>
+					</tr>
+				</tbody>
+			</table>
 
-			<br />
-
-			<Text style={{ textTransform: 'uppercase' }} strong>
-				Bill To
-			</Text>
-			<Descriptions
-				className="w-100 mt-2"
-				column={1}
-				labelStyle={{ width: 200 }}
-				bordered
-			>
-				<Descriptions.Item label="Name">
-					{expenseVoucher.payee || '—'}
-				</Descriptions.Item>
-				<Descriptions.Item label="Address">—</Descriptions.Item>
-				<Descriptions.Item label="Email">—</Descriptions.Item>
-				<Descriptions.Item label="Phone">—</Descriptions.Item>
-			</Descriptions>
-
-			<br />
-
-			<Text style={{ textTransform: 'uppercase' }} strong>
-				Payment Method
-			</Text>
-			<div className="mt-2">
-				Payment Type:{' '}
-				{expenseVoucher.payment_type === 'on_account' ? 'On Account' : 'Pay'}
-			</div>
-
-			<br />
-
-			<Text style={{ textTransform: 'uppercase' }} strong>
-				Details
-			</Text>
 			<Table
-				className="mt-2"
+				className="mt-6"
 				columns={particularsColumns}
 				dataSource={expenseVoucher.particulars || []}
 				pagination={false}
@@ -321,6 +239,18 @@ export const ViewExpenseVoucherModal = ({
 				)}
 				bordered
 			/>
+
+			<Space
+				align="center"
+				className="w-100 text-center"
+				direction="vertical"
+				size={0}
+			>
+				<br />
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					Total Amount: {formatInPeso(expenseVoucher.amount)}
+				</Text>
+			</Space>
 
 			<br />
 
@@ -363,19 +293,23 @@ export const ViewExpenseVoucherModal = ({
 				</Col>
 			</Row>
 
-			<br />
-
-			<div>GDT: {formatDateTime(expenseVoucher.datetime_created)}</div>
+			<Space
+				align="center"
+				className="w-100 text-center"
+				direction="vertical"
+				size={0}
+			>
+				<br />
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}
+				</Text>
+			</Space>
 
 			<br />
 
 			<ReceiptFooter />
 
-			<div
-				// eslint-disable-next-line react/no-danger
-				dangerouslySetInnerHTML={{ __html: htmlPdf }}
-				style={{ display: 'none' }}
-			/>
+			{pdfPreviewModal}
 		</Modal>
 	);
 };

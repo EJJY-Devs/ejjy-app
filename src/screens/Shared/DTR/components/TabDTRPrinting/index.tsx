@@ -86,8 +86,15 @@ export const TabDTRPrinting = () => {
 			enabled: !timeRangeError && !!params?.employeeId && !!params?.timeRange,
 		},
 	});
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const {
+		htmlPdf,
+		isLoadingPdf,
+		previewPdf,
+		downloadPdf,
+		pdfPreviewModal,
+	} = usePdf({
 		title: 'TransactionAdjustmentReport.pdf',
+		previewInModal: true,
 		jsPdfSettings: { format: [400, 850] },
 		print: () => {
 			let month;
@@ -188,6 +195,8 @@ export const TabDTRPrinting = () => {
 				dangerouslySetInnerHTML={{ __html: htmlPdf }}
 				style={{ display: 'none' }}
 			/>
+
+			{pdfPreviewModal}
 		</>
 	);
 };

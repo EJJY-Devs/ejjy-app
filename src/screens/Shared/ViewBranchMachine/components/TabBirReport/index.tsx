@@ -6,6 +6,9 @@ import { BranchMachine, specialDiscountCodes } from 'ejjy-global';
 import { birAnnexTransactionsTabs as tabs } from 'ejjy-global/dist/components/BirAnnexTransactions/data';
 import { AnnexTransactionsTab } from './AnnexTransactionsTab';
 import { AnnexBirSalesSummaryTab } from './AnnexBirSalesSummaryTab';
+import { VoidedInvoiceReportTab } from './VoidedInvoiceReportTab';
+
+const VOIDED_INVOICE_REPORTS = 'Voided Invoice Reports';
 
 type Props = {
 	branchMachine: BranchMachine;
@@ -37,7 +40,7 @@ export const TabBirReport = ({ branchMachine }: Props) => {
 				key={tabs.BIR_SALES_SUMMARY_REPORT}
 				tab={tabs.BIR_SALES_SUMMARY_REPORT}
 			>
-				<AnnexBirSalesSummaryTab branchMachineId={branchMachine.id} />
+				<AnnexBirSalesSummaryTab branchMachine={branchMachine} />
 			</Tabs.TabPane>
 
 			<Tabs.TabPane
@@ -82,6 +85,10 @@ export const TabBirReport = ({ branchMachine }: Props) => {
 					category={annexTab as string}
 					discountCode={specialDiscountCodes.SOLO_PARENTS}
 				/>
+			</Tabs.TabPane>
+
+			<Tabs.TabPane key={VOIDED_INVOICE_REPORTS} tab={VOIDED_INVOICE_REPORTS}>
+				<VoidedInvoiceReportTab branchMachine={branchMachine} />
 			</Tabs.TabPane>
 		</Tabs>
 	);

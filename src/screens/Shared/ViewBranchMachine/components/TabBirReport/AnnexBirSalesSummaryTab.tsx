@@ -3,13 +3,19 @@ import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import { PdfButtons } from 'components/Printing';
 import {
+	AuthorizationModal,
 	BirReportsService,
+	BranchMachine,
 	MAX_PAGE_SIZE,
 	NO_TRANSACTION_REMARK,
+	User,
 	printBirReport,
+	renderA4SinglePagePdf,
 	useBirReports,
-	usePdf,
+	userTypes,
 } from 'ejjy-global';
+import { Props as AuthorizationModalProps } from 'ejjy-global/dist/components/modals/AuthorizationModal';
+import type jsPDF from 'jspdf';
 import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
@@ -18,19 +24,19 @@ import {
 	refetchOptions,
 	timeRangeTypes,
 } from 'global';
-import { useQueryParams, useSiteSettings } from 'hooks';
-import React, { useEffect, useRef, useState } from 'react';
-import { useUserStore } from 'stores';
+import { useQueryParams, useSiteSettings, usePdfPreviewModal } from 'hooks';
+import React, { useEffect, useState } from 'react';
 import {
 	convertIntoArray,
 	formatDate,
 	formatInPeso,
 	getLocalApiUrl,
+	savePdf,
 } from 'utils';
 import { birAnnexTransactionsTabs as tabs } from 'ejjy-global/dist/components/BirAnnexTransactions/data';
 
 type Props = {
-	branchMachineId: number;
+	branchMachine: BranchMachine;
 };
 
 const columns: ColumnsType = [
@@ -100,13 +106,16 @@ const columns: ColumnsType = [
 	{ title: 'Remarks', dataIndex: 'remarks' },
 ];
 
-export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
+export const AnnexBirSalesSummaryTab = ({ branchMachine }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
-	const containerRef = useRef<HTMLDivElement | null>(null);
+	const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 
 	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
 	const { params, setQueryParams } = useQueryParams();
 	const {
 		data: siteSettings,
@@ -120,40 +129,98 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 		error: birReportsError,
 	} = useBirReports({
 		params: {
-			branchMachineId,
+			branchMachineId: branchMachine.id,
 			timeRange: timeRangeTypes.DAILY,
 			...params,
 		},
 		options: refetchOptions,
 		serviceOptions: { baseURL: getLocalApiUrl() },
 	});
-	const { htmlPdf, isLoadingPdf, previewPdf, downloadPdf } = usePdf({
+	const buildPdfHtml = async (authorizedUser: User) => {
+		const response = await BirReportsService.list(
+			{
+				branch_machine_id: branchMachine.id,
+				page_size: MAX_PAGE_SIZE,
+				page: DEFAULT_PAGE,
+				time_range: params?.timeRange as string,
+			},
+			getLocalApiUrl(),
+		);
+
+		return printBirReport(
+			response.results,
+			siteSettings,
+			authorizedUser,
+			branchMachine,
+		);
+	};
+
+	// The E1 sales summary is a ~31-column spreadsheet; its template
+	// (.bir-reports-pdf) is designed at 2300px wide. Capture it at that natural
+	// width and shrink-to-fit onto a whole A4 page turned crosswise (landscape),
+	// which is the only orientation the full table stays legible on.
+	const renderPdf = async (authorizedUser: User): Promise<jsPDF | null> => {
+		setIsLoadingPdf(true);
+		try {
+			const html = await buildPdfHtml(authorizedUser);
+			return await renderA4SinglePagePdf({
+				html,
+				title: 'AnnexE1.pdf',
+				orientation: 'l',
+				widthPx: 2300,
+			});
+		} catch (error) {
+			console.error('Failed to generate PDF', error);
+			return null;
+		} finally {
+			setIsLoadingPdf(false);
+		}
+	};
+
+	const downloadPdfAsUser = async (authorizedUser: User) => {
+		const pdf = await renderPdf(authorizedUser);
+		if (pdf) {
+			await savePdf(pdf, 'AnnexE1.pdf');
+		}
+	};
+
+	// The printed header's UserID is the authorizer who unlocked this PDF, not
+	// necessarily whoever is logged in — so Preview/Download must each be
+	// gated behind their own PIN prompt (see AuthorizationModal) rather than
+	// reusing the session user.
+	const authorize = (
+		onSuccess: (authorizedUser: User) => void | Promise<void>,
+	) => {
+		setAuthorizeConfig({
+			description: `Authorize Viewing of ${tabs.BIR_SALES_SUMMARY_REPORT}`,
+			userTypes: [
+				userTypes.ADMIN,
+				userTypes.OFFICE_MANAGER,
+				userTypes.BRANCH_MANAGER,
+			],
+			onSuccess: async (authorizedUser) => {
+				setAuthorizeConfig(null);
+				await onSuccess(authorizedUser);
+			},
+		});
+	};
+
+	// Show the generated PDF in an in-app dialog instead of a new tab/window.
+	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
 		title: 'AnnexE1.pdf',
-		container: {
-			containerRef,
-			widthAdd: 30,
-			heightAdd: 30,
-		},
-		jsPdfSettings: {
-			unit: 'px',
-			putOnlyUsedFonts: true,
-		},
-		print: async () => {
-			const response = await BirReportsService.list(
-				{
-					branch_machine_id: branchMachineId,
-					page_size: MAX_PAGE_SIZE,
-					page: DEFAULT_PAGE,
-					time_range: params?.timeRange as string,
-				},
-				getLocalApiUrl(),
-			);
-
-			const birReports = response.results;
-
-			return printBirReport(birReports, siteSettings, user);
-		},
+		onDownload: () => authorize(downloadPdfAsUser),
 	});
+
+	const previewPdfAsUser = async (authorizedUser: User) => {
+		const pdf = await renderPdf(authorizedUser);
+		if (!pdf) {
+			return;
+		}
+		showPreview(pdf.output('bloburl').toString());
+	};
+
+	const downloadPdf = () => authorize(downloadPdfAsUser);
+	const previewPdf = () => authorize(previewPdfAsUser);
 
 	// METHODS
 	useEffect(() => {
@@ -261,6 +328,7 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 
 	return (
 		<>
+			{pdfPreviewModal}
 			<TableHeader
 				buttons={
 					<PdfButtons
@@ -320,16 +388,13 @@ export const AnnexBirSalesSummaryTab = ({ branchMachineId }: Props) => {
 				bordered
 			/>
 
-			<div
-				ref={containerRef}
-				// eslint-disable-next-line react/no-danger
-				dangerouslySetInnerHTML={{ __html: htmlPdf }}
-				style={{
-					width: 'fit-content',
-					position: 'absolute',
-					visibility: 'hidden',
-				}}
-			/>
+			{authorizeConfig && (
+				<AuthorizationModal
+					{...authorizeConfig}
+					baseURL={getLocalApiUrl()}
+					onCancel={() => setAuthorizeConfig(null)}
+				/>
+			)}
 		</>
 	);
 };

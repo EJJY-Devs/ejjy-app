@@ -48,8 +48,16 @@ export const RequisitionSlipDetails = ({ requisitionSlip, type }: Props) => {
 							{requisitionSlip.branch?.name || EMPTY_CELL}
 						</Descriptions.Item>
 
-						<Descriptions.Item label="Vendor">
-							{requisitionSlip.vendor?.name || EMPTY_CELL}
+						<Descriptions.Item
+							label={
+								requisitionSlip.vendor_type === 'supplier'
+									? 'Supplier'
+									: 'Vendor'
+							}
+						>
+							{(requisitionSlip.vendor_type === 'supplier'
+								? requisitionSlip.supplier?.name
+								: requisitionSlip.vendor?.name) || EMPTY_CELL}
 						</Descriptions.Item>
 
 						<Descriptions.Item label="Remarks">

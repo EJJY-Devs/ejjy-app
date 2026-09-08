@@ -14,8 +14,16 @@ const { spawn, exec } = require('child_process');
 const Store = require('electron-store');
 const fs = require('fs');
 
-// Persistent store for UI/app settings (zoomLevel, appType, headOfficeType)
-const store = new Store({ defaults: { zoomLevel: 1 } });
+// Persistent store for the zoom level, initialized lazily in initZoomStore()
+// (see below) once Electron has actually fired 'ready' -- app.getPath('userData')
+// isn't guaranteed to resolve to the real, stable profile path before then, and
+// constructing electron-store any earlier can silently point it at a fallback
+// path on a slow cold boot, which looks like "the saved zoom level got reset".
+let store;
+
+// Persistent store for other app settings (appType, headOfficeType, startNgrok),
+// created in initStore() -- also deferred until createWindow() runs post-'ready'.
+let appStore;
 
 const SPLASH_SCREEN_SHOWN_MS = 8_000;
 
@@ -26,24 +34,6 @@ const ZOOM_CONFIG = {
 	MAX: 2.0,
 	STEP: 0.1,
 };
-
-// Prevent accidental zoom via OS/trackpad gestures and common Chromium shortcuts.
-// Zoom should only change through our explicit menu actions.
-const DISABLE_USER_ZOOM_SHORTCUTS = true;
-
-const ZOOM_SHORTCUT_KEYS = new Set([
-	'+',
-	'=',
-	'-',
-	'0',
-	'Plus',
-	'Add',
-	'NumpadAdd',
-	'Minus',
-	'Subtract',
-	'NumpadSubtract',
-	'Numpad0',
-]);
 
 // Validate and sanitize zoom level
 function validateZoomLevel(level) {
@@ -58,7 +48,17 @@ function validateZoomLevel(level) {
 	return Math.round(numLevel * 10) / 10; // Round to 1 decimal place
 }
 
-let zoomLevel = validateZoomLevel(store.get('zoomLevel', ZOOM_CONFIG.DEFAULT));
+let zoomLevel = ZOOM_CONFIG.DEFAULT; // real value loaded in initZoomStore()
+
+// Creates the zoom-level store and loads the saved zoom level. Must only be
+// called after Electron's 'ready' event (i.e. from createWindow()), so that
+// app.getPath('userData') has resolved to the real, stable profile path.
+function initZoomStore() {
+	store = new Store({ name: 'zoom-settings', defaults: { zoomLevel: ZOOM_CONFIG.DEFAULT } });
+	const savedZoom = store.get('zoomLevel', ZOOM_CONFIG.DEFAULT);
+	zoomLevel = validateZoomLevel(savedZoom);
+	log.info(`[ZOOM] Loaded zoomLevel=${zoomLevel} (raw=${savedZoom}) from ${store.path}`);
+}
 
 // Safe zoom update function
 function updateZoom(newLevel) {
@@ -69,6 +69,31 @@ function updateZoom(newLevel) {
 		store.set('zoomLevel', zoomLevel);
 		logStatus(`Zoom level set to: ${(zoomLevel * 100).toFixed(0)}%`);
 	}
+	// Keep the Options menu's "Zoom: X%" label in sync, whatever triggered
+	// the change (menu click or the Ctrl+=/Ctrl+-/Ctrl+0 shortcuts below).
+	rebuildAppMenu();
+}
+
+// Zoom in/out/reset, shared by the Options menu items and by the View menu's
+// Zoom In/Zoom Out/Actual Size items (Ctrl+=/Ctrl+-/Ctrl+0), which
+// rebuildAppMenu() rewires to call these instead of their default
+// role-based (zoom-level) behavior -- see rebuildAppMenu() below.
+function zoomIn() {
+	const newZoomLevel = zoomLevel + ZOOM_CONFIG.STEP;
+	if (newZoomLevel <= ZOOM_CONFIG.MAX) {
+		updateZoom(newZoomLevel);
+	}
+}
+
+function zoomOut() {
+	const newZoomLevel = zoomLevel - ZOOM_CONFIG.STEP;
+	if (newZoomLevel >= ZOOM_CONFIG.MIN) {
+		updateZoom(newZoomLevel);
+	}
+}
+
+function zoomReset() {
+	updateZoom(ZOOM_CONFIG.DEFAULT);
 }
 
 const appTypes = {
@@ -93,17 +118,78 @@ function logStatus(text) {
 	}
 }
 
+// Shared per-appType folder name under the OS user-data directory
+// (%APPDATA% on Windows) -- a location electron-builder/NSIS never touches
+// on install, update, or uninstall, unlike anything under resourcesPath.
+function getAppDataDir(appType) {
+	if (appType === appTypes.HEAD_OFFICE) {
+		return 'EJJY-Inventory-Headoffice-App';
+	}
+	if (appType === appTypes.BACK_OFFICE) {
+		return 'EJJY-Inventory-App';
+	}
+	return 'EJJY-Cashiering';
+}
+
 // Helper to get backend config path (unique file name)
 function getBackendConfigPath(appType) {
-	let configDir;
-	if (appType === appTypes.HEAD_OFFICE) {
-		configDir = 'EJJY-Inventory-Headoffice-App';
-	} else if (appType === appTypes.BACK_OFFICE) {
-		configDir = 'EJJY-Inventory-App';
-	} else {
-		configDir = 'EJJY-Cashiering';
+	return path.join(
+		app.getPath('appData'),
+		getAppDataDir(appType),
+		'backend-config.json',
+	);
+}
+
+// Where the backend writes e-journal exports (invoices, X-read/Z-read
+// reports, etc.) in production -- see EJJY_MEDIA_ROOT below and MEDIA_ROOT
+// in api/backend/settings.py. Deliberately outside resourcesPath/apiPath so
+// this data survives every future app update.
+function getMediaRootPath(appType) {
+	return path.join(app.getPath('appData'), getAppDataDir(appType), 'media');
+}
+
+function copyDirRecursiveSync(sourceDir, destDir) {
+	fs.mkdirSync(destDir, { recursive: true });
+	for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
+		const sourcePath = path.join(sourceDir, entry.name);
+		const destPath = path.join(destDir, entry.name);
+		if (entry.isDirectory()) {
+			copyDirRecursiveSync(sourcePath, destPath);
+		} else {
+			fs.copyFileSync(sourcePath, destPath);
+		}
 	}
-	return path.join(app.getPath('appData'), configDir, 'backend-config.json');
+}
+
+// One-time migration for installs that already have exports sitting in the
+// old, update-unsafe location (resources/api/media, from before this fix
+// existed). Runs at most once: if the new location already has anything in
+// it -- including a prior, possibly partial, migration -- it's left alone
+// rather than re-copied over.
+function migrateLegacyMediaIfNeeded(appType) {
+	const legacyMediaPath = path.join(apiPath, 'media');
+	const newMediaPath = getMediaRootPath(appType);
+
+	try {
+		const hasLegacyMedia =
+			fs.existsSync(legacyMediaPath) &&
+			fs.readdirSync(legacyMediaPath).length > 0;
+		const hasNewMedia =
+			fs.existsSync(newMediaPath) && fs.readdirSync(newMediaPath).length > 0;
+
+		if (hasLegacyMedia && !hasNewMedia) {
+			logStatus(
+				`Migrating e-journal exports from ${legacyMediaPath} to ${newMediaPath}...`,
+			);
+			copyDirRecursiveSync(legacyMediaPath, newMediaPath);
+			logStatus('E-journal export migration complete.');
+		}
+	} catch (e) {
+		// Never let a migration hiccup block startup -- worst case the old
+		// folder (still untouched, since this only ever copies, never
+		// deletes) can be migrated by hand later.
+		logStatus(`E-journal export migration skipped: ${e.message}`);
+	}
 }
 
 function getDefaultBackendConfig(appType) {
@@ -189,7 +275,168 @@ function isBackendConfigSetupRequired(appType) {
 	return !config.ONLINE_API_URL;
 }
 
+// --- Backup Handler ---
+async function handleBackup() {
+	mainWindow.setProgressBar(1);
+
+	// Read config to get app type and DB name
+	const appType = appStore.get('appType');
+	const config = ensureBackendConfig(appType);
+
+	const dbName = config.LOCAL_DB_NAME || 'backoffice'; // 'headoffice' or 'backoffice'
+	const backupFileName = `${dbName}-${new Date()
+		.toISOString()
+		.replace(/[-:T]/g, '')
+		.slice(0, 15)}.sql`;
+
+	const { filePath } = await dialog.showSaveDialog(mainWindow, {
+		title: 'Save MySQL Backup',
+		defaultPath: path.join(app.getPath('desktop'), backupFileName),
+		filters: [{ name: 'SQL Files', extensions: ['sql'] }],
+	});
+
+	if (!filePath) {
+		isUploading = false;
+		mainWindow.setProgressBar(-1);
+		return;
+	}
+
+	const mysqldumpPath =
+		'C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe';
+	const dbUser = config.DB_USER || 'root';
+	const dbPassword = config.DB_PASSWORD || '';
+	const dumpArgs = [`-u${dbUser}`, `-p${dbPassword}`, dbName];
+
+	logStatus(`[START BACKUP]: Running mysqldump to ${filePath}`);
+
+	const dump = require('child_process').spawn(mysqldumpPath, dumpArgs);
+	const writeStream = fs.createWriteStream(filePath);
+	dump.stdout.pipe(writeStream);
+
+	let errorMsg = '';
+	dump.stderr.on('data', (data) => {
+		errorMsg += data.toString();
+	});
+
+	dump.on('close', (code) => {
+		isUploading = false;
+		mainWindow.setProgressBar(-1);
+
+		const filteredError = errorMsg.replace(
+			/mysqldump: \[Warning\] Using a password on the command line interface can be insecure\.\s*/g,
+			'',
+		);
+
+		if (code === 0 && !filteredError.trim()) {
+			dialog.showMessageBoxSync(mainWindow, {
+				type: 'info',
+				title: 'Success',
+				buttons: ['Close'],
+				message: 'Database backup has been completed successfully.',
+			});
+			logStatus('[START BACKUP]: Upload Success!');
+		} else {
+			dialog.showMessageBoxSync(mainWindow, {
+				type: 'error',
+				title: 'Error',
+				message:
+					'An error occurred while backing up the database.\n' +
+					filteredError,
+			});
+			logStatus(`[START BACKUP]: Upload Err: ${filteredError}`);
+		}
+	});
+}
+
+// The OS-default menu items, captured once (in createWindow, before we ever
+// append our own Options/Database submenus) so rebuildAppMenu() can rebuild
+// from a clean base each time instead of re-appending onto its own output.
+let baseMenuItems;
+
+// (Re)builds the full application menu from baseMenuItems plus our Options
+// (zoom) and, outside dev, Database submenus. Called once at startup and
+// again from updateZoom() so the "Zoom: X%" label always reflects the
+// current zoomLevel, however it was changed.
+function rebuildAppMenu() {
+	if (!baseMenuItems) return;
+
+	// Electron's default "View" menu ships its own Zoom In / Zoom Out /
+	// Actual Size items (role: 'zoomIn'/'zoomOut'/'resetZoom', bound to
+	// Ctrl+=/Ctrl+-/Ctrl+0 by default). Those roles change Chromium's zoom
+	// *level* directly, completely bypassing our zoomLevel tracking/
+	// persistence/clamping -- which is exactly what caused zoom to look like
+	// it "reset" after switching tabs: the user zooms via View's native role,
+	// our zoomLevel variable never learns about it, then the next
+	// did-navigate*/did-finish-load handler reapplies our own (stale)
+	// zoomLevel over top of it. Rewire those three items to go through our
+	// own zoomIn/zoomOut/zoomReset instead, keeping their original labels,
+	// accelerators, and position so the View menu still owns the keyboard
+	// shortcuts (avoids also binding them on the Options items below, which
+	// would double-apply on every keypress).
+	const menuItems = baseMenuItems.map((item) => {
+		if (item.label !== 'View' || !item.submenu) return item;
+
+		const submenu = item.submenu.items.map((subItem) => {
+			const role = subItem.role && subItem.role.toLowerCase();
+			if (role === 'zoomin' || role === 'zoomout' || role === 'resetzoom') {
+				return {
+					label: subItem.label,
+					accelerator: subItem.accelerator,
+					click:
+						role === 'zoomin' ? zoomIn : role === 'zoomout' ? zoomOut : zoomReset,
+				};
+			}
+			return subItem;
+		});
+
+		return { label: item.label, submenu };
+	});
+
+	menuItems.push({
+		label: 'Options',
+		submenu: [
+			{
+				label: `Zoom: ${Math.round(zoomLevel * 100)}%`,
+				enabled: false,
+			},
+			{ type: 'separator' },
+			{
+				label: 'Zoom In',
+				click: zoomIn,
+			},
+			{
+				label: 'Zoom Out',
+				click: zoomOut,
+			},
+			{
+				label: 'Reset Zoom',
+				click: zoomReset,
+			},
+		],
+	});
+
+	if (!isDev) {
+		menuItems.push({
+			label: 'Database',
+			submenu: [
+				{
+					label: 'Backup Database',
+					click: () => {
+						handleBackup();
+					},
+				},
+			],
+		});
+	}
+
+	Menu.setApplicationMenu(Menu.buildFromTemplate(menuItems));
+}
+
 function createWindow() {
+	// Must run first: constructs the zoom-level store now that 'ready' has
+	// fired, and sets the real (persisted) zoomLevel used just below.
+	initZoomStore();
+
 	// Splash screen
 	splashWindow = new BrowserWindow({
 		width: 800,
@@ -304,21 +551,20 @@ function createWindow() {
 		mainWindow.webContents.setZoomFactor(zoomLevel);
 	});
 
-	// Prevent unintended zoom changes from system gestures or Chromium shortcuts.
+	// Block accidental zoom via OS/trackpad pinch gestures and Ctrl+wheel --
+	// their fractional, uncontrolled deltas would drift from our
+	// ZOOM_CONFIG.STEP-based levels. Deliberate zoom still works via the View
+	// menu's Zoom In/Out/Actual Size items (Ctrl+=/Ctrl+-/Ctrl+0), which
+	// rebuildAppMenu() rewires to our own zoomIn/zoomOut/zoomReset below, and
+	// via the Options menu.
 	mainWindow.webContents.on('before-input-event', (event, input) => {
-		if (!DISABLE_USER_ZOOM_SHORTCUTS) return;
-
-		const isCtrlZoomKey =
-			input.control &&
-			input.type === 'keyDown' &&
-			ZOOM_SHORTCUT_KEYS.has(input.key);
 		const isCtrlWheelZoom = input.control && input.type === 'mouseWheel';
 		const isGestureZoom =
 			typeof input.type === 'string' &&
 			(input.type.toLowerCase().includes('pinch') ||
 				input.type.toLowerCase().includes('zoom'));
 
-		if (isCtrlZoomKey || isCtrlWheelZoom || isGestureZoom) {
+		if (isCtrlWheelZoom || isGestureZoom) {
 			event.preventDefault();
 		}
 	});
@@ -329,133 +575,15 @@ function createWindow() {
 	});
 
 	// Initialize Store
-	const store = initStore();
-	ensureBackendConfig(store.get('appType'));
+	initStore();
+	ensureBackendConfig(appStore.get('appType'));
 
 	// Migrate and Run API
 	startServer();
 
 	// Set Menu
-	const menuItems = Menu.getApplicationMenu().items;
-
-	// --- Backup Handler ---
-	async function handleBackup() {
-		mainWindow.setProgressBar(1);
-
-		// Read config to get app type and DB name
-		const appType = store.get('appType');
-		const config = ensureBackendConfig(appType);
-
-		const dbName = config.LOCAL_DB_NAME || 'backoffice'; // 'headoffice' or 'backoffice'
-		const backupFileName = `${dbName}-${new Date()
-			.toISOString()
-			.replace(/[-:T]/g, '')
-			.slice(0, 15)}.sql`;
-
-		const { filePath } = await dialog.showSaveDialog(mainWindow, {
-			title: 'Save MySQL Backup',
-			defaultPath: path.join(app.getPath('desktop'), backupFileName),
-			filters: [{ name: 'SQL Files', extensions: ['sql'] }],
-		});
-
-		if (!filePath) {
-			isUploading = false;
-			mainWindow.setProgressBar(-1);
-			return;
-		}
-
-		const mysqldumpPath =
-			'C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe';
-		const dbUser = config.DB_USER || 'root';
-		const dbPassword = config.DB_PASSWORD || '';
-		const dumpArgs = [`-u${dbUser}`, `-p${dbPassword}`, dbName];
-
-		logStatus(`[START BACKUP]: Running mysqldump to ${filePath}`);
-
-		const dump = require('child_process').spawn(mysqldumpPath, dumpArgs);
-		const writeStream = fs.createWriteStream(filePath);
-		dump.stdout.pipe(writeStream);
-
-		let errorMsg = '';
-		dump.stderr.on('data', (data) => {
-			errorMsg += data.toString();
-		});
-
-		dump.on('close', (code) => {
-			isUploading = false;
-			mainWindow.setProgressBar(-1);
-
-			const filteredError = errorMsg.replace(
-				/mysqldump: \[Warning\] Using a password on the command line interface can be insecure\.\s*/g,
-				'',
-			);
-
-			if (code === 0 && !filteredError.trim()) {
-				dialog.showMessageBoxSync(mainWindow, {
-					type: 'info',
-					title: 'Success',
-					buttons: ['Close'],
-					message: 'Database backup has been completed successfully.',
-				});
-				logStatus('[START BACKUP]: Upload Success!');
-			} else {
-				dialog.showMessageBoxSync(mainWindow, {
-					type: 'error',
-					title: 'Error',
-					message:
-						'An error occurred while backing up the database.\n' +
-						filteredError,
-				});
-				logStatus(`[START BACKUP]: Upload Err: ${filteredError}`);
-			}
-		});
-	}
-
-	// Add zoom menu for both dev and production
-	menuItems.push({
-		label: 'Options',
-		submenu: [
-			{
-				label: 'Zoom In',
-				click() {
-					const newZoomLevel = zoomLevel + ZOOM_CONFIG.STEP;
-					if (newZoomLevel <= ZOOM_CONFIG.MAX) {
-						updateZoom(newZoomLevel);
-					}
-				},
-			},
-			{
-				label: 'Zoom Out',
-				click() {
-					const newZoomLevel = zoomLevel - ZOOM_CONFIG.STEP;
-					if (newZoomLevel >= ZOOM_CONFIG.MIN) {
-						updateZoom(newZoomLevel);
-					}
-				},
-			},
-			{
-				label: 'Reset Zoom',
-				click() {
-					updateZoom(ZOOM_CONFIG.DEFAULT);
-				},
-			},
-		],
-	});
-
-	if (!isDev) {
-		menuItems.push({
-			label: 'Database',
-			submenu: [
-				{
-					label: 'Backup Database',
-					click: () => {
-						handleBackup();
-					},
-				},
-			],
-		});
-	}
-	Menu.setApplicationMenu(Menu.buildFromTemplate(menuItems));
+	baseMenuItems = Menu.getApplicationMenu().items;
+	rebuildAppMenu();
 }
 
 //-------------------------------------------------------------------
@@ -479,7 +607,8 @@ function initStore() {
 		},
 	};
 
-	const store = new Store({ schema });
+	appStore = new Store({ schema });
+	const store = appStore;
 
 	ipcMain.handle('getStoreValue', (event, key) => {
 		return store.get(key);
@@ -515,22 +644,22 @@ function initStore() {
 //-------------------------------------------------------------------
 // Server
 //-------------------------------------------------------------------
-const NGROK_RESTART_INTERVAL_MS = 60_000;
-// Resolve the ngrok binary bundled via the "ngrok" npm dependency instead of
-// relying on it being on PATH (production/packaged processes don't inherit
-// the interactive shell PATH, so a plain `ngrok` command lookup can ENOENT
-// even when ngrok is installed on the machine).
-const ngrokBinDir = path
-	.join(path.dirname(require.resolve('ngrok')), 'bin')
-	.replace('app.asar', 'app.asar.unpacked');
-const ngrokBinPath = path.join(
-	ngrokBinDir,
-	process.platform === 'win32' ? 'ngrok.exe' : 'ngrok',
-);
+// Delay before reconnecting after ngrok exits, so ngrok's cloud-side
+// session from the previous run has time to fully release before we try
+// to reclaim the reserved domain.
+const NGROK_RESPAWN_DELAY_MS = 5_000;
+// ngrok is NOT bundled with the app. The user must install ngrok themselves
+// and ensure it is available on the system PATH; we just invoke `ngrok`.
+const ngrokBinPath = 'ngrok';
 
 let spawnRun = null;
 let ngrokProcess = null;
+// True while ngrok is supposed to be running on this instance. Guards the
+// respawn-on-exit handler below so an intentional shutdown (killNgrok())
+// doesn't get treated as a crash and immediately restarted.
+let ngrokShouldRun = false;
 function killNgrok() {
+	ngrokShouldRun = false;
 	if (ngrokProcess && ngrokProcess.pid) {
 		kill(ngrokProcess.pid);
 		ngrokProcess = null;
@@ -538,11 +667,13 @@ function killNgrok() {
 }
 function startServer() {
 	if (!isDev) {
-		const selectedAppType = store.get('appType');
-		const headOfficeType = store.get('headOfficeType');
-		const shouldStartNgrok = store.get('startNgrok');
+		const selectedAppType = appStore.get('appType');
+		const headOfficeType = appStore.get('headOfficeType');
+		const shouldStartNgrok = appStore.get('startNgrok');
 		const backendConfigPath = getBackendConfigPath(selectedAppType);
 		ensureBackendConfig(selectedAppType);
+		const mediaRootPath = getMediaRootPath(selectedAppType);
+		migrateLegacyMediaIfNeeded(selectedAppType);
 		const spawnEnv = {
 			...process.env,
 			EJJY_APP_TYPE:
@@ -552,6 +683,7 @@ function startServer() {
 					? 'backoffice'
 					: 'cashiering',
 			EJJY_CONFIG_PATH: backendConfigPath,
+			EJJY_MEDIA_ROOT: mediaRootPath,
 		};
 
 		spawn('python', ['manage.py', 'migrate'], {
@@ -589,15 +721,26 @@ function startServer() {
 			logStatus('Ngrok: Starting');
 
 			exec(
-				`"${ngrokBinPath}" config add-authtoken 1n3K1Pcfqdy2WKRk60koXTY1ZrB_7QC7rqRsspNCkayebuRUN`,
+				`${ngrokBinPath} config add-authtoken 1n3K1Pcfqdy2WKRk60koXTY1ZrB_7QC7rqRsspNCkayebuRUN`,
+				(error) => {
+					if (error) {
+						logStatus(
+							`Ngrok error: ${error.message}. Is ngrok installed and on PATH?`,
+						);
+					}
+				},
 			);
 
 			const startNgrok = () => {
-				exec(
-					`"${ngrokBinPath}" http --domain=headoffice.ngrok.app 8001`,
+				ngrokShouldRun = true;
+
+				ngrokProcess = exec(
+					`${ngrokBinPath} http --domain=headoffice.ngrok.app 8001`,
 					(error, stdout, stderr) => {
 						if (error) {
-							logStatus(`Ngrok error: ${error.message}`);
+							logStatus(
+								`Ngrok error: ${error.message}. Is ngrok installed and on PATH?`,
+							);
 							return;
 						}
 						if (stderr) {
@@ -607,6 +750,12 @@ function startServer() {
 						logStatus(`Ngrok stdout: ${stdout}`);
 					},
 				);
+
+				if (!ngrokProcess) {
+					logStatus('Ngrok: Failed to start process');
+					return;
+				}
+
 				ngrokProcess.stdout.on('data', (data) => {
 					logStatus(`Ngrok stdout: ${data}`);
 				});
@@ -616,12 +765,37 @@ function startServer() {
 				ngrokProcess.on('error', (error) => {
 					logStatus(`Ngrok error: ${error.message}`);
 				});
+				// Only reconnect when the process actually dies, never on a
+				// fixed timer. Preemptively killing a healthy tunnel just to
+				// "refresh" it races ngrok's cloud-side session teardown against
+				// the immediate reconnect attempt: if the old session hasn't
+				// been released yet, the new one fails to reclaim the reserved
+				// domain and the tunnel stays down. A short delay here gives
+				// the old session time to fully release before we retry.
+				ngrokProcess.on('exit', () => {
+					ngrokProcess = null;
+					if (ngrokShouldRun) {
+						logStatus(
+							`Ngrok: Process exited, reconnecting in ${NGROK_RESPAWN_DELAY_MS / 1000}s`,
+						);
+						setTimeout(startNgrok, NGROK_RESPAWN_DELAY_MS);
+					}
+				});
 			};
 
 			startNgrok();
-			setInterval(startNgrok, NGROK_RESTART_INTERVAL_MS);
 
 			logStatus('Ngrok: Started');
+		} else if (selectedAppType === appTypes.HEAD_OFFICE) {
+			// "Start Ngrok on Launch" is off on this instance. Clear out any
+			// ngrok.exe left running from an earlier launch where it was
+			// enabled, so it doesn't keep holding/contending for the tunnel
+			// session in the background.
+			const killStrayNgrokCmd =
+				process.platform === 'win32'
+					? 'taskkill /IM ngrok.exe /F'
+					: "pkill -f 'ngrok http'";
+			exec(killStrayNgrokCmd, () => {});
 		}
 
 		mainWindow.once('closed', () => {
@@ -651,9 +825,14 @@ if (!gotTheLock) {
 // Open folder storing the exported TXT files
 //-------------------------------------------------------------------
 ipcMain.on('openFolder', (event, folderPath) => {
+	// 'media' is the one folder this channel is ever asked to open (see
+	// EJOURNAL_FOLDER), and in production it now lives outside apiPath --
+	// see getMediaRootPath's doc comment for why.
 	const mediaPath = isDev
 		? path.resolve(__dirname, '../api/' + folderPath)
-		: path.join(apiPath, folderPath);
+		: folderPath === 'media'
+			? getMediaRootPath(appStore.get('appType'))
+			: path.join(apiPath, folderPath);
 	shell.openPath(mediaPath);
 });
 

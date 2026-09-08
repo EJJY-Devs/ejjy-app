@@ -86,6 +86,9 @@ export const TabBranchProducts = ({ branch, disabled }: Props) => {
 				return isSoldInBranch;
 			})(),
 		},
+		options: {
+			keepPreviousData: true,
+		},
 	});
 
 	// NOTE: Hiding/showing of current balance is temporarily disabled as requested by Emman

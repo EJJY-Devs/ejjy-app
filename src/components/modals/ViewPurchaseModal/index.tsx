@@ -125,14 +125,6 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 					</tr>
 					<tr>
 						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
-							Check No.:
-						</td>
-						<td style={{ padding: '2px 0', textAlign: 'right' }}>
-							{EMPTY_CELL}
-						</td>
-					</tr>
-					<tr>
-						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
 							Authorizer:
 						</td>
 						<td style={{ padding: '2px 0', textAlign: 'right' }}>

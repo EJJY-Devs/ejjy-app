@@ -1,3 +1,4 @@
+// import { ThunderboltOutlined } from '@ant-design/icons';
 import { Button, Col, Modal, Row, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { RequestErrors } from 'components/RequestErrors';
@@ -21,8 +22,10 @@ import {
 	AuthorizationModal,
 	Props as AuthorizationModalProps,
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
+// import { GENERIC_ERROR_MESSAGE } from 'global';
 import { useQueryParams, useSiteSettingsNew } from 'hooks';
 import React, { useEffect, useState } from 'react';
+// import { ZReadReportsService } from 'services';
 import { getReportsApiUrl } from 'utils';
 
 type TableRow = {
@@ -50,6 +53,7 @@ export const ViewZReportsModal = ({ branchMachine, onClose }: Props) => {
 		setAuthorizeConfig,
 	] = useState<AuthorizationModalProps | null>(null);
 	const [userPrinter, setUserPrinter] = useState<User | null>(null);
+	// const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams();
@@ -106,11 +110,60 @@ export const ViewZReportsModal = ({ branchMachine, onClose }: Props) => {
 		}
 	}, [zReadReportsData?.list]);
 
+	// GENERATE AS OF NOW (disabled)
+	// const handleGeneratePreview = () => {
+	// 	setAuthorizeConfig({
+	// 		description: 'Authorize Generation of Z-Read Report',
+	// 		userTypes: [
+	// 			userTypes.ADMIN,
+	// 			userTypes.OFFICE_MANAGER,
+	// 			userTypes.BRANCH_MANAGER,
+	// 		],
+	// 		onSuccess: async (user) => {
+	// 			setIsGeneratingPreview(true);
+	//
+	// 			try {
+	// 				const response = await ZReadReportsService.create(
+	// 					{
+	// 						branch_machine_id: branchMachine.id,
+	// 						user_id: user.id,
+	// 						is_preview: true,
+	// 					} as any,
+	// 					getReportsApiUrl(),
+	// 				);
+	//
+	// 				setUserPrinter(user);
+	// 				setSelectedZReadReport(response.data);
+	// 			} catch (error) {
+	// 				message.error(GENERIC_ERROR_MESSAGE);
+	// 			} finally {
+	// 				setIsGeneratingPreview(false);
+	// 				setAuthorizeConfig(null);
+	// 			}
+	// 		},
+	// 	});
+	// };
+
 	return (
 		<Modal
 			className="Modal__hasFooter"
 			footer={<Button onClick={onClose}>Close</Button>}
 			title="Z-report Reports"
+			// GENERATE AS OF NOW (disabled) — swap the title above for this to re-enable:
+			// title={
+			// 	<Space>
+			// 		<span>Z-report Reports</span>
+			// 		<Tooltip title="Generate As of Now">
+			// 			<Button
+			// 				icon={<ThunderboltOutlined />}
+			// 				loading={isGeneratingPreview}
+			// 				shape="circle"
+			// 				size="small"
+			// 				onClick={handleGeneratePreview}
+			// 			/>
+			// 		</Tooltip>
+			// 	</Space>
+			// }
 			width={500}
 			centered
 			closable

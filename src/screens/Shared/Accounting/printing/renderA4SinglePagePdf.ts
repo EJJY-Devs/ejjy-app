@@ -34,21 +34,46 @@ const renderA4Pdf = async ({
 	pageHeightPx: number;
 	wrapperWidthPx: number;
 }): Promise<jsPDF> => {
-	const container = document.createElement('div');
-	container.style.position = 'fixed';
-	container.style.top = '0';
-	container.style.left = '-100000px';
-	container.style.width = `${wrapperWidthPx}px`;
-	container.style.background = '#ffffff';
-	container.innerHTML = html;
-	document.body.appendChild(container);
+	// `html` is a full `<!DOCTYPE html><html><head><style>...` document (see
+	// the printX() functions in this folder). Dropping that directly into a
+	// container inside the live app document via innerHTML doesn't sandbox
+	// it: the fragment parser discards the outer <html>/<head>/<body> tags
+	// but keeps the <style> element, and a <style> tag applies its rules
+	// document-wide no matter where in the DOM it sits — so selectors like
+	// `body`, `h1`, `table` bleed into the real app and change its fonts
+	// for as long as the container is attached. Rendering inside an iframe
+	// gives that markup its own document, so the leak can't happen.
+	const iframe = document.createElement('iframe');
+	iframe.style.position = 'fixed';
+	iframe.style.top = '0';
+	iframe.style.left = '-100000px';
+	iframe.style.width = `${wrapperWidthPx}px`;
+	iframe.style.border = 'none';
+	document.body.appendChild(iframe);
 
 	try {
+		const iframeDoc = iframe.contentDocument;
+		if (!iframeDoc) {
+			throw new Error(
+				'Failed to create an isolated render context for the PDF',
+			);
+		}
+
+		iframeDoc.open();
+		iframeDoc.write(html);
+		iframeDoc.close();
+		iframeDoc.body.style.margin = '0';
+
 		if (document.fonts?.ready) {
 			await document.fonts.ready;
 		}
 
-		const canvas = await html2canvas(container, {
+		// Iframes clip their content to their own box like a little window,
+		// unlike the plain div this replaced (which just grew to fit its
+		// content). Size it to match before capturing so nothing gets cut off.
+		iframe.style.height = `${iframeDoc.documentElement.scrollHeight}px`;
+
+		const canvas = await html2canvas(iframeDoc.body, {
 			scale: RENDER_SCALE,
 			backgroundColor: '#ffffff',
 			useCORS: true,
@@ -83,7 +108,7 @@ const renderA4Pdf = async ({
 
 		return pdf;
 	} finally {
-		document.body.removeChild(container);
+		document.body.removeChild(iframe);
 	}
 };
 

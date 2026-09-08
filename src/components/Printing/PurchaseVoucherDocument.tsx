@@ -57,10 +57,6 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 							{purchase?.supplier_name || EMPTY_CELL}
 						</td>
 					</tr>
-					<tr>
-						<td style={rowStyle}>Check No.:</td>
-						<td style={{ ...rowStyle, textAlign: 'right' }}>{EMPTY_CELL}</td>
-					</tr>
 					{purchase?.authorizer && (
 						<tr>
 							<td style={rowStyle}>Authorizer:</td>

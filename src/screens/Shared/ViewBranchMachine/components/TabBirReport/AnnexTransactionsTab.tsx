@@ -1,6 +1,7 @@
 import { Col, Row } from 'antd';
 import { RequestErrors, TableHeader, TimeRangeFilter } from 'components';
 import {
+	AuthorizationModal,
 	BirAnnexTransactions,
 	BranchMachine,
 	DEFAULT_PAGE,
@@ -8,6 +9,7 @@ import {
 	PdfButtons,
 	SpecialDiscountCode,
 	TransactionsService,
+	User,
 	convertIntoArray,
 	printBirReportNAAC,
 	printBirReportPWD,
@@ -17,11 +19,12 @@ import {
 	timeRangeTypes,
 	useQueryParams,
 	useTransactions,
+	userTypes,
 } from 'ejjy-global';
+import { Props as AuthorizationModalProps } from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import type jsPDF from 'jspdf';
 import { refetchOptions } from 'global';
 import { useSiteSettingsNew, usePdfPreviewModal } from 'hooks';
-import { useUserStore } from 'stores';
 import { getLocalApiUrl, savePdf } from 'utils';
 import React, { useState } from 'react';
 import { birAnnexTransactionsTabs as tabs } from 'ejjy-global/dist/components/BirAnnexTransactions/data';
@@ -38,7 +41,6 @@ export const AnnexTransactionsTab = ({
 	discountCode,
 }: Props) => {
 	// CUSTOM HOOKS
-	const user = useUserStore((state) => state.user);
 	const { params } = useQueryParams();
 	const {
 		data: siteSettings,
@@ -63,6 +65,10 @@ export const AnnexTransactionsTab = ({
 	});
 
 	const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+	const [
+		authorizeConfig,
+		setAuthorizeConfig,
+	] = useState<AuthorizationModalProps | null>(null);
 
 	const pdfTitle = (() => {
 		if (discountCode === 'SC') return 'AnnexE2';
@@ -72,7 +78,7 @@ export const AnnexTransactionsTab = ({
 		return '';
 	})();
 
-	const buildPdfHtml = async () => {
+	const buildPdfHtml = async (authorizedUser: User) => {
 		const response = await TransactionsService.list(
 			{
 				branch_machine_id: branchMachine.id,
@@ -90,18 +96,33 @@ export const AnnexTransactionsTab = ({
 			return printBirReportNAAC(
 				transactions,
 				siteSettings,
-				user,
+				authorizedUser,
 				branchMachine,
 			);
 		}
 		if (category === tabs.SOLO_PARENTS_SALES_REPORT) {
-			return printBirReportSP(transactions, siteSettings, user, branchMachine);
+			return printBirReportSP(
+				transactions,
+				siteSettings,
+				authorizedUser,
+				branchMachine,
+			);
 		}
 		if (category === tabs.SENIOR_CITIZEN_SALES_REPORT) {
-			return printBirReportSC(transactions, siteSettings, user, branchMachine);
+			return printBirReportSC(
+				transactions,
+				siteSettings,
+				authorizedUser,
+				branchMachine,
+			);
 		}
 		if (category === tabs.PERSONS_WITH_DISABILITY_SALES_REPORT) {
-			return printBirReportPWD(transactions, siteSettings, user, branchMachine);
+			return printBirReportPWD(
+				transactions,
+				siteSettings,
+				authorizedUser,
+				branchMachine,
+			);
 		}
 
 		return '';
@@ -111,10 +132,10 @@ export const AnnexTransactionsTab = ({
 	// (.bir-reports-pdf, designed at 2300px wide), so they print the same way:
 	// captured at that natural width and shrunk to fit one whole A4 page turned
 	// crosswise (landscape), so nothing is clipped.
-	const renderPdf = async (): Promise<jsPDF | null> => {
+	const renderPdf = async (authorizedUser: User): Promise<jsPDF | null> => {
 		setIsLoadingPdf(true);
 		try {
-			const html = await buildPdfHtml();
+			const html = await buildPdfHtml(authorizedUser);
 			return await renderA4SinglePagePdf({
 				html,
 				title: pdfTitle,
@@ -129,26 +150,50 @@ export const AnnexTransactionsTab = ({
 		}
 	};
 
-	const downloadPdf = async () => {
-		const pdf = await renderPdf();
+	const downloadPdfAsUser = async (authorizedUser: User) => {
+		const pdf = await renderPdf(authorizedUser);
 		if (pdf) {
 			await savePdf(pdf, `${pdfTitle}.pdf`);
 		}
 	};
 
+	// The printed header's UserID is the authorizer who unlocked this PDF, not
+	// necessarily whoever is logged in — so Preview/Download must each be
+	// gated behind their own PIN prompt (see AuthorizationModal) rather than
+	// reusing the session user.
+	const authorize = (
+		onSuccess: (authorizedUser: User) => void | Promise<void>,
+	) => {
+		setAuthorizeConfig({
+			description: `Authorize Viewing of ${category}`,
+			userTypes: [
+				userTypes.ADMIN,
+				userTypes.OFFICE_MANAGER,
+				userTypes.BRANCH_MANAGER,
+			],
+			onSuccess: async (authorizedUser) => {
+				setAuthorizeConfig(null);
+				await onSuccess(authorizedUser);
+			},
+		});
+	};
+
 	// Show the generated PDF in an in-app dialog instead of a new tab/window.
 	const { showPreview, pdfPreviewModal } = usePdfPreviewModal({
 		title: pdfTitle,
-		onDownload: downloadPdf,
+		onDownload: () => authorize(downloadPdfAsUser),
 	});
 
-	const previewPdf = async () => {
-		const pdf = await renderPdf();
+	const previewPdfAsUser = async (authorizedUser: User) => {
+		const pdf = await renderPdf(authorizedUser);
 		if (!pdf) {
 			return;
 		}
 		showPreview(pdf.output('bloburl').toString());
 	};
+
+	const downloadPdf = () => authorize(downloadPdfAsUser);
+	const previewPdf = () => authorize(previewPdfAsUser);
 
 	// METHODS
 
@@ -188,6 +233,14 @@ export const AnnexTransactionsTab = ({
 				transactions={transactionsData?.list}
 				transactionsTotal={transactionsData?.total}
 			/>
+
+			{authorizeConfig && (
+				<AuthorizationModal
+					{...authorizeConfig}
+					baseURL={getLocalApiUrl()}
+					onCancel={() => setAuthorizeConfig(null)}
+				/>
+			)}
 		</>
 	);
 };

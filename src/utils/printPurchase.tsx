@@ -65,7 +65,6 @@ const renderNative = ({ purchase }: PrintPurchaseProps): string[] => {
 		{ label: 'Voucher No.:', value: purchase?.reference_number || EMPTY_CELL },
 		{ label: 'Date:', value: formatDateTime(purchase?.datetime_created) },
 		{ label: 'To:', value: purchase?.supplier_name || EMPTY_CELL },
-		{ label: 'Check No.:', value: EMPTY_CELL },
 	];
 	if (purchase?.authorizer) {
 		items.push({

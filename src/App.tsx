@@ -2,6 +2,7 @@ import { Spin } from 'antd';
 import {
 	AppIcons,
 	CommonRoute,
+	EjournalExportIndicator,
 	NoAuthRoute,
 	PageInformation,
 } from 'components';
@@ -14,6 +15,7 @@ import {
 	userTypes,
 } from 'global';
 import {
+	useAutoEjournalExport,
 	useBranches,
 	useDownloadStatusListener,
 	useInitializeData,
@@ -253,6 +255,20 @@ const App = () => {
 		},
 	});
 
+	// Runs the e-journal export incrementally, scoped to just what changed
+	// since each branch machine's last successful export -- see
+	// useAutoEjournalExport for the full behavior (including why it's a
+	// no-op for any machine that hasn't had its one-time manual backfill
+	// run yet).
+	useAutoEjournalExport({
+		branchId,
+		enabled:
+			getAppType() === appTypes.BACK_OFFICE &&
+			isNetworkSuccess &&
+			isFetchingBranchesSuccess &&
+			branchId !== null,
+	});
+
 	// Check sync status every 60 seconds for headoffice (background polling)
 	useProductSyncStatus({
 		params: {
@@ -314,6 +330,8 @@ const App = () => {
 			<PageInformation />
 
 			<AppIcons />
+
+			<EjournalExportIndicator />
 
 			<Spin
 				className="GlobalSpinner"

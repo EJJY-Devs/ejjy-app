@@ -83,6 +83,10 @@ export const JSPDF_SETTINGS: jsPDFOptions = {
 
 export const EJOURNAL_FOLDER = 'media';
 export const DESKTOP_FOLDER_OPEN_FUNCTION = 'openFolder';
+// Prefix for the per-branch-machine key (suffixed with the machine's id)
+// tracking when its e-journal export last completed successfully -- see
+// getEjournalLastExportedAt/setEjournalLastExportedAt.
+export const APP_EJOURNAL_LAST_EXPORT_PREFIX = 'EJJY_EJOURNAL_LAST_EXPORT_';
 
 export const AUTOMATIC_GENERATED_REPORT_USER_NAME = 'Auto';
 

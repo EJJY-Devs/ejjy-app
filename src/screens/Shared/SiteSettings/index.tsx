@@ -32,7 +32,7 @@ import {
 	Props as AuthorizationModalProps,
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { ErrorMessage, Form, Formik } from 'formik';
-import { appTypes, inputTypes, userTypes } from 'global';
+import { appTypes, inputTypes, taxTypes, userTypes } from 'global';
 import { usePingOnlineServer, useSiteSettingsNew } from 'hooks';
 import moment from 'moment';
 import React, { useCallback, useState } from 'react';
@@ -552,7 +552,7 @@ export const SiteSettings = () => {
 										/>
 									</Col>
 
-									{/* <Divider>Receipt Header</Divider>
+									<Divider>Receipt Header</Divider>
 
 									<Col md={12} span={24}>
 										{renderInputField({
@@ -619,7 +619,7 @@ export const SiteSettings = () => {
 											setFieldValue,
 											values,
 										})}
-									</Col> */}
+									</Col>
 
 									<Divider>Receipt Footer</Divider>
 

@@ -19,21 +19,39 @@ export const renderReceiptPdf = async ({
 	title: string;
 	widthPx: number;
 }): Promise<jsPDF> => {
-	const container = document.createElement('div');
-	container.style.position = 'fixed';
-	container.style.top = '0';
-	container.style.left = '-100000px';
-	container.style.width = `${widthPx}px`;
-	container.style.background = '#ffffff';
-	container.innerHTML = html;
-	document.body.appendChild(container);
+	// See renderA4SinglePagePdf.ts for why this renders inside an iframe
+	// rather than a container appended straight into the live document: the
+	// printed markup carries its own <style> block, and a <style> tag applies
+	// document-wide no matter where it sits in the DOM, bleeding its generic
+	// selectors (body, table, ...) into the real app's fonts.
+	const iframe = document.createElement('iframe');
+	iframe.style.position = 'fixed';
+	iframe.style.top = '0';
+	iframe.style.left = '-100000px';
+	iframe.style.width = `${widthPx}px`;
+	iframe.style.border = 'none';
+	document.body.appendChild(iframe);
 
 	try {
+		const iframeDoc = iframe.contentDocument;
+		if (!iframeDoc) {
+			throw new Error(
+				'Failed to create an isolated render context for the PDF',
+			);
+		}
+
+		iframeDoc.open();
+		iframeDoc.write(html);
+		iframeDoc.close();
+		iframeDoc.body.style.margin = '0';
+
 		if (document.fonts?.ready) {
 			await document.fonts.ready;
 		}
 
-		const canvas = await html2canvas(container, {
+		iframe.style.height = `${iframeDoc.documentElement.scrollHeight}px`;
+
+		const canvas = await html2canvas(iframeDoc.body, {
 			scale: RENDER_SCALE,
 			backgroundColor: '#ffffff',
 			useCORS: true,
@@ -64,6 +82,6 @@ export const renderReceiptPdf = async ({
 
 		return pdf;
 	} finally {
-		document.body.removeChild(container);
+		document.body.removeChild(iframe);
 	}
 };

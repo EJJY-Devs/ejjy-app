@@ -37,10 +37,7 @@ export const ReportsPerMachine = ({
 	const [selectedReportType, setSelectedReadReportType] = useState<
 		string | null
 	>(null);
-	const [
-		isExportEjournalModalVisible,
-		setIsExportEjournalModalVisible,
-	] = useState(false);
+	const [isEjournalModalVisible, setIsEjournalModalVisible] = useState(false);
 
 	// CUSTOM HOOKS
 	const user = useUserStore((state) => state.user);
@@ -134,6 +131,16 @@ export const ReportsPerMachine = ({
 	return (
 		<>
 			<TableHeader
+				buttons={
+					getAppType() === appTypes.BACK_OFFICE && (
+						<Button
+							type="primary"
+							onClick={() => setIsEjournalModalVisible(true)}
+						>
+							Generate E-journals
+						</Button>
+					)
+				}
 				title="Reports per Machine"
 				wrapperClassName={tableHeaderClassName}
 			/>
@@ -153,9 +160,10 @@ export const ReportsPerMachine = ({
 				bordered
 			/>
 
-			{isExportEjournalModalVisible && (
+			{isEjournalModalVisible && (
 				<ReportTimeRangeModal
-					onClose={() => setIsExportEjournalModalVisible(null)}
+					branchId={branchId}
+					onClose={() => setIsEjournalModalVisible(false)}
 				/>
 			)}
 

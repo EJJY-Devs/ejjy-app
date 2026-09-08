@@ -6,6 +6,7 @@ export * from './ButtonIcons/ButtonIcons';
 export * from './ColoredText/ColoredText';
 export * from './ConnectionAlert';
 export { default as ConnectivityType } from './ConnectivityType';
+export * from './EjournalExportIndicator';
 export * from './Icons/Icons';
 export * from './KeyboardButton/KeyboardButton';
 export * from './NotificationItem';

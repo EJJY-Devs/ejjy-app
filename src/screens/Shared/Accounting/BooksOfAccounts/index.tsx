@@ -20,7 +20,11 @@ import {
 import { ExpenseVoucher } from 'screens/Shared/Accounting/ExpenseVouchers';
 import { ViewExpenseVoucherModal } from 'screens/Shared/Accounting/ExpenseVouchers/modals/ViewExpenseVoucherModal';
 import { ViewPurchaseModal } from 'components/modals';
+import { CashDisbursementsTab } from './components/CashDisbursementsTab';
+import { CashReceiptsTab } from './components/CashReceiptsTab';
 import { GeneralLedgerTab } from './components/GeneralLedgerTab';
+import { SubsidiaryPurchasesTab } from './components/SubsidiaryPurchasesTab';
+import { SubsidiarySalesTab } from './components/SubsidiarySalesTab';
 import { TrialBalanceTab } from './components/TrialBalanceTab';
 import {
 	GeneralJournalEntry,
@@ -181,6 +185,22 @@ export const BooksOfAccounts = () => {
 			return 'Trial Balance';
 		}
 
+		if (activeTab === 'cash-receipts') {
+			return 'Cash Receipts';
+		}
+
+		if (activeTab === 'cash-disbursements') {
+			return 'Cash Disbursements';
+		}
+
+		if (activeTab === 'subsidiary-sales') {
+			return 'Subsidiary Sales';
+		}
+
+		if (activeTab === 'subsidiary-purchases') {
+			return 'Subsidiary Purchases';
+		}
+
 		return 'General Journal';
 	};
 
@@ -223,6 +243,18 @@ export const BooksOfAccounts = () => {
 							isHeadOffice={isHeadOffice}
 							localBranchId={localBranchId}
 						/>
+					</Tabs.TabPane>
+					<Tabs.TabPane key="cash-receipts" tab="Cash Receipts">
+						<CashReceiptsTab />
+					</Tabs.TabPane>
+					<Tabs.TabPane key="cash-disbursements" tab="Cash Disbursements">
+						<CashDisbursementsTab />
+					</Tabs.TabPane>
+					<Tabs.TabPane key="subsidiary-sales" tab="Subsidiary Sales">
+						<SubsidiarySalesTab />
+					</Tabs.TabPane>
+					<Tabs.TabPane key="subsidiary-purchases" tab="Subsidiary Purchases">
+						<SubsidiaryPurchasesTab />
 					</Tabs.TabPane>
 				</Tabs>
 			</Box>

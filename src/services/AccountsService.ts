@@ -27,6 +27,7 @@ interface Modify {
 	place_of_birth?: string;
 	religion?: string;
 	tin: string;
+	tax_type?: string;
 	type: string;
 	pin?: string;
 }

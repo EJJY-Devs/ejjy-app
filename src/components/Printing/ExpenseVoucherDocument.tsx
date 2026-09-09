@@ -65,6 +65,12 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 						</td>
 					</tr>
 					<tr>
+						<td style={rowStyle}>Invoice #:</td>
+						<td style={{ ...rowStyle, textAlign: 'right' }}>
+							{expenseVoucher?.invoice_number || EMPTY_CELL}
+						</td>
+					</tr>
+					<tr>
 						<td style={rowStyle}>Type:</td>
 						<td style={{ ...rowStyle, textAlign: 'right' }}>
 							{expenseVoucher?.payment_type === 'on_account'
@@ -98,6 +104,11 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 						<th style={{ ...headerCellStyle, textAlign: 'left' }}>
 							Description
 						</th>
+						<th
+							style={{ ...headerCellStyle, textAlign: 'center', width: '80px' }}
+						>
+							Type
+						</th>
 						<th style={{ ...headerCellStyle, textAlign: 'right' }}>Amount</th>
 					</tr>
 				</thead>
@@ -107,6 +118,9 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 						<tr key={index}>
 							<td style={{ ...cellStyle, textAlign: 'center' }}>{index + 1}</td>
 							<td style={cellStyle}>{item.description}</td>
+							<td style={{ ...cellStyle, textAlign: 'center' }}>
+								{item.type === 'VE' ? 'VAT Exempt' : 'Vatable'}
+							</td>
 							<td style={{ ...cellStyle, textAlign: 'right' }}>
 								{formatInPeso(item.amount, 'P')}
 							</td>
@@ -114,7 +128,7 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 					))}
 					<tr>
 						<td
-							colSpan={2}
+							colSpan={3}
 							style={{ ...cellStyle, textAlign: 'right', fontWeight: 'bold' }}
 						>
 							Total

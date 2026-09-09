@@ -50,6 +50,7 @@ export const useExpenseVoucherCreate = () => {
 	return useMutation<any, any, any>(
 		({
 			payee,
+			invoiceNumber,
 			paymentType,
 			particulars,
 			amount,
@@ -61,6 +62,7 @@ export const useExpenseVoucherCreate = () => {
 			ExpenseVoucherService.create(
 				{
 					payee,
+					invoice_number: invoiceNumber,
 					payment_type: paymentType,
 					particulars,
 					amount,

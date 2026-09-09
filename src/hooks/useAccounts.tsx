@@ -78,6 +78,7 @@ export const useAccountCreate = () =>
 			placeOfBirth,
 			religion,
 			tin,
+			taxType,
 			type,
 			pin,
 		}: any) =>
@@ -101,6 +102,7 @@ export const useAccountCreate = () =>
 					place_of_birth: placeOfBirth,
 					religion,
 					tin,
+					tax_type: taxType,
 					type,
 					pin,
 				},
@@ -130,6 +132,7 @@ export const useAccountEdit = () =>
 			placeOfBirth,
 			religion,
 			tin,
+			taxType,
 			type,
 			pin,
 		}: any) =>
@@ -154,6 +157,7 @@ export const useAccountEdit = () =>
 					place_of_birth: placeOfBirth,
 					religion,
 					tin,
+					tax_type: taxType,
 					type,
 					pin,
 				},

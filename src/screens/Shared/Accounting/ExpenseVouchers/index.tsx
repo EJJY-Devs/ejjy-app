@@ -59,6 +59,7 @@ export interface ExpenseVoucherAuthorizer {
 export interface ExpenseVoucherParticular {
 	description: string;
 	amount: string;
+	type: 'V' | 'VE';
 }
 
 export interface ExpenseVoucher {
@@ -66,6 +67,7 @@ export interface ExpenseVoucher {
 	reference_number: string | null;
 	datetime_created: string;
 	payee: string;
+	invoice_number: string | null;
 	payment_type: 'pay' | 'on_account';
 	particulars: ExpenseVoucherParticular[];
 	amount: string;
@@ -161,6 +163,11 @@ export const ExpenseVouchers = () => {
 				title: 'Payee',
 				dataIndex: 'payee',
 				key: 'payee',
+			},
+			{
+				title: 'Invoice #',
+				dataIndex: 'invoice_number',
+				key: 'invoice_number',
 			},
 			{
 				title: 'Particulars',
@@ -343,6 +350,7 @@ export const ExpenseVouchers = () => {
 					try {
 						await createExpenseVoucher({
 							payee: values.payee,
+							invoiceNumber: values.invoiceNumber,
 							paymentType: values.paymentType,
 							particulars: values.particulars,
 							amount: values.amount,

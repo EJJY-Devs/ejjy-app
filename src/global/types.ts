@@ -292,4 +292,5 @@ export const authorizationStatuses = {
 // Extended types
 export interface Account extends BaseAccount {
 	outstanding_balance?: number;
+	tax_type?: 'VAT' | 'NVAT';
 }

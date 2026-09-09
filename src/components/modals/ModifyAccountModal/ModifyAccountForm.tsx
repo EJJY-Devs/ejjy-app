@@ -19,7 +19,7 @@ import {
 import { RcFile } from 'antd/es/upload/interface';
 import { filterOption } from 'ejjy-global';
 import { ErrorMessage, Form, Formik, useFormikContext } from 'formik';
-import { accountTypes } from 'global';
+import { accountTypes, taxTypes } from 'global';
 import moment from 'moment';
 import React, { useCallback, useState } from 'react';
 import * as Yup from 'yup';
@@ -52,6 +52,15 @@ const getCorporateGovernmentSchema = (label) =>
 			then: Yup.string().trim().required().label(label),
 		});
 
+const getPersonalCorporateSchema = (label) =>
+	Yup.string()
+		.nullable()
+		.when('type', {
+			is: (type) =>
+				[accountTypes.PERSONAL, accountTypes.CORPORATE].includes(type),
+			then: Yup.string().trim().required().label(label),
+		});
+
 export const ModifyAccountForm = ({
 	account,
 	loading,
@@ -69,6 +78,7 @@ export const ModifyAccountForm = ({
 				lastName: account?.last_name || '',
 				birthday: account?.birthday ? moment(account?.birthday) : null,
 				tin: account?.tin || '',
+				taxType: account?.tax_type || undefined,
 				businessName: account?.business_name || undefined,
 				homeAddress: account?.home_address || '',
 				businessAddress: account?.business_address || undefined,
@@ -93,6 +103,7 @@ export const ModifyAccountForm = ({
 				lastName: Yup.string().trim().required().label('Last Name'),
 				birthday: Yup.date().nullable().required().label('Birthday'),
 				tin: Yup.string().trim().required().label('TIN'),
+				taxType: getPersonalCorporateSchema('Tax Type'),
 				homeAddress: Yup.string().trim().required().label('Address (Home)'),
 				businessName: getCorporateGovernmentSchema('Business Name'),
 				businessAddress: getCorporateGovernmentSchema('Address (Business)'),
@@ -185,6 +196,14 @@ export const ModifyAccountForm = ({
 									if (employees.includes(value)) {
 										setFieldValue('businessName', undefined);
 										setFieldValue('businessAddress', undefined);
+									}
+
+									const taxTypeEligible = [
+										accountTypes.PERSONAL,
+										accountTypes.CORPORATE,
+									];
+									if (!taxTypeEligible.includes(value)) {
+										setFieldValue('taxType', undefined);
 									}
 
 									if (value === accountTypes.EMPLOYEE && !account) {
@@ -499,6 +518,29 @@ export const ModifyAccountForm = ({
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>
+
+						{[accountTypes.PERSONAL, accountTypes.CORPORATE].includes(
+							values.type,
+						) && (
+							<Col span={24}>
+								<Label label="Tax Type" spacing />
+								<Radio.Group
+									options={[
+										{ label: 'VAT', value: taxTypes.VAT },
+										{ label: 'NVAT', value: taxTypes.NVAT },
+									]}
+									optionType="button"
+									value={values.taxType}
+									onChange={(e) => {
+										setFieldValue('taxType', e.target.value);
+									}}
+								/>
+								<ErrorMessage
+									name="taxType"
+									render={(error) => <FieldError error={error} />}
+								/>
+							</Col>
+						)}
 
 						<Col span={24}>
 							<Label label="Address (Home)" spacing />

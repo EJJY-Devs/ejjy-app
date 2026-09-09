@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import {
 	Button,
+	Checkbox,
 	Col,
 	Input,
 	Popconfirm,
@@ -556,6 +557,42 @@ const Filter = () => {
 							</Select.Option>
 						))}
 					</Select>
+				</Col>
+
+				<Col lg={12} span={24}>
+					<Label label="Product/Service Search" spacing />
+					<Space align="center" size="middle">
+						<Checkbox
+							checked={params.showPurchases !== 'false'}
+							onChange={(event) => {
+								// Always send both flags explicitly so the backend
+								// filter never has to guess a missing one's state.
+								setQueryParams(
+									{
+										showPurchases: String(event.target.checked),
+										showExpenses: String(params.showExpenses === 'true'),
+									},
+									{ shouldResetPage: true },
+								);
+							}}
+						>
+							Purchases
+						</Checkbox>
+						<Checkbox
+							checked={params.showExpenses === 'true'}
+							onChange={(event) => {
+								setQueryParams(
+									{
+										showPurchases: String(params.showPurchases !== 'false'),
+										showExpenses: String(event.target.checked),
+									},
+									{ shouldResetPage: true },
+								);
+							}}
+						>
+							Expenses
+						</Checkbox>
+					</Space>
 				</Col>
 			</Row>
 		</>

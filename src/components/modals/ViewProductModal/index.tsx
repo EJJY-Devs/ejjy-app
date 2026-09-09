@@ -126,6 +126,12 @@ export const ViewProductModal = ({ product, onClose }: Props) => {
 				<Descriptions.Item label="Include in Scale">
 					{product.is_shown_in_scale_list ? 'Yes' : 'No'}
 				</Descriptions.Item>
+				<Descriptions.Item label="Show in Purchases">
+					{product.is_shown_in_purchases ? 'Yes' : 'No'}
+				</Descriptions.Item>
+				<Descriptions.Item label="Show in Expenses">
+					{product.is_shown_in_expenses ? 'Yes' : 'No'}
+				</Descriptions.Item>
 			</Descriptions>
 
 			<Divider orientation="left">Tags</Divider>

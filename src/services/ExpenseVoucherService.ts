@@ -12,10 +12,12 @@ interface List extends IListRequest {
 interface Particular {
 	description: string;
 	amount: number;
+	type?: 'V' | 'VE';
 }
 
 interface Create {
 	payee: string;
+	invoice_number?: string;
 	payment_type?: 'pay' | 'on_account';
 	particulars?: Particular[];
 	amount: number;

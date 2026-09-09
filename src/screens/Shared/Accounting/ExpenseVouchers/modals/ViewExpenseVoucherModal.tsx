@@ -43,6 +43,13 @@ const particularsColumns: ColumnsType<ExpenseVoucherParticular> = [
 	},
 	{ title: 'Description', dataIndex: 'description' },
 	{
+		title: 'Type',
+		dataIndex: 'type',
+		width: 100,
+		align: 'center',
+		render: (value: string) => (value === 'VE' ? 'VAT Exempt' : 'Vatable'),
+	},
+	{
 		title: 'Amount',
 		dataIndex: 'amount',
 		align: 'right',
@@ -199,6 +206,14 @@ export const ViewExpenseVoucherModal = ({
 					</tr>
 					<tr>
 						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
+							Invoice #:
+						</td>
+						<td style={{ padding: '2px 0', textAlign: 'right' }}>
+							{expenseVoucher.invoice_number || EMPTY_CELL}
+						</td>
+					</tr>
+					<tr>
+						<td style={{ padding: '2px 0', verticalAlign: 'top', width: 200 }}>
 							Type:
 						</td>
 						<td style={{ padding: '2px 0', textAlign: 'right' }}>
@@ -229,10 +244,10 @@ export const ViewExpenseVoucherModal = ({
 				size="small"
 				summary={() => (
 					<Table.Summary.Row>
-						<Table.Summary.Cell colSpan={2} index={0}>
+						<Table.Summary.Cell colSpan={3} index={0}>
 							<b>Total</b>
 						</Table.Summary.Cell>
-						<Table.Summary.Cell align="right" index={2}>
+						<Table.Summary.Cell align="right" index={3}>
 							<b>{formatInPeso(expenseVoucher.amount)}</b>
 						</Table.Summary.Cell>
 					</Table.Summary.Row>

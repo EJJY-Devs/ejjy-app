@@ -77,6 +77,14 @@ export const ViewAccountModal = ({ account, onClose }: Props) => {
 
 				<Descriptions.Item label="TIN">{account.tin}</Descriptions.Item>
 
+				{[accountTypes.PERSONAL, accountTypes.CORPORATE].includes(
+					account.type,
+				) && (
+					<Descriptions.Item label="Tax Type">
+						{account.tax_type}
+					</Descriptions.Item>
+				)}
+
 				{employers.includes(account.type) && (
 					<>
 						<Descriptions.Item

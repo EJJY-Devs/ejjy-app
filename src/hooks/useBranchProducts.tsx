@@ -221,6 +221,8 @@ const useBranchProductsNew = ({ params, options }: Query) =>
 			params?.productStatus,
 			params?.search,
 			params?.searchBy,
+			params?.showPurchases,
+			params?.showExpenses,
 		],
 		() => {
 			return wrapServiceWithCatch(
@@ -240,6 +242,8 @@ const useBranchProductsNew = ({ params, options }: Query) =>
 						product_status: params?.productStatus,
 						search: params?.search,
 						search_by: params?.searchBy,
+						show_purchases: params?.showPurchases,
+						show_expenses: params?.showExpenses,
 					},
 					getLocalApiUrl(),
 				),

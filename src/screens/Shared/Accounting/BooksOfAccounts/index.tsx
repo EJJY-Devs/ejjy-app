@@ -6,20 +6,22 @@ import {
 	Props as AuthorizationModalProps,
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { appTypes, MAX_PAGE_SIZE } from 'global';
-import { useJournalEntryCreate } from 'hooks';
+import { useJournalEntryCreate, useSiteSettingsNew } from 'hooks';
 import useAccountingTransactions from 'hooks/useAccountingTransactions';
 import React, { useCallback, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { getLocalApiUrl, getLocalBranchId } from 'utils';
+import { getLocalApiUrl, getLocalBranchId, getReportsApiUrl } from 'utils';
 import { getAppType } from 'utils/localStorage';
 import {
 	ExpenseVoucherService,
 	JournalEntriesService,
 	PurchasesService,
+	TransactionsService,
 } from 'services';
 import { ExpenseVoucher } from 'screens/Shared/Accounting/ExpenseVouchers';
 import { ViewExpenseVoucherModal } from 'screens/Shared/Accounting/ExpenseVouchers/modals/ViewExpenseVoucherModal';
 import { ViewPurchaseModal } from 'components/modals';
+import { ViewTransactionModal as ViewInvoiceModal } from 'ejjy-global';
 import { CashDisbursementsTab } from './components/CashDisbursementsTab';
 import { CashReceiptsTab } from './components/CashReceiptsTab';
 import { GeneralLedgerTab } from './components/GeneralLedgerTab';
@@ -58,6 +60,9 @@ export const BooksOfAccounts = () => {
 	const [viewTransactionRemarks, setViewTransactionRemarks] = useState('');
 	const [viewExpense, setViewExpense] = useState<ExpenseVoucher | null>(null);
 	const [viewPurchase, setViewPurchase] = useState<any>(null);
+	const [viewInvoiceTransaction, setViewInvoiceTransaction] = useState<any>(
+		null,
+	);
 	const [
 		authorizeConfig,
 		setAuthorizeConfig,
@@ -67,6 +72,8 @@ export const BooksOfAccounts = () => {
 		mutateAsync: createJournalEntry,
 		isLoading: isCreatingJournalEntry,
 	} = useJournalEntryCreate();
+
+	const { data: siteSettings } = useSiteSettingsNew();
 
 	const { data: transactionsData } = useAccountingTransactions({
 		params: {
@@ -96,6 +103,30 @@ export const BooksOfAccounts = () => {
 			setViewPurchase(response.data);
 		} catch {
 			message.error('Failed to load purchase');
+		}
+	}, []);
+
+	const handleViewInvoice = useCallback(async (entry: GeneralJournalEntry) => {
+		try {
+			const response = await TransactionsService.list(
+				{
+					or_number: entry.remarks,
+					...(entry.branchMachineId && {
+						branch_machine_id: entry.branchMachineId,
+					}),
+					page: 1,
+					page_size: 1,
+				},
+				getReportsApiUrl(),
+			);
+			const transaction = response.data?.results?.[0];
+			if (transaction) {
+				setViewInvoiceTransaction(transaction);
+			} else {
+				message.error('Failed to load invoice');
+			}
+		} catch {
+			message.error('Failed to load invoice');
 		}
 	}, []);
 
@@ -227,6 +258,7 @@ export const BooksOfAccounts = () => {
 							onCreateJournalEntry={() => setIsCreateOpen(true)}
 							onOpenJournalEntry={handleOpenJournalEntry}
 							onViewExpense={handleViewExpense}
+							onViewInvoice={handleViewInvoice}
 							onViewPurchase={handleViewPurchase}
 							onViewTransaction={handleViewTransaction}
 						/>
@@ -359,6 +391,13 @@ export const BooksOfAccounts = () => {
 				<ViewPurchaseModal
 					purchase={viewPurchase}
 					onClose={() => setViewPurchase(null)}
+				/>
+			)}
+			{viewInvoiceTransaction && (
+				<ViewInvoiceModal
+					siteSettings={siteSettings}
+					transaction={viewInvoiceTransaction}
+					onClose={() => setViewInvoiceTransaction(null)}
 				/>
 			)}
 			<ViewTransactionModal

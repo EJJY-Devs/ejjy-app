@@ -35,6 +35,7 @@ export interface GeneralJournalEntry {
 	expenseReferenceNumber?: string | null;
 	purchaseId?: number | null;
 	purchaseReferenceNumber?: string | null;
+	branchMachineId?: number | null;
 }
 
 interface Props {
@@ -44,6 +45,7 @@ interface Props {
 	onCreateJournalEntry: () => void;
 	onOpenJournalEntry: (entry: GeneralJournalEntry) => void;
 	onViewExpense?: (expenseId: number) => void;
+	onViewInvoice?: (entry: GeneralJournalEntry) => void;
 	onViewPurchase?: (purchaseId: number) => void;
 	onViewTransaction?: (transactionId: number, description: string) => void;
 }
@@ -55,6 +57,7 @@ export const GeneralJournalTab = ({
 	onCreateJournalEntry,
 	onOpenJournalEntry,
 	onViewExpense,
+	onViewInvoice,
 	onViewPurchase,
 	onViewTransaction,
 }: Props) => {
@@ -126,6 +129,7 @@ export const GeneralJournalTab = ({
 			expenseReferenceNumber: entry.expense_reference_number ?? null,
 			purchaseId: entry.purchase ?? null,
 			purchaseReferenceNumber: entry.purchase_reference_number ?? null,
+			branchMachineId: entry.branch_machine ?? null,
 		}),
 	);
 
@@ -225,6 +229,21 @@ export const GeneralJournalTab = ({
 							</span>
 						);
 					}
+					if (
+						record.entryType === 'automated' &&
+						record.remarks &&
+						record.remarks !== EMPTY_CELL
+					) {
+						return (
+							<Button
+								style={{ padding: 0, height: 'auto' }}
+								type="link"
+								onClick={() => onViewInvoice?.(record)}
+							>
+								{record.remarks}
+							</Button>
+						);
+					}
 					return record.remarks;
 				},
 			},
@@ -246,7 +265,14 @@ export const GeneralJournalTab = ({
 		}
 
 		return baseColumns;
-	}, [isHeadOffice, onOpenJournalEntry, onViewTransaction]);
+	}, [
+		isHeadOffice,
+		onOpenJournalEntry,
+		onViewExpense,
+		onViewInvoice,
+		onViewPurchase,
+		onViewTransaction,
+	]);
 
 	return (
 		<>

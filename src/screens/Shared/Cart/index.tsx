@@ -77,13 +77,22 @@ export const Cart = ({
 		setAuthorizeConfig,
 	] = useState<AuthorizationModalProps | null>(null);
 
+	// Purchase Voucher details (Type/Supplier/Invoice #/Remarks) are collected
+	// FIRST for type='Purchase', before the PO is picked - the chosen supplier
+	// determines which purchase orders show up in the PO selector below.
+	const [purchaseVoucherFormData, setPurchaseVoucherFormData] = useState<any>(
+		null,
+	);
+	const [
+		isPurchaseVoucherFormVisible,
+		setIsPurchaseVoucherFormVisible,
+	] = useState(type === 'Purchase');
+
 	// Purchase Order selection state
 	const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState<
 		number | null
 	>(null);
-	const [isPOSelectVisible, setIsPOSelectVisible] = useState(
-		type === 'Purchase',
-	);
+	const [isPOSelectVisible, setIsPOSelectVisible] = useState(false);
 	const poProductsPopulated = useRef(false);
 
 	const hasPrePopulated =
@@ -122,12 +131,17 @@ export const Cart = ({
 		params: { pageSize: MAX_PAGE_SIZE },
 	});
 
-	// Load purchase orders for PO selector (only when type is Purchase)
+	// Load purchase orders for PO selector (only when type is Purchase).
+	// Scoped to the supplier chosen in the voucher details step, since that's
+	// what determines which POs are relevant.
 	const {
 		data: { purchaseOrders = [] } = {},
 		isFetching: isFetchingPurchaseOrders,
 	} = usePurchaseOrders({
-		params: { pageSize: MAX_PAGE_SIZE },
+		params: {
+			pageSize: MAX_PAGE_SIZE,
+			supplierName: purchaseVoucherFormData?.supplierName,
+		},
 	});
 
 	// Load selected PO details to pre-populate cart
@@ -628,7 +642,17 @@ export const Cart = ({
 
 			handleAdjustmentSlipAuthorize();
 		} else if (type === 'Purchase') {
-			setIsCreatePurchaseVisible(true);
+			// Voucher details (Type/Supplier/Invoice #/Remarks) were already
+			// collected as the first step of this flow - go straight to
+			// authorization instead of asking for them again.
+			const currentProducts = useBoundStore.getState().products;
+
+			if (!currentProducts || currentProducts.length === 0) {
+				message.error('Please add products to the cart before submission.');
+				return;
+			}
+
+			handlePurchaseFormSubmit(purchaseVoucherFormData);
 		} else if (type === 'Purchase Order') {
 			const currentProducts = useBoundStore.getState().products;
 			const incomplete = currentProducts.filter(
@@ -650,6 +674,23 @@ export const Cart = ({
 		setSelectedBranchId(branch);
 		setIsBranchSelectVisible(false);
 	};
+
+	// Voucher details step (Type/Supplier/Invoice #/Remarks) - shown FIRST for
+	// Purchase, before the PO selector, since the chosen supplier determines
+	// which purchase orders are offered next.
+	if (type === 'Purchase' && isPurchaseVoucherFormVisible) {
+		return (
+			<CreatePurchaseVoucherModal
+				isLoading={false}
+				onClose={onClose}
+				onSubmit={(formData) => {
+					setPurchaseVoucherFormData(formData);
+					setIsPurchaseVoucherFormVisible(false);
+					setIsPOSelectVisible(true);
+				}}
+			/>
+		);
+	}
 
 	// PO selector step (shown before the cart for Purchase type)
 	if (type === 'Purchase' && isPOSelectVisible) {

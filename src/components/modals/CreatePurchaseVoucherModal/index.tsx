@@ -23,11 +23,12 @@ type ModalProps = {
 	onClose: () => void;
 };
 
-const formDetails = {
+const getFormDetails = (isPurchaseOrder: boolean) => ({
 	defaultValues: {
 		paymentType: 'on_account',
 		supplierAccountId: null,
 		supplierName: '',
+		invoiceNumber: '',
 		overallRemarks: '',
 	},
 	schema: Yup.object().shape({
@@ -39,16 +40,19 @@ const formDetails = {
 			.nullable()
 			.label('Supplier')
 			.when('paymentType', {
-				is: 'on_account',
+				is: (value) => !isPurchaseOrder && value === 'on_account',
 				then: (schema) =>
 					schema.required(
 						'Supplier must be an existing account when payment type is On Account',
 					),
 			}),
 		supplierName: Yup.string().trim().required().label('Supplier'),
+		invoiceNumber: isPurchaseOrder
+			? Yup.string().nullable().label('Invoice #').trim()
+			: Yup.string().trim().required().label('Invoice #'),
 		overallRemarks: Yup.string().nullable().label('Remarks').trim(),
 	}),
-};
+});
 
 export const CreatePurchaseVoucherModal = ({
 	isLoading,
@@ -82,6 +86,10 @@ export const CreatePurchaseVoucherModal = ({
 			})),
 		[supplierAccounts],
 	);
+
+	const formDetails = useMemo(() => getFormDetails(isPurchaseOrder), [
+		isPurchaseOrder,
+	]);
 
 	return (
 		<Modal
@@ -193,6 +201,23 @@ export const CreatePurchaseVoucherModal = ({
 									render={(error) => <FieldError error={error} />}
 								/>
 							</Col>
+
+							{!isPurchaseOrder && (
+								<Col span={24}>
+									<Label label="Invoice #" spacing />
+									<Input
+										name="invoiceNumber"
+										value={values['invoiceNumber']}
+										onChange={(e) =>
+											setFieldValue('invoiceNumber', e.target.value)
+										}
+									/>
+									<ErrorMessage
+										name="invoiceNumber"
+										render={(error) => <FieldError error={error} />}
+									/>
+								</Col>
+							)}
 
 							<Col span={24}>
 								<Label label="Remarks" spacing />

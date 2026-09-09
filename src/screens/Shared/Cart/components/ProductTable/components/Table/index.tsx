@@ -24,9 +24,18 @@ interface Props {
 	data: any;
 	activeRow?: number;
 	loading?: any;
+	// When true, columns without an explicit `width` share the remaining
+	// table width equally instead of sizing to their content.
+	fixedLayout?: boolean;
 }
 
-export const Table = ({ columns, data, activeRow, loading }: Props) => {
+export const Table = ({
+	columns,
+	data,
+	activeRow,
+	loading,
+	fixedLayout,
+}: Props) => {
 	// CUSTOM HOOKS
 	const pageNumber = useBoundStore((state: any) => state.pageNumber);
 	const { data: siteSettings } = useSiteSettings();
@@ -58,7 +67,7 @@ export const Table = ({ columns, data, activeRow, loading }: Props) => {
 					/>
 				)}
 
-				<table>
+				<table style={fixedLayout ? { tableLayout: 'fixed' } : undefined}>
 					<thead>
 						<tr>
 							{columns.map(

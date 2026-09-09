@@ -14,6 +14,7 @@ import {
 	message,
 } from 'antd';
 import { formatInPeso } from 'ejjy-global';
+import { vatTypes } from 'global';
 import React, { useEffect, useState, useRef } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
 import { AddProductModal } from 'screens/Shared/Cart/components/AddProductModal';
@@ -124,11 +125,13 @@ export const ProductTable = ({
 					{ name: 'Remarks', alignment: 'center', width: '275px' },
 			  ];
 	} else if (type === 'Purchase') {
+		// Delete icon column stays as narrow as possible; the rest are left
+		// without an explicit width so `fixedLayout` splits them evenly.
 		baseColumns = [
-			{ name: '', width: '1px' },
-			{ name: 'Barcode', width: '40px' },
-			{ name: 'Product Name', alignment: 'center' },
-			{ name: 'Qty', alignment: 'center', width: '275px' },
+			{ name: '', width: '64px' },
+			{ name: 'Particular', alignment: 'center' },
+			{ name: 'Type', alignment: 'center' },
+			{ name: 'Qty', alignment: 'center' },
 		];
 	} else if (type === 'Purchase Order') {
 		baseColumns = [
@@ -163,12 +166,9 @@ export const ProductTable = ({
 		columns.push({
 			name: type === 'Purchase' ? 'Unit Cost' : 'Unit Price',
 			alignment: 'center',
-			width: type === 'Purchase' ? '200px' : undefined,
 		});
 
-		if (type !== 'Purchase') {
-			columns.push({ name: 'Amount', alignment: 'center' });
-		}
+		columns.push({ name: 'Amount', alignment: 'center' });
 	}
 
 	if (type === 'Delivery Receipt' || type === 'Receiving Report') {
@@ -571,17 +571,37 @@ export const ProductTable = ({
 					/>
 				</Tooltip>,
 
-				<Tooltip
-					key={`tooltip-barcode-${key}`}
-					placement="top"
-					title={barcode || textcode}
-				>
-					{barcode || textcode}
-				</Tooltip>,
+				...(type === 'Purchase'
+					? []
+					: [
+							<Tooltip
+								key={`tooltip-barcode-${key}`}
+								placement="top"
+								title={barcode || textcode}
+							>
+								{barcode || textcode}
+							</Tooltip>,
+					  ]),
 
 				<Tooltip key={`tooltip-name-${key}`} placement="top" title={name}>
 					{name}
 				</Tooltip>,
+
+				...(type === 'Purchase'
+					? [
+							<Tooltip
+								key={`tooltip-vat-${key}`}
+								placement="top"
+								title={product.is_vat_exempted ? 'VAT Exempt' : 'Vatable'}
+							>
+								<div style={{ textAlign: 'center' }}>
+									{product.is_vat_exempted
+										? vatTypes.VAT_EMPTY
+										: vatTypes.VATABLE}
+								</div>
+							</Tooltip>,
+					  ]
+					: []),
 
 				type === 'Purchase' ? (
 					<InputNumber
@@ -757,6 +777,11 @@ export const ProductTable = ({
 						localCosts[key] !== undefined
 							? localCosts[key]
 							: branchProduct.cost_per_piece ?? 0;
+					const currentQtyForAmount =
+						localQtys[key] !== undefined
+							? localQtys[key]
+							: Number(quantity ?? 0);
+					const amount = currentQtyForAmount * currentCost;
 
 					row.push(
 						<InputNumber
@@ -810,6 +835,13 @@ export const ProductTable = ({
 								(e.target as HTMLInputElement).select();
 							}}
 						/>,
+						<Tooltip
+							key={`tooltip-amount-${key}`}
+							placement="top"
+							title={`Amount: ${formatInPeso(amount)}`}
+						>
+							<div style={{ textAlign: 'center' }}>{formatInPeso(amount)}</div>
+						</Tooltip>,
 					);
 				} else {
 					const unitPrice = price_per_piece;
@@ -942,6 +974,7 @@ export const ProductTable = ({
 				activeRow={activeIndex}
 				columns={columns}
 				data={dataSource}
+				fixedLayout={type === 'Purchase'}
 				loading={isLoading}
 			/>
 

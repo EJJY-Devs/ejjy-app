@@ -77,6 +77,13 @@ export const ProductSearch = ({
 			branchId: branchId ?? getLocalBranchId(),
 			search: searchedText,
 			searchBy: currentSearchMode.key,
+			// Expense Vouchers only pick from products tagged for use in
+			// Expenses (see the Products screen's Purchases/Expenses toggle) -
+			// other types are unaffected, so their search keeps showing
+			// everything as before.
+			...(type === 'Expense Voucher'
+				? { showExpenses: true, showPurchases: false }
+				: {}),
 		},
 		options: {
 			enabled: searchedText?.length > 0 && searchedText.trim().length > 0,

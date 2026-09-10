@@ -277,16 +277,28 @@ export const BooksOfAccounts = () => {
 						/>
 					</Tabs.TabPane>
 					<Tabs.TabPane key="cash-receipts" tab="Cash Receipts">
-						<CashReceiptsTab />
+						<CashReceiptsTab
+							isHeadOffice={isHeadOffice}
+							localBranchId={localBranchId}
+						/>
 					</Tabs.TabPane>
 					<Tabs.TabPane key="cash-disbursements" tab="Cash Disbursements">
-						<CashDisbursementsTab />
+						<CashDisbursementsTab
+							isHeadOffice={isHeadOffice}
+							localBranchId={localBranchId}
+						/>
 					</Tabs.TabPane>
 					<Tabs.TabPane key="subsidiary-sales" tab="Subsidiary Sales">
-						<SubsidiarySalesTab />
+						<SubsidiarySalesTab
+							isHeadOffice={isHeadOffice}
+							localBranchId={localBranchId}
+						/>
 					</Tabs.TabPane>
 					<Tabs.TabPane key="subsidiary-purchases" tab="Subsidiary Purchases">
-						<SubsidiaryPurchasesTab />
+						<SubsidiaryPurchasesTab
+							isHeadOffice={isHeadOffice}
+							localBranchId={localBranchId}
+						/>
 					</Tabs.TabPane>
 				</Tabs>
 			</Box>

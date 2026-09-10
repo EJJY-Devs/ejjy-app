@@ -31,17 +31,11 @@ import {
 } from 'global';
 import { useQueryParams, useBranches } from 'hooks';
 import useExpenseVouchers, {
-	useExpenseVoucherCreate,
 	useExpenseVoucherUpdate,
 } from 'hooks/useExpenseVouchers';
 import React, { useMemo, useState } from 'react';
 import { JournalEntriesService } from 'services';
-import {
-	formatDateTime,
-	formatInPeso,
-	getLocalApiUrl,
-	getLocalBranchId,
-} from 'utils';
+import { formatDateTime, formatInPeso, getLocalApiUrl } from 'utils';
 import { getAppType } from 'utils/localStorage';
 import { CreateJournalEntryModal } from '../modals/CreateJournalEntryModal';
 import { CreateExpenseVoucherModal } from './modals/CreateExpenseVoucherModal';
@@ -60,6 +54,11 @@ export interface ExpenseVoucherParticular {
 	description: string;
 	amount: string;
 	type: 'V' | 'VE';
+	// Set when the particular was picked from the product search (cart-style
+	// picker) instead of typed in freely.
+	product_id?: number | null;
+	quantity?: string | number | null;
+	rate?: string | number | null;
 }
 
 export interface ExpenseVoucher {
@@ -130,10 +129,6 @@ export const ExpenseVouchers = () => {
 	});
 	const withoutJeCount = withoutJeData?.total || 0;
 
-	const {
-		mutateAsync: createExpenseVoucher,
-		isLoading: isCreating,
-	} = useExpenseVoucherCreate();
 	const { mutateAsync: updateExpenseVoucher } = useExpenseVoucherUpdate();
 
 	const expenseVouchers: ExpenseVoucher[] = useMemo(
@@ -343,30 +338,8 @@ export const ExpenseVouchers = () => {
 			</Box>
 
 			<CreateExpenseVoucherModal
-				isSubmitting={isCreating}
 				open={isCreateOpen}
 				onClose={() => setIsCreateOpen(false)}
-				onCreate={async (values) => {
-					try {
-						await createExpenseVoucher({
-							payee: values.payee,
-							invoiceNumber: values.invoiceNumber,
-							paymentType: values.paymentType,
-							particulars: values.particulars,
-							amount: values.amount,
-							remarks: values.remarks,
-							authorizerId: values.authorizerId,
-							supplierAccountId: values.supplierAccountId,
-							branchId: getLocalBranchId()
-								? Number(getLocalBranchId())
-								: undefined,
-						});
-						message.success('Expense voucher created successfully');
-						setIsCreateOpen(false);
-					} catch {
-						message.error('Failed to create expense voucher');
-					}
-				}}
 			/>
 
 			<ViewExpenseVoucherModal

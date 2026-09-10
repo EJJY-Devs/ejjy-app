@@ -10,16 +10,17 @@ import {
 } from 'ejjy-global';
 import { usePdf, usePurchaseById, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { formatDateTime, formatInPeso } from 'utils';
+import { computeVatBreakdown, formatDateTime, formatInPeso } from 'utils';
 import { printPurchase } from 'utils/printPurchase';
 
 const { Text } = Typography;
 
 const columns: ColumnsType = [
-	{ title: 'Quantity', dataIndex: 'quantity', align: 'center' },
-	{ title: 'Description', dataIndex: 'name' },
-	{ title: 'Unit Price', dataIndex: 'costPerPiece', align: 'right' },
-	{ title: 'Total', dataIndex: 'amount', align: 'right' },
+	{ title: 'Qty', dataIndex: 'quantity', align: 'center' },
+	{ title: 'Particulars', dataIndex: 'name' },
+	{ title: 'Type', dataIndex: 'type', align: 'center' },
+	{ title: 'Unit Cost', dataIndex: 'costPerPiece', align: 'right' },
+	{ title: 'Amount', dataIndex: 'amount', align: 'right' },
 ];
 
 interface Props {
@@ -47,14 +48,19 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 			key: item.id,
 			name: item.product?.name,
 			quantity: item.quantity,
-			costPerPiece: formatInPeso(item.cost_per_piece, 'P'),
-			amount: formatInPeso(
-				Number(item.quantity) * Number(item.cost_per_piece),
-				'P',
-			),
+			type: item.product?.is_vat_exempted ? 'VE' : 'V',
+			costPerPiece: formatInPeso(item.cost_per_piece),
+			amount: formatInPeso(Number(item.quantity) * Number(item.cost_per_piece)),
 		}));
 		setDataSource(formatted);
 	}, [data]);
+
+	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
+		(data?.purchase_products || []).map((item: any) => ({
+			amount: Number(item.quantity) * Number(item.cost_per_piece),
+			isVatExempt: !!item.product?.is_vat_exempted,
+		})),
+	);
 
 	const handlePrint = () => {
 		printPurchase({ purchase: data, siteSettings });
@@ -174,8 +180,17 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 				size={0}
 			>
 				<br />
+				<Text style={{ whiteSpace: 'pre-line' }} strong>
+					Total Amount: {formatInPeso(data?.total_amount)}
+				</Text>
 				<Text style={{ whiteSpace: 'pre-line' }}>
-					Total Amount: {formatInPeso(data?.total_amount, 'P')}
+					VAT Exempt: {formatInPeso(vatExempt)}
+				</Text>
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					VATable Sales: {formatInPeso(vatableSales)}
+				</Text>
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					VAT Amount: {formatInPeso(vatAmount)}
 				</Text>
 			</Space>
 

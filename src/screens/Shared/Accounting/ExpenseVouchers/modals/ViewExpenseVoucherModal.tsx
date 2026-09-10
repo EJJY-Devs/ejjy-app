@@ -1,10 +1,9 @@
 import { PrinterOutlined } from '@ant-design/icons';
-import { Button, Col, Modal, Row, Space, Table, Typography } from 'antd';
+import { Button, Modal, Space, Table, Typography } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
 	ExpenseVoucherDocument,
 	PdfButtons,
-	ReceiptFooter,
 	ReceiptHeaderV2,
 } from 'components/Printing';
 import dayjs from 'dayjs';
@@ -19,11 +18,11 @@ import {
 	getPageStyleObject,
 	print,
 } from 'ejjy-global/dist/print/helper-receipt';
-import { usePdf, useSiteSettings } from 'hooks';
+import { usePdf } from 'hooks';
 import { useBranchRetrieve } from 'hooks/useBranches';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
-import { formatDate, formatDateTime, formatInPeso } from 'utils';
+import { computeVatBreakdown, formatDateTime, formatInPeso } from 'utils';
 import { ExpenseVoucher, ExpenseVoucherParticular } from '../index';
 
 const { Text } = Typography;
@@ -41,13 +40,12 @@ const particularsColumns: ColumnsType<ExpenseVoucherParticular> = [
 		align: 'center',
 		render: (_value, _record, index) => index + 1,
 	},
-	{ title: 'Description', dataIndex: 'description' },
+	{ title: 'Particulars', dataIndex: 'description' },
 	{
 		title: 'Type',
 		dataIndex: 'type',
 		width: 100,
 		align: 'center',
-		render: (value: string) => (value === 'VE' ? 'VAT Exempt' : 'Vatable'),
 	},
 	{
 		title: 'Amount',
@@ -61,7 +59,6 @@ const particularsColumns: ColumnsType<ExpenseVoucherParticular> = [
 const printExpenseVoucher = (
 	expenseVoucher: ExpenseVoucher,
 	branch?: any,
-	siteSettings?: any,
 	isPdf = false,
 ): string | undefined => {
 	const data = ReactDOM.renderToStaticMarkup(
@@ -74,22 +71,6 @@ const printExpenseVoucher = (
 			<div style={{ textAlign: 'center', fontSize: '12px' }}>
 				<div>Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}</div>
 			</div>
-			{siteSettings && (
-				<div
-					style={{ textAlign: 'center', fontSize: '12px', marginTop: '16px' }}
-				>
-					<div>{siteSettings.software_developer}</div>
-					<div style={{ whiteSpace: 'pre-line' }}>
-						{siteSettings.software_developer_address}
-					</div>
-					<div>{siteSettings.software_developer_tin}</div>
-					<div>Acc No: {siteSettings.pos_accreditation_number}</div>
-					<div>Date Issued: {siteSettings.pos_accreditation_date}</div>
-					<br />
-					<div>PTU No: {siteSettings.ptu_number}</div>
-					<div>Date Issued: {siteSettings.ptu_date}</div>
-				</div>
-			)}
 		</div>,
 	);
 
@@ -116,8 +97,6 @@ export const ViewExpenseVoucherModal = ({
 		options: { enabled: !!expenseVoucher?.branch },
 	});
 
-	const { data: siteSettings } = useSiteSettings();
-
 	const { isLoadingPdf, previewPdf, downloadPdf, pdfPreviewModal } = usePdf({
 		title: `ExpenseVoucher_${
 			expenseVoucher?.reference_number || expenseVoucher?.id
@@ -125,25 +104,22 @@ export const ViewExpenseVoucherModal = ({
 		paper: 'a4HalfLengthwise',
 		previewInModal: true,
 		print: () =>
-			printExpenseVoucher(
-				expenseVoucher as ExpenseVoucher,
-				branchData,
-				siteSettings,
-				true,
-			),
+			printExpenseVoucher(expenseVoucher as ExpenseVoucher, branchData, true),
 	});
 
 	const handlePrint = () => {
 		if (!expenseVoucher) return;
-		printExpenseVoucher(expenseVoucher, branchData, siteSettings);
+		printExpenseVoucher(expenseVoucher, branchData);
 	};
 
 	if (!expenseVoucher) return null;
 
-	const notes = (expenseVoucher.remarks || '')
-		.split('\n')
-		.map((line) => line.trim())
-		.filter(Boolean);
+	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
+		(expenseVoucher.particulars || []).map((item) => ({
+			amount: Number(item.amount),
+			isVatExempt: item.type === 'VE',
+		})),
+	);
 
 	return (
 		<Modal
@@ -242,16 +218,6 @@ export const ViewExpenseVoucherModal = ({
 				pagination={false}
 				rowKey="description"
 				size="small"
-				summary={() => (
-					<Table.Summary.Row>
-						<Table.Summary.Cell colSpan={3} index={0}>
-							<b>Total</b>
-						</Table.Summary.Cell>
-						<Table.Summary.Cell align="right" index={3}>
-							<b>{formatInPeso(expenseVoucher.amount)}</b>
-						</Table.Summary.Cell>
-					</Table.Summary.Row>
-				)}
 				bordered
 			/>
 
@@ -262,51 +228,19 @@ export const ViewExpenseVoucherModal = ({
 				size={0}
 			>
 				<br />
-				<Text style={{ whiteSpace: 'pre-line' }}>
+				<Text style={{ whiteSpace: 'pre-line' }} strong>
 					Total Amount: {formatInPeso(expenseVoucher.amount)}
 				</Text>
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					VAT Exempt: {formatInPeso(vatExempt)}
+				</Text>
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					VATable Sales: {formatInPeso(vatableSales)}
+				</Text>
+				<Text style={{ whiteSpace: 'pre-line' }}>
+					VAT Amount: {formatInPeso(vatAmount)}
+				</Text>
 			</Space>
-
-			<br />
-
-			<Text style={{ textTransform: 'uppercase' }} strong>
-				Notes
-			</Text>
-			<ul className="mt-2">
-				{notes.length > 0 ? (
-					notes.map((line) => <li key={line}>{line}</li>)
-				) : (
-					<li>—</li>
-				)}
-			</ul>
-
-			<br />
-
-			<Text style={{ textTransform: 'uppercase' }} strong>
-				Signatures
-			</Text>
-			<Row className="mt-4" gutter={[24, 16]}>
-				<Col span={12}>
-					<div style={{ borderBottom: '1px solid #000', height: 32 }} />
-					<div>{expenseVoucher.payee || '—'}, Employee</div>
-					<div>Date Signed: {formatDate(expenseVoucher.datetime_created)}</div>
-				</Col>
-				<Col span={12}>
-					<div style={{ borderBottom: '1px solid #000', height: 32 }} />
-					<div>
-						{expenseVoucher.authorizer
-							? getFullName(expenseVoucher.authorizer)
-							: '—'}
-						, Authorizer
-					</div>
-					<div>
-						Date Signed:{' '}
-						{expenseVoucher.authorizer
-							? formatDate(expenseVoucher.datetime_created)
-							: '—'}
-					</div>
-				</Col>
-			</Row>
 
 			<Space
 				align="center"
@@ -319,10 +253,6 @@ export const ViewExpenseVoucherModal = ({
 					Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}
 				</Text>
 			</Space>
-
-			<br />
-
-			<ReceiptFooter />
 
 			{pdfPreviewModal}
 		</Modal>

@@ -15,6 +15,7 @@ import {
 	useRequisitionSlipCreate,
 	useBranches,
 	useAdjustmentSlipCreate,
+	useExpenseVoucherCreate,
 	usePurchaseCreate,
 	usePurchaseOrderCreate,
 	usePurchaseOrders,
@@ -43,6 +44,17 @@ interface ModalProps {
 	branchId?: string | null;
 	rsProducts?: any[];
 	onPurchaseCreated?: (purchase: any) => void;
+	// For type='Expense Voucher': the voucher's own Payee/Type/Invoice #/
+	// Remarks, collected by the caller BEFORE the Cart is shown (mirrors how
+	// Purchase collects those in its own CreatePurchaseVoucherModal step).
+	expenseVoucherDetails?: {
+		payee: string;
+		invoiceNumber: string;
+		paymentType: 'pay' | 'on_account';
+		remarks: string;
+		supplierAccountId?: number | null;
+	};
+	onExpenseVoucherCreated?: (expenseVoucher: any) => void;
 }
 
 export const Cart = ({
@@ -58,6 +70,8 @@ export const Cart = ({
 	branchId: branchIdProp,
 	rsProducts,
 	onPurchaseCreated,
+	expenseVoucherDetails,
+	onExpenseVoucherCreated,
 }: ModalProps) => {
 	// STATES
 	const [barcodeScanLoading, setBarcodeScanLoading] = useState(false);
@@ -77,29 +91,26 @@ export const Cart = ({
 		setAuthorizeConfig,
 	] = useState<AuthorizationModalProps | null>(null);
 
-	// Purchase Voucher details (Type/Supplier/Invoice #/Remarks) are collected
-	// FIRST for type='Purchase', before the PO is picked - the chosen supplier
-	// determines which purchase orders show up in the PO selector below.
 	const [purchaseVoucherFormData, setPurchaseVoucherFormData] = useState<any>(
 		null,
 	);
 	const [
 		isPurchaseVoucherFormVisible,
 		setIsPurchaseVoucherFormVisible,
-	] = useState(type === 'Purchase');
+	] = useState(false);
 
-	// Purchase Order selection state
+	// Purchase Order selection state - shown FIRST for type='Purchase'.
 	const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState<
 		number | null
 	>(null);
-	const [isPOSelectVisible, setIsPOSelectVisible] = useState(false);
-	const poProductsPopulated = useRef(false);
+	const [isPOSelectVisible, setIsPOSelectVisible] = useState(
+		type === 'Purchase',
+	);
 
 	const hasPrePopulated =
 		!!prePopulatedProduct ||
 		(prePopulatedProducts && prePopulatedProducts.length > 0) ||
-		(type === 'Purchase Order' && !!rsProducts?.length) ||
-		(type === 'Purchase' && selectedPurchaseOrderId !== null);
+		(type === 'Purchase Order' && !!rsProducts?.length);
 
 	const [isBranchSelectVisible, setIsBranchSelectVisible] = useState(
 		type === 'Adjustment Slip' && !hasPrePopulated && !preSelectedBranchId,
@@ -132,19 +143,19 @@ export const Cart = ({
 	});
 
 	// Load purchase orders for PO selector (only when type is Purchase).
-	// Scoped to the supplier chosen in the voucher details step, since that's
-	// what determines which POs are relevant.
+	// The PO is picked before the supplier is known, so this is unfiltered.
 	const {
 		data: { purchaseOrders = [] } = {},
 		isFetching: isFetchingPurchaseOrders,
 	} = usePurchaseOrders({
 		params: {
 			pageSize: MAX_PAGE_SIZE,
-			supplierName: purchaseVoucherFormData?.supplierName,
 		},
 	});
 
-	// Load selected PO details to pre-populate cart
+	// Load selected PO details (used to pre-fill the Supplier field on the
+	// voucher details step - products are NOT auto-added to the cart; the
+	// user searches for and adds the products they actually received).
 	const { data: purchaseOrderData } = usePurchaseOrderById(
 		selectedPurchaseOrderId || 0,
 	);
@@ -177,39 +188,7 @@ export const Cart = ({
 	const { mutateAsync: createAdjustmentSlip } = useAdjustmentSlipCreate();
 	const { mutateAsync: createPurchase } = usePurchaseCreate();
 	const { mutateAsync: createPurchaseOrder } = usePurchaseOrderCreate();
-
-	// Pre-populate cart from selected PO (once, when PO data arrives)
-	useEffect(() => {
-		if (
-			!purchaseOrderData ||
-			type !== 'Purchase' ||
-			poProductsPopulated.current
-		) {
-			return;
-		}
-
-		const products = purchaseOrderData.purchase_order_products || [];
-		if (products.length === 0) return;
-
-		resetProducts();
-		const { addProduct } = useBoundStore.getState();
-
-		products.forEach((pop: any) => {
-			addProduct({
-				id: pop.product?.id,
-				product: {
-					...pop.product,
-					key: pop.product?.id,
-					current_balance: 0,
-				},
-				quantity: 0,
-				cost_per_piece: Number(pop.cost_per_piece) || 0,
-				current_balance: 0,
-			});
-		});
-
-		poProductsPopulated.current = true;
-	}, [purchaseOrderData, type, resetProducts]);
+	const { mutateAsync: createExpenseVoucher } = useExpenseVoucherCreate();
 
 	// Pre-populate cart from RS products for Purchase Order creation
 	useEffect(() => {
@@ -431,7 +410,7 @@ export const Cart = ({
 		});
 	};
 
-	const handleInventoryTransferFormSubmit = (formData: any) => {
+	const handleInventoryTransferFormSubmit = async (formData: any) => {
 		setAuthorizeConfig({
 			baseURL: getLocalApiUrl(),
 			title: `Authorize ${type}`,
@@ -510,6 +489,48 @@ export const Cart = ({
 		}
 	};
 
+	const handleCreateExpenseVoucher = async (formData) => {
+		const currentProducts = useBoundStore.getState().products;
+		if (currentProducts.length > 0) {
+			const particulars = currentProducts.map((branchProduct: any) => {
+				const product = branchProduct.product || {};
+				const quantity = Number(branchProduct.quantity) || 0;
+				const rate = Number(
+					branchProduct.cost_per_piece ?? product.price_per_piece ?? 0,
+				);
+
+				return {
+					description: product.name || '',
+					type: product.is_vat_exempted ? 'VE' : 'V',
+					quantity,
+					rate,
+					amount: quantity * rate,
+					product_id: product.id ?? null,
+				};
+			});
+			const amount = particulars.reduce((sum, item) => sum + item.amount, 0);
+
+			const response = await createExpenseVoucher({
+				payee: formData.payee,
+				invoiceNumber: formData.invoiceNumber,
+				paymentType: formData.paymentType,
+				particulars,
+				amount,
+				remarks: formData.remarks,
+				authorizerId: formData.authorizerId,
+				supplierAccountId: formData.supplierAccountId,
+				branchId,
+			});
+
+			if (!response) {
+				throw Error;
+			}
+
+			onExpenseVoucherCreated?.(response.data);
+			message.success('Expense Voucher was created successfully');
+		}
+	};
+
 	const handleModalSubmit = async (formData) => {
 		setLoading(true);
 
@@ -526,6 +547,8 @@ export const Cart = ({
 				await handleCreatePurchase(formData);
 			} else if (type === 'Purchase Order') {
 				await handleCreatePurchaseOrder(formData);
+			} else if (type === 'Expense Voucher') {
+				await handleCreateExpenseVoucher(formData);
 			}
 		} catch (error) {
 			message.error({ key: 'cart-error', content: `Failed to create ${type}` });
@@ -606,6 +629,20 @@ export const Cart = ({
 		});
 	};
 
+	const handleExpenseVoucherFormSubmit = (formData: any) => {
+		setAuthorizeConfig({
+			baseURL: getLocalApiUrl(),
+			title: 'Authorize Expense Voucher',
+			onSuccess: async (authorizer: any) => {
+				setAuthorizeConfig(null);
+				await handleModalSubmit({ ...formData, authorizerId: authorizer?.id });
+			},
+			onCancel: () => {
+				setAuthorizeConfig(null);
+			},
+		});
+	};
+
 	const handleSubmit = () => {
 		if (type === 'Requisition Slip') {
 			setIsCreateRequisitionSlipVisible(true);
@@ -665,6 +702,18 @@ export const Cart = ({
 				return;
 			}
 			setIsCreatePurchaseVisible(true);
+		} else if (type === 'Expense Voucher') {
+			// Voucher details (Payee/Type/Invoice #/Remarks) were already
+			// collected as the first step of this flow - go straight to
+			// authorization instead of asking for them again.
+			const currentProducts = useBoundStore.getState().products;
+
+			if (!currentProducts || currentProducts.length === 0) {
+				message.error('Please add products to the cart before submission.');
+				return;
+			}
+
+			handleExpenseVoucherFormSubmit(expenseVoucherDetails);
 		} else {
 			setIsCreateInventoryTransferModalVisible(true);
 		}
@@ -675,24 +724,7 @@ export const Cart = ({
 		setIsBranchSelectVisible(false);
 	};
 
-	// Voucher details step (Type/Supplier/Invoice #/Remarks) - shown FIRST for
-	// Purchase, before the PO selector, since the chosen supplier determines
-	// which purchase orders are offered next.
-	if (type === 'Purchase' && isPurchaseVoucherFormVisible) {
-		return (
-			<CreatePurchaseVoucherModal
-				isLoading={false}
-				onClose={onClose}
-				onSubmit={(formData) => {
-					setPurchaseVoucherFormData(formData);
-					setIsPurchaseVoucherFormVisible(false);
-					setIsPOSelectVisible(true);
-				}}
-			/>
-		);
-	}
-
-	// PO selector step (shown before the cart for Purchase type)
+	// PO selector step - shown FIRST for Purchase, before the voucher details.
 	if (type === 'Purchase' && isPOSelectVisible) {
 		return (
 			<Modal
@@ -722,9 +754,9 @@ export const Cart = ({
 							placeholder="Select a purchase order"
 							showSearch
 							onChange={(value: number) => {
-								poProductsPopulated.current = false;
 								setSelectedPurchaseOrderId(value);
 								setIsPOSelectVisible(false);
+								setIsPurchaseVoucherFormVisible(true);
 							}}
 						>
 							{purchaseOrders.map((po: any) => (
@@ -736,6 +768,22 @@ export const Cart = ({
 					</>
 				)}
 			</Modal>
+		);
+	}
+
+	// Voucher details step (Type/Supplier/Invoice #/Remarks) - shown after the
+	// PO is picked; the Supplier field is pre-filled from the selected PO.
+	if (type === 'Purchase' && isPurchaseVoucherFormVisible) {
+		return (
+			<CreatePurchaseVoucherModal
+				initialSupplierName={purchaseOrderData?.supplier_name}
+				isLoading={false}
+				onClose={onClose}
+				onSubmit={(formData) => {
+					setPurchaseVoucherFormData(formData);
+					setIsPurchaseVoucherFormVisible(false);
+				}}
+			/>
 		);
 	}
 

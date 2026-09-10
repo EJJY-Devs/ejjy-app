@@ -20,7 +20,7 @@ import { EscPosCommands } from 'ejjy-global/dist/print/utils/escpos.enum';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
 import { PurchaseVoucherDocument, ReceiptHeaderV2 } from 'components/Printing';
-import { formatDateTime, formatInPeso } from 'utils';
+import { computeVatBreakdown, formatDateTime, formatInPeso } from 'utils';
 import {
 	DASHED_DIVIDER,
 	generateFourColumnLine,
@@ -89,16 +89,23 @@ const renderNative = ({ purchase }: PrintPurchaseProps): string[] => {
 	commands.push(...generateItemBlockCommands(items));
 
 	commands.push(EscPosCommands.LINE_BREAK);
-	commands.push(generateFourColumnLine('Qty', 'Description', 'Price', 'Total'));
+	commands.push(
+		generateFourColumnLine('Qty', 'Particulars', 'Unit Cost', 'Amount'),
+	);
 	commands.push(EscPosCommands.LINE_BREAK);
 	commands.push(printCenter(DASHED_DIVIDER));
 	commands.push(EscPosCommands.LINE_BREAK);
 
+	// Receipt paper is too narrow for a true 5th "Type" column, so it's
+	// tucked into the particulars text instead (e.g. "Item Name (VE)");
+	// the PDF/HTML render (PurchaseVoucherDocument) has room for a real
+	// column since it can expand.
 	products.forEach((item: any) => {
+		const typeLabel = item.product?.is_vat_exempted ? 'VE' : 'V';
 		commands.push(
 			generateFourColumnLine(
 				String(item.quantity),
-				item.product?.name || '',
+				`${item.product?.name || ''} (${typeLabel})`,
 				formatInPeso(item.cost_per_piece, 'P'),
 				formatInPeso(Number(item.quantity) * Number(item.cost_per_piece), 'P'),
 			),
@@ -106,10 +113,25 @@ const renderNative = ({ purchase }: PrintPurchaseProps): string[] => {
 		commands.push(EscPosCommands.LINE_BREAK);
 	});
 
+	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
+		products.map((item: any) => ({
+			amount: Number(item.quantity) * Number(item.cost_per_piece),
+			isVatExempt: !!item.product?.is_vat_exempted,
+		})),
+	);
+
 	commands.push(EscPosCommands.LINE_BREAK);
 	commands.push(
 		printCenter(`Total Amount: ${formatInPeso(purchase?.total_amount, 'P')}`),
 	);
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(printCenter(`VAT Exempt: ${formatInPeso(vatExempt, 'P')}`));
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(
+		printCenter(`VATable Sales: ${formatInPeso(vatableSales, 'P')}`),
+	);
+	commands.push(EscPosCommands.LINE_BREAK);
+	commands.push(printCenter(`VAT Amount: ${formatInPeso(vatAmount, 'P')}`));
 	commands.push(EscPosCommands.LINE_BREAK);
 	commands.push(
 		printCenter(`Print Details: ${dayjs().format('MM/DD/YYYY h:mmA')}`),

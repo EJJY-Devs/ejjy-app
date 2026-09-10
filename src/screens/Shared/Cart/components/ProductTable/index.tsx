@@ -101,6 +101,13 @@ export const ProductTable = ({
 	const isAuditAdjustment =
 		type === 'Adjustment Slip' && products[0]?.product?.captured_qty != null;
 
+	// Expense Voucher reuses the exact same grid as Purchase (Particular, Type,
+	// inline-editable Qty + Unit Cost, computed Amount) - it's just picking
+	// products to attach as expense voucher line items instead of receiving
+	// stock, so no other Purchase-only behavior (PO selection, voucher
+	// creation, etc.) is affected by this.
+	const isPurchaseLikeTable = type === 'Purchase' || type === 'Expense Voucher';
+
 	let baseColumns: { name: string; width?: string; alignment?: string }[];
 	if (type === 'Adjustment Slip') {
 		baseColumns = isAuditAdjustment
@@ -124,7 +131,7 @@ export const ProductTable = ({
 					{ name: 'Adjustment', alignment: 'center' },
 					{ name: 'Remarks', alignment: 'center', width: '275px' },
 			  ];
-	} else if (type === 'Purchase') {
+	} else if (isPurchaseLikeTable) {
 		// Delete icon column stays as narrow as possible; the rest are left
 		// without an explicit width so `fixedLayout` splits them evenly.
 		baseColumns = [
@@ -164,7 +171,7 @@ export const ProductTable = ({
 		type !== 'Purchase Order'
 	) {
 		columns.push({
-			name: type === 'Purchase' ? 'Unit Cost' : 'Unit Price',
+			name: isPurchaseLikeTable ? 'Unit Cost' : 'Unit Price',
 			alignment: 'center',
 		});
 
@@ -571,7 +578,7 @@ export const ProductTable = ({
 					/>
 				</Tooltip>,
 
-				...(type === 'Purchase'
+				...(isPurchaseLikeTable
 					? []
 					: [
 							<Tooltip
@@ -587,7 +594,7 @@ export const ProductTable = ({
 					{name}
 				</Tooltip>,
 
-				...(type === 'Purchase'
+				...(isPurchaseLikeTable
 					? [
 							<Tooltip
 								key={`tooltip-vat-${key}`}
@@ -603,7 +610,7 @@ export const ProductTable = ({
 					  ]
 					: []),
 
-				type === 'Purchase' ? (
+				isPurchaseLikeTable ? (
 					<InputNumber
 						key={`input-qty-${key}`}
 						ref={(el: HTMLInputElement) => {
@@ -772,7 +779,7 @@ export const ProductTable = ({
 					</Tooltip>,
 				);
 			} else if (type !== 'Receiving Report' && type !== 'Delivery Receipt') {
-				if (type === 'Purchase') {
+				if (isPurchaseLikeTable) {
 					const currentCost =
 						localCosts[key] !== undefined
 							? localCosts[key]
@@ -974,7 +981,7 @@ export const ProductTable = ({
 				activeRow={activeIndex}
 				columns={columns}
 				data={dataSource}
-				fixedLayout={type === 'Purchase'}
+				fixedLayout={isPurchaseLikeTable}
 				loading={isLoading}
 			/>
 

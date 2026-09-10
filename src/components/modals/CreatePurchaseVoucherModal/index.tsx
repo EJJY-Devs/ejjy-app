@@ -19,15 +19,20 @@ import { FieldError, Label } from '../../elements';
 type ModalProps = {
 	isLoading: boolean;
 	isPurchaseOrder?: boolean;
+	initialSupplierName?: string;
 	onSubmit: (formData: any) => void;
 	onClose: () => void;
 };
 
-const getFormDetails = (isPurchaseOrder: boolean) => ({
+const getFormDetails = (
+	isPurchaseOrder: boolean,
+	initialSupplierName?: string,
+	initialSupplierAccountId?: number | null,
+) => ({
 	defaultValues: {
 		paymentType: 'on_account',
-		supplierAccountId: null,
-		supplierName: '',
+		supplierAccountId: initialSupplierAccountId ?? null,
+		supplierName: initialSupplierName || '',
 		invoiceNumber: '',
 		overallRemarks: '',
 	},
@@ -57,6 +62,7 @@ const getFormDetails = (isPurchaseOrder: boolean) => ({
 export const CreatePurchaseVoucherModal = ({
 	isLoading,
 	isPurchaseOrder = false,
+	initialSupplierName,
 	onSubmit,
 	onClose,
 }: ModalProps) => {
@@ -87,9 +93,30 @@ export const CreatePurchaseVoucherModal = ({
 		[supplierAccounts],
 	);
 
-	const formDetails = useMemo(() => getFormDetails(isPurchaseOrder), [
-		isPurchaseOrder,
-	]);
+	// Auto-match the PO's supplier to an existing account, so the "On Account"
+	// select (a different control from the free-text field below) is also
+	// pre-filled when the selected PO's supplier is a known account.
+	const matchedSupplierAccount = useMemo(
+		() =>
+			initialSupplierName
+				? supplierAccounts.find(
+						(account: any) =>
+							getSupplierLabel(account).toLowerCase() ===
+							initialSupplierName.toLowerCase(),
+				  )
+				: null,
+		[supplierAccounts, initialSupplierName],
+	);
+
+	const formDetails = useMemo(
+		() =>
+			getFormDetails(
+				isPurchaseOrder,
+				initialSupplierName,
+				matchedSupplierAccount?.id ?? null,
+			),
+		[isPurchaseOrder, initialSupplierName, matchedSupplierAccount],
+	);
 
 	return (
 		<Modal
@@ -107,6 +134,7 @@ export const CreatePurchaseVoucherModal = ({
 			<Formik
 				initialValues={formDetails.defaultValues}
 				validationSchema={formDetails.schema}
+				enableReinitialize
 				onSubmit={(formData) => {
 					// 'Pay' must never post/link to a supplier account, even if the
 					// typed supplier name happened to autocomplete-match one.

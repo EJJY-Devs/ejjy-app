@@ -1,6 +1,6 @@
 import { EMPTY_CELL, getFullName } from 'ejjy-global';
 import React from 'react';
-import { formatDate, formatDateTime, formatInPeso } from 'utils';
+import { computeVatBreakdown, formatDateTime, formatInPeso } from 'utils';
 import { ReceiptHeaderV2 } from './ReceiptHeaderV2';
 
 interface Props {
@@ -23,18 +23,15 @@ const headerCellStyle: React.CSSProperties = {
 	fontWeight: 'bold',
 };
 
-const sectionTitleStyle: React.CSSProperties = {
-	fontWeight: 'bold',
-	textTransform: 'uppercase',
-	marginTop: '12px',
-};
-
 export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 	const particulars = expenseVoucher?.particulars || [];
-	const notes = (expenseVoucher?.remarks || '')
-		.split('\n')
-		.map((line: string) => line.trim())
-		.filter(Boolean);
+
+	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
+		particulars.map((item: any) => ({
+			amount: Number(item.amount),
+			isVatExempt: item.type === 'VE',
+		})),
+	);
 
 	return (
 		<div style={{ fontSize: '12px', lineHeight: '1.2' }}>
@@ -102,7 +99,7 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 							Item #
 						</th>
 						<th style={{ ...headerCellStyle, textAlign: 'left' }}>
-							Description
+							Particulars
 						</th>
 						<th
 							style={{ ...headerCellStyle, textAlign: 'center', width: '80px' }}
@@ -148,61 +145,11 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 				Total Amount: {formatInPeso(expenseVoucher?.amount, 'P')}
 			</div>
 
-			<div style={sectionTitleStyle}>Notes</div>
-			<ul style={{ marginTop: '4px', paddingLeft: '18px' }}>
-				{notes.length > 0 ? (
-					notes.map((line: string, index: number) => (
-						// eslint-disable-next-line react/no-array-index-key
-						<li key={index}>{line}</li>
-					))
-				) : (
-					<li>{EMPTY_CELL}</li>
-				)}
-			</ul>
-
-			<div style={sectionTitleStyle}>Signatures</div>
-			<table
-				style={{ width: '100%', borderCollapse: 'collapse', marginTop: '16px' }}
-			>
-				<tbody>
-					<tr>
-						<td
-							style={{
-								width: '50%',
-								verticalAlign: 'top',
-								paddingRight: '12px',
-							}}
-						>
-							<div style={{ borderBottom: '1px solid #000', height: '28px' }} />
-							<div>{expenseVoucher?.payee || EMPTY_CELL}, Employee</div>
-							<div>
-								Date Signed: {formatDate(expenseVoucher?.datetime_created)}
-							</div>
-						</td>
-						<td
-							style={{
-								width: '50%',
-								verticalAlign: 'top',
-								paddingLeft: '12px',
-							}}
-						>
-							<div style={{ borderBottom: '1px solid #000', height: '28px' }} />
-							<div>
-								{expenseVoucher?.authorizer
-									? getFullName(expenseVoucher.authorizer)
-									: EMPTY_CELL}
-								, Authorizer
-							</div>
-							<div>
-								Date Signed:{' '}
-								{expenseVoucher?.authorizer
-									? formatDate(expenseVoucher?.datetime_created)
-									: EMPTY_CELL}
-							</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<div style={{ textAlign: 'center', marginTop: '4px' }}>
+				<div>VAT Exempt: {formatInPeso(vatExempt, 'P')}</div>
+				<div>VATable Sales: {formatInPeso(vatableSales, 'P')}</div>
+				<div>VAT Amount: {formatInPeso(vatAmount, 'P')}</div>
+			</div>
 		</div>
 	);
 };

@@ -11,7 +11,7 @@ import {
 import { ErrorMessage, Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import React, { useMemo } from 'react';
-import { MAX_PAGE_SIZE } from 'global';
+import { accountTypes, MAX_PAGE_SIZE } from 'global';
 import useAccounts from 'hooks/useAccounts';
 import { getSupplierLabel } from 'screens/Shared/Accounts/components/TabSupplierPurchases/components/SupplierTotalBalance';
 import { FieldError, Label } from '../../elements';
@@ -73,7 +73,20 @@ export const CreatePurchaseVoucherModal = ({
 		},
 	});
 
-	const supplierAccounts = accountsData?.accounts || [];
+	// Only Personal/Corporate accounts with a Tax Type set are valid suppliers
+	// for a purchase voucher - VAT applicability is resolved from the linked
+	// account's Tax Type (see isPurchaseVatApplicable), so an account without
+	// one (or of another type, e.g. Employee/Government) can't be used here.
+	const supplierAccounts = useMemo(
+		() =>
+			(accountsData?.accounts || []).filter(
+				(account: any) =>
+					[accountTypes.PERSONAL, accountTypes.CORPORATE].includes(
+						account.type,
+					) && !!account.tax_type,
+			),
+		[accountsData?.accounts],
+	);
 
 	const supplierAutoCompleteOptions = useMemo(
 		() =>

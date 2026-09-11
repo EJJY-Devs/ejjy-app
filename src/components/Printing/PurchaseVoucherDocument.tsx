@@ -1,10 +1,16 @@
 import { EMPTY_CELL, getFullName } from 'ejjy-global';
 import React from 'react';
-import { computeVatBreakdown, formatDateTime, formatInPeso } from 'utils';
+import {
+	computeVatBreakdown,
+	formatDateTime,
+	formatInPeso,
+	isPurchaseVatApplicable,
+} from 'utils';
 import { ReceiptHeaderV2 } from './ReceiptHeaderV2';
 
 interface Props {
 	purchase: any;
+	siteSettings?: any;
 }
 
 const rowStyle: React.CSSProperties = {
@@ -22,13 +28,17 @@ const headerCellStyle: React.CSSProperties = {
 	fontWeight: 'bold',
 };
 
-export const PurchaseVoucherDocument = ({ purchase }: Props) => {
+export const PurchaseVoucherDocument = ({ purchase, siteSettings }: Props) => {
 	const products = purchase?.purchase_products || [];
 
+	const vatApplicable = isPurchaseVatApplicable(
+		siteSettings,
+		purchase?.supplier_account,
+	);
 	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
 		products.map((item: any) => ({
 			amount: Number(item.quantity) * Number(item.cost_per_piece),
-			isVatExempt: !!item.product?.is_vat_exempted,
+			isVatExempt: !vatApplicable || !!item.product?.is_vat_exempted,
 		})),
 	);
 
@@ -125,7 +135,7 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 							</td>
 							<td style={cellStyle}>{item.product?.name}</td>
 							<td style={{ ...cellStyle, textAlign: 'center' }}>
-								{item.product?.is_vat_exempted ? 'VAT Exempt' : 'Vatable'}
+								{!vatApplicable || item.product?.is_vat_exempted ? 'VE' : 'V'}
 							</td>
 							<td style={{ ...cellStyle, textAlign: 'right' }}>
 								{formatInPeso(item.cost_per_piece, 'P')}

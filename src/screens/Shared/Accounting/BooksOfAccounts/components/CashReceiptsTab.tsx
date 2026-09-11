@@ -20,7 +20,10 @@ import React, { useMemo } from 'react';
 import { formatDateTime, formatInPeso } from 'utils';
 
 export interface CashReceiptEntry {
-	id: number;
+	// A plain invoice id for invoice-sourced rows, or "je-<id>" for a row
+	// sourced straight from a General Journal entry posted to a cash-book
+	// account (see CashReceiptsViewSet on the backend).
+	id: number | string;
 	date: string;
 	payor?: string | null;
 	tin?: string | null;

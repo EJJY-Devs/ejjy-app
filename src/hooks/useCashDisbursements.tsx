@@ -48,7 +48,7 @@ export const useCashDisbursementDetailUpsert = () => {
 			otherDeductionsAmount,
 			otherDeductionsRemarks,
 		}: {
-			sourceType: 'expense' | 'purchase';
+			sourceType: 'expense' | 'purchase' | 'journal_entry';
 			sourceId: number;
 			ewtPercentage: number;
 			otherDeductionsAmount: number;

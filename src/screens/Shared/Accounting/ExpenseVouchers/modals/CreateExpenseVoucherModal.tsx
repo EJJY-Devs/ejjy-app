@@ -1,13 +1,10 @@
 import { AutoComplete, Button, Form, Input, Modal, Radio, Select } from 'antd';
 import { Label } from 'components/elements';
-import { MAX_PAGE_SIZE } from 'global';
+import { accountTypes, MAX_PAGE_SIZE } from 'global';
 import { useAccounts } from 'hooks';
 import React, { useEffect, useMemo, useState } from 'react';
 import { getSupplierLabel } from 'screens/Shared/Accounts/components/TabSupplierPurchases/components/SupplierTotalBalance';
-// The actual line-item picking (search, results grid, Submit/authorize) is
-// the same Cart used for Create Purchase Voucher - see Cart's
-// `type === 'Expense Voucher'` handling for how it creates the voucher
-// directly, the same way it creates a Purchase Voucher.
+
 import { Cart } from 'screens/Shared/Cart';
 
 interface DetailsFormData {
@@ -42,21 +39,32 @@ export const CreateExpenseVoucherModal = ({
 		params: { withSupplierRegistration: true, pageSize: MAX_PAGE_SIZE },
 		options: { enabled: open && step === 'details' && !isSupplierAccountFixed },
 	});
+
+	const supplierAccounts = useMemo(
+		() =>
+			(accountsData?.accounts || []).filter(
+				(account: any) =>
+					[accountTypes.PERSONAL, accountTypes.CORPORATE].includes(
+						account.type,
+					) && !!account.tax_type,
+			),
+		[accountsData?.accounts],
+	);
 	const supplierAutoCompleteOptions = useMemo(
 		() =>
-			(accountsData?.accounts || []).map((account: any) => ({
+			supplierAccounts.map((account: any) => ({
 				id: account.id,
 				value: getSupplierLabel(account),
 			})),
-		[accountsData?.accounts],
+		[supplierAccounts],
 	);
 	const supplierSelectOptions = useMemo(
 		() =>
-			(accountsData?.accounts || []).map((account: any) => ({
+			supplierAccounts.map((account: any) => ({
 				value: account.id,
 				label: getSupplierLabel(account),
 			})),
-		[accountsData?.accounts],
+		[supplierAccounts],
 	);
 
 	useEffect(() => {
@@ -93,7 +101,7 @@ export const CreateExpenseVoucherModal = ({
 
 		const effectiveSupplierAccountId = isSupplierAccountFixed
 			? supplierAccountId
-			: values.supplierAccountId;
+			: detailsForm.getFieldValue('supplierAccountId');
 
 		const payee =
 			values.paymentType === 'on_account'
@@ -105,10 +113,14 @@ export const CreateExpenseVoucherModal = ({
 		setDetailsData({
 			payee,
 			paymentType: values.paymentType,
-			supplierAccountId:
-				values.paymentType === 'on_account'
-					? effectiveSupplierAccountId
-					: undefined,
+			// Keep the matched supplier account even for "Pay" vouchers (picked
+			// via the payee autocomplete, see handlePayeeAutoCompleteChange) so
+			// VAT applicability can still be resolved from the linked account's
+			// Tax Type - see isPurchaseVatApplicable. Previously this was
+			// dropped for anything but "On Account", so a "Pay" voucher to a
+			// registered VAT supplier always printed as VAT Exempt with no VAT
+			// computed.
+			supplierAccountId: effectiveSupplierAccountId || undefined,
 			invoiceNumber: values.invoiceNumber || '',
 			remarks: values.remarks || '',
 		});

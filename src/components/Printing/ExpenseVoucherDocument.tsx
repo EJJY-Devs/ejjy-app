@@ -1,11 +1,17 @@
 import { EMPTY_CELL, getFullName } from 'ejjy-global';
 import React from 'react';
-import { computeVatBreakdown, formatDateTime, formatInPeso } from 'utils';
+import {
+	computeVatBreakdown,
+	formatDateTime,
+	formatInPeso,
+	isPurchaseVatApplicable,
+} from 'utils';
 import { ReceiptHeaderV2 } from './ReceiptHeaderV2';
 
 interface Props {
 	expenseVoucher: any;
 	branch?: any;
+	siteSettings?: any;
 }
 
 const rowStyle: React.CSSProperties = {
@@ -23,13 +29,21 @@ const headerCellStyle: React.CSSProperties = {
 	fontWeight: 'bold',
 };
 
-export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
+export const ExpenseVoucherDocument = ({
+	expenseVoucher,
+	branch,
+	siteSettings,
+}: Props) => {
 	const particulars = expenseVoucher?.particulars || [];
 
+	const vatApplicable = isPurchaseVatApplicable(
+		siteSettings,
+		expenseVoucher?.supplier_account,
+	);
 	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
 		particulars.map((item: any) => ({
 			amount: Number(item.amount),
-			isVatExempt: item.type === 'VE',
+			isVatExempt: !vatApplicable || item.type === 'VE',
 		})),
 	);
 
@@ -116,7 +130,7 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 							<td style={{ ...cellStyle, textAlign: 'center' }}>{index + 1}</td>
 							<td style={cellStyle}>{item.description}</td>
 							<td style={{ ...cellStyle, textAlign: 'center' }}>
-								{item.type === 'VE' ? 'VAT Exempt' : 'Vatable'}
+								{!vatApplicable || item.type === 'VE' ? 'VE' : 'V'}
 							</td>
 							<td style={{ ...cellStyle, textAlign: 'right' }}>
 								{formatInPeso(item.amount, 'P')}

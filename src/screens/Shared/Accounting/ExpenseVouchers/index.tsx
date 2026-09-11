@@ -76,6 +76,7 @@ export interface ExpenseVoucher {
 	branch_name: string | null;
 	journal_entry: number | null;
 	journal_entry_reference_number: string | null;
+	supplier_account?: { id: number; tax_type?: 'VAT' | 'NVAT' | null } | null;
 }
 
 export const ExpenseVouchers = () => {
@@ -163,13 +164,6 @@ export const ExpenseVouchers = () => {
 				title: 'Invoice #',
 				dataIndex: 'invoice_number',
 				key: 'invoice_number',
-			},
-			{
-				title: 'Particulars',
-				dataIndex: 'particulars',
-				key: 'particulars',
-				render: (value: ExpenseVoucherParticular[]) =>
-					(value || []).map((item) => item.description).join(', '),
 			},
 			{
 				title: 'Amount',

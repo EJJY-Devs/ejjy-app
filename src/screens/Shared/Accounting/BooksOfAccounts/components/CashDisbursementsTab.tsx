@@ -21,7 +21,10 @@ import { formatDateTime, formatInPeso } from 'utils';
 import { EditCashDisbursementDetailModal } from '../../modals/EditCashDisbursementDetailModal';
 
 export interface CashDisbursementEntry {
-	sourceType: 'expense' | 'purchase';
+	// 'journal_entry' covers a row sourced straight from a General Journal
+	// entry posted to a cash-book account, with no voucher behind it — see
+	// CashDisbursementsViewSet on the backend.
+	sourceType: 'expense' | 'purchase' | 'journal_entry';
 	sourceId: number;
 	date: string;
 	payee?: string | null;

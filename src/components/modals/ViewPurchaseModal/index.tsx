@@ -10,7 +10,12 @@ import {
 } from 'ejjy-global';
 import { usePdf, usePurchaseById, useSiteSettings } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { computeVatBreakdown, formatDateTime, formatInPeso } from 'utils';
+import {
+	computeVatBreakdown,
+	formatDateTime,
+	formatInPeso,
+	isPurchaseVatApplicable,
+} from 'utils';
 import { printPurchase } from 'utils/printPurchase';
 
 const { Text } = Typography;
@@ -42,23 +47,28 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 		print: () => printPurchase({ purchase: data, siteSettings, isPdf: true }),
 	});
 
+	const vatApplicable = isPurchaseVatApplicable(
+		siteSettings,
+		data?.supplier_account,
+	);
+
 	useEffect(() => {
 		const products = data?.purchase_products || [];
 		const formatted = products.map((item: any) => ({
 			key: item.id,
 			name: item.product?.name,
 			quantity: item.quantity,
-			type: item.product?.is_vat_exempted ? 'VE' : 'V',
+			type: !vatApplicable || item.product?.is_vat_exempted ? 'VE' : 'V',
 			costPerPiece: formatInPeso(item.cost_per_piece),
 			amount: formatInPeso(Number(item.quantity) * Number(item.cost_per_piece)),
 		}));
 		setDataSource(formatted);
-	}, [data]);
+	}, [data, vatApplicable]);
 
 	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
 		(data?.purchase_products || []).map((item: any) => ({
 			amount: Number(item.quantity) * Number(item.cost_per_piece),
-			isVatExempt: !!item.product?.is_vat_exempted,
+			isVatExempt: !vatApplicable || !!item.product?.is_vat_exempted,
 		})),
 	);
 

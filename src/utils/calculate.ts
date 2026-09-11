@@ -1,3 +1,5 @@
+import { taxTypes } from 'global';
+
 // TODO: Remove once already implemented in backend
 export const getComputedDiscount = (transactionData) => {
 	return transactionData.discount_option.is_special_discount
@@ -6,9 +8,6 @@ export const getComputedDiscount = (transactionData) => {
 		: transactionData.overall_discount;
 };
 
-// Same 12%-inclusive VAT formula used elsewhere in this codebase
-// (`gross / 1.12`, `gross - gross / 1.12`) — see accounting/views.py's
-// CashDisbursementsViewSet for the backend equivalent.
 const VAT_RATE = 1.12;
 
 export interface VatBreakdownLine {
@@ -21,6 +20,13 @@ export interface VatBreakdown {
 	vatableSales: number;
 	vatAmount: number;
 }
+
+export const isPurchaseVatApplicable = (
+	siteSettings: any,
+	supplierAccount: any,
+): boolean =>
+	siteSettings?.tax_type === taxTypes.VAT &&
+	supplierAccount?.tax_type === taxTypes.VAT;
 
 export const computeVatBreakdown = (
 	lines: VatBreakdownLine[],

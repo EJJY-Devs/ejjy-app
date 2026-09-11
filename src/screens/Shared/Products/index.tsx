@@ -129,6 +129,8 @@ export const Products = () => {
 	} = useProductsData({
 		params: {
 			...params,
+			showPurchases: String(params.showPurchases !== 'false'),
+			showExpenses: String(params.showExpenses === 'true'),
 			branchId: getLocalBranchId(),
 		},
 		user,

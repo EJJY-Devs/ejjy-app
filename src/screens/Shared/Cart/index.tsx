@@ -494,17 +494,12 @@ export const Cart = ({
 		if (currentProducts.length > 0) {
 			const particulars = currentProducts.map((branchProduct: any) => {
 				const product = branchProduct.product || {};
-				const quantity = Number(branchProduct.quantity) || 0;
-				const rate = Number(
-					branchProduct.cost_per_piece ?? product.price_per_piece ?? 0,
-				);
+				const amount = Number(branchProduct.amount) || 0;
 
 				return {
 					description: product.name || '',
 					type: product.is_vat_exempted ? 'VE' : 'V',
-					quantity,
-					rate,
-					amount: quantity * rate,
+					amount,
 					product_id: product.id ?? null,
 				};
 			});
@@ -831,6 +826,7 @@ export const Cart = ({
 		<Modal
 			className="CartModal"
 			footer={null}
+			maskClosable={false}
 			title={type === 'Purchase' ? 'Create Purchase Voucher' : `Create ${type}`}
 			width={1400}
 			centered
@@ -842,6 +838,7 @@ export const Cart = ({
 				<BarcodeScanner
 					ref={barcodeScannerRef}
 					setLoading={setBarcodeScanLoading}
+					type={type}
 				/>
 			)}
 

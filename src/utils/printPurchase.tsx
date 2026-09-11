@@ -20,7 +20,12 @@ import { EscPosCommands } from 'ejjy-global/dist/print/utils/escpos.enum';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
 import { PurchaseVoucherDocument, ReceiptHeaderV2 } from 'components/Printing';
-import { computeVatBreakdown, formatDateTime, formatInPeso } from 'utils';
+import {
+	computeVatBreakdown,
+	formatDateTime,
+	formatInPeso,
+	isPurchaseVatApplicable,
+} from 'utils';
 import {
 	DASHED_DIVIDER,
 	generateFourColumnLine,
@@ -32,13 +37,16 @@ interface PrintPurchaseProps {
 	isPdf?: boolean;
 }
 
-const renderHtml = ({ purchase }: PrintPurchaseProps): string =>
+const renderHtml = ({ purchase, siteSettings }: PrintPurchaseProps): string =>
 	ReactDOM.renderToStaticMarkup(
 		<div
 			className="container"
 			style={getPageStyleObject({ lineHeight: '1.2' })}
 		>
-			<PurchaseVoucherDocument purchase={purchase} />
+			<PurchaseVoucherDocument
+				purchase={purchase}
+				siteSettings={siteSettings}
+			/>
 			<br />
 			<div style={{ textAlign: 'center', fontSize: '12px' }}>
 				<div>Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}</div>
@@ -46,11 +54,15 @@ const renderHtml = ({ purchase }: PrintPurchaseProps): string =>
 		</div>,
 	);
 
-// Native (ESC/POS) renderer — see printPOInternal.tsx for why this report
-// builds its own commands instead of delegating to ejjy-global. Mirrors
-// PurchaseVoucherDocument's fields/ordering.
-const renderNative = ({ purchase }: PrintPurchaseProps): string[] => {
+const renderNative = ({
+	purchase,
+	siteSettings,
+}: PrintPurchaseProps): string[] => {
 	const products = purchase?.purchase_products || [];
+	const vatApplicable = isPurchaseVatApplicable(
+		siteSettings,
+		purchase?.supplier_account,
+	);
 
 	const commands: string[] = [
 		...generateReceiptHeaderCommandsV2({
@@ -101,7 +113,8 @@ const renderNative = ({ purchase }: PrintPurchaseProps): string[] => {
 	// the PDF/HTML render (PurchaseVoucherDocument) has room for a real
 	// column since it can expand.
 	products.forEach((item: any) => {
-		const typeLabel = item.product?.is_vat_exempted ? 'VE' : 'V';
+		const typeLabel =
+			!vatApplicable || item.product?.is_vat_exempted ? 'VE' : 'V';
 		commands.push(
 			generateFourColumnLine(
 				String(item.quantity),
@@ -116,7 +129,7 @@ const renderNative = ({ purchase }: PrintPurchaseProps): string[] => {
 	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
 		products.map((item: any) => ({
 			amount: Number(item.quantity) * Number(item.cost_per_piece),
-			isVatExempt: !!item.product?.is_vat_exempted,
+			isVatExempt: !vatApplicable || !!item.product?.is_vat_exempted,
 		})),
 	);
 
@@ -144,20 +157,26 @@ const renderNative = ({ purchase }: PrintPurchaseProps): string[] => {
 
 export const printPurchase = ({
 	purchase,
+	siteSettings,
 	isPdf = false,
 }: PrintPurchaseProps): string | undefined => {
 	if (isPdf) {
-		return appendHtmlElement(renderHtml({ purchase }));
+		return appendHtmlElement(renderHtml({ purchase, siteSettings }));
 	}
 
 	const printingType = getAppReceiptPrintingType();
 
 	if (printingType === printingTypes.NATIVE) {
-		print(renderNative({ purchase }), 'Purchase', undefined, printingType);
+		print(
+			renderNative({ purchase, siteSettings }),
+			'Purchase',
+			undefined,
+			printingType,
+		);
 		return undefined;
 	}
 
-	const data = renderHtml({ purchase });
+	const data = renderHtml({ purchase, siteSettings });
 	print(appendHtmlElement(data), 'Purchase', undefined, printingType);
 	return data;
 };

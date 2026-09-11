@@ -361,8 +361,27 @@ export const ModifyProductForm = ({
 					patronageSystemTagId: Yup.string()
 						.nullable()
 						.label('Patronage System Tag'),
+					isShownInPurchases: Yup.string().test(
+						'at-least-one-checked',
+						'Product must be shown in at least one of Purchases or Expenses.',
+						function test(value) {
+							const { isShownInExpenses } = this.parent;
+							return value === 'true' || isShownInExpenses === 'true';
+						},
+					),
+					isShownInExpenses: Yup.string().test(
+						'at-least-one-checked',
+						'Product must be shown in at least one of Purchases or Expenses.',
+						function test(value) {
+							const { isShownInPurchases } = this.parent;
+							return value === 'true' || isShownInPurchases === 'true';
+						},
+					),
 				},
-				[['barcode', 'textcode']],
+				[
+					['barcode', 'textcode'],
+					['isShownInPurchases', 'isShownInExpenses'],
+				],
 			),
 		}),
 		[product, isDailyChecked],
@@ -440,6 +459,10 @@ export const ModifyProductForm = ({
 							<Space size="middle">
 								<Checkbox
 									checked={values.isShownInPurchases === 'true'}
+									disabled={
+										values.isShownInPurchases === 'true' &&
+										values.isShownInExpenses !== 'true'
+									}
 									onChange={(event) => {
 										setFieldValue(
 											'isShownInPurchases',
@@ -451,6 +474,10 @@ export const ModifyProductForm = ({
 								</Checkbox>
 								<Checkbox
 									checked={values.isShownInExpenses === 'true'}
+									disabled={
+										values.isShownInExpenses === 'true' &&
+										values.isShownInPurchases !== 'true'
+									}
 									onChange={(event) => {
 										setFieldValue(
 											'isShownInExpenses',
@@ -461,6 +488,10 @@ export const ModifyProductForm = ({
 									Expenses
 								</Checkbox>
 							</Space>
+							<ErrorMessage
+								name="isShownInPurchases"
+								render={(error) => <FieldError error={error} />}
+							/>
 						</Col>
 
 						<Col sm={12} span={24}>

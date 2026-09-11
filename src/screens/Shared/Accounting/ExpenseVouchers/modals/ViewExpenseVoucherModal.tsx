@@ -18,11 +18,16 @@ import {
 	getPageStyleObject,
 	print,
 } from 'ejjy-global/dist/print/helper-receipt';
-import { usePdf } from 'hooks';
+import { usePdf, useSiteSettings } from 'hooks';
 import { useBranchRetrieve } from 'hooks/useBranches';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
-import { computeVatBreakdown, formatDateTime, formatInPeso } from 'utils';
+import {
+	computeVatBreakdown,
+	formatDateTime,
+	formatInPeso,
+	isPurchaseVatApplicable,
+} from 'utils';
 import { ExpenseVoucher, ExpenseVoucherParticular } from '../index';
 
 const { Text } = Typography;
@@ -60,13 +65,18 @@ const printExpenseVoucher = (
 	expenseVoucher: ExpenseVoucher,
 	branch?: any,
 	isPdf = false,
+	siteSettings?: any,
 ): string | undefined => {
 	const data = ReactDOM.renderToStaticMarkup(
 		<div
 			className="container"
 			style={getPageStyleObject({ lineHeight: '1.2' })}
 		>
-			<ExpenseVoucherDocument branch={branch} expenseVoucher={expenseVoucher} />
+			<ExpenseVoucherDocument
+				branch={branch}
+				expenseVoucher={expenseVoucher}
+				siteSettings={siteSettings}
+			/>
 			<br />
 			<div style={{ textAlign: 'center', fontSize: '12px' }}>
 				<div>Print Details: {dayjs().format('MM/DD/YYYY h:mmA')}</div>
@@ -96,6 +106,7 @@ export const ViewExpenseVoucherModal = ({
 		id: expenseVoucher?.branch ?? undefined,
 		options: { enabled: !!expenseVoucher?.branch },
 	});
+	const { data: siteSettings } = useSiteSettings();
 
 	const { isLoadingPdf, previewPdf, downloadPdf, pdfPreviewModal } = usePdf({
 		title: `ExpenseVoucher_${
@@ -104,21 +115,38 @@ export const ViewExpenseVoucherModal = ({
 		paper: 'a4HalfLengthwise',
 		previewInModal: true,
 		print: () =>
-			printExpenseVoucher(expenseVoucher as ExpenseVoucher, branchData, true),
+			printExpenseVoucher(
+				expenseVoucher as ExpenseVoucher,
+				branchData,
+				true,
+				siteSettings,
+			),
 	});
 
 	const handlePrint = () => {
 		if (!expenseVoucher) return;
-		printExpenseVoucher(expenseVoucher, branchData);
+		printExpenseVoucher(expenseVoucher, branchData, false, siteSettings);
 	};
 
 	if (!expenseVoucher) return null;
 
+	const vatApplicable = isPurchaseVatApplicable(
+		siteSettings,
+		expenseVoucher.supplier_account,
+	);
 	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
 		(expenseVoucher.particulars || []).map((item) => ({
 			amount: Number(item.amount),
-			isVatExempt: item.type === 'VE',
+			isVatExempt: !vatApplicable || item.type === 'VE',
 		})),
+	);
+	// Same override reflected in the itemized table below, so a viewer
+	// doesn't see "V" rows next to totals that treat everything as VE.
+	const particularsDataSource = (expenseVoucher.particulars || []).map(
+		(item) => ({
+			...item,
+			type: !vatApplicable ? 'VE' : item.type,
+		}),
 	);
 
 	return (
@@ -214,7 +242,7 @@ export const ViewExpenseVoucherModal = ({
 			<Table
 				className="mt-6"
 				columns={particularsColumns}
-				dataSource={expenseVoucher.particulars || []}
+				dataSource={particularsDataSource}
 				pagination={false}
 				rowKey="description"
 				size="small"

@@ -1,4 +1,4 @@
-import { AutoComplete, Button, Form, Input, Modal, Radio, Select } from 'antd';
+import { Button, Form, Input, Modal, Radio, Select } from 'antd';
 import { Label } from 'components/elements';
 import { accountTypes, MAX_PAGE_SIZE } from 'global';
 import { useAccounts } from 'hooks';
@@ -10,21 +10,19 @@ import { Cart } from 'screens/Shared/Cart';
 interface DetailsFormData {
 	payee: string;
 	paymentType: 'pay' | 'on_account';
-	supplierAccountId?: number;
+	supplierAccountId: number;
 	invoiceNumber: string;
 	remarks: string;
 }
 
 interface Props {
 	open: boolean;
-	initialPayee?: string;
 	supplierAccountId?: number;
 	onClose: () => void;
 }
 
 export const CreateExpenseVoucherModal = ({
 	open,
-	initialPayee,
 	supplierAccountId,
 	onClose,
 }: Props) => {
@@ -33,7 +31,6 @@ export const CreateExpenseVoucherModal = ({
 
 	const [detailsForm] = Form.useForm();
 	const isSupplierAccountFixed = !!supplierAccountId;
-	const detailsPaymentType = Form.useWatch('paymentType', detailsForm) || 'pay';
 
 	const { data: accountsData } = useAccounts({
 		params: { withSupplierRegistration: true, pageSize: MAX_PAGE_SIZE },
@@ -50,14 +47,6 @@ export const CreateExpenseVoucherModal = ({
 			),
 		[accountsData?.accounts],
 	);
-	const supplierAutoCompleteOptions = useMemo(
-		() =>
-			supplierAccounts.map((account: any) => ({
-				id: account.id,
-				value: getSupplierLabel(account),
-			})),
-		[supplierAccounts],
-	);
 	const supplierSelectOptions = useMemo(
 		() =>
 			supplierAccounts.map((account: any) => ({
@@ -72,55 +61,25 @@ export const CreateExpenseVoucherModal = ({
 			setStep('details');
 			setDetailsData(null);
 			detailsForm.resetFields();
-		} else if (initialPayee) {
-			detailsForm.setFieldsValue({ payee: initialPayee });
 		}
-	}, [open, initialPayee]);
-
-	const handlePaymentTypeChange = (value: string) => {
-		detailsForm.setFieldsValue({
-			paymentType: value,
-			payee: '',
-			supplierAccountId: null,
-		});
-	};
-
-	const handlePayeeAutoCompleteChange = (value: string) => {
-		if (isSupplierAccountFixed) return;
-
-		const matched = supplierAutoCompleteOptions.find(
-			(option) => option.value === value,
-		);
-		detailsForm.setFieldsValue({
-			supplierAccountId: matched ? matched.id : null,
-		});
-	};
+	}, [open]);
 
 	const handleDetailsSubmit = async () => {
 		const values = await detailsForm.validateFields();
 
 		const effectiveSupplierAccountId = isSupplierAccountFixed
 			? supplierAccountId
-			: detailsForm.getFieldValue('supplierAccountId');
+			: values.supplierAccountId;
 
 		const payee =
-			values.paymentType === 'on_account'
-				? supplierSelectOptions.find(
-						(option) => option.value === effectiveSupplierAccountId,
-				  )?.label || ''
-				: values.payee;
+			supplierSelectOptions.find(
+				(option) => option.value === effectiveSupplierAccountId,
+			)?.label || '';
 
 		setDetailsData({
 			payee,
 			paymentType: values.paymentType,
-			// Keep the matched supplier account even for "Pay" vouchers (picked
-			// via the payee autocomplete, see handlePayeeAutoCompleteChange) so
-			// VAT applicability can still be resolved from the linked account's
-			// Tax Type - see isPurchaseVatApplicable. Previously this was
-			// dropped for anything but "On Account", so a "Pay" voucher to a
-			// registered VAT supplier always printed as VAT Exempt with no VAT
-			// computed.
-			supplierAccountId: effectiveSupplierAccountId || undefined,
+			supplierAccountId: effectiveSupplierAccountId,
 			invoiceNumber: values.invoiceNumber || '',
 			remarks: values.remarks || '',
 		});
@@ -142,56 +101,34 @@ export const CreateExpenseVoucherModal = ({
 			>
 				<Form
 					form={detailsForm}
-					initialValues={{ paymentType: 'pay' }}
+					initialValues={{ paymentType: 'pay', supplierAccountId }}
 					layout="vertical"
 				>
 					<Label label="Type" spacing />
 					<Form.Item name="paymentType">
-						<Radio.Group
-							disabled={isSupplierAccountFixed}
-							onChange={(e) => handlePaymentTypeChange(e.target.value)}
-						>
+						<Radio.Group disabled={isSupplierAccountFixed}>
 							<Radio value="pay">Pay</Radio>
 							<Radio value="on_account">On Account</Radio>
 						</Radio.Group>
 					</Form.Item>
 
 					<Label label="Supplier" spacing />
-					{detailsPaymentType === 'on_account' ? (
-						<Form.Item
-							name="supplierAccountId"
-							rules={[{ required: true, message: 'Supplier is required' }]}
-						>
-							<Select
-								disabled={isSupplierAccountFixed}
-								filterOption={(inputValue, option) =>
-									(option?.label as string)
-										?.toLowerCase()
-										.includes(inputValue.toLowerCase())
-								}
-								options={supplierSelectOptions}
-								placeholder="Select a supplier"
-								showSearch
-							/>
-						</Form.Item>
-					) : (
-						<Form.Item
-							name="payee"
-							rules={[{ required: true, message: 'Payee is required' }]}
-						>
-							<AutoComplete
-								disabled={isSupplierAccountFixed}
-								filterOption={(inputValue, option) =>
-									(option?.value as string)
-										.toLowerCase()
-										.includes(inputValue.toLowerCase())
-								}
-								options={supplierAutoCompleteOptions}
-								placeholder="Select a supplier or type a payee name"
-								onChange={handlePayeeAutoCompleteChange}
-							/>
-						</Form.Item>
-					)}
+					<Form.Item
+						name="supplierAccountId"
+						rules={[{ required: true, message: 'Supplier is required' }]}
+					>
+						<Select
+							disabled={isSupplierAccountFixed}
+							filterOption={(inputValue, option) =>
+								(option?.label as string)
+									?.toLowerCase()
+									.includes(inputValue.toLowerCase())
+							}
+							options={supplierSelectOptions}
+							placeholder="Select a supplier"
+							showSearch
+						/>
+					</Form.Item>
 
 					<Label label="Invoice #" spacing />
 					<Form.Item name="invoiceNumber">

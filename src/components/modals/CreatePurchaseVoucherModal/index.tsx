@@ -41,16 +41,11 @@ const getFormDetails = (
 			.oneOf(['pay', 'on_account'])
 			.required()
 			.label('Payment Type'),
-		supplierAccountId: Yup.number()
-			.nullable()
-			.label('Supplier')
-			.when('paymentType', {
-				is: (value) => !isPurchaseOrder && value === 'on_account',
-				then: (schema) =>
-					schema.required(
-						'Supplier must be an existing account when payment type is On Account',
-					),
-			}),
+		supplierAccountId: isPurchaseOrder
+			? Yup.number().nullable().label('Supplier')
+			: Yup.number()
+					.required('Supplier must be an existing account')
+					.label('Supplier'),
 		supplierName: Yup.string().trim().required().label('Supplier'),
 		invoiceNumber: isPurchaseOrder
 			? Yup.string().nullable().label('Invoice #').trim()
@@ -148,16 +143,7 @@ export const CreatePurchaseVoucherModal = ({
 				initialValues={formDetails.defaultValues}
 				validationSchema={formDetails.schema}
 				enableReinitialize
-				onSubmit={(formData) => {
-					// 'Pay' must never post/link to a supplier account, even if the
-					// typed supplier name happened to autocomplete-match one.
-					const supplierAccountId =
-						!isPurchaseOrder && formData.paymentType === 'pay'
-							? null
-							: formData.supplierAccountId;
-
-					onSubmit({ ...formData, supplierAccountId });
-				}}
+				onSubmit={onSubmit}
 			>
 				{({ values, setFieldValue, isSubmitting }) => (
 					<Form>
@@ -169,8 +155,6 @@ export const CreatePurchaseVoucherModal = ({
 										value={values['paymentType']}
 										onChange={(e) => {
 											setFieldValue('paymentType', e.target.value);
-											setFieldValue('supplierName', '');
-											setFieldValue('supplierAccountId', null);
 										}}
 									>
 										<Radio value="pay">Pay</Radio>
@@ -185,7 +169,7 @@ export const CreatePurchaseVoucherModal = ({
 
 							<Col span={24}>
 								<Label label="Supplier" spacing />
-								{!isPurchaseOrder && values['paymentType'] === 'on_account' ? (
+								{!isPurchaseOrder ? (
 									<Select
 										className="w-100"
 										filterOption={(inputValue, option) =>

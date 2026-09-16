@@ -44,6 +44,8 @@ interface Props {
 	onAddTransactionEntry: () => void;
 	onCreateJournalEntry: () => void;
 	onOpenJournalEntry: (entry: GeneralJournalEntry) => void;
+	onViewCollectionReceipt?: (referenceNumber: string) => void;
+	onViewDisbursementVoucher?: (referenceNumber: string) => void;
 	onViewExpense?: (expenseId: number) => void;
 	onViewInvoice?: (entry: GeneralJournalEntry) => void;
 	onViewPurchase?: (purchaseId: number) => void;
@@ -56,6 +58,8 @@ export const GeneralJournalTab = ({
 	onAddTransactionEntry,
 	onCreateJournalEntry,
 	onOpenJournalEntry,
+	onViewCollectionReceipt,
+	onViewDisbursementVoucher,
 	onViewExpense,
 	onViewInvoice,
 	onViewPurchase,
@@ -196,6 +200,34 @@ export const GeneralJournalTab = ({
 								</>
 							);
 						}
+
+						// Collection Receipt entries store the CR reference number
+						// (e.g. CR-18) as their remarks.
+						if (/^CR-\d+$/.test(record.remarks)) {
+							return (
+								<Button
+									style={{ padding: 0, height: 'auto' }}
+									type="link"
+									onClick={() => onViewCollectionReceipt?.(record.remarks)}
+								>
+									{record.remarks}
+								</Button>
+							);
+						}
+
+						// Disbursement Voucher entries store the DV reference number
+						// (e.g. DV-2) as their remarks.
+						if (/^DV-\d+$/.test(record.remarks)) {
+							return (
+								<Button
+									style={{ padding: 0, height: 'auto' }}
+									type="link"
+									onClick={() => onViewDisbursementVoucher?.(record.remarks)}
+								>
+									{record.remarks}
+								</Button>
+							);
+						}
 					}
 					if (record.expenseId) {
 						const ref = record.expenseReferenceNumber;
@@ -268,6 +300,8 @@ export const GeneralJournalTab = ({
 	}, [
 		isHeadOffice,
 		onOpenJournalEntry,
+		onViewCollectionReceipt,
+		onViewDisbursementVoucher,
 		onViewExpense,
 		onViewInvoice,
 		onViewPurchase,

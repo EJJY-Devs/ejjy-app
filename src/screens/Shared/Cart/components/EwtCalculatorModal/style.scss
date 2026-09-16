@@ -1,0 +1,21 @@
+.EwtCalculatorModal {
+	&_inputPercentage {
+		input {
+			height: 75px !important;
+			font-size: 3rem;
+			font-weight: bold;
+			text-align: center;
+		}
+	}
+
+	&_amountSection {
+		margin-top: 28px;
+		text-align: center;
+	}
+
+	&_amount {
+		margin: 0;
+		font-size: 2rem;
+		font-weight: bold;
+	}
+}

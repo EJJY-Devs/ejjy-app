@@ -1,5 +1,5 @@
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Col, Row, Select, Table, Tooltip } from 'antd';
+import { Button, Col, Row, Select, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
@@ -18,16 +18,16 @@ import {
 } from 'hooks';
 import React, { useMemo } from 'react';
 import { formatDateTime, formatInPeso } from 'utils';
+import { GeneralJournalEntry } from './GeneralJournalTab';
 
 export interface CashReceiptEntry {
-	// A plain invoice id for invoice-sourced rows, or "je-<id>" for a row
-	// sourced straight from a General Journal entry posted to a cash-book
-	// account (see CashReceiptsViewSet on the backend).
 	id: number | string;
+	sourceType: 'invoice' | 'journal_entry';
 	date: string;
 	payor?: string | null;
 	tin?: string | null;
 	invoice: string;
+	branchMachineId?: number | null;
 	debitAccount?: string | null;
 	creditAccount?: string | null;
 	amount: number;
@@ -35,14 +35,28 @@ export interface CashReceiptEntry {
 	salesIncomeVatExclusive: number;
 	otherReceipts?: number | null;
 	totalReceipts?: number | null;
+	isLinkedInvoice: boolean;
+	journalEntryId?: number | null;
+	entryType?: string | null;
+	remarks?: string | null;
+	description?: string | null;
+	branchName?: string | null;
+	branchMachineName?: string | null;
 }
 
 interface Props {
 	isHeadOffice: boolean;
 	localBranchId: number;
+	onOpenJournalEntry: (entry: GeneralJournalEntry) => void;
+	onViewInvoice: (reference: string, branchMachineId?: number | null) => void;
 }
 
-export const CashReceiptsTab = ({ isHeadOffice, localBranchId }: Props) => {
+export const CashReceiptsTab = ({
+	isHeadOffice,
+	localBranchId,
+	onOpenJournalEntry,
+	onViewInvoice,
+}: Props) => {
 	const { params, setQueryParams } = useQueryParams();
 	const { data: { branches } = { branches: [] } } = useBranches({
 		params: {
@@ -90,10 +104,12 @@ export const CashReceiptsTab = ({ isHeadOffice, localBranchId }: Props) => {
 	const entries: CashReceiptEntry[] = (cashReceipts || []).map(
 		(entry: any) => ({
 			id: entry.id,
+			sourceType: entry.source_type,
 			date: formatDateTime(entry.date, true),
 			payor: entry.payor,
 			tin: entry.tin,
 			invoice: entry.invoice,
+			branchMachineId: entry.branch_machine_id,
 			debitAccount: entry.debit_account,
 			creditAccount: entry.credit_account,
 			amount: entry.amount,
@@ -101,8 +117,36 @@ export const CashReceiptsTab = ({ isHeadOffice, localBranchId }: Props) => {
 			salesIncomeVatExclusive: entry.sales_income_vat_exclusive,
 			otherReceipts: entry.other_receipts,
 			totalReceipts: entry.total_receipts,
+			isLinkedInvoice: entry.is_linked_invoice,
+			journalEntryId: entry.journal_entry_id,
+			entryType: entry.entry_type,
+			remarks: entry.remarks,
+			description: entry.description,
+			branchName: entry.branch_name,
+			branchMachineName: entry.branch_machine_name,
 		}),
 	);
+
+	const handleReferenceClick = (record: CashReceiptEntry) => {
+		if (record.sourceType === 'invoice') {
+			onViewInvoice(record.invoice, record.branchMachineId);
+			return;
+		}
+
+		onOpenJournalEntry({
+			id: record.journalEntryId as number,
+			entryType: record.entryType || '',
+			datetime: record.date,
+			branch: record.branchName || undefined,
+			branchMachine: record.branchMachineName || undefined,
+			referenceNumber: record.invoice,
+			debitAccount: record.debitAccount || '',
+			creditAccount: record.creditAccount || '',
+			amount: formatInPeso(record.amount, '₱ '),
+			remarks: record.remarks || EMPTY_CELL,
+			description: record.description || '',
+		});
+	};
 
 	const columns: ColumnsType<CashReceiptEntry> = [
 		{
@@ -126,10 +170,25 @@ export const CashReceiptsTab = ({ isHeadOffice, localBranchId }: Props) => {
 			render: (value: string | null) => value || EMPTY_CELL,
 		},
 		{
-			title: 'Invoice',
+			title: 'Reference',
 			dataIndex: 'invoice',
 			key: 'invoice',
 			align: 'left',
+			render: (value: string, record: CashReceiptEntry) => {
+				// A row that merely settles an existing invoice's receivable
+				// (e.g. a Collection Receipt) isn't a reference of its own.
+				if (record.isLinkedInvoice) return null;
+
+				return (
+					<Button
+						style={{ padding: 0, height: 'auto' }}
+						type="link"
+						onClick={() => handleReferenceClick(record)}
+					>
+						{value}
+					</Button>
+				);
+			},
 		},
 		{
 			title: 'Debit Account',

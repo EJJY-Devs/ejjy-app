@@ -108,7 +108,7 @@ export const AddProductForm = ({ product, type, onClose, onSubmit }) => {
 		() => ({
 			DefaultValues: {
 				quantity: '',
-				costPerPiece: '',
+				costPerPiece: 0,
 				type: unitOfMeasurementTypes.NON_WEIGHING,
 			},
 			Schema: Yup.object().shape({

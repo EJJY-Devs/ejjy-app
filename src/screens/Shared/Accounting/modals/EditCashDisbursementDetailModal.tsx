@@ -1,7 +1,7 @@
 import { Button, Form, Input, InputNumber, Modal } from 'antd';
 import { Label } from 'components/elements';
 import React, { useEffect } from 'react';
-import { formatNumberWithCommas } from 'utils';
+import { formatInPeso, formatNumberWithCommas } from 'utils';
 import { CashDisbursementEntry } from '../BooksOfAccounts/components/CashDisbursementsTab';
 
 const pesoFormatter = (
@@ -38,6 +38,10 @@ export const EditCashDisbursementDetailModal = ({
 	onUpdate,
 }: Props) => {
 	const [form] = Form.useForm();
+
+	const ewtBaseAmount = entry?.expensePurchaseVatExclusive || 0;
+	const watchedEwtPercentage = Form.useWatch('ewtPercentage', form);
+	const ewtAmount = (ewtBaseAmount * (watchedEwtPercentage || 0)) / 100;
 
 	useEffect(() => {
 		if (open && entry) {
@@ -76,6 +80,12 @@ export const EditCashDisbursementDetailModal = ({
 			)}
 
 			<Form form={form} layout="vertical" onFinish={handleFinish}>
+				<Label label="EWT Calculator" spacing />
+				<p className="mb-2">
+					Purchase/Expense Amount (VAT Exclusive):{' '}
+					{formatInPeso(ewtBaseAmount, '₱ ')}
+				</p>
+
 				<Label label="EWT (%)" spacing />
 				<Form.Item name="ewtPercentage">
 					<InputNumber
@@ -87,6 +97,11 @@ export const EditCashDisbursementDetailModal = ({
 						onFocus={(e) => e.target.select()}
 					/>
 				</Form.Item>
+
+				<Label label="EWT Amount" spacing />
+				<p className="mb-4">
+					<strong>{formatInPeso(ewtAmount, '₱ ')}</strong>
+				</p>
 
 				<Label label="Other Deductions" spacing />
 				<Form.Item name="otherDeductionsAmount">

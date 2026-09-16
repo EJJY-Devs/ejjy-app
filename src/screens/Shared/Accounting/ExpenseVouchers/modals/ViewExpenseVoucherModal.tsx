@@ -20,6 +20,7 @@ import {
 } from 'ejjy-global/dist/print/helper-receipt';
 import { usePdf, useSiteSettings } from 'hooks';
 import { useBranchRetrieve } from 'hooks/useBranches';
+import { useExpenseVoucherById } from 'hooks/useExpenseVouchers';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
 import {
@@ -36,6 +37,7 @@ interface Props {
 	expenseVoucher: ExpenseVoucher | null;
 	open: boolean;
 	onClose: () => void;
+	asReferencePanel?: boolean;
 }
 
 const particularsColumns: ColumnsType<ExpenseVoucherParticular> = [
@@ -101,22 +103,29 @@ export const ViewExpenseVoucherModal = ({
 	expenseVoucher,
 	open,
 	onClose,
+	asReferencePanel,
 }: Props) => {
 	const { data: branchData } = useBranchRetrieve({
 		id: expenseVoucher?.branch ?? undefined,
 		options: { enabled: !!expenseVoucher?.branch },
 	});
 	const { data: siteSettings } = useSiteSettings();
+	// Fetched fresh by id rather than trusting the list-cached `expenseVoucher`
+	// prop, which can be stale right after the EWT Calculator step writes a
+	// CashDisbursementDetail for it (list refetch can race the EWT save) -
+	// same role usePurchaseById plays for ViewPurchaseModal.
+	const { data: fullExpenseVoucher } = useExpenseVoucherById(
+		expenseVoucher?.id,
+	);
+	const data = fullExpenseVoucher || expenseVoucher;
 
 	const { isLoadingPdf, previewPdf, downloadPdf, pdfPreviewModal } = usePdf({
-		title: `ExpenseVoucher_${
-			expenseVoucher?.reference_number || expenseVoucher?.id
-		}.pdf`,
+		title: `ExpenseVoucher_${data?.reference_number || data?.id}.pdf`,
 		paper: 'a4HalfLengthwise',
 		previewInModal: true,
 		print: () =>
 			printExpenseVoucher(
-				expenseVoucher as ExpenseVoucher,
+				data as ExpenseVoucher,
 				branchData,
 				true,
 				siteSettings,
@@ -124,33 +133,32 @@ export const ViewExpenseVoucherModal = ({
 	});
 
 	const handlePrint = () => {
-		if (!expenseVoucher) return;
-		printExpenseVoucher(expenseVoucher, branchData, false, siteSettings);
+		if (!data) return;
+		printExpenseVoucher(data, branchData, false, siteSettings);
 	};
 
-	if (!expenseVoucher) return null;
+	if (!data) return null;
 
 	const vatApplicable = isPurchaseVatApplicable(
 		siteSettings,
-		expenseVoucher.supplier_account,
+		data.supplier_account,
 	);
 	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
-		(expenseVoucher.particulars || []).map((item) => ({
+		(data.particulars || []).map((item) => ({
 			amount: Number(item.amount),
 			isVatExempt: !vatApplicable || item.type === 'VE',
 		})),
 	);
 	// Same override reflected in the itemized table below, so a viewer
 	// doesn't see "V" rows next to totals that treat everything as VE.
-	const particularsDataSource = (expenseVoucher.particulars || []).map(
-		(item) => ({
-			...item,
-			type: !vatApplicable ? 'VE' : item.type,
-		}),
-	);
+	const particularsDataSource = (data.particulars || []).map((item) => ({
+		...item,
+		type: !vatApplicable ? 'VE' : item.type,
+	}));
 
 	return (
 		<Modal
+			centered={!asReferencePanel}
 			className="Modal__hasFooter"
 			footer={[
 				<Button
@@ -170,10 +178,11 @@ export const ViewExpenseVoucherModal = ({
 					previewPdf={previewPdf}
 				/>,
 			]}
+			mask={!asReferencePanel}
 			open={open}
 			title="[View] Expense Voucher"
 			width={VIEW_PRINTING_MODAL_WIDTH}
-			centered
+			wrapClassName={asReferencePanel ? 'VoucherReferencePanel' : undefined}
 			closable
 			onCancel={onClose}
 		>
@@ -189,7 +198,7 @@ export const ViewExpenseVoucherModal = ({
 							Voucher No.:
 						</td>
 						<td style={{ padding: '2px 0', textAlign: 'right' }}>
-							{expenseVoucher.reference_number || EMPTY_CELL}
+							{data.reference_number || EMPTY_CELL}
 						</td>
 					</tr>
 					<tr>
@@ -197,7 +206,7 @@ export const ViewExpenseVoucherModal = ({
 							Date:
 						</td>
 						<td style={{ padding: '2px 0', textAlign: 'right' }}>
-							{formatDateTime(expenseVoucher.datetime_created)}
+							{formatDateTime(data.datetime_created)}
 						</td>
 					</tr>
 					<tr>
@@ -205,7 +214,7 @@ export const ViewExpenseVoucherModal = ({
 							Payee:
 						</td>
 						<td style={{ padding: '2px 0', textAlign: 'right' }}>
-							{expenseVoucher.payee || EMPTY_CELL}
+							{data.payee || EMPTY_CELL}
 						</td>
 					</tr>
 					<tr>
@@ -213,7 +222,7 @@ export const ViewExpenseVoucherModal = ({
 							Invoice #:
 						</td>
 						<td style={{ padding: '2px 0', textAlign: 'right' }}>
-							{expenseVoucher.invoice_number || EMPTY_CELL}
+							{data.invoice_number || EMPTY_CELL}
 						</td>
 					</tr>
 					<tr>
@@ -221,9 +230,7 @@ export const ViewExpenseVoucherModal = ({
 							Type:
 						</td>
 						<td style={{ padding: '2px 0', textAlign: 'right' }}>
-							{expenseVoucher.payment_type === 'on_account'
-								? 'On Account'
-								: 'Pay'}
+							{data.payment_type === 'on_account' ? 'On Account' : 'Pay'}
 						</td>
 					</tr>
 					<tr>
@@ -231,9 +238,7 @@ export const ViewExpenseVoucherModal = ({
 							Authorizer:
 						</td>
 						<td style={{ padding: '2px 0', textAlign: 'right' }}>
-							{expenseVoucher.authorizer
-								? getFullName(expenseVoucher.authorizer)
-								: EMPTY_CELL}
+							{data.authorizer ? getFullName(data.authorizer) : EMPTY_CELL}
 						</td>
 					</tr>
 				</tbody>
@@ -257,7 +262,7 @@ export const ViewExpenseVoucherModal = ({
 			>
 				<br />
 				<Text style={{ whiteSpace: 'pre-line' }} strong>
-					Total Amount: {formatInPeso(expenseVoucher.amount)}
+					Total Amount: {formatInPeso(data.amount)}
 				</Text>
 				<Text style={{ whiteSpace: 'pre-line' }}>
 					VAT Exempt: {formatInPeso(vatExempt)}
@@ -268,6 +273,11 @@ export const ViewExpenseVoucherModal = ({
 				<Text style={{ whiteSpace: 'pre-line' }}>
 					VAT Amount: {formatInPeso(vatAmount)}
 				</Text>
+				{Number(data.ewt_percentage) > 0 && (
+					<Text style={{ whiteSpace: 'pre-line' }}>
+						EWT: {formatInPeso(data.ewt_amount)} ({data.ewt_percentage}%)
+					</Text>
+				)}
 			</Space>
 
 			<Space

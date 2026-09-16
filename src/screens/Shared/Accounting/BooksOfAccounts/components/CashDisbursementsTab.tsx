@@ -21,15 +21,13 @@ import { formatDateTime, formatInPeso } from 'utils';
 import { EditCashDisbursementDetailModal } from '../../modals/EditCashDisbursementDetailModal';
 
 export interface CashDisbursementEntry {
-	// 'journal_entry' covers a row sourced straight from a General Journal
-	// entry posted to a cash-book account, with no voucher behind it — see
-	// CashDisbursementsViewSet on the backend.
 	sourceType: 'expense' | 'purchase' | 'journal_entry';
 	sourceId: number;
 	date: string;
 	payee?: string | null;
 	tin?: string | null;
 	invoiceNumber?: string | null;
+	referenceNumber?: string | null;
 	debitAccount?: string | null;
 	creditAccount?: string | null;
 	amount: number;
@@ -45,11 +43,15 @@ export interface CashDisbursementEntry {
 interface Props {
 	isHeadOffice: boolean;
 	localBranchId: number;
+	onViewExpense?: (expenseId: number) => void;
+	onViewPurchase?: (purchaseId: number) => void;
 }
 
 export const CashDisbursementsTab = ({
 	isHeadOffice,
 	localBranchId,
+	onViewExpense,
+	onViewPurchase,
 }: Props) => {
 	const { params, setQueryParams } = useQueryParams();
 	const [editEntry, setEditEntry] = useState<CashDisbursementEntry | null>(
@@ -93,6 +95,7 @@ export const CashDisbursementsTab = ({
 			payee: entry.payee,
 			tin: entry.tin,
 			invoiceNumber: entry.invoice_number,
+			referenceNumber: entry.reference_number,
 			debitAccount: entry.debit_account,
 			creditAccount: entry.credit_account,
 			amount: entry.amount,
@@ -153,6 +156,37 @@ export const CashDisbursementsTab = ({
 			key: 'invoiceNumber',
 			align: 'left',
 			render: (value: string | null) => value || EMPTY_CELL,
+		},
+		{
+			title: (
+				<>
+					Reference{' '}
+					<Tooltip title="The Purchase/Expense Voucher's own number (PV-/EV-). Click to open its print preview.">
+						<QuestionCircleOutlined />
+					</Tooltip>
+				</>
+			),
+			dataIndex: 'referenceNumber',
+			key: 'referenceNumber',
+			align: 'left',
+			render: (value: string | null, record: CashDisbursementEntry) => {
+				if (!value) return EMPTY_CELL;
+				return (
+					<Button
+						style={{ padding: 0, height: 'auto' }}
+						type="link"
+						onClick={() => {
+							if (record.sourceType === 'purchase') {
+								onViewPurchase?.(record.sourceId);
+							} else if (record.sourceType === 'expense') {
+								onViewExpense?.(record.sourceId);
+							}
+						}}
+					>
+						{value}
+					</Button>
+				);
+			},
 		},
 		{
 			title: 'Debit Account',
@@ -315,7 +349,7 @@ export const CashDisbursementsTab = ({
 					pageSizeOptions,
 				}}
 				rowKey={(record) => `${record.sourceType}-${record.sourceId}`}
-				scroll={{ x: 1700 }}
+				scroll={{ x: 1900 }}
 				bordered
 			/>
 			<EditCashDisbursementDetailModal

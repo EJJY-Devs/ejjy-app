@@ -35,6 +35,7 @@ import { CreateJournalEntryModal } from 'screens/Shared/Accounting/modals/Create
 import {
 	convertIntoArray,
 	formatDateTime,
+	formatInPeso,
 	getLocalApiUrl,
 	getAppType,
 } from 'utils';
@@ -97,6 +98,9 @@ export const Purchases = () => {
 	});
 	const withoutJeCount = withoutJeData?.total || 0;
 
+	const journalEntryStatus = (params.journalEntryStatus as string) ?? 'without';
+	const isWithoutJeFilter = journalEntryStatus === 'without';
+
 	useEffect(() => {
 		if (purchases) {
 			const data = purchases.map((item: any) => ({
@@ -112,6 +116,7 @@ export const Purchases = () => {
 				authorizer: item.authorizer
 					? `${item.authorizer.first_name} ${item.authorizer.last_name}`
 					: EMPTY_CELL,
+				amount: formatInPeso(item.total_amount),
 				remarks: item.overall_remarks || EMPTY_CELL,
 				purchaseOrder: item.purchase_order?.reference_number || EMPTY_CELL,
 			}));
@@ -145,6 +150,7 @@ export const Purchases = () => {
 		...(showBranchColumn ? [{ title: 'Branch', dataIndex: 'branch' }] : []),
 		{ title: 'Supplier', dataIndex: 'supplierName' },
 		{ title: 'Authorizer', dataIndex: 'authorizer' },
+		{ title: 'Amount', dataIndex: 'amount', align: 'right' as const },
 		{ title: 'Remarks', dataIndex: 'remarks' },
 		{
 			title: 'PO',
@@ -240,7 +246,7 @@ export const Purchases = () => {
 					<Col span={24}>
 						<Row gutter={[16, 0]}>
 							<Col flex="none">
-								<TimeRangeFilter disabled={isFetching} />
+								<TimeRangeFilter disabled={isFetching || isWithoutJeFilter} />
 							</Col>
 							{showBranchColumn && (
 								<Col flex="none">
@@ -275,7 +281,7 @@ export const Purchases = () => {
 								<Radio.Group
 									buttonStyle="solid"
 									optionType="button"
-									value={(params.journalEntryStatus as string) ?? 'without'}
+									value={journalEntryStatus}
 									onChange={(e) =>
 										setQueryParams({
 											journalEntryStatus: e.target.value,
@@ -346,8 +352,18 @@ export const Purchases = () => {
 				/>
 
 				<CreateJournalEntryModal
+					hasVoucher={!!purchaseForJE}
 					isSubmitting={isJeSubmitting}
 					open={!!purchaseForJE}
+					renderVoucher={(onCloseVoucher) =>
+						purchaseForJE && (
+							<ViewPurchaseModal
+								purchase={purchaseForJE}
+								asReferencePanel
+								onClose={onCloseVoucher}
+							/>
+						)
+					}
 					onClose={() => setPurchaseForJE(null)}
 					onSubmit={async (values) => {
 						setAuthorizeConfig({

@@ -29,10 +29,6 @@
 }
 
 .CreateJournalEntryModal {
-	.ant-modal {
-		width: min(1200px, calc(100vw - 32px)) !important;
-	}
-
 	.ant-modal-content {
 		border-radius: 20px;
 		min-height: 400px;
@@ -82,7 +78,29 @@
 	}
 }
 
+.CreateJournalEntryModal_titleRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding-right: 20px;
+
+	.ant-btn {
+		height: 36px;
+		font-size: 15px;
+	}
+}
+
+.CreateJournalEntryModal_body {
+	display: flex;
+	align-items: stretch;
+	gap: 28px;
+}
+
 .CreateJournalEntryModal_form {
+	flex: 1;
+	min-width: 0;
+
 	.ant-form-item {
 		margin-bottom: 14px;
 	}

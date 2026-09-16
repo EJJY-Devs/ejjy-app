@@ -31,9 +31,15 @@ const columns: ColumnsType = [
 interface Props {
 	purchase: any;
 	onClose: any;
+
+	asReferencePanel?: boolean;
 }
 
-export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
+export const ViewPurchaseModal = ({
+	purchase,
+	onClose,
+	asReferencePanel,
+}: Props) => {
 	const [dataSource, setDataSource] = useState([]);
 
 	const { data: fullPurchase } = usePurchaseById(purchase?.id);
@@ -78,6 +84,7 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 
 	return (
 		<Modal
+			centered={!asReferencePanel}
 			className="Modal__hasFooter"
 			footer={[
 				<Button
@@ -97,9 +104,10 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 					previewPdf={previewPdf}
 				/>,
 			]}
+			mask={!asReferencePanel}
 			title="[View] Purchase Voucher"
 			width={VIEW_PRINTING_MODAL_WIDTH}
-			centered
+			wrapClassName={asReferencePanel ? 'VoucherReferencePanel' : undefined}
 			closable
 			open
 			onCancel={onClose}
@@ -202,6 +210,11 @@ export const ViewPurchaseModal = ({ purchase, onClose }: Props) => {
 				<Text style={{ whiteSpace: 'pre-line' }}>
 					VAT Amount: {formatInPeso(vatAmount)}
 				</Text>
+				{Number(data?.ewt_percentage) > 0 && (
+					<Text style={{ whiteSpace: 'pre-line' }}>
+						EWT: {formatInPeso(data?.ewt_amount)} ({data?.ewt_percentage}%)
+					</Text>
+				)}
 			</Space>
 
 			<Space

@@ -1,5 +1,5 @@
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Col, Row, Select, Table, Tooltip } from 'antd';
+import { Button, Col, Row, Select, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
@@ -15,13 +15,14 @@ import React, { useMemo } from 'react';
 import { formatDateTime, formatInPeso } from 'utils';
 
 export interface SubsidiaryPurchaseEntry {
-	sourceType: 'expense' | 'purchase';
+	sourceType: 'expense' | 'purchase' | 'journal_entry';
 	sourceId: number;
 	date: string;
 	supplier?: string | null;
 	tin?: string | null;
 	invoiceNumber?: string | null;
 	description?: string | null;
+	referenceNumber?: string | null;
 	purchasesExpenseVatExclusive: number;
 	vatInput: number;
 	totalPurchases: number;
@@ -33,6 +34,8 @@ export interface SubsidiaryPurchaseEntry {
 interface Props {
 	isHeadOffice: boolean;
 	localBranchId: number;
+	onViewExpense?: (expenseId: number) => void;
+	onViewPurchase?: (purchaseId: number) => void;
 }
 
 const notYetAvailableTooltip = (
@@ -44,6 +47,8 @@ const notYetAvailableTooltip = (
 export const SubsidiaryPurchasesTab = ({
 	isHeadOffice,
 	localBranchId,
+	onViewExpense,
+	onViewPurchase,
 }: Props) => {
 	const { params, setQueryParams } = useQueryParams();
 	const { data: { branches } = { branches: [] } } = useBranches({
@@ -79,6 +84,7 @@ export const SubsidiaryPurchasesTab = ({
 			tin: entry.tin,
 			invoiceNumber: entry.invoice_number,
 			description: entry.description,
+			referenceNumber: entry.reference_number,
 			purchasesExpenseVatExclusive: entry.purchases_expense_vat_exclusive,
 			vatInput: entry.vat_input,
 			totalPurchases: entry.total_purchases,
@@ -122,6 +128,37 @@ export const SubsidiaryPurchasesTab = ({
 			key: 'description',
 			align: 'left',
 			render: (value: string | null) => value || EMPTY_CELL,
+		},
+		{
+			title: (
+				<>
+					Reference{' '}
+					<Tooltip title="The Purchase/Expense Voucher's own number (PV-/EV-). Click to open its print preview.">
+						<QuestionCircleOutlined />
+					</Tooltip>
+				</>
+			),
+			dataIndex: 'referenceNumber',
+			key: 'referenceNumber',
+			align: 'left',
+			render: (value: string | null, record: SubsidiaryPurchaseEntry) => {
+				if (!value) return EMPTY_CELL;
+				return (
+					<Button
+						style={{ padding: 0, height: 'auto' }}
+						type="link"
+						onClick={() => {
+							if (record.sourceType === 'purchase') {
+								onViewPurchase?.(record.sourceId);
+							} else {
+								onViewExpense?.(record.sourceId);
+							}
+						}}
+					>
+						{value}
+					</Button>
+				);
+			},
 		},
 		{
 			title: 'Purchases / Expense - VAT Exclusive',
@@ -237,7 +274,7 @@ export const SubsidiaryPurchasesTab = ({
 					pageSizeOptions,
 				}}
 				rowKey={(record) => `${record.sourceType}-${record.sourceId}`}
-				scroll={{ x: 1500 }}
+				scroll={{ x: 1700 }}
 				bordered
 			/>
 		</>

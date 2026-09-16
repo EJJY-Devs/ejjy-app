@@ -77,6 +77,8 @@ export interface ExpenseVoucher {
 	journal_entry: number | null;
 	journal_entry_reference_number: string | null;
 	supplier_account?: { id: number; tax_type?: 'VAT' | 'NVAT' | null } | null;
+	ewt_percentage?: string | number;
+	ewt_amount?: string | number;
 }
 
 export const ExpenseVouchers = () => {
@@ -129,6 +131,9 @@ export const ExpenseVouchers = () => {
 		},
 	});
 	const withoutJeCount = withoutJeData?.total || 0;
+
+	const journalEntryStatus = (params.journalEntryStatus as string) ?? 'without';
+	const isWithoutJeFilter = journalEntryStatus === 'without';
 
 	const { mutateAsync: updateExpenseVoucher } = useExpenseVoucherUpdate();
 
@@ -273,14 +278,14 @@ export const ExpenseVouchers = () => {
 					<Col span={24}>
 						<Row gutter={[16, 0]}>
 							<Col flex="none">
-								<TimeRangeFilter disabled={isFetching} />
+								<TimeRangeFilter disabled={isFetching || isWithoutJeFilter} />
 							</Col>
 							<Col flex="none">
 								<Label label="Journal Entry" spacing />
 								<Radio.Group
 									buttonStyle="solid"
 									optionType="button"
-									value={(params.journalEntryStatus as string) ?? 'without'}
+									value={journalEntryStatus}
 									onChange={(e) =>
 										setQueryParams({
 											journalEntryStatus: e.target.value,
@@ -349,8 +354,19 @@ export const ExpenseVouchers = () => {
 			/>
 
 			<CreateJournalEntryModal
+				hasVoucher={!!jeExpenseVoucher}
 				isSubmitting={isJeSubmitting}
 				open={!!jeExpenseVoucher}
+				renderVoucher={(onCloseVoucher) =>
+					jeExpenseVoucher && (
+						<ViewExpenseVoucherModal
+							expenseVoucher={jeExpenseVoucher}
+							asReferencePanel
+							open
+							onClose={onCloseVoucher}
+						/>
+					)
+				}
 				onClose={() => setJeExpenseVoucher(null)}
 				onSubmit={async (values) => {
 					setAuthorizeConfig({

@@ -19,6 +19,9 @@ interface Modify {
 	sub_type: number;
 	normal_balance: number;
 	is_cash_book?: boolean;
+	is_sales_book?: boolean;
+	is_purchase_book?: boolean;
+	is_ewt_book?: boolean;
 }
 
 const service = {

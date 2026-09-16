@@ -100,6 +100,7 @@ export const CreateExpenseVoucherModal = ({
 				onCancel={onClose}
 			>
 				<Form
+					autoComplete="off"
 					form={detailsForm}
 					initialValues={{ paymentType: 'pay', supplierAccountId }}
 					layout="vertical"

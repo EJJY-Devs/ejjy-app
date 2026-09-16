@@ -4,27 +4,37 @@ import {
 	AuthorizationModal,
 	Props as AuthorizationModalProps,
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
-import { convertIntoArray, getLocalApiUrl, getLocalBranchId } from 'utils';
+import {
+	computeVatBreakdown,
+	convertIntoArray,
+	getLocalApiUrl,
+	getLocalBranchId,
+	isPurchaseVatApplicable,
+} from 'utils';
 import shallow from 'zustand/shallow';
 import { backOrderTypes, MAX_PAGE_SIZE } from 'ejjy-global';
 import {
+	useAccountRetrieve,
 	useReceivingVoucherCreate,
 	useBackOrderCreate,
 	useRequisitionSlipCreate,
 	useBranches,
 	useAdjustmentSlipCreate,
+	useCashDisbursementDetailUpsert,
 	useExpenseVoucherCreate,
 	usePurchaseCreate,
 	usePurchaseOrderCreate,
 	usePurchaseOrders,
 	usePurchaseOrderById,
+	useSiteSettings,
 } from 'hooks';
 import { Label } from 'components/elements';
 import { CreateRequisitionSlipModal } from 'components/modals/CreateRequisitionSlipModal';
 import { CreatePurchaseVoucherModal } from 'components/modals/CreatePurchaseVoucherModal';
 import { BarcodeScanner } from './components/BarcodeScanner';
+import { EwtCalculatorModal } from './components/EwtCalculatorModal';
 import { FooterButtons } from './components/FooterButtons';
 import { ProductSearch } from './components/ProductSearch';
 import { ProductTable } from './components/ProductTable';
@@ -98,6 +108,18 @@ export const Cart = ({
 		isPurchaseVoucherFormVisible,
 		setIsPurchaseVoucherFormVisible,
 	] = useState(false);
+
+	// EWT Calculator - optional, opened via the icon next to Submit in
+	// FooterButtons (Purchase/Expense Voucher only). 0 means the user never
+	// calculated it, and no CashDisbursementDetail gets written.
+	const [isEwtCalculatorVisible, setIsEwtCalculatorVisible] = useState(false);
+	// A ref (not state) on purpose: it's set and then read from inside the
+	// Authorization modal's onSuccess callback, which is only invoked much
+	// later (after the user picks an authorizer) by a closure captured at
+	// the moment handlePurchaseFormSubmit/handleExpenseVoucherFormSubmit ran
+	// - state set in the same tick wouldn't be visible to that closure yet,
+	// but a ref always reads the latest value regardless of closure timing.
+	const pendingEwtPercentageRef = useRef(0);
 
 	// Purchase Order selection state - shown FIRST for type='Purchase'.
 	const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState<
@@ -189,6 +211,43 @@ export const Cart = ({
 	const { mutateAsync: createPurchase } = usePurchaseCreate();
 	const { mutateAsync: createPurchaseOrder } = usePurchaseOrderCreate();
 	const { mutateAsync: createExpenseVoucher } = useExpenseVoucherCreate();
+	const {
+		mutateAsync: upsertCashDisbursementDetail,
+	} = useCashDisbursementDetailUpsert();
+
+	const ewtSupplierAccountId =
+		type === 'Purchase'
+			? purchaseVoucherFormData?.supplierAccountId
+			: expenseVoucherDetails?.supplierAccountId;
+	const { data: siteSettings } = useSiteSettings();
+	const { data: ewtSupplierAccount } = useAccountRetrieve({
+		id: ewtSupplierAccountId,
+		options: { enabled: !!ewtSupplierAccountId && isEwtCalculatorVisible },
+	});
+	const cartProducts = useBoundStore((state: any) => state.products);
+	const ewtVatExclusiveBase = useMemo(() => {
+		if (type !== 'Purchase' && type !== 'Expense Voucher') return 0;
+
+		const vatApplicable = isPurchaseVatApplicable(
+			siteSettings,
+			ewtSupplierAccount,
+		);
+		const lines = cartProducts.map((branchProduct: any) => {
+			const product = branchProduct.product || {};
+			const amount =
+				type === 'Purchase'
+					? Number(branchProduct.quantity || 0) *
+					  Number(branchProduct.cost_per_piece || 0)
+					: Number(branchProduct.amount) || 0;
+
+			return {
+				amount,
+				isVatExempt: !vatApplicable || !!product.is_vat_exempted,
+			};
+		});
+		const { vatExempt, vatableSales } = computeVatBreakdown(lines);
+		return vatExempt + vatableSales;
+	}, [type, cartProducts, siteSettings, ewtSupplierAccount]);
 
 	// Pre-populate cart from RS products for Purchase Order creation
 	useEffect(() => {
@@ -462,6 +521,28 @@ export const Cart = ({
 		}
 	};
 
+	const persistPendingEwt = async (
+		sourceType: 'purchase' | 'expense',
+		sourceId: number,
+	) => {
+		const ewtPercentage = pendingEwtPercentageRef.current;
+		if (ewtPercentage <= 0) return;
+
+		try {
+			await upsertCashDisbursementDetail({
+				sourceType,
+				sourceId,
+				ewtPercentage,
+				otherDeductionsAmount: 0,
+				otherDeductionsRemarks: '',
+			});
+		} catch (error) {
+			message.warning(
+				'Voucher was created, but the EWT amount could not be saved.',
+			);
+		}
+	};
+
 	const handleCreatePurchase = async (formData) => {
 		const currentProducts = useBoundStore.getState().products;
 		if (currentProducts.length > 0) {
@@ -484,6 +565,7 @@ export const Cart = ({
 				throw Error;
 			}
 
+			await persistPendingEwt('purchase', response.data.id);
 			onPurchaseCreated?.(response.data);
 			message.success('Purchase was created successfully');
 		}
@@ -521,6 +603,7 @@ export const Cart = ({
 				throw Error;
 			}
 
+			await persistPendingEwt('expense', response.data.id);
 			onExpenseVoucherCreated?.(response.data);
 			message.success('Expense Voucher was created successfully');
 		}
@@ -553,6 +636,7 @@ export const Cart = ({
 		}
 
 		resetProducts();
+		pendingEwtPercentageRef.current = 0;
 		onClose();
 
 		const { setRefetchData } = useBoundStore.getState();
@@ -674,9 +758,6 @@ export const Cart = ({
 
 			handleAdjustmentSlipAuthorize();
 		} else if (type === 'Purchase') {
-			// Voucher details (Type/Supplier/Invoice #/Remarks) were already
-			// collected as the first step of this flow - go straight to
-			// authorization instead of asking for them again.
 			const currentProducts = useBoundStore.getState().products;
 
 			if (!currentProducts || currentProducts.length === 0) {
@@ -698,9 +779,6 @@ export const Cart = ({
 			}
 			setIsCreatePurchaseVisible(true);
 		} else if (type === 'Expense Voucher') {
-			// Voucher details (Payee/Type/Invoice #/Remarks) were already
-			// collected as the first step of this flow - go straight to
-			// authorization instead of asking for them again.
 			const currentProducts = useBoundStore.getState().products;
 
 			if (!currentProducts || currentProducts.length === 0) {
@@ -712,6 +790,18 @@ export const Cart = ({
 		} else {
 			setIsCreateInventoryTransferModalVisible(true);
 		}
+	};
+
+	// EWT Calculator - opened via the icon next to Submit (Purchase/Expense
+	// Voucher only). Saving the % records it for persisting after the
+	// voucher is created (see persistPendingEwt) and immediately continues
+	// the same submission handleSubmit would have, straight to
+	// Authorization - calculating EWT first is just an alternate entry point
+	// into the same flow, not an extra step on top of it.
+	const handleEwtCalculatorSave = (ewtPercentage: number) => {
+		pendingEwtPercentageRef.current = ewtPercentage;
+		setIsEwtCalculatorVisible(false);
+		handleSubmit();
 	};
 
 	const handleBranchSelect = (branch: string) => {
@@ -766,8 +856,6 @@ export const Cart = ({
 		);
 	}
 
-	// Voucher details step (Type/Supplier/Invoice #/Remarks) - shown after the
-	// PO is picked; the Supplier field is pre-filled from the selected PO.
 	if (type === 'Purchase' && isPurchaseVoucherFormVisible) {
 		return (
 			<CreatePurchaseVoucherModal
@@ -782,7 +870,6 @@ export const Cart = ({
 		);
 	}
 
-	// Branch selector step for Adjustment Slip
 	if (type === 'Adjustment Slip' && isBranchSelectVisible) {
 		return (
 			<Modal
@@ -871,6 +958,8 @@ export const Cart = ({
 					isDisabled={
 						isLoading || (type === 'Requisition Slip' && hasEmptyUnits)
 					}
+					showEwtCalculator={type === 'Purchase' || type === 'Expense Voucher'}
+					onEwtCalculatorClick={() => setIsEwtCalculatorVisible(true)}
 					onSubmit={handleSubmit}
 				/>
 
@@ -918,6 +1007,16 @@ export const Cart = ({
 							}, 100);
 						}}
 						onSubmit={handlePurchaseFormSubmit}
+					/>
+				)}
+
+				{isEwtCalculatorVisible && (
+					<EwtCalculatorModal
+						initialEwtPercentage={pendingEwtPercentageRef.current}
+						vatExclusiveBase={ewtVatExclusiveBase}
+						open
+						onClose={() => setIsEwtCalculatorVisible(false)}
+						onSave={handleEwtCalculatorSave}
 					/>
 				)}
 

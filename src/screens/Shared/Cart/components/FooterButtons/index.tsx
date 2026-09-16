@@ -1,9 +1,10 @@
 import {
+	CalculatorOutlined,
 	CaretLeftOutlined,
 	CaretRightOutlined,
 	LoadingOutlined,
 } from '@ant-design/icons';
-import { Spin } from 'antd';
+import { Spin, Tooltip } from 'antd';
 import cn from 'classnames';
 import { ceil } from 'lodash';
 import React, { ReactNode, useCallback, useEffect } from 'react';
@@ -13,7 +14,19 @@ import { PRODUCT_LENGTH_PER_PAGE } from '../../data';
 import { useBoundStore } from '../../stores/useBoundStore';
 import './style.scss';
 
-export const FooterButtons = ({ isDisabled, onSubmit }) => {
+interface FooterButtonsProps {
+	isDisabled: boolean;
+	onSubmit: () => void;
+	showEwtCalculator?: boolean;
+	onEwtCalculatorClick?: () => void;
+}
+
+export const FooterButtons = ({
+	isDisabled,
+	onSubmit,
+	showEwtCalculator,
+	onEwtCalculatorClick,
+}: FooterButtonsProps) => {
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === 'F8') {
@@ -81,14 +94,39 @@ export const FooterButtons = ({ isDisabled, onSubmit }) => {
 				/>
 			</div>
 
-			<CartButton
-				disabled={products.length === 0 || isDisabled}
-				shortcutKey="F8"
-				size="lg"
-				text="Submit"
-				variant="primary"
-				onClick={onSubmit}
-			/>
+			<div className="FooterButtons_submitGroup">
+				{showEwtCalculator && (
+					<Tooltip title="Calculate EWT">
+						{/* Plain button with a .disabled class rather than antd's Button
+						with a native disabled attribute - same pattern as CartButton
+						and NavigationButton below, and it keeps antd's own
+						disabled-state styling (and its Tooltip's special-casing of
+						disabled elements) from fighting this button's sizing. */}
+						<button
+							className={cn('EwtCalculatorButton', {
+								disabled: products.length === 0 || isDisabled,
+							})}
+							type="button"
+							onClick={
+								products.length === 0 || isDisabled
+									? null
+									: onEwtCalculatorClick
+							}
+						>
+							<CalculatorOutlined />
+						</button>
+					</Tooltip>
+				)}
+
+				<CartButton
+					disabled={products.length === 0 || isDisabled}
+					shortcutKey="F8"
+					size="lg"
+					text="Submit"
+					variant="primary"
+					onClick={onSubmit}
+				/>
+			</div>
 		</div>
 	);
 };

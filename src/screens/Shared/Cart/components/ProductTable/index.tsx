@@ -15,7 +15,7 @@ import {
 } from 'antd';
 import { formatInPeso } from 'ejjy-global';
 import { vatTypes } from 'global';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
 import { AddProductModal } from 'screens/Shared/Cart/components/AddProductModal';
 import { Table } from 'screens/Shared/Cart/components/ProductTable/components/Table';
@@ -52,7 +52,6 @@ export const ProductTable = ({
 	const [editProductModalVisible, setEditProductModalVisible] = useState(false);
 	const [addProductModalVisible, setAddProductModalVisible] = useState(false);
 	const [selectedProduct, setSelectedProduct] = useState(null);
-	const [dataSource, setDataSource] = useState([]);
 	const [toggleAction, setToggleAction] = useState<{ [key: string]: boolean }>(
 		{},
 	);
@@ -233,11 +232,6 @@ export const ProductTable = ({
 		});
 	}, [products, unitErrors]);
 
-	// Initialize toggleAction for newly-added products based on the initial
-	// quantity sign: negative quantity  = shortage  → start in "Decrease" mode.
-	//                positive quantity  = excess    → start in "Increase" mode.
-	// This runs before the dataSource effect so the icon/tooltip are correct
-	// on first render.
 	useEffect(() => {
 		if (type !== 'Adjustment Slip') return;
 		setToggleAction((prev) => {
@@ -245,10 +239,9 @@ export const ProductTable = ({
 			let changed = false;
 			products.forEach((p) => {
 				const k = p.product?.key;
-				// Use String(k) so `undefined` keys become "undefined" – consistent
-				// with how JS object indexing with `undefined` works.
+
 				if (!(k in prev)) {
-					next[k] = p.quantity < 0; // true = Decrease, false = Increase
+					next[k] = p.quantity < 0;
 					changed = true;
 				}
 			});
@@ -256,9 +249,9 @@ export const ProductTable = ({
 		});
 	}, [products, type]);
 
-	useEffect(() => {
+	const dataSource = useMemo(() => {
 		if (type === 'Adjustment Slip') {
-			const data = products.map((branchProduct, index) => {
+			return products.map((branchProduct, index) => {
 				const { product, quantity } = branchProduct;
 				const { barcode, name, key } = product;
 
@@ -459,12 +452,10 @@ export const ProductTable = ({
 					</div>,
 				];
 			});
-			setDataSource(data);
-			return;
 		}
 
 		if (type === 'Purchase Order') {
-			const poData = products.map((branchProduct, index) => {
+			return products.map((branchProduct, index) => {
 				const { product, quantity } = branchProduct;
 				const { barcode, textcode, name, key } = product;
 				const currentPoQty =
@@ -531,8 +522,6 @@ export const ProductTable = ({
 					</div>,
 				];
 			});
-			setDataSource(poData);
-			return;
 		}
 
 		const paginatedProducts = products.slice(
@@ -994,7 +983,7 @@ export const ProductTable = ({
 			return row;
 		});
 
-		setDataSource(data);
+		return data;
 	}, [
 		pageNumber,
 		products,

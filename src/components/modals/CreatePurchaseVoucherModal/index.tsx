@@ -27,11 +27,10 @@ type ModalProps = {
 const getFormDetails = (
 	isPurchaseOrder: boolean,
 	initialSupplierName?: string,
-	initialSupplierAccountId?: number | null,
 ) => ({
 	defaultValues: {
 		paymentType: 'on_account',
-		supplierAccountId: initialSupplierAccountId ?? null,
+		supplierAccountId: null,
 		supplierName: initialSupplierName || '',
 		invoiceNumber: '',
 		overallRemarks: '',
@@ -101,29 +100,9 @@ export const CreatePurchaseVoucherModal = ({
 		[supplierAccounts],
 	);
 
-	// Auto-match the PO's supplier to an existing account, so the "On Account"
-	// select (a different control from the free-text field below) is also
-	// pre-filled when the selected PO's supplier is a known account.
-	const matchedSupplierAccount = useMemo(
-		() =>
-			initialSupplierName
-				? supplierAccounts.find(
-						(account: any) =>
-							getSupplierLabel(account).toLowerCase() ===
-							initialSupplierName.toLowerCase(),
-				  )
-				: null,
-		[supplierAccounts, initialSupplierName],
-	);
-
 	const formDetails = useMemo(
-		() =>
-			getFormDetails(
-				isPurchaseOrder,
-				initialSupplierName,
-				matchedSupplierAccount?.id ?? null,
-			),
-		[isPurchaseOrder, initialSupplierName, matchedSupplierAccount],
+		() => getFormDetails(isPurchaseOrder, initialSupplierName),
+		[isPurchaseOrder, initialSupplierName],
 	);
 
 	return (
@@ -146,7 +125,7 @@ export const CreatePurchaseVoucherModal = ({
 				onSubmit={onSubmit}
 			>
 				{({ values, setFieldValue, isSubmitting }) => (
-					<Form>
+					<Form autoComplete="off">
 						<Row gutter={[16, 16]}>
 							{!isPurchaseOrder && (
 								<Col span={24}>

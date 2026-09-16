@@ -1,7 +1,13 @@
-import { Button, Checkbox, Form, Input, Modal, Select } from 'antd';
+import { Button, Form, Input, Modal, Radio, Select } from 'antd';
 import React, { useEffect } from 'react';
 import { MAX_PAGE_SIZE } from 'global';
 import { useAccountSubTypes, useAccountTypes, useNormalBalances } from 'hooks';
+import {
+	BOOK_TAG_OPTIONS,
+	BOOK_TAG_TOOLTIP,
+	bookTagToFields,
+	fieldsToBookTag,
+} from './CreateAccountModal';
 
 const ACCOUNT_CATEGORY_OPTIONS = [
 	{ label: 'Standard', value: 'standard' },
@@ -94,7 +100,7 @@ export const EditAccountModal = ({
 				accountType: account.account_type,
 				subType: account.sub_type,
 				normalBalance: account.normal_balance,
-				isCashBook: !!account.is_cash_book,
+				bookTag: fieldsToBookTag(account),
 			});
 		}
 
@@ -103,8 +109,8 @@ export const EditAccountModal = ({
 		}
 	}, [account, form, open]);
 
-	const handleFinish = async (values: any) => {
-		await onUpdate(values);
+	const handleFinish = async ({ bookTag, ...values }: any) => {
+		await onUpdate({ ...values, ...bookTagToFields(bookTag) });
 		form.resetFields();
 	};
 
@@ -198,11 +204,12 @@ export const EditAccountModal = ({
 					/>
 				</Form.Item>
 
-				<Form.Item name="isCashBook" valuePropName="checked">
-					<Checkbox>
-						Enable for Cash Books (debits record to Cash Receipts, credits
-						record to Cash Disbursements)
-					</Checkbox>
+				<Form.Item label="Book Tag" name="bookTag" tooltip={BOOK_TAG_TOOLTIP}>
+					<Radio.Group
+						buttonStyle="solid"
+						options={BOOK_TAG_OPTIONS}
+						optionType="button"
+					/>
 				</Form.Item>
 
 				<div className="CreateAccountModal_actions d-flex justify-end gap-2">

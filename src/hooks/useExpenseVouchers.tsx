@@ -1,8 +1,23 @@
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from 'global';
 import { getLocalApiUrl } from 'utils';
 import { Query } from 'hooks/inteface';
+import { wrapServiceWithCatch } from 'hooks/helper';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { ExpenseVoucherService } from 'services';
+
+export const useExpenseVoucherById = (id: number) =>
+	useQuery<any>(
+		['useExpenseVoucherById', id],
+		() =>
+			wrapServiceWithCatch(
+				ExpenseVoucherService.retrieve(id, getLocalApiUrl()),
+			),
+		{
+			enabled: !!id,
+			initialData: { data: null },
+			select: (query) => query.data,
+		},
+	);
 
 const useExpenseVouchers = ({ params, options }: Query) =>
 	useQuery<any>(

@@ -1,5 +1,5 @@
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Col, Row, Select, Table, Tooltip } from 'antd';
+import { Button, Col, Row, Select, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
@@ -20,11 +20,13 @@ import React, { useMemo } from 'react';
 import { formatDateTime, formatInPeso } from 'utils';
 
 export interface SubsidiarySaleEntry {
-	id: number;
+	sourceType: 'invoice' | 'journal_entry';
+	sourceId: number;
 	date: string;
 	payor?: string | null;
 	tin?: string | null;
-	invoice: string;
+	invoice?: string | null;
+	branchMachineId?: number | null;
 	description?: string | null;
 	salesVatExclusive: number;
 	vatOutput: number;
@@ -36,6 +38,7 @@ export interface SubsidiarySaleEntry {
 interface Props {
 	isHeadOffice: boolean;
 	localBranchId: number;
+	onViewInvoice: (reference: string, branchMachineId?: number | null) => void;
 }
 
 const notYetAvailableTooltip = (
@@ -44,7 +47,11 @@ const notYetAvailableTooltip = (
 	</Tooltip>
 );
 
-export const SubsidiarySalesTab = ({ isHeadOffice, localBranchId }: Props) => {
+export const SubsidiarySalesTab = ({
+	isHeadOffice,
+	localBranchId,
+	onViewInvoice,
+}: Props) => {
 	const { params, setQueryParams } = useQueryParams();
 	const { data: { branches } = { branches: [] } } = useBranches({
 		params: {
@@ -91,11 +98,13 @@ export const SubsidiarySalesTab = ({ isHeadOffice, localBranchId }: Props) => {
 
 	const entries: SubsidiarySaleEntry[] = (subsidiarySales || []).map(
 		(entry: any) => ({
-			id: entry.id,
+			sourceType: entry.source_type,
+			sourceId: entry.source_id,
 			date: formatDateTime(entry.date, true),
 			payor: entry.payor,
 			tin: entry.tin,
 			invoice: entry.invoice,
+			branchMachineId: entry.branch_machine_id,
 			description: entry.description,
 			salesVatExclusive: entry.sales_vat_exclusive,
 			vatOutput: entry.vat_output,
@@ -131,6 +140,20 @@ export const SubsidiarySalesTab = ({ isHeadOffice, localBranchId }: Props) => {
 			dataIndex: 'invoice',
 			key: 'invoice',
 			align: 'left',
+
+			render: (value: string | null, record: SubsidiarySaleEntry) => {
+				if (!value) return EMPTY_CELL;
+
+				return (
+					<Button
+						style={{ padding: 0, height: 'auto' }}
+						type="link"
+						onClick={() => onViewInvoice(value, record.branchMachineId)}
+					>
+						{value}
+					</Button>
+				);
+			},
 		},
 		{
 			title: <>Description {notYetAvailableTooltip}</>,
@@ -267,7 +290,7 @@ export const SubsidiarySalesTab = ({ isHeadOffice, localBranchId }: Props) => {
 					position: ['bottomCenter'],
 					pageSizeOptions,
 				}}
-				rowKey="id"
+				rowKey={(record) => `${record.sourceType}-${record.sourceId}`}
 				scroll={{ x: 1500 }}
 				bordered
 			/>

@@ -161,6 +161,12 @@ export const PurchaseVoucherDocument = ({ purchase, siteSettings }: Props) => {
 				<div>VAT Exempt: {formatInPeso(vatExempt, 'P')}</div>
 				<div>VATable Sales: {formatInPeso(vatableSales, 'P')}</div>
 				<div>VAT Amount: {formatInPeso(vatAmount, 'P')}</div>
+				{Number(purchase?.ewt_percentage) > 0 && (
+					<div>
+						EWT: {formatInPeso(purchase?.ewt_amount, 'P')} (
+						{purchase?.ewt_percentage}%)
+					</div>
+				)}
 			</div>
 		</div>
 	);

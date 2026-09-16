@@ -251,6 +251,7 @@ const useBranchProductsNew = ({ params, options }: Query) =>
 		},
 		{
 			initialData: { data: { results: [], count: 0 } },
+			keepPreviousData: true,
 			select: (query) => ({
 				branchProducts: query.data.results,
 				total: query.data.count,

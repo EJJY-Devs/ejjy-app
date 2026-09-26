@@ -171,6 +171,7 @@ export const BooksOfAccounts = () => {
 
 	const fetchAndViewInvoice = useCallback(
 		async (orNumber: string, branchMachineId?: number | null) => {
+			let transaction = null;
 			try {
 				const response = await TransactionsService.list(
 					{
@@ -183,15 +184,21 @@ export const BooksOfAccounts = () => {
 					},
 					getReportsApiUrl(),
 				);
-				const transaction = response.data?.results?.[0];
-				if (transaction) {
-					setViewInvoiceTransaction(transaction);
-				} else {
-					message.error('Failed to load invoice');
-				}
+				transaction = response.data?.results?.[0];
 			} catch {
-				message.error('Failed to load invoice');
+				// Handled below
 			}
+
+			if (
+				!transaction?.id ||
+				!transaction.payment ||
+				transaction.invoice?.or_number !== orNumber
+			) {
+				message.error('Failed to load invoice');
+				return;
+			}
+
+			setViewInvoiceTransaction(transaction);
 		},
 		[],
 	);

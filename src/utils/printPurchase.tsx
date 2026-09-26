@@ -24,6 +24,7 @@ import {
 	computeVatBreakdown,
 	formatDateTime,
 	formatInPeso,
+	isNvatEntity,
 	isPurchaseVatApplicable,
 } from 'utils';
 import {
@@ -138,14 +139,16 @@ const renderNative = ({
 		printCenter(`Total Amount: ${formatInPeso(purchase?.total_amount, 'P')}`),
 	);
 	commands.push(EscPosCommands.LINE_BREAK);
-	commands.push(printCenter(`VAT Exempt: ${formatInPeso(vatExempt, 'P')}`));
-	commands.push(EscPosCommands.LINE_BREAK);
-	commands.push(
-		printCenter(`VATable Sales: ${formatInPeso(vatableSales, 'P')}`),
-	);
-	commands.push(EscPosCommands.LINE_BREAK);
-	commands.push(printCenter(`VAT Amount: ${formatInPeso(vatAmount, 'P')}`));
-	commands.push(EscPosCommands.LINE_BREAK);
+	if (!isNvatEntity(siteSettings)) {
+		commands.push(printCenter(`VAT Exempt: ${formatInPeso(vatExempt, 'P')}`));
+		commands.push(EscPosCommands.LINE_BREAK);
+		commands.push(
+			printCenter(`VATable Sales: ${formatInPeso(vatableSales, 'P')}`),
+		);
+		commands.push(EscPosCommands.LINE_BREAK);
+		commands.push(printCenter(`VAT Amount: ${formatInPeso(vatAmount, 'P')}`));
+		commands.push(EscPosCommands.LINE_BREAK);
+	}
 	commands.push(
 		printCenter(`Print Details: ${dayjs().format('MM/DD/YYYY h:mmA')}`),
 	);

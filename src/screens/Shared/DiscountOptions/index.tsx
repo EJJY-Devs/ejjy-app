@@ -9,13 +9,13 @@ import {
 	Typography,
 } from 'antd';
 import Table, { ColumnsType } from 'antd/lib/table';
-import cn from 'classnames';
+// import cn from 'classnames';
 import {
 	ConnectionAlert,
 	Content,
-	ModifyDiscountOptionModal,
+	// ModifyDiscountOptionModal,
 	RequestErrors,
-	TableHeader,
+	// TableHeader,
 } from 'components';
 import { Box } from 'components/elements';
 import {
@@ -89,6 +89,7 @@ export const DiscountOptions = () => {
 			<ConnectionAlert />
 
 			<Box padding>
+				{/* NOTE: Non-special discounts are hidden per client request.
 				{getAppType() === appTypes.HEAD_OFFICE && (
 					<TableHeader
 						buttonName="Create Discount Option"
@@ -96,11 +97,14 @@ export const DiscountOptions = () => {
 						onCreateDisabled={isConnected === false}
 					/>
 				)}
+				*/}
 
 				<RequestErrors
-					className={cn('px-6', {
-						'mt-6': getAppType() !== appTypes.HEAD_OFFICE,
-					})}
+					// NOTE: Restore once non-special discounts are shown again.
+					// className={cn('px-6', {
+					// 	'mt-6': getAppType() !== appTypes.HEAD_OFFICE,
+					// })}
+					className="px-6 mt-6"
 					errors={convertIntoArray(deleteDiscountOptionError?.errors)}
 					withSpaceBottom
 				/>
@@ -115,6 +119,7 @@ export const DiscountOptions = () => {
 					onSelect={handleSelect}
 				/>
 
+				{/* NOTE: Non-special discounts are hidden per client request.
 				<div className="mt-8">
 					<DiscountOptionTable
 						isConnected={isConnected}
@@ -136,6 +141,7 @@ export const DiscountOptions = () => {
 						}}
 					/>
 				)}
+				*/}
 			</Box>
 		</Content>
 	);

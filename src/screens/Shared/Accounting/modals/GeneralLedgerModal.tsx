@@ -33,25 +33,37 @@ interface GeneralLedgerEntry {
 	entries: GeneralLedgerDetail[];
 }
 
+interface BalanceSummary {
+	label: string;
+	value: string;
+	asOf: string;
+}
+
+export interface GeneralLedgerBalances {
+	beginning: BalanceSummary;
+	ending: BalanceSummary;
+	totalDebit: string;
+	totalCredit: string;
+}
+
 interface Props {
+	balances: GeneralLedgerBalances | null;
 	columns: ColumnsType<GeneralLedgerDetail>;
 	entry: GeneralLedgerEntry | null;
 	filter?: React.ReactNode;
+	loading?: boolean;
 	open: boolean;
 	onClose: () => void;
-	summary: {
-		label: string;
-		value: string;
-	};
 }
 
 export const GeneralLedgerModal = ({
+	balances,
 	columns,
 	entry,
 	filter,
+	loading,
 	open,
 	onClose,
-	summary,
 }: Props) => {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(10);
@@ -72,7 +84,7 @@ export const GeneralLedgerModal = ({
 	const totalEntries = (entry?.entries || []).length;
 
 	const buildPdfHtml = () => {
-		const dataHtml = printGeneralLedgerTAccounts({ entry, summary });
+		const dataHtml = printGeneralLedgerTAccounts({ entry, balances });
 		if (!dataHtml) {
 			return null;
 		}
@@ -148,11 +160,34 @@ export const GeneralLedgerModal = ({
 					: '-'}
 			</h2>
 			{filter && <div className="BooksOfAccounts_tAccountFilter">{filter}</div>}
+			{balances && (
+				<div className="BooksOfAccounts_tAccountBeginning">
+					Beginning Balance (as of {balances.beginning.asOf}):{' '}
+					{balances.beginning.label} - {balances.beginning.value}
+				</div>
+			)}
 			<Table
 				columns={columns}
 				dataSource={paginatedEntries}
+				loading={loading}
 				pagination={false}
 				rowKey="id"
+				summary={() =>
+					balances && (
+						<Table.Summary.Row className="BooksOfAccounts_tAccountTotals">
+							<Table.Summary.Cell index={0}>Total</Table.Summary.Cell>
+							<Table.Summary.Cell align="right" index={1}>
+								{balances.totalDebit}
+							</Table.Summary.Cell>
+							<Table.Summary.Cell colSpan={2} index={2} />
+							<Table.Summary.Cell index={4}>Total</Table.Summary.Cell>
+							<Table.Summary.Cell align="right" index={5}>
+								{balances.totalCredit}
+							</Table.Summary.Cell>
+							<Table.Summary.Cell index={6} />
+						</Table.Summary.Row>
+					)
+				}
 				bordered
 			/>
 
@@ -170,9 +205,16 @@ export const GeneralLedgerModal = ({
 					}}
 				/>
 			)}
-			<div className="BooksOfAccounts_tAccountSummary">
-				{summary.label} - {summary.value}
-			</div>
+			{balances && (
+				<>
+					<div className="BooksOfAccounts_tAccountSummaryLabel">
+						Ending Balance (as of {balances.ending.asOf})
+					</div>
+					<div className="BooksOfAccounts_tAccountSummary">
+						{balances.ending.label} - {balances.ending.value}
+					</div>
+				</>
+			)}
 		</Modal>
 	);
 };

@@ -4,6 +4,7 @@ import {
 	computeVatBreakdown,
 	formatDateTime,
 	formatInPeso,
+	isNvatEntity,
 	isPurchaseVatApplicable,
 } from 'utils';
 import { ReceiptHeaderV2 } from './ReceiptHeaderV2';
@@ -158,9 +159,13 @@ export const PurchaseVoucherDocument = ({ purchase, siteSettings }: Props) => {
 			</div>
 
 			<div style={{ textAlign: 'center', marginTop: '4px' }}>
-				<div>VAT Exempt: {formatInPeso(vatExempt, 'P')}</div>
-				<div>VATable Sales: {formatInPeso(vatableSales, 'P')}</div>
-				<div>VAT Amount: {formatInPeso(vatAmount, 'P')}</div>
+				{!isNvatEntity(siteSettings) && (
+					<>
+						<div>VAT Exempt: {formatInPeso(vatExempt, 'P')}</div>
+						<div>VATable Sales: {formatInPeso(vatableSales, 'P')}</div>
+						<div>VAT Amount: {formatInPeso(vatAmount, 'P')}</div>
+					</>
+				)}
 				{Number(purchase?.ewt_percentage) > 0 && (
 					<div>
 						EWT: {formatInPeso(purchase?.ewt_amount, 'P')} (

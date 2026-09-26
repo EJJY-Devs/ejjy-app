@@ -3,7 +3,7 @@ import { Button, Input, Select, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
-import { EMPTY_CELL, MAX_PAGE_SIZE, timeRangeTypes } from 'global';
+import { DATE_FORMAT, EMPTY_CELL, MAX_PAGE_SIZE, timeRangeTypes } from 'global';
 import {
 	useBranches,
 	useChartOfAccounts,
@@ -12,9 +12,19 @@ import {
 	useJournalEntries,
 	useQueryParams,
 } from 'hooks';
+import moment from 'moment';
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatDateTime, formatInPeso } from 'utils';
 import { GeneralLedgerModal } from '../../modals/GeneralLedgerModal';
+
+const LONG_DATE_FORMAT = 'MMMM D, YYYY';
+
+// The T-Accounts view defaults to the current month.
+const getCurrentMonthTimeRange = () =>
+	[
+		moment().startOf('month').format(DATE_FORMAT),
+		moment().endOf('month').format(DATE_FORMAT),
+	].join(',');
 
 interface GeneralJournalEntry {
 	id: number;
@@ -76,8 +86,11 @@ interface SelectedLedgerMeta {
 	accountName: string;
 	debitAmount: string;
 	creditAmount: string;
-	balanceSide: string;
-	balanceAmount: string;
+}
+
+interface LedgerBalance {
+	balance_side: string;
+	balance_amount: number | string;
 }
 
 interface Props {
@@ -107,10 +120,9 @@ export const GeneralLedgerTab = ({
 		}
 	}, [isHeadOffice, params.generalLedgerBranchId, setQueryParams]);
 
-	const selectedTimeRange =
-		(params?.generalLedgerTimeRange as string) || timeRangeTypes.DAILY;
 	const selectedDetailTimeRange =
-		(params?.generalLedgerDetailTimeRange as string) || timeRangeTypes.DAILY;
+		(params?.generalLedgerDetailTimeRange as string) ||
+		getCurrentMonthTimeRange();
 	const selectedBranchId = useMemo(() => {
 		if (!isHeadOffice) {
 			return localBranchId || undefined;
@@ -138,10 +150,11 @@ export const GeneralLedgerTab = ({
 
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [searchText, selectedBranchId, selectedTimeRange]);
+	}, [searchText, selectedBranchId]);
 
 	const branchFilter = selectedBranchId;
 
+	// Account balances are always "as of" today, so no time range is sent.
 	const {
 		data: { generalLedgerEntries: summaryRows = [], total } = {
 			generalLedgerEntries: [],
@@ -151,7 +164,6 @@ export const GeneralLedgerTab = ({
 	} = useGeneralLedger({
 		params: {
 			branchId: branchFilter,
-			timeRange: selectedTimeRange,
 			search: searchText || undefined,
 			page: currentPage,
 			pageSize: currentPageSize,
@@ -159,16 +171,23 @@ export const GeneralLedgerTab = ({
 	});
 
 	const {
-		data: { generalLedgerDetails: detailRows = [] } = {
+		data: {
+			generalLedgerDetails: detailRows = [],
+			startDate: detailStartDate,
+			endDate: detailEndDate,
+			beginningBalance,
+			endingBalance,
+			totalDebit,
+			totalCredit,
+		} = {
 			generalLedgerDetails: [],
 		},
+		isFetching: isFetchingDetails,
 	} = useGeneralLedgerDetails({
 		params: {
 			accountCode: selectedLedgerMeta?.accountCode,
 			branchId: branchFilter,
 			timeRange: selectedDetailTimeRange,
-			page: 1,
-			pageSize: MAX_PAGE_SIZE,
 		},
 		options: {
 			enabled: isLedgerViewOpen && !!selectedLedgerMeta?.accountCode,
@@ -225,39 +244,7 @@ export const GeneralLedgerTab = ({
 	const formatPeso = (value: number | string | undefined | null) =>
 		formatInPeso(value, '₱ ');
 
-	const formatLongDate = (value: Date) =>
-		new Intl.DateTimeFormat('en-US', {
-			month: 'long',
-			day: 'numeric',
-			year: 'numeric',
-		}).format(value);
-
-	const parseDate = (value: string) => {
-		const parsed = new Date(value);
-		if (Number.isNaN(parsed.getTime())) {
-			return null;
-		}
-
-		return parsed;
-	};
-
-	const asOfDateLabel = useMemo(() => {
-		const today = new Date();
-
-		if (!selectedTimeRange || selectedTimeRange === timeRangeTypes.DAILY) {
-			return `As of ${formatLongDate(today)}`;
-		}
-
-		if (selectedTimeRange.includes(',')) {
-			const [, endDate] = selectedTimeRange.split(',');
-			const parsedEndDate = parseDate((endDate || '').trim());
-
-			return `As of ${formatLongDate(parsedEndDate || today)}`;
-		}
-
-		const parsedSelectedDate = parseDate(selectedTimeRange);
-		return `As of ${formatLongDate(parsedSelectedDate || today)}`;
-	}, [selectedTimeRange]);
+	const asOfDateLabel = `As of ${moment().format(LONG_DATE_FORMAT)}`;
 
 	const generalLedgerEntries = useMemo(
 		() =>
@@ -337,16 +324,14 @@ export const GeneralLedgerTab = ({
 								accountName: record.accountName,
 								debitAmount: record.debitAmount,
 								creditAmount: record.creditAmount,
-								balanceSide: record.balanceSide,
-								balanceAmount: record.balanceAmount,
 							});
-							setIsLedgerViewOpen(true);
-							// Always reopen the T-Accounts view starting from the
-							// Daily filter, independent of any previous selection.
+							// Always reopen the T-Accounts view on the current month,
+							// independent of any previous selection.
 							setQueryParams(
-								{ generalLedgerDetailTimeRange: timeRangeTypes.DAILY },
+								{ generalLedgerDetailTimeRange: getCurrentMonthTimeRange() },
 								{ shouldResetPage: false },
 							);
+							setIsLedgerViewOpen(true);
 						}}
 					>
 						{value}
@@ -448,28 +433,46 @@ export const GeneralLedgerTab = ({
 		return tableColumns;
 	}, [allEntriesById, onOpenJournalEntry]);
 
-	// The account balance shown in the T-Accounts view is fixed to the
-	// account's overall balance at the time the modal was opened - it does
-	// NOT change when the Date Filter changes which transactions are listed.
-	const ledgerBalanceSummary = useMemo(
-		() => ({
-			label: selectedLedgerMeta?.balanceSide || 'Debit',
-			value: selectedLedgerMeta?.balanceAmount || formatPeso(0),
-		}),
-		[selectedLedgerMeta],
-	);
+	// Beginning balance = ending balance of the previous month (Monthly) or of
+	// the previous day (Select Date); ending balance = beginning + period
+	// debits - period credits. Both are computed by the API.
+	const ledgerBalances = useMemo(() => {
+		if (!detailStartDate || !detailEndDate) {
+			return null;
+		}
+
+		const toSummary = (balance?: LedgerBalance) => ({
+			label: balance?.balance_side || 'Debit',
+			value: formatPeso(balance?.balance_amount || 0),
+		});
+
+		return {
+			beginning: {
+				...toSummary(beginningBalance),
+				asOf: moment(detailStartDate)
+					.subtract(1, 'day')
+					.format(LONG_DATE_FORMAT),
+			},
+			ending: {
+				...toSummary(endingBalance),
+				asOf: moment(detailEndDate).format(LONG_DATE_FORMAT),
+			},
+			totalDebit: formatPeso(totalDebit || 0),
+			totalCredit: formatPeso(totalCredit || 0),
+		};
+	}, [
+		beginningBalance,
+		detailEndDate,
+		detailStartDate,
+		endingBalance,
+		totalCredit,
+		totalDebit,
+	]);
 
 	return (
 		<>
 			<div className="BooksOfAccounts_ledgerHeader">
 				<div className="BooksOfAccounts_ledgerControls">
-					<div className="BooksOfAccounts_ledgerTimeRange">
-						<TimeRangeFilter
-							dateRangeLabel="Select Date"
-							queryName="generalLedgerTimeRange"
-							useSingleDateForDateRange
-						/>
-					</div>
 					<div className="BooksOfAccounts_ledgerSearch">
 						<Input
 							className="BooksOfAccounts_ledgerSearchInput"
@@ -544,18 +547,19 @@ export const GeneralLedgerTab = ({
 			/>
 
 			<GeneralLedgerModal
+				balances={ledgerBalances}
 				columns={generalLedgerDetailColumns}
 				entry={selectedLedgerEntry}
 				filter={
 					<TimeRangeFilter
-						dailyLabel="Daily"
 						dateRangeLabel="Select Date"
+						fields={[timeRangeTypes.MONTHLY, timeRangeTypes.DATE_RANGE]}
 						queryName="generalLedgerDetailTimeRange"
 						useSingleDateForDateRange
 					/>
 				}
+				loading={isFetchingDetails}
 				open={isLedgerViewOpen}
-				summary={ledgerBalanceSummary}
 				onClose={() => {
 					setIsLedgerViewOpen(false);
 					setSelectedLedgerMeta(null);

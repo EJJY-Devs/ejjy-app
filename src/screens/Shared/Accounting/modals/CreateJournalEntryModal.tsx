@@ -1,5 +1,17 @@
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, DatePicker, Input, InputNumber, Modal, Select } from 'antd';
+import {
+	DeleteOutlined,
+	FileSearchOutlined,
+	PlusOutlined,
+} from '@ant-design/icons';
+import {
+	Button,
+	DatePicker,
+	Input,
+	InputNumber,
+	Modal,
+	Select,
+	Tooltip,
+} from 'antd';
 import { DEFAULT_PAGE } from 'global';
 import useChartOfAccounts from 'hooks/useChartOfAccounts';
 import moment, { Moment } from 'moment';
@@ -32,6 +44,8 @@ const createEmptyRow = (): EntryRow => ({
 interface Props {
 	isSubmitting?: boolean;
 	open: boolean;
+	hasVoucher?: boolean;
+	renderVoucher?: (onClose: () => void) => React.ReactNode;
 	onClose: () => void;
 	onSubmit: (values: {
 		entries: { debitAccount: string; creditAccount: string; amount: number }[];
@@ -43,6 +57,8 @@ interface Props {
 export const CreateJournalEntryModal = ({
 	isSubmitting,
 	open,
+	hasVoucher,
+	renderVoucher,
 	onClose,
 	onSubmit,
 }: Props) => {
@@ -61,6 +77,7 @@ export const CreateJournalEntryModal = ({
 	const [selectedSearchValue, setSelectedSearchValue] = useState<string | null>(
 		null,
 	);
+	const [isVoucherOpen, setIsVoucherOpen] = useState(!!hasVoucher);
 
 	const { data, isFetching } = useChartOfAccounts({
 		params: {
@@ -87,8 +104,9 @@ export const CreateJournalEntryModal = ({
 		setEntryDate(moment());
 		setSearchText('');
 		setSelectedSearchValue(null);
+		setIsVoucherOpen(!!hasVoucher);
 		amountRefs.current = [];
-	}, []);
+	}, [hasVoucher]);
 
 	const handleClose = () => {
 		resetModalState();
@@ -242,7 +260,6 @@ export const CreateJournalEntryModal = ({
 			remarks: remarks || undefined,
 			datetimeCreated: entryDate.format('YYYY-MM-DD'),
 		});
-		resetModalState();
 	};
 
 	const hasMultipleRows = entries.length > 1;
@@ -253,226 +270,253 @@ export const CreateJournalEntryModal = ({
 		hasMultipleRows ? ' has-delete' : ''
 	}`;
 
+	const isPairedWithVoucher = !!hasVoucher && isVoucherOpen;
+
 	return (
 		<Modal
+			centered={!isPairedWithVoucher}
 			className="CreateJournalEntryModal"
 			footer={null}
 			maskClosable={false}
 			open={open}
-			title="Create Journal Entry"
+			title={
+				<div className="CreateJournalEntryModal_titleRow">
+					<span>Create Journal Entry</span>
+					{hasVoucher && (
+						<Tooltip title={isVoucherOpen ? 'Hide voucher' : 'Show voucher'}>
+							<Button
+								icon={<FileSearchOutlined />}
+								size="small"
+								type={isVoucherOpen ? 'primary' : 'default'}
+								onClick={() => setIsVoucherOpen((prev) => !prev)}
+							>
+								Voucher
+							</Button>
+						</Tooltip>
+					)}
+				</div>
+			}
 			width={760}
-			centered
+			wrapClassName={
+				isPairedWithVoucher ? 'CreateJournalEntryModal_pairedWrap' : undefined
+			}
 			closable
 			destroyOnClose
 			keyboard
 			onCancel={handleClose}
 		>
-			<div className="CreateJournalEntryModal_form">
-				<div className="CreateJournalEntryModal_dateRow">
-					<span className="CreateJournalEntryModal_dateLabel">Date</span>
-					<DatePicker
-						allowClear={false}
-						className="CreateJournalEntryModal_datePicker"
-						format="MMMM DD, YYYY"
-						value={entryDate}
-						onChange={(value) => value && setEntryDate(value)}
-					/>
-				</div>
+			<div className="CreateJournalEntryModal_body">
+				{hasVoucher &&
+					isVoucherOpen &&
+					renderVoucher?.(() => setIsVoucherOpen(false))}
 
-				<div className="CreateJournalEntryModal_searchItem">
-					<Select
-						ref={searchSelectRef}
-						className="w-100"
-						disabled={!activeCell}
-						filterOption={false}
-						loading={isFetching}
-						notFoundContent={isFetching ? 'Loading...' : 'No accounts found'}
-						options={accountOptions}
-						placeholder={
-							activeCell?.field === 'debitAccount'
-								? 'Search account for debit'
-								: 'Search account for credit'
-						}
-						searchValue={searchText}
-						value={selectedSearchValue}
-						allowClear
-						autoFocus
-						showSearch
-						onChange={() => setSelectedSearchValue(null)}
-						onClear={() => {
-							setSelectedSearchValue(null);
-							setSearchText('');
-						}}
-						onSearch={(value) => setSearchText(value)}
-						onSelect={(value) => handleAccountSelect(value)}
-					/>
-				</div>
-
-				<div className={labelsClass}>
-					<span>DEBIT</span>
-					<span>CREDIT</span>
-					<span>AMOUNT</span>
-					{hasMultipleRows && <span />}
-				</div>
-
-				{entries.map((entry, index) => (
-					<div key={index} className={gridClass}>
-						<div
-							role="button"
-							style={{ cursor: 'pointer' }}
-							tabIndex={0}
-							onClick={() => handleCellClick(index, 'debitAccount')}
-							onKeyDown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ')
-									handleCellClick(index, 'debitAccount');
-							}}
-						>
-							<Input
-								className={
-									activeCell?.rowIndex === index &&
-									activeCell?.field === 'debitAccount'
-										? 'CreateJournalEntryModal_activeInput'
-										: ''
-								}
-								placeholder="Select from search"
-								style={{
-									fontSize: getAccountFontSize(entry.debitAccount),
-									pointerEvents: 'none',
-								}}
-								title={entry.debitAccount}
-								value={entry.debitAccount}
-								disabled
-								readOnly
-							/>
-						</div>
-						<div
-							role="button"
-							style={{ cursor: 'pointer' }}
-							tabIndex={0}
-							onClick={() => handleCellClick(index, 'creditAccount')}
-							onKeyDown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ')
-									handleCellClick(index, 'creditAccount');
-							}}
-						>
-							<Input
-								className={
-									activeCell?.rowIndex === index &&
-									activeCell?.field === 'creditAccount'
-										? 'CreateJournalEntryModal_activeInput'
-										: ''
-								}
-								placeholder="Select from search"
-								style={{
-									fontSize: getAccountFontSize(entry.creditAccount),
-									pointerEvents: 'none',
-								}}
-								title={entry.creditAccount}
-								value={entry.creditAccount}
-								disabled
-								readOnly
-							/>
-						</div>
-						<InputNumber
-							key={
-								lockedAmounts.has(index)
-									? `locked-${index}`
-									: `unlocked-${index}`
-							}
-							ref={(el) => {
-								amountRefs.current[index] = el;
-							}}
-							className="w-100"
-							controls={false}
-							disabled={
-								!(entry.debitAccount && entry.creditAccount) ||
-								lockedAmounts.has(index)
-							}
-							formatter={(value) => {
-								if (!value) return '₱ ';
-								if (lockedAmounts.has(index)) {
-									return `₱ ${formatNumberWithCommas(
-										Number(value).toFixed(2),
-									)}`;
-								}
-								return `₱ ${formatNumberWithCommas(value)}`;
-							}}
-							min={0}
-							parser={(value) =>
-								Number((value || '').replace(/₱\s?|,/g, '')) as any
-							}
-							precision={2}
-							value={entry.amount}
-							onBlur={() => lockAmount(index)}
-							onChange={(val) => handleAmountChange(index, val)}
-							onKeyDown={(e) => {
-								const allowedKeys = [
-									'Backspace',
-									'Delete',
-									'Tab',
-									'ArrowLeft',
-									'ArrowRight',
-									'Home',
-									'End',
-								];
-								if (allowedKeys.includes(e.key) || /^[0-9.]$/.test(e.key)) {
-									return;
-								}
-								e.preventDefault();
-							}}
-							onPressEnter={() => lockAmount(index)}
+				<div className="CreateJournalEntryModal_form">
+					<div className="CreateJournalEntryModal_dateRow">
+						<span className="CreateJournalEntryModal_dateLabel">Date</span>
+						<DatePicker
+							allowClear={false}
+							className="CreateJournalEntryModal_datePicker"
+							format="MMMM DD, YYYY"
+							value={entryDate}
+							onChange={(value) => value && setEntryDate(value)}
 						/>
-						{hasMultipleRows && (
-							<Button
-								icon={<DeleteOutlined />}
-								style={{ height: 64 }}
-								type="text"
-								danger
-								onClick={() => removeEntry(index)}
-							/>
-						)}
 					</div>
-				))}
 
-				<Button
-					className="CreateJournalEntryModal_addEntryBtn"
-					icon={<PlusOutlined />}
-					style={{ marginBottom: 16, marginTop: 4 }}
-					type="primary"
-					ghost
-					onClick={addEntry}
-				>
-					Add Entry
-				</Button>
+					<div className="CreateJournalEntryModal_searchItem">
+						<Select
+							ref={searchSelectRef}
+							className="w-100"
+							disabled={!activeCell}
+							filterOption={false}
+							loading={isFetching}
+							notFoundContent={isFetching ? 'Loading...' : 'No accounts found'}
+							options={accountOptions}
+							placeholder={
+								activeCell?.field === 'debitAccount'
+									? 'Search account for debit'
+									: 'Search account for credit'
+							}
+							searchValue={searchText}
+							value={selectedSearchValue}
+							allowClear
+							autoFocus
+							showSearch
+							onChange={() => setSelectedSearchValue(null)}
+							onClear={() => {
+								setSelectedSearchValue(null);
+								setSearchText('');
+							}}
+							onSearch={(value) => setSearchText(value)}
+							onSelect={(value) => handleAccountSelect(value)}
+						/>
+					</div>
 
-				<div className="CreateJournalEntryModal_remarksLabel">Remarks</div>
-				<Input
-					style={{ marginBottom: 14 }}
-					value={remarks}
-					onChange={(e) => setRemarks(e.target.value)}
-				/>
+					<div className={labelsClass}>
+						<span>DEBIT</span>
+						<span>CREDIT</span>
+						<span>AMOUNT</span>
+						{hasMultipleRows && <span />}
+					</div>
 
-				<div className="ModalCustomFooter">
+					{entries.map((entry, index) => (
+						<div key={index} className={gridClass}>
+							<div
+								role="button"
+								style={{ cursor: 'pointer' }}
+								tabIndex={0}
+								onClick={() => handleCellClick(index, 'debitAccount')}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ')
+										handleCellClick(index, 'debitAccount');
+								}}
+							>
+								<Input
+									className={
+										activeCell?.rowIndex === index &&
+										activeCell?.field === 'debitAccount'
+											? 'CreateJournalEntryModal_activeInput'
+											: ''
+									}
+									placeholder="Select from search"
+									style={{
+										fontSize: getAccountFontSize(entry.debitAccount),
+										pointerEvents: 'none',
+									}}
+									title={entry.debitAccount}
+									value={entry.debitAccount}
+									disabled
+									readOnly
+								/>
+							</div>
+							<div
+								role="button"
+								style={{ cursor: 'pointer' }}
+								tabIndex={0}
+								onClick={() => handleCellClick(index, 'creditAccount')}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ')
+										handleCellClick(index, 'creditAccount');
+								}}
+							>
+								<Input
+									className={
+										activeCell?.rowIndex === index &&
+										activeCell?.field === 'creditAccount'
+											? 'CreateJournalEntryModal_activeInput'
+											: ''
+									}
+									placeholder="Select from search"
+									style={{
+										fontSize: getAccountFontSize(entry.creditAccount),
+										pointerEvents: 'none',
+									}}
+									title={entry.creditAccount}
+									value={entry.creditAccount}
+									disabled
+									readOnly
+								/>
+							</div>
+							<InputNumber
+								key={
+									lockedAmounts.has(index)
+										? `locked-${index}`
+										: `unlocked-${index}`
+								}
+								ref={(el) => {
+									amountRefs.current[index] = el;
+								}}
+								className="w-100"
+								controls={false}
+								disabled={
+									!(entry.debitAccount && entry.creditAccount) ||
+									lockedAmounts.has(index)
+								}
+								formatter={(value) => {
+									if (!value) return '₱ ';
+									if (lockedAmounts.has(index)) {
+										return `₱ ${formatNumberWithCommas(
+											Number(value).toFixed(2),
+										)}`;
+									}
+									return `₱ ${formatNumberWithCommas(value)}`;
+								}}
+								min={0}
+								parser={(value) =>
+									Number((value || '').replace(/₱\s?|,/g, '')) as any
+								}
+								precision={2}
+								value={entry.amount}
+								onBlur={() => lockAmount(index)}
+								onChange={(val) => handleAmountChange(index, val)}
+								onKeyDown={(e) => {
+									const allowedKeys = [
+										'Backspace',
+										'Delete',
+										'Tab',
+										'ArrowLeft',
+										'ArrowRight',
+										'Home',
+										'End',
+									];
+									if (allowedKeys.includes(e.key) || /^[0-9.]$/.test(e.key)) {
+										return;
+									}
+									e.preventDefault();
+								}}
+								onPressEnter={() => lockAmount(index)}
+							/>
+							{hasMultipleRows && (
+								<Button
+									icon={<DeleteOutlined />}
+									style={{ height: 64 }}
+									type="text"
+									danger
+									onClick={() => removeEntry(index)}
+								/>
+							)}
+						</div>
+					))}
+
 					<Button
-						htmlType="button"
-						onClick={() => {
-							resetModalState();
-							setTimeout(() => {
-								searchSelectRef.current?.focus?.();
-							}, 0);
-						}}
-					>
-						Clear
-					</Button>
-					<Button
-						disabled={!isValid}
-						htmlType="button"
-						loading={isSubmitting}
+						className="CreateJournalEntryModal_addEntryBtn"
+						icon={<PlusOutlined />}
+						style={{ marginBottom: 16, marginTop: 4 }}
 						type="primary"
-						onClick={handleSubmit}
+						ghost
+						onClick={addEntry}
 					>
-						Submit
+						Add Entry
 					</Button>
+
+					<div className="CreateJournalEntryModal_remarksLabel">Remarks</div>
+					<Input
+						style={{ marginBottom: 14 }}
+						value={remarks}
+						onChange={(e) => setRemarks(e.target.value)}
+					/>
+
+					<div className="ModalCustomFooter">
+						<Button
+							htmlType="button"
+							onClick={() => {
+								resetModalState();
+								setTimeout(() => {
+									searchSelectRef.current?.focus?.();
+								}, 0);
+							}}
+						>
+							Clear
+						</Button>
+						<Button
+							disabled={!isValid}
+							htmlType="button"
+							loading={isSubmitting}
+							type="primary"
+							onClick={handleSubmit}
+						>
+							Submit
+						</Button>
+					</div>
 				</div>
 			</div>
 		</Modal>

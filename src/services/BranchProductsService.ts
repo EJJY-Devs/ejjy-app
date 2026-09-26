@@ -17,6 +17,8 @@ interface List extends IListRequest {
 	is_daily_checked?: boolean;
 	is_randomly_checked?: boolean;
 	is_below_reorder_point?: boolean;
+	show_purchases?: boolean;
+	show_expenses?: boolean;
 }
 
 interface Edit {

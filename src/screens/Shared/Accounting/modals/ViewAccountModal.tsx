@@ -2,6 +2,7 @@ import { Descriptions, Modal } from 'antd';
 import React from 'react';
 import { MAX_PAGE_SIZE } from 'global';
 import { useAccountSubTypes, useAccountTypes, useNormalBalances } from 'hooks';
+import { BOOK_TAG_OPTIONS, fieldsToBookTag } from './CreateAccountModal';
 
 interface Props {
 	account: any;
@@ -85,6 +86,11 @@ export const ViewAccountModal = ({ account, open, onClose }: Props) => {
 				</Descriptions.Item>
 				<Descriptions.Item label="Normal Balance">
 					{getOptionLabel(account?.normal_balance, normalBalanceOptions)}
+				</Descriptions.Item>
+				<Descriptions.Item label="Book Tag">
+					{BOOK_TAG_OPTIONS.find(
+						(option) => option.value === fieldsToBookTag(account),
+					)?.label || '-'}
 				</Descriptions.Item>
 			</Descriptions>
 		</Modal>

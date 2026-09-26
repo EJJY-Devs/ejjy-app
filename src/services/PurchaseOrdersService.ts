@@ -11,6 +11,7 @@ interface List extends IListRequest {
 	time_range?: string;
 	branch_id?: number;
 	requisition_slip_id?: number;
+	supplier_name?: string;
 }
 
 interface Create {

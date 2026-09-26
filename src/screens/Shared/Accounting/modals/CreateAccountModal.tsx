@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select } from 'antd';
+import { Button, Form, Input, Modal, Radio, Select } from 'antd';
 import React from 'react';
 import { MAX_PAGE_SIZE } from 'global';
 import { useAccountSubTypes, useAccountTypes, useNormalBalances } from 'hooks';
@@ -12,6 +12,73 @@ const ACCOUNT_CLASSIFICATION_OPTIONS = [
 	{ label: 'Nominal (Temporary — Reset every year)', value: 'nominal' },
 	{ label: 'Real (Permanent — Balances carry over)', value: 'real' },
 ];
+
+export const BOOK_TAG_OPTIONS = [
+	{ label: 'None', value: '' },
+	{ label: 'Cash Book', value: 'cash_book' },
+	{ label: 'Sales Book', value: 'sales_book' },
+	{ label: 'Purchase Book', value: 'purchase_book' },
+	{ label: 'EWT', value: 'ewt_book' },
+];
+
+export const bookTagToFields = (bookTag: string) => ({
+	isCashBook: bookTag === 'cash_book',
+	isSalesBook: bookTag === 'sales_book',
+	isPurchaseBook: bookTag === 'purchase_book',
+	isEwtBook: bookTag === 'ewt_book',
+});
+
+export const fieldsToBookTag = (account: any) => {
+	if (account?.is_sales_book) return 'sales_book';
+	if (account?.is_purchase_book) return 'purchase_book';
+	if (account?.is_ewt_book) return 'ewt_book';
+	if (account?.is_cash_book) return 'cash_book';
+	return '';
+};
+
+const BOOK_TAG_EFFECTS = [
+	{
+		tag: 'Cash Book',
+		effects: ['Debit → Cash Receipts', 'Credit → Cash Disbursements'],
+	},
+	{ tag: 'Sales Book', effects: ['Credit → Subsidiary Sales'] },
+	{ tag: 'Purchase Book', effects: ['Debit → Subsidiary Purchases'] },
+	{ tag: 'EWT', effects: ['Credit → Subsidiary Purchases'] },
+];
+
+export const BOOK_TAG_TOOLTIP = {
+	title: (
+		<table cellSpacing={0}>
+			<tbody>
+				{BOOK_TAG_EFFECTS.map(({ tag, effects }) =>
+					effects.map((effect, index) => (
+						<tr key={`${tag}-${effect}`}>
+							{index === 0 && (
+								<td
+									rowSpan={effects.length}
+									style={{
+										fontWeight: 600,
+										paddingRight: 12,
+										paddingBottom: 4,
+										whiteSpace: 'nowrap',
+										verticalAlign: 'top',
+									}}
+								>
+									{tag}
+								</td>
+							)}
+							<td style={{ paddingBottom: 4, whiteSpace: 'nowrap' }}>
+								{effect}
+							</td>
+						</tr>
+					)),
+				)}
+			</tbody>
+		</table>
+	),
+
+	overlayStyle: { maxWidth: 420 },
+};
 
 type Option = { label: string; value: number };
 
@@ -51,9 +118,9 @@ export const CreateAccountModal = ({
 		isFetching: isFetchingNormalBalances,
 	} = useNormalBalances({ params: { pageSize: MAX_PAGE_SIZE } });
 
-	const handleFinish = async (values: any) => {
+	const handleFinish = async ({ bookTag, ...values }: any) => {
 		try {
-			await onCreate(values);
+			await onCreate({ ...values, ...bookTagToFields(bookTag) });
 			form.resetFields();
 		} catch (error) {
 			// Keep user input on error so they can correct and retry.
@@ -183,6 +250,19 @@ export const CreateAccountModal = ({
 						optionFilterProp="label"
 						options={normalBalanceOptions}
 						showSearch
+					/>
+				</Form.Item>
+
+				<Form.Item
+					initialValue=""
+					label="Book Tag"
+					name="bookTag"
+					tooltip={BOOK_TAG_TOOLTIP}
+				>
+					<Radio.Group
+						buttonStyle="solid"
+						options={BOOK_TAG_OPTIONS}
+						optionType="button"
 					/>
 				</Form.Item>
 

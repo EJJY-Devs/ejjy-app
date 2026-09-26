@@ -1,5 +1,6 @@
 .AddProductForm {
-	&_inputQuantity {
+	&_inputQuantity,
+	&_inputCost {
 		input {
 			height: 75px !important;
 			font-size: 3rem;

@@ -15,7 +15,8 @@ import { useBoundStore } from '../../stores/useBoundStore';
 
 const MESSAGE_KEY = 'MESSAGE_KEY_BARCODE_SCAN_MSG';
 
-const Component = (props, ref) => {
+const Component = (props: any, ref) => {
+	const { type } = props;
 	// STATES
 	const [scannedBarcode, setScannedBarcode] = useState(null);
 
@@ -37,6 +38,12 @@ const Component = (props, ref) => {
 	} = useBranchProducts({
 		params: {
 			identifier: scannedBarcode,
+			// Same Purchases/Expenses source tagging as ProductSearch - a
+			// scanned barcode must respect the same visibility rule as a
+			// typed search (see ProductSearch/index.tsx).
+			...(type === 'Expense Voucher'
+				? { showExpenses: true, showPurchases: false }
+				: { showPurchases: true, showExpenses: false }),
 		},
 		options: {
 			enabled: scannedBarcode !== null && scannedBarcode.trim().length > 0,

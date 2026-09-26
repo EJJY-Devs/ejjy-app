@@ -10,7 +10,12 @@ import {
 	MAX_PAGE_SIZE,
 	pageSizeOptions,
 } from 'global';
-import { useBranches, useJournalEntries, useQueryParams } from 'hooks';
+import {
+	useBranches,
+	useBranchMachines,
+	useJournalEntries,
+	useQueryParams,
+} from 'hooks';
 import React, { useEffect, useMemo } from 'react';
 import { formatDateTime, formatInPeso } from 'utils';
 
@@ -19,6 +24,7 @@ export interface GeneralJournalEntry {
 	entryType: string;
 	datetime: string;
 	branch?: string;
+	branchMachine?: string;
 	referenceNumber: string;
 	debitAccount: string;
 	creditAccount: string;
@@ -29,6 +35,7 @@ export interface GeneralJournalEntry {
 	expenseReferenceNumber?: string | null;
 	purchaseId?: number | null;
 	purchaseReferenceNumber?: string | null;
+	branchMachineId?: number | null;
 }
 
 interface Props {
@@ -37,7 +44,10 @@ interface Props {
 	onAddTransactionEntry: () => void;
 	onCreateJournalEntry: () => void;
 	onOpenJournalEntry: (entry: GeneralJournalEntry) => void;
+	onViewCollectionReceipt?: (referenceNumber: string) => void;
+	onViewDisbursementVoucher?: (referenceNumber: string) => void;
 	onViewExpense?: (expenseId: number) => void;
+	onViewInvoice?: (entry: GeneralJournalEntry) => void;
 	onViewPurchase?: (purchaseId: number) => void;
 	onViewTransaction?: (transactionId: number, description: string) => void;
 }
@@ -48,7 +58,10 @@ export const GeneralJournalTab = ({
 	onAddTransactionEntry,
 	onCreateJournalEntry,
 	onOpenJournalEntry,
+	onViewCollectionReceipt,
+	onViewDisbursementVoucher,
 	onViewExpense,
+	onViewInvoice,
 	onViewPurchase,
 	onViewTransaction,
 }: Props) => {
@@ -72,6 +85,21 @@ export const GeneralJournalTab = ({
 		return undefined;
 	}, [isHeadOffice, localBranchId, params.branchId]);
 
+	const selectedBranchMachineId = useMemo(() => {
+		if (params.branchMachineId === 'all') return undefined;
+		if (params.branchMachineId) return Number(params.branchMachineId);
+		return undefined;
+	}, [params.branchMachineId]);
+
+	const {
+		data: { branchMachines } = { branchMachines: [] },
+	} = useBranchMachines({
+		params: {
+			branchId: selectedBranchId,
+			pageSize: MAX_PAGE_SIZE,
+		},
+	});
+
 	const {
 		data: { journalEntries, total },
 		isFetching,
@@ -81,6 +109,9 @@ export const GeneralJournalTab = ({
 			pageSize: params.pageSize,
 			timeRange: params.timeRange,
 			...(selectedBranchId && { branchId: selectedBranchId }),
+			...(selectedBranchMachineId && {
+				branchMachineId: selectedBranchMachineId,
+			}),
 			...(params.entryType && { entryType: params.entryType }),
 		},
 	});
@@ -91,6 +122,7 @@ export const GeneralJournalTab = ({
 			entryType: entry.entry_type || '',
 			datetime: formatDateTime(entry.datetime_created, true),
 			branch: entry.branch_name,
+			branchMachine: entry.branch_machine_name,
 			referenceNumber: entry.reference_number,
 			debitAccount: entry.debit_account,
 			creditAccount: entry.credit_account,
@@ -101,6 +133,7 @@ export const GeneralJournalTab = ({
 			expenseReferenceNumber: entry.expense_reference_number ?? null,
 			purchaseId: entry.purchase ?? null,
 			purchaseReferenceNumber: entry.purchase_reference_number ?? null,
+			branchMachineId: entry.branch_machine ?? null,
 		}),
 	);
 
@@ -167,6 +200,34 @@ export const GeneralJournalTab = ({
 								</>
 							);
 						}
+
+						// Collection Receipt entries store the CR reference number
+						// (e.g. CR-18) as their remarks.
+						if (/^CR-\d+$/.test(record.remarks)) {
+							return (
+								<Button
+									style={{ padding: 0, height: 'auto' }}
+									type="link"
+									onClick={() => onViewCollectionReceipt?.(record.remarks)}
+								>
+									{record.remarks}
+								</Button>
+							);
+						}
+
+						// Disbursement Voucher entries store the DV reference number
+						// (e.g. DV-2) as their remarks.
+						if (/^DV-\d+$/.test(record.remarks)) {
+							return (
+								<Button
+									style={{ padding: 0, height: 'auto' }}
+									type="link"
+									onClick={() => onViewDisbursementVoucher?.(record.remarks)}
+								>
+									{record.remarks}
+								</Button>
+							);
+						}
 					}
 					if (record.expenseId) {
 						const ref = record.expenseReferenceNumber;
@@ -200,10 +261,32 @@ export const GeneralJournalTab = ({
 							</span>
 						);
 					}
+					if (
+						record.entryType === 'automated' &&
+						record.remarks &&
+						record.remarks !== EMPTY_CELL
+					) {
+						return (
+							<Button
+								style={{ padding: 0, height: 'auto' }}
+								type="link"
+								onClick={() => onViewInvoice?.(record)}
+							>
+								{record.remarks}
+							</Button>
+						);
+					}
 					return record.remarks;
 				},
 			},
 		];
+
+		baseColumns.splice(2, 0, {
+			title: 'Branch Machine',
+			dataIndex: 'branchMachine',
+			key: 'branchMachine',
+			render: (value: string) => value || EMPTY_CELL,
+		});
 
 		if (isHeadOffice) {
 			baseColumns.splice(2, 0, {
@@ -214,7 +297,16 @@ export const GeneralJournalTab = ({
 		}
 
 		return baseColumns;
-	}, [isHeadOffice, onOpenJournalEntry, onViewTransaction]);
+	}, [
+		isHeadOffice,
+		onOpenJournalEntry,
+		onViewCollectionReceipt,
+		onViewDisbursementVoucher,
+		onViewExpense,
+		onViewInvoice,
+		onViewPurchase,
+		onViewTransaction,
+	]);
 
 	return (
 		<>
@@ -258,7 +350,7 @@ export const GeneralJournalTab = ({
 								showSearch
 								onChange={(value) => {
 									setQueryParams(
-										{ branchId: value },
+										{ branchId: value, branchMachineId: undefined },
 										{ shouldResetPage: true },
 									);
 								}}
@@ -272,6 +364,35 @@ export const GeneralJournalTab = ({
 							</Select>
 						</Col>
 					)}
+					<Col className="BooksOfAccounts_timeRangeFilter" lg={4}>
+						<Label label="Branch Machine" spacing />
+						<Select
+							className="w-100"
+							optionFilterProp="children"
+							placeholder="Select Branch Machine"
+							value={(() => {
+								if (params.branchMachineId === 'all') return 'all';
+								if (params.branchMachineId)
+									return Number(params.branchMachineId);
+								return undefined;
+							})()}
+							allowClear
+							showSearch
+							onChange={(value) => {
+								setQueryParams(
+									{ branchMachineId: value },
+									{ shouldResetPage: true },
+								);
+							}}
+						>
+							<Select.Option value="all">All</Select.Option>
+							{branchMachines.map(({ id, name }: any) => (
+								<Select.Option key={id} value={id}>
+									{name}
+								</Select.Option>
+							))}
+						</Select>
+					</Col>
 				</Row>
 				{!isHeadOffice && (
 					<>

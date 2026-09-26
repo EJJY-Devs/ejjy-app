@@ -1,10 +1,16 @@
 import { EMPTY_CELL, getFullName } from 'ejjy-global';
 import React from 'react';
-import { formatDateTime, formatInPeso } from 'utils';
+import {
+	computeVatBreakdown,
+	formatDateTime,
+	formatInPeso,
+	isPurchaseVatApplicable,
+} from 'utils';
 import { ReceiptHeaderV2 } from './ReceiptHeaderV2';
 
 interface Props {
 	purchase: any;
+	siteSettings?: any;
 }
 
 const rowStyle: React.CSSProperties = {
@@ -22,8 +28,19 @@ const headerCellStyle: React.CSSProperties = {
 	fontWeight: 'bold',
 };
 
-export const PurchaseVoucherDocument = ({ purchase }: Props) => {
+export const PurchaseVoucherDocument = ({ purchase, siteSettings }: Props) => {
 	const products = purchase?.purchase_products || [];
+
+	const vatApplicable = isPurchaseVatApplicable(
+		siteSettings,
+		purchase?.supplier_account,
+	);
+	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
+		products.map((item: any) => ({
+			amount: Number(item.quantity) * Number(item.cost_per_piece),
+			isVatExempt: !vatApplicable || !!item.product?.is_vat_exempted,
+		})),
+	);
 
 	return (
 		<div style={{ fontSize: '12px', lineHeight: '1.2' }}>
@@ -95,16 +112,19 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 			>
 				<thead>
 					<tr>
-						<th style={{ ...headerCellStyle, textAlign: 'center' }}>
-							Quantity
-						</th>
+						<th style={{ ...headerCellStyle, textAlign: 'center' }}>Qty</th>
 						<th style={{ ...headerCellStyle, textAlign: 'left' }}>
-							Description
+							Particulars
+						</th>
+						<th
+							style={{ ...headerCellStyle, textAlign: 'center', width: '80px' }}
+						>
+							Type
 						</th>
 						<th style={{ ...headerCellStyle, textAlign: 'right' }}>
-							Unit Price
+							Unit Cost
 						</th>
-						<th style={{ ...headerCellStyle, textAlign: 'right' }}>Total</th>
+						<th style={{ ...headerCellStyle, textAlign: 'right' }}>Amount</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -114,6 +134,9 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 								{item.quantity}
 							</td>
 							<td style={cellStyle}>{item.product?.name}</td>
+							<td style={{ ...cellStyle, textAlign: 'center' }}>
+								{!vatApplicable || item.product?.is_vat_exempted ? 'VE' : 'V'}
+							</td>
 							<td style={{ ...cellStyle, textAlign: 'right' }}>
 								{formatInPeso(item.cost_per_piece, 'P')}
 							</td>
@@ -132,6 +155,18 @@ export const PurchaseVoucherDocument = ({ purchase }: Props) => {
 				style={{ textAlign: 'center', marginTop: '12px', fontWeight: 'bold' }}
 			>
 				Total Amount: {formatInPeso(purchase?.total_amount, 'P')}
+			</div>
+
+			<div style={{ textAlign: 'center', marginTop: '4px' }}>
+				<div>VAT Exempt: {formatInPeso(vatExempt, 'P')}</div>
+				<div>VATable Sales: {formatInPeso(vatableSales, 'P')}</div>
+				<div>VAT Amount: {formatInPeso(vatAmount, 'P')}</div>
+				{Number(purchase?.ewt_percentage) > 0 && (
+					<div>
+						EWT: {formatInPeso(purchase?.ewt_amount, 'P')} (
+						{purchase?.ewt_percentage}%)
+					</div>
+				)}
 			</div>
 		</div>
 	);

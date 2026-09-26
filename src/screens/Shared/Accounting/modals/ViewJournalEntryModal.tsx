@@ -7,6 +7,7 @@ interface JournalEntry {
 	entryType: string;
 	datetime: string;
 	branch?: string;
+	branchMachine?: string;
 	referenceNumber: string;
 	debitAccount: string;
 	creditAccount: string;
@@ -112,6 +113,12 @@ export const ViewJournalEntryModal = ({
 					},
 			  ]
 			: []),
+		{
+			title: 'Branch Machine',
+			dataIndex: 'branchMachine',
+			key: 'branchMachine',
+			render: (value: string) => value || '-',
+		},
 	];
 
 	return (

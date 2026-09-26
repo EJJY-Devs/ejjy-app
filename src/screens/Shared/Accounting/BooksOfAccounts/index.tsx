@@ -6,21 +6,37 @@ import {
 	Props as AuthorizationModalProps,
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { appTypes, MAX_PAGE_SIZE } from 'global';
-import { useJournalEntryCreate } from 'hooks';
+import { useJournalEntryCreate, useSiteSettingsNew } from 'hooks';
 import useAccountingTransactions from 'hooks/useAccountingTransactions';
 import React, { useCallback, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { getLocalApiUrl, getLocalBranchId } from 'utils';
+import { getLocalApiUrl, getLocalBranchId, getReportsApiUrl } from 'utils';
 import { getAppType } from 'utils/localStorage';
 import {
+	DisbursementVoucherService,
 	ExpenseVoucherService,
 	JournalEntriesService,
 	PurchasesService,
+	TransactionsService,
 } from 'services';
 import { ExpenseVoucher } from 'screens/Shared/Accounting/ExpenseVouchers';
 import { ViewExpenseVoucherModal } from 'screens/Shared/Accounting/ExpenseVouchers/modals/ViewExpenseVoucherModal';
 import { ViewPurchaseModal } from 'components/modals';
+import {
+	DisbursementVoucher,
+	ViewDisbursementVoucherModal,
+} from 'screens/Shared/Accounts/components/TabSupplierPurchases/modals/ViewDisbursementVoucherModal';
+import {
+	CollectionReceipt,
+	CollectionReceiptsService,
+	ViewCollectionReceiptModal,
+	ViewTransactionModal as ViewInvoiceModal,
+} from 'ejjy-global';
+import { CashDisbursementsTab } from './components/CashDisbursementsTab';
+import { CashReceiptsTab } from './components/CashReceiptsTab';
 import { GeneralLedgerTab } from './components/GeneralLedgerTab';
+import { SubsidiaryPurchasesTab } from './components/SubsidiaryPurchasesTab';
+import { SubsidiarySalesTab } from './components/SubsidiarySalesTab';
 import { TrialBalanceTab } from './components/TrialBalanceTab';
 import {
 	GeneralJournalEntry,
@@ -54,6 +70,17 @@ export const BooksOfAccounts = () => {
 	const [viewTransactionRemarks, setViewTransactionRemarks] = useState('');
 	const [viewExpense, setViewExpense] = useState<ExpenseVoucher | null>(null);
 	const [viewPurchase, setViewPurchase] = useState<any>(null);
+	const [viewInvoiceTransaction, setViewInvoiceTransaction] = useState<any>(
+		null,
+	);
+	const [
+		viewCollectionReceipt,
+		setViewCollectionReceipt,
+	] = useState<CollectionReceipt | null>(null);
+	const [
+		viewDisbursementVoucher,
+		setViewDisbursementVoucher,
+	] = useState<DisbursementVoucher | null>(null);
 	const [
 		authorizeConfig,
 		setAuthorizeConfig,
@@ -63,6 +90,8 @@ export const BooksOfAccounts = () => {
 		mutateAsync: createJournalEntry,
 		isLoading: isCreatingJournalEntry,
 	} = useJournalEntryCreate();
+
+	const { data: siteSettings } = useSiteSettingsNew();
 
 	const { data: transactionsData } = useAccountingTransactions({
 		params: {
@@ -94,6 +123,84 @@ export const BooksOfAccounts = () => {
 			message.error('Failed to load purchase');
 		}
 	}, []);
+
+	const handleViewCollectionReceipt = useCallback(
+		async (referenceNumber: string) => {
+			try {
+				const response = await CollectionReceiptsService.list(
+					{ reference_number: referenceNumber, page: 1, page_size: 1 } as any,
+					getLocalApiUrl(),
+				);
+				const collectionReceipt = response.results?.[0];
+				if (collectionReceipt) {
+					setViewCollectionReceipt(collectionReceipt);
+				} else {
+					message.error('Failed to load collection receipt');
+				}
+			} catch {
+				message.error('Failed to load collection receipt');
+			}
+		},
+		[],
+	);
+
+	const handleViewDisbursementVoucher = useCallback(
+		async (referenceNumber: string) => {
+			try {
+				// `search` is a contains-match, so pick the exact reference
+				// (DV-2 would otherwise also match DV-20, DV-21, ...).
+				const response = await DisbursementVoucherService.list(
+					{ search: referenceNumber, page: 1, page_size: 100 },
+					getLocalApiUrl(),
+				);
+				const disbursementVoucher = (response.data?.results || []).find(
+					(voucher: DisbursementVoucher) =>
+						voucher.reference_number === referenceNumber,
+				);
+				if (disbursementVoucher) {
+					setViewDisbursementVoucher(disbursementVoucher);
+				} else {
+					message.error('Failed to load disbursement voucher');
+				}
+			} catch {
+				message.error('Failed to load disbursement voucher');
+			}
+		},
+		[],
+	);
+
+	const fetchAndViewInvoice = useCallback(
+		async (orNumber: string, branchMachineId?: number | null) => {
+			try {
+				const response = await TransactionsService.list(
+					{
+						or_number: orNumber,
+						...(branchMachineId && {
+							branch_machine_id: branchMachineId,
+						}),
+						page: 1,
+						page_size: 1,
+					},
+					getReportsApiUrl(),
+				);
+				const transaction = response.data?.results?.[0];
+				if (transaction) {
+					setViewInvoiceTransaction(transaction);
+				} else {
+					message.error('Failed to load invoice');
+				}
+			} catch {
+				message.error('Failed to load invoice');
+			}
+		},
+		[],
+	);
+
+	const handleViewInvoice = useCallback(
+		(entry: GeneralJournalEntry) =>
+			fetchAndViewInvoice(entry.remarks, entry.branchMachineId),
+		[fetchAndViewInvoice],
+	);
 
 	const handleOpenJournalEntry = useCallback((entry: GeneralJournalEntry) => {
 		setSelectedEntry(entry);
@@ -181,6 +288,22 @@ export const BooksOfAccounts = () => {
 			return 'Trial Balance';
 		}
 
+		if (activeTab === 'cash-receipts') {
+			return 'Cash Receipts';
+		}
+
+		if (activeTab === 'cash-disbursements') {
+			return 'Cash Disbursements';
+		}
+
+		if (activeTab === 'subsidiary-sales') {
+			return 'Subsidiary Sales';
+		}
+
+		if (activeTab === 'subsidiary-purchases') {
+			return 'Subsidiary Purchases';
+		}
+
 		return 'General Journal';
 	};
 
@@ -206,7 +329,10 @@ export const BooksOfAccounts = () => {
 							onAddTransactionEntry={() => setIsAddTransactionOpen(true)}
 							onCreateJournalEntry={() => setIsCreateOpen(true)}
 							onOpenJournalEntry={handleOpenJournalEntry}
+							onViewCollectionReceipt={handleViewCollectionReceipt}
+							onViewDisbursementVoucher={handleViewDisbursementVoucher}
 							onViewExpense={handleViewExpense}
+							onViewInvoice={handleViewInvoice}
 							onViewPurchase={handleViewPurchase}
 							onViewTransaction={handleViewTransaction}
 						/>
@@ -222,6 +348,37 @@ export const BooksOfAccounts = () => {
 						<TrialBalanceTab
 							isHeadOffice={isHeadOffice}
 							localBranchId={localBranchId}
+						/>
+					</Tabs.TabPane>
+					<Tabs.TabPane key="cash-receipts" tab="Cash Receipts">
+						<CashReceiptsTab
+							isHeadOffice={isHeadOffice}
+							localBranchId={localBranchId}
+							onOpenJournalEntry={handleOpenJournalEntry}
+							onViewInvoice={fetchAndViewInvoice}
+						/>
+					</Tabs.TabPane>
+					<Tabs.TabPane key="cash-disbursements" tab="Cash Disbursements">
+						<CashDisbursementsTab
+							isHeadOffice={isHeadOffice}
+							localBranchId={localBranchId}
+							onViewExpense={handleViewExpense}
+							onViewPurchase={handleViewPurchase}
+						/>
+					</Tabs.TabPane>
+					<Tabs.TabPane key="subsidiary-sales" tab="Subsidiary Sales">
+						<SubsidiarySalesTab
+							isHeadOffice={isHeadOffice}
+							localBranchId={localBranchId}
+							onViewInvoice={fetchAndViewInvoice}
+						/>
+					</Tabs.TabPane>
+					<Tabs.TabPane key="subsidiary-purchases" tab="Subsidiary Purchases">
+						<SubsidiaryPurchasesTab
+							isHeadOffice={isHeadOffice}
+							localBranchId={localBranchId}
+							onViewExpense={handleViewExpense}
+							onViewPurchase={handleViewPurchase}
 						/>
 					</Tabs.TabPane>
 				</Tabs>
@@ -329,6 +486,25 @@ export const BooksOfAccounts = () => {
 					onClose={() => setViewPurchase(null)}
 				/>
 			)}
+			{viewInvoiceTransaction && (
+				<ViewInvoiceModal
+					siteSettings={siteSettings}
+					transaction={viewInvoiceTransaction}
+					onClose={() => setViewInvoiceTransaction(null)}
+				/>
+			)}
+			{viewCollectionReceipt && siteSettings && (
+				<ViewCollectionReceiptModal
+					collectionReceipt={viewCollectionReceipt}
+					siteSettings={siteSettings}
+					onClose={() => setViewCollectionReceipt(null)}
+				/>
+			)}
+			<ViewDisbursementVoucherModal
+				disbursementVoucher={viewDisbursementVoucher}
+				open={!!viewDisbursementVoucher}
+				onClose={() => setViewDisbursementVoucher(null)}
+			/>
 			<ViewTransactionModal
 				open={isViewTransactionOpen}
 				remarks={viewTransactionRemarks}

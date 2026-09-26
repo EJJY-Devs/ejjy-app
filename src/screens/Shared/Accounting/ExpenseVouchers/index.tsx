@@ -31,17 +31,11 @@ import {
 } from 'global';
 import { useQueryParams, useBranches } from 'hooks';
 import useExpenseVouchers, {
-	useExpenseVoucherCreate,
 	useExpenseVoucherUpdate,
 } from 'hooks/useExpenseVouchers';
 import React, { useMemo, useState } from 'react';
 import { JournalEntriesService } from 'services';
-import {
-	formatDateTime,
-	formatInPeso,
-	getLocalApiUrl,
-	getLocalBranchId,
-} from 'utils';
+import { formatDateTime, formatInPeso, getLocalApiUrl } from 'utils';
 import { getAppType } from 'utils/localStorage';
 import { CreateJournalEntryModal } from '../modals/CreateJournalEntryModal';
 import { CreateExpenseVoucherModal } from './modals/CreateExpenseVoucherModal';
@@ -59,6 +53,12 @@ export interface ExpenseVoucherAuthorizer {
 export interface ExpenseVoucherParticular {
 	description: string;
 	amount: string;
+	type: 'V' | 'VE';
+	// Set when the particular was picked from the product search (cart-style
+	// picker) instead of typed in freely.
+	product_id?: number | null;
+	quantity?: string | number | null;
+	rate?: string | number | null;
 }
 
 export interface ExpenseVoucher {
@@ -66,6 +66,7 @@ export interface ExpenseVoucher {
 	reference_number: string | null;
 	datetime_created: string;
 	payee: string;
+	invoice_number: string | null;
 	payment_type: 'pay' | 'on_account';
 	particulars: ExpenseVoucherParticular[];
 	amount: string;
@@ -75,6 +76,9 @@ export interface ExpenseVoucher {
 	branch_name: string | null;
 	journal_entry: number | null;
 	journal_entry_reference_number: string | null;
+	supplier_account?: { id: number; tax_type?: 'VAT' | 'NVAT' | null } | null;
+	ewt_percentage?: string | number;
+	ewt_amount?: string | number;
 }
 
 export const ExpenseVouchers = () => {
@@ -128,10 +132,9 @@ export const ExpenseVouchers = () => {
 	});
 	const withoutJeCount = withoutJeData?.total || 0;
 
-	const {
-		mutateAsync: createExpenseVoucher,
-		isLoading: isCreating,
-	} = useExpenseVoucherCreate();
+	const journalEntryStatus = (params.journalEntryStatus as string) ?? 'without';
+	const isWithoutJeFilter = journalEntryStatus === 'without';
+
 	const { mutateAsync: updateExpenseVoucher } = useExpenseVoucherUpdate();
 
 	const expenseVouchers: ExpenseVoucher[] = useMemo(
@@ -163,11 +166,9 @@ export const ExpenseVouchers = () => {
 				key: 'payee',
 			},
 			{
-				title: 'Particulars',
-				dataIndex: 'particulars',
-				key: 'particulars',
-				render: (value: ExpenseVoucherParticular[]) =>
-					(value || []).map((item) => item.description).join(', '),
+				title: 'Invoice #',
+				dataIndex: 'invoice_number',
+				key: 'invoice_number',
 			},
 			{
 				title: 'Amount',
@@ -277,14 +278,14 @@ export const ExpenseVouchers = () => {
 					<Col span={24}>
 						<Row gutter={[16, 0]}>
 							<Col flex="none">
-								<TimeRangeFilter disabled={isFetching} />
+								<TimeRangeFilter disabled={isFetching || isWithoutJeFilter} />
 							</Col>
 							<Col flex="none">
 								<Label label="Journal Entry" spacing />
 								<Radio.Group
 									buttonStyle="solid"
 									optionType="button"
-									value={(params.journalEntryStatus as string) ?? 'without'}
+									value={journalEntryStatus}
 									onChange={(e) =>
 										setQueryParams({
 											journalEntryStatus: e.target.value,
@@ -336,29 +337,8 @@ export const ExpenseVouchers = () => {
 			</Box>
 
 			<CreateExpenseVoucherModal
-				isSubmitting={isCreating}
 				open={isCreateOpen}
 				onClose={() => setIsCreateOpen(false)}
-				onCreate={async (values) => {
-					try {
-						await createExpenseVoucher({
-							payee: values.payee,
-							paymentType: values.paymentType,
-							particulars: values.particulars,
-							amount: values.amount,
-							remarks: values.remarks,
-							authorizerId: values.authorizerId,
-							supplierAccountId: values.supplierAccountId,
-							branchId: getLocalBranchId()
-								? Number(getLocalBranchId())
-								: undefined,
-						});
-						message.success('Expense voucher created successfully');
-						setIsCreateOpen(false);
-					} catch {
-						message.error('Failed to create expense voucher');
-					}
-				}}
 			/>
 
 			<ViewExpenseVoucherModal
@@ -374,8 +354,19 @@ export const ExpenseVouchers = () => {
 			/>
 
 			<CreateJournalEntryModal
+				hasVoucher={!!jeExpenseVoucher}
 				isSubmitting={isJeSubmitting}
 				open={!!jeExpenseVoucher}
+				renderVoucher={(onCloseVoucher) =>
+					jeExpenseVoucher && (
+						<ViewExpenseVoucherModal
+							expenseVoucher={jeExpenseVoucher}
+							asReferencePanel
+							open
+							onClose={onCloseVoucher}
+						/>
+					)
+				}
 				onClose={() => setJeExpenseVoucher(null)}
 				onSubmit={async (values) => {
 					setAuthorizeConfig({

@@ -105,6 +105,11 @@ export const TabAccounts = ({ disabled }: Props) => {
 				? account.business_name
 				: null,
 			type: getAccountTypeName(account.type),
+			taxType: [accountTypes.PERSONAL, accountTypes.CORPORATE].includes(
+				account.type,
+			)
+				? account.tax_type
+				: null,
 			homeAddress: account.home_address,
 			businessAddress: account.business_address,
 			contactNumber: account.contact_number,
@@ -187,6 +192,7 @@ export const TabAccounts = ({ disabled }: Props) => {
 			{ title: 'Name', dataIndex: 'name' },
 			{ title: 'Business / Agency Name', dataIndex: 'businessName' },
 			{ title: 'Type', dataIndex: 'type' },
+			{ title: 'Tax Type', dataIndex: 'taxType' },
 			{ title: 'Address (Home)', dataIndex: 'homeAddress' },
 			{ title: 'Address (Business)', dataIndex: 'businessAddress' },
 			{ title: 'Contact #', dataIndex: 'contactNumber' },

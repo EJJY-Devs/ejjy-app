@@ -11,7 +11,7 @@ import {
 import { ErrorMessage, Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import React, { useMemo } from 'react';
-import { MAX_PAGE_SIZE } from 'global';
+import { accountTypes, MAX_PAGE_SIZE } from 'global';
 import useAccounts from 'hooks/useAccounts';
 import { getSupplierLabel } from 'screens/Shared/Accounts/components/TabSupplierPurchases/components/SupplierTotalBalance';
 import { FieldError, Label } from '../../elements';
@@ -19,15 +19,20 @@ import { FieldError, Label } from '../../elements';
 type ModalProps = {
 	isLoading: boolean;
 	isPurchaseOrder?: boolean;
+	initialSupplierName?: string;
 	onSubmit: (formData: any) => void;
 	onClose: () => void;
 };
 
-const formDetails = {
+const getFormDetails = (
+	isPurchaseOrder: boolean,
+	initialSupplierName?: string,
+) => ({
 	defaultValues: {
 		paymentType: 'on_account',
 		supplierAccountId: null,
-		supplierName: '',
+		supplierName: initialSupplierName || '',
+		invoiceNumber: '',
 		overallRemarks: '',
 	},
 	schema: Yup.object().shape({
@@ -35,24 +40,23 @@ const formDetails = {
 			.oneOf(['pay', 'on_account'])
 			.required()
 			.label('Payment Type'),
-		supplierAccountId: Yup.number()
-			.nullable()
-			.label('Supplier')
-			.when('paymentType', {
-				is: 'on_account',
-				then: (schema) =>
-					schema.required(
-						'Supplier must be an existing account when payment type is On Account',
-					),
-			}),
+		supplierAccountId: isPurchaseOrder
+			? Yup.number().nullable().label('Supplier')
+			: Yup.number()
+					.required('Supplier must be an existing account')
+					.label('Supplier'),
 		supplierName: Yup.string().trim().required().label('Supplier'),
+		invoiceNumber: isPurchaseOrder
+			? Yup.string().nullable().label('Invoice #').trim()
+			: Yup.string().trim().required().label('Invoice #'),
 		overallRemarks: Yup.string().nullable().label('Remarks').trim(),
 	}),
-};
+});
 
 export const CreatePurchaseVoucherModal = ({
 	isLoading,
 	isPurchaseOrder = false,
+	initialSupplierName,
 	onSubmit,
 	onClose,
 }: ModalProps) => {
@@ -63,7 +67,20 @@ export const CreatePurchaseVoucherModal = ({
 		},
 	});
 
-	const supplierAccounts = accountsData?.accounts || [];
+	// Only Personal/Corporate accounts with a Tax Type set are valid suppliers
+	// for a purchase voucher - VAT applicability is resolved from the linked
+	// account's Tax Type (see isPurchaseVatApplicable), so an account without
+	// one (or of another type, e.g. Employee/Government) can't be used here.
+	const supplierAccounts = useMemo(
+		() =>
+			(accountsData?.accounts || []).filter(
+				(account: any) =>
+					[accountTypes.PERSONAL, accountTypes.CORPORATE].includes(
+						account.type,
+					) && !!account.tax_type,
+			),
+		[accountsData?.accounts],
+	);
 
 	const supplierAutoCompleteOptions = useMemo(
 		() =>
@@ -83,6 +100,11 @@ export const CreatePurchaseVoucherModal = ({
 		[supplierAccounts],
 	);
 
+	const formDetails = useMemo(
+		() => getFormDetails(isPurchaseOrder, initialSupplierName),
+		[isPurchaseOrder, initialSupplierName],
+	);
+
 	return (
 		<Modal
 			footer={null}
@@ -99,19 +121,11 @@ export const CreatePurchaseVoucherModal = ({
 			<Formik
 				initialValues={formDetails.defaultValues}
 				validationSchema={formDetails.schema}
-				onSubmit={(formData) => {
-					// 'Pay' must never post/link to a supplier account, even if the
-					// typed supplier name happened to autocomplete-match one.
-					const supplierAccountId =
-						!isPurchaseOrder && formData.paymentType === 'pay'
-							? null
-							: formData.supplierAccountId;
-
-					onSubmit({ ...formData, supplierAccountId });
-				}}
+				enableReinitialize
+				onSubmit={onSubmit}
 			>
 				{({ values, setFieldValue, isSubmitting }) => (
-					<Form>
+					<Form autoComplete="off">
 						<Row gutter={[16, 16]}>
 							{!isPurchaseOrder && (
 								<Col span={24}>
@@ -120,8 +134,6 @@ export const CreatePurchaseVoucherModal = ({
 										value={values['paymentType']}
 										onChange={(e) => {
 											setFieldValue('paymentType', e.target.value);
-											setFieldValue('supplierName', '');
-											setFieldValue('supplierAccountId', null);
 										}}
 									>
 										<Radio value="pay">Pay</Radio>
@@ -136,7 +148,7 @@ export const CreatePurchaseVoucherModal = ({
 
 							<Col span={24}>
 								<Label label="Supplier" spacing />
-								{!isPurchaseOrder && values['paymentType'] === 'on_account' ? (
+								{!isPurchaseOrder ? (
 									<Select
 										className="w-100"
 										filterOption={(inputValue, option) =>
@@ -193,6 +205,23 @@ export const CreatePurchaseVoucherModal = ({
 									render={(error) => <FieldError error={error} />}
 								/>
 							</Col>
+
+							{!isPurchaseOrder && (
+								<Col span={24}>
+									<Label label="Invoice #" spacing />
+									<Input
+										name="invoiceNumber"
+										value={values['invoiceNumber']}
+										onChange={(e) =>
+											setFieldValue('invoiceNumber', e.target.value)
+										}
+									/>
+									<ErrorMessage
+										name="invoiceNumber"
+										render={(error) => <FieldError error={error} />}
+									/>
+								</Col>
+							)}
 
 							<Col span={24}>
 								<Label label="Remarks" spacing />

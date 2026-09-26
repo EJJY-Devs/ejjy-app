@@ -1,4 +1,4 @@
-import { Col, Divider, message, Modal, Row, Space } from 'antd';
+import { Col, Divider, InputNumber, message, Modal, Row, Space } from 'antd';
 import { FieldError, Label } from 'components/elements';
 import { ErrorMessage, Form, Formik } from 'formik';
 import { unitOfMeasurementTypes } from 'global';
@@ -12,16 +12,24 @@ import './style.scss';
 
 interface Props {
 	product: any;
+	type?: string;
 	onSuccess: any;
 	onClose: any;
 }
-export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
+export const AddProductModal = ({
+	product,
+	type,
+	onClose,
+	onSuccess,
+}: Props) => {
 	// CUSTOM HOOKS
 	const { products, addProduct, editProduct } = useBoundStore((state: any) => ({
 		products: state.products,
 		addProduct: state.addProduct,
 		editProduct: state.editProduct,
 	}));
+
+	const isPurchase = type === 'Purchase';
 
 	// METHODS
 	const handleSubmit = (formData) => {
@@ -32,6 +40,10 @@ export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 		// Check if product allows multiple instances
 		const allowsMultiple = product?.product?.is_multiple_instance;
 
+		const costOverride = isPurchase
+			? { cost_per_piece: formData.costPerPiece }
+			: {};
+
 		if (existingProduct && !allowsMultiple) {
 			// If not allowed multiple, just increase quantity
 			editProduct({
@@ -39,18 +51,19 @@ export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 				product: {
 					...existingProduct,
 					quantity: existingProduct.quantity + formData.quantity,
+					...costOverride,
 				},
 			});
 		} else if (existingProduct && allowsMultiple) {
 			// Add duplicate immediately after original
 			addProduct(
-				{ ...product, quantity: formData.quantity },
+				{ ...product, quantity: formData.quantity, ...costOverride },
 				true,
 				product.product.key,
 			);
 		} else {
 			// Default add logic
-			addProduct({ ...product, quantity: formData.quantity });
+			addProduct({ ...product, quantity: formData.quantity, ...costOverride });
 		}
 
 		message.success(`${product.product.name} was added successfully.`);
@@ -70,6 +83,7 @@ export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 		>
 			<AddProductForm
 				product={product}
+				type={type}
 				onClose={onClose}
 				onSubmit={handleSubmit}
 			/>
@@ -77,9 +91,11 @@ export const AddProductModal = ({ product, onClose, onSuccess }: Props) => {
 	);
 };
 
-export const AddProductForm = ({ product, onClose, onSubmit }) => {
+export const AddProductForm = ({ product, type, onClose, onSubmit }) => {
 	// REFS
 	const inputRef = useRef(null);
+
+	const isPurchase = type === 'Purchase';
 
 	// METHODS
 	useEffect(() => {
@@ -92,6 +108,7 @@ export const AddProductForm = ({ product, onClose, onSubmit }) => {
 		() => ({
 			DefaultValues: {
 				quantity: '',
+				costPerPiece: 0,
 				type: unitOfMeasurementTypes.NON_WEIGHING,
 			},
 			Schema: Yup.object().shape({
@@ -114,9 +131,14 @@ export const AddProductForm = ({ product, onClose, onSubmit }) => {
 								: _.isInteger(Number(value)),
 					)
 					.label('Quantity'),
+				...(isPurchase
+					? {
+							costPerPiece: Yup.number().required().min(0).label('Unit Cost'),
+					  }
+					: {}),
 			}),
 		}),
-		[product],
+		[product, isPurchase],
 	);
 
 	return (
@@ -125,13 +147,16 @@ export const AddProductForm = ({ product, onClose, onSubmit }) => {
 			validationSchema={getFormDetails().Schema}
 			enableReinitialize
 			onSubmit={(formData) => {
-				onSubmit({ quantity: Number(formData.quantity) });
+				onSubmit({
+					quantity: Number(formData.quantity),
+					costPerPiece: Number(formData.costPerPiece) || 0,
+				});
 			}}
 		>
 			{({ values, setFieldValue }) => (
 				<Form>
 					<Row gutter={[16, 16]}>
-						<Col span={24}>
+						<Col span={isPurchase ? 12 : 24}>
 							<Label label="Quantity" spacing />
 							<InputNumberQuantity
 								ref={inputRef}
@@ -151,6 +176,34 @@ export const AddProductForm = ({ product, onClose, onSubmit }) => {
 								render={(error) => <FieldError error={error} />}
 							/>
 						</Col>
+
+						{isPurchase && (
+							<Col span={12}>
+								<Label label="Unit Cost" spacing />
+								<InputNumber
+									className="w-100 AddProductForm_inputCost"
+									controls={false}
+									formatter={(value, info) =>
+										info?.userTyping || value === undefined || value === null
+											? `₱${value}`
+											: `₱${Number(value).toFixed(2)}`
+									}
+									min={0}
+									parser={(value) =>
+										Number((value || '').replace(/₱/g, '')) as any
+									}
+									precision={2}
+									value={values['costPerPiece'] as any}
+									onChange={(value) => {
+										setFieldValue('costPerPiece', value);
+									}}
+								/>
+								<ErrorMessage
+									name="costPerPiece"
+									render={(error) => <FieldError error={error} />}
+								/>
+							</Col>
+						)}
 					</Row>
 
 					<Divider />

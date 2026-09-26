@@ -12,10 +12,17 @@ interface List extends IListRequest {
 interface Particular {
 	description: string;
 	amount: number;
+	type?: 'V' | 'VE';
+	// Set when the particular was picked from the product search (cart-style
+	// picker) instead of typed in freely.
+	product_id?: number | null;
+	quantity?: number | null;
+	rate?: number | null;
 }
 
 interface Create {
 	payee: string;
+	invoice_number?: string;
 	payment_type?: 'pay' | 'on_account';
 	particulars?: Particular[];
 	amount: number;

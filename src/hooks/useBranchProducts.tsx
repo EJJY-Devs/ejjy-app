@@ -221,6 +221,8 @@ const useBranchProductsNew = ({ params, options }: Query) =>
 			params?.productStatus,
 			params?.search,
 			params?.searchBy,
+			params?.showPurchases,
+			params?.showExpenses,
 		],
 		() => {
 			return wrapServiceWithCatch(
@@ -240,6 +242,8 @@ const useBranchProductsNew = ({ params, options }: Query) =>
 						product_status: params?.productStatus,
 						search: params?.search,
 						search_by: params?.searchBy,
+						show_purchases: params?.showPurchases,
+						show_expenses: params?.showExpenses,
 					},
 					getLocalApiUrl(),
 				),
@@ -247,6 +251,7 @@ const useBranchProductsNew = ({ params, options }: Query) =>
 		},
 		{
 			initialData: { data: { results: [], count: 0 } },
+			keepPreviousData: true,
 			select: (query) => ({
 				branchProducts: query.data.results,
 				total: query.data.count,

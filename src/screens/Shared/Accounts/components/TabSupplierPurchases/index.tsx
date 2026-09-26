@@ -25,6 +25,7 @@ import {
 	convertIntoArray,
 	formatInPeso,
 	getAppType,
+	getLocalBranchId,
 	formatDateTime,
 } from 'utils';
 import { CreateDisbursementVoucherModal } from './modals/CreateDisbursementVoucherModal';
@@ -407,7 +408,12 @@ export const TabSupplierPurchases = ({ onBack }: Props) => {
 						onClose={() => setIsCreateDvModalVisible(false)}
 						onCreate={async (values) => {
 							try {
-								await createDisbursementVoucher(values);
+								await createDisbursementVoucher({
+									...values,
+									// Without a branch, the voucher's journal entry is
+									// hidden from the branch-filtered General Journal.
+									branchId: Number(getLocalBranchId()) || undefined,
+								});
 								message.success('Disbursement voucher created successfully');
 								setIsCreateDvModalVisible(false);
 							} catch {

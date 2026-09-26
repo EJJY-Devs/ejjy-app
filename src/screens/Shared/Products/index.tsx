@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import {
 	Button,
+	Checkbox,
 	Col,
 	Input,
 	Popconfirm,
@@ -128,6 +129,8 @@ export const Products = () => {
 	} = useProductsData({
 		params: {
 			...params,
+			showPurchases: String(params.showPurchases !== 'false'),
+			showExpenses: String(params.showExpenses === 'true'),
 			branchId: getLocalBranchId(),
 		},
 		user,
@@ -556,6 +559,55 @@ const Filter = () => {
 							</Select.Option>
 						))}
 					</Select>
+				</Col>
+
+				<Col lg={12} span={24}>
+					<Label label="Product/Service Search" spacing />
+					<Space align="center" size="middle">
+						{(() => {
+							const isPurchasesChecked = params.showPurchases !== 'false';
+							const isExpensesChecked = params.showExpenses === 'true';
+
+							return (
+								<>
+									<Checkbox
+										checked={isPurchasesChecked}
+										// At least one of Purchases/Expenses must stay selected,
+										// so lock the checkbox once it's the only one checked.
+										disabled={isPurchasesChecked && !isExpensesChecked}
+										onChange={(event) => {
+											// Always send both flags explicitly so the backend
+											// filter never has to guess a missing one's state.
+											setQueryParams(
+												{
+													showPurchases: String(event.target.checked),
+													showExpenses: String(isExpensesChecked),
+												},
+												{ shouldResetPage: true },
+											);
+										}}
+									>
+										Purchases
+									</Checkbox>
+									<Checkbox
+										checked={isExpensesChecked}
+										disabled={isExpensesChecked && !isPurchasesChecked}
+										onChange={(event) => {
+											setQueryParams(
+												{
+													showPurchases: String(isPurchasesChecked),
+													showExpenses: String(event.target.checked),
+												},
+												{ shouldResetPage: true },
+											);
+										}}
+									>
+										Expenses
+									</Checkbox>
+								</>
+							);
+						})()}
+					</Space>
 				</Col>
 			</Row>
 		</>

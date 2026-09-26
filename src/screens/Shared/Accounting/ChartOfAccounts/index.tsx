@@ -175,6 +175,20 @@ export const ChartOfAccounts = () => {
 					</Tag>
 				),
 			},
+			{
+				title: 'Book Tag',
+				dataIndex: 'is_cash_book',
+				key: 'bookTag',
+				render: (_: boolean, record: any) => {
+					if (record.is_sales_book) return <Tag color="gold">Sales Book</Tag>;
+					if (record.is_purchase_book) {
+						return <Tag color="volcano">Purchase Book</Tag>;
+					}
+					if (record.is_ewt_book) return <Tag color="magenta">EWT</Tag>;
+					if (record.is_cash_book) return <Tag color="cyan">Cash Book</Tag>;
+					return <Tag>—</Tag>;
+				},
+			},
 		];
 
 		if (isHeadOffice) {

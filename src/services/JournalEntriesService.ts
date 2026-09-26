@@ -4,6 +4,7 @@ import { IListRequest } from './interfaces';
 interface List extends IListRequest {
 	search?: string;
 	branch_id?: number;
+	branch_machine_id?: number;
 	time_range?: string;
 	entry_type?: string;
 	expense_id?: number;

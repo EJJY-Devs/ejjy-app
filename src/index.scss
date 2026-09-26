@@ -40,10 +40,6 @@ body {
 			}
 		}
 
-		// .ant-modal-body {
-		// 	padding-bottom: 100px;
-		// }
-
 		&.Modal {
 			&__large {
 				width: 100% !important;
@@ -68,6 +64,36 @@ body {
 					padding-bottom: 24px !important;
 				}
 			}
+		}
+	}
+
+	.VoucherReferencePanel.ant-modal-wrap {
+		display: flex;
+		align-items: center;
+		pointer-events: none;
+
+		.ant-modal {
+			position: relative;
+			top: 0;
+			max-height: calc(100vh - 48px);
+			margin: 0 0 0 calc(50vw - 592.5px);
+			pointer-events: auto;
+
+			.ant-modal-content {
+				max-height: calc(100vh - 48px);
+				overflow-y: auto;
+			}
+		}
+	}
+
+	.CreateJournalEntryModal_pairedWrap.ant-modal-wrap {
+		display: flex;
+		align-items: center;
+
+		.ant-modal {
+			position: relative;
+			top: 0;
+			margin: 0 0 0 calc(50vw - 167.5px);
 		}
 	}
 
@@ -160,13 +186,33 @@ a {
 	color: #fff;
 }
 
-// Tailwind utility classes used by ejjy-global components (not bundled in ejjy-global/dist/styles.css)
-.my-1 { margin-top: 0.25rem; margin-bottom: 0.25rem; }
-.ml-1 { margin-left: 0.25rem; }
-.mb-4 { margin-bottom: 1rem; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-end { justify-content: flex-end; }
-.text-xs { font-size: 0.75rem; line-height: 1rem; }
-.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-.text-red-600 { color: rgb(220, 38, 38); }
+.my-1 {
+	margin-top: 0.25rem;
+	margin-bottom: 0.25rem;
+}
+.ml-1 {
+	margin-left: 0.25rem;
+}
+.mb-4 {
+	margin-bottom: 1rem;
+}
+.flex-col {
+	flex-direction: column;
+}
+.items-center {
+	align-items: center;
+}
+.justify-end {
+	justify-content: flex-end;
+}
+.text-xs {
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+.text-sm {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+.text-red-600 {
+	color: rgb(220, 38, 38);
+}

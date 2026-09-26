@@ -4,6 +4,7 @@ import { useBranchProducts } from 'hooks';
 
 import React, { useEffect, useRef, useState } from 'react';
 import KeyboardEventHandler from 'react-keyboard-event-handler';
+import { AddExpenseAmountModal } from 'screens/Shared/Cart/components/AddExpenseAmountModal';
 import { AddProductModal } from 'screens/Shared/Cart/components/AddProductModal';
 import { SearchInput } from 'screens/Shared/Cart/components/ProductSearch/components/SearchInput';
 import { SearchSuggestion } from 'screens/Shared/Cart/components/ProductSearch/components/SearchSuggestion';
@@ -77,6 +78,9 @@ export const ProductSearch = ({
 			branchId: branchId ?? getLocalBranchId(),
 			search: searchedText,
 			searchBy: currentSearchMode.key,
+			...(type === 'Expense Voucher'
+				? { showExpenses: true, showPurchases: false }
+				: { showPurchases: true, showExpenses: false }),
 		},
 		options: {
 			enabled: searchedText?.length > 0 && searchedText.trim().length > 0,
@@ -229,30 +233,45 @@ export const ProductSearch = ({
 						/>
 					)}
 
-					{selectedProduct && (
-						<AddProductModal
-							product={selectedProduct}
-							onClose={() => {
-								// Only auto-focus search input for document types that need it
-								// Don't focus for Requisition Slip, Delivery Receipt, Receiving Report, or Adjustment Slip
-								if (
-									type !== 'Requisition Slip' &&
-									type !== 'Delivery Receipt' &&
-									type !== 'Receiving Report' &&
-									type !== 'Adjustment Slip' &&
-									searchedText.length > 0
-								) {
-									searchInputRef.current.focusInput();
-								}
-								setSelectedProduct(null);
-							}}
-							onSuccess={() => {
-								setSearchedText('');
-								setSearchableProducts([]);
-								setSearchModeIndex(0);
-							}}
-						/>
-					)}
+					{selectedProduct &&
+						(type === 'Expense Voucher' ? (
+							<AddExpenseAmountModal
+								product={selectedProduct}
+								onClose={() => {
+									if (searchedText.length > 0) {
+										searchInputRef.current.focusInput();
+									}
+									setSelectedProduct(null);
+								}}
+								onSuccess={() => {
+									setSearchedText('');
+									setSearchableProducts([]);
+									setSearchModeIndex(0);
+								}}
+							/>
+						) : (
+							<AddProductModal
+								product={selectedProduct}
+								type={type}
+								onClose={() => {
+									if (
+										type !== 'Requisition Slip' &&
+										type !== 'Delivery Receipt' &&
+										type !== 'Receiving Report' &&
+										type !== 'Adjustment Slip' &&
+										searchedText.length > 0
+									) {
+										searchInputRef.current.focusInput();
+									}
+									setSelectedProduct(null);
+								}}
+								onSuccess={() => {
+									setSearchedText('');
+									setSearchableProducts([]);
+									setSearchModeIndex(0);
+								}}
+							/>
+						))}
 				</KeyboardEventHandler>
 			</div>
 

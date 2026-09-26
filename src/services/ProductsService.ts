@@ -5,6 +5,8 @@ interface List extends IListRequest {
 	branch_id: number;
 	ids?: string;
 	product_category?: string;
+	show_purchases?: boolean;
+	show_expenses?: boolean;
 }
 
 interface Modify {
@@ -19,6 +21,8 @@ interface Modify {
 	is_daily_checked?: boolean;
 	is_randomly_checked?: boolean;
 	is_shown_in_scale_list?: boolean;
+	is_shown_in_purchases?: boolean;
+	is_shown_in_expenses?: boolean;
 	is_sold_in_branch?: boolean;
 	is_vat_exempted?: boolean;
 	max_balance: number;

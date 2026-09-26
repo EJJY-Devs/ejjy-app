@@ -1,7 +1,46 @@
+import { taxTypes } from 'global';
+
 // TODO: Remove once already implemented in backend
 export const getComputedDiscount = (transactionData) => {
 	return transactionData.discount_option.is_special_discount
 		? Number(transactionData.overall_discount) -
 				Number(transactionData.invoice.vat_amount)
 		: transactionData.overall_discount;
+};
+
+const VAT_RATE = 1.12;
+
+export interface VatBreakdownLine {
+	amount: number;
+	isVatExempt: boolean;
+}
+
+export interface VatBreakdown {
+	vatExempt: number;
+	vatableSales: number;
+	vatAmount: number;
+}
+
+export const isPurchaseVatApplicable = (
+	siteSettings: any,
+	supplierAccount: any,
+): boolean =>
+	siteSettings?.tax_type === taxTypes.VAT &&
+	supplierAccount?.tax_type === taxTypes.VAT;
+
+export const computeVatBreakdown = (
+	lines: VatBreakdownLine[],
+): VatBreakdown => {
+	const vatExempt = lines
+		.filter((line) => line.isVatExempt)
+		.reduce((total, line) => total + Number(line.amount || 0), 0);
+
+	const vatableGross = lines
+		.filter((line) => !line.isVatExempt)
+		.reduce((total, line) => total + Number(line.amount || 0), 0);
+
+	const vatableSales = vatableGross / VAT_RATE;
+	const vatAmount = vatableGross - vatableSales;
+
+	return { vatExempt, vatableSales, vatAmount };
 };

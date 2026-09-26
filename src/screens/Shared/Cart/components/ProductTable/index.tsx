@@ -14,7 +14,8 @@ import {
 	message,
 } from 'antd';
 import { formatInPeso } from 'ejjy-global';
-import React, { useEffect, useState, useRef } from 'react';
+import { vatTypes } from 'global';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { EditProductModal } from 'screens/Shared/Cart/components/EditProductModal';
 import { AddProductModal } from 'screens/Shared/Cart/components/AddProductModal';
 import { Table } from 'screens/Shared/Cart/components/ProductTable/components/Table';
@@ -51,7 +52,6 @@ export const ProductTable = ({
 	const [editProductModalVisible, setEditProductModalVisible] = useState(false);
 	const [addProductModalVisible, setAddProductModalVisible] = useState(false);
 	const [selectedProduct, setSelectedProduct] = useState(null);
-	const [dataSource, setDataSource] = useState([]);
 	const [toggleAction, setToggleAction] = useState<{ [key: string]: boolean }>(
 		{},
 	);
@@ -65,13 +65,12 @@ export const ProductTable = ({
 	const [localPoQtys, setLocalPoQtys] = useState<{
 		[key: string]: number | null;
 	}>({});
-	const [localQtys, setLocalQtys] = useState<{ [key: string]: number }>({});
+	const [localAmounts, setLocalAmounts] = useState<{ [key: string]: number }>(
+		{},
+	);
 
 	// Ref to store unit input references
 	const unitInputRefs = useRef<{ [key: string]: any }>({});
-	// Ref to store Qty/Unit Cost input references (Purchase type)
-	const qtyInputRefs = useRef<{ [key: string]: HTMLInputElement }>({});
-	const hasAutoFocusedPurchaseQty = useRef(false);
 
 	const {
 		products,
@@ -100,6 +99,15 @@ export const ProductTable = ({
 	const isAuditAdjustment =
 		type === 'Adjustment Slip' && products[0]?.product?.captured_qty != null;
 
+	// Expense Voucher reuses most of the Purchase grid (Particular, Type
+	// picked from the product search) - it's just picking products to attach
+	// as expense voucher line items instead of receiving stock, so no other
+	// Purchase-only behavior (PO selection, voucher creation, etc.) is
+	// affected by this. Unlike Purchase, it has no Qty/Unit Cost columns -
+	// the Amount is typed in directly.
+	const isExpenseVoucher = type === 'Expense Voucher';
+	const isPurchaseLikeTable = type === 'Purchase' || isExpenseVoucher;
+
 	let baseColumns: { name: string; width?: string; alignment?: string }[];
 	if (type === 'Adjustment Slip') {
 		baseColumns = isAuditAdjustment
@@ -123,12 +131,15 @@ export const ProductTable = ({
 					{ name: 'Adjustment', alignment: 'center' },
 					{ name: 'Remarks', alignment: 'center', width: '275px' },
 			  ];
-	} else if (type === 'Purchase') {
+	} else if (isPurchaseLikeTable) {
+		// Delete icon column stays as narrow as possible; the rest are left
+		// without an explicit width so `fixedLayout` splits them evenly.
 		baseColumns = [
-			{ name: '', width: '1px' },
-			{ name: 'Barcode', width: '40px' },
-			{ name: 'Product Name', alignment: 'center' },
-			{ name: 'Qty', alignment: 'center', width: '275px' },
+			{ name: '', width: '64px' },
+			{ name: 'Particular', alignment: 'center' },
+			{ name: 'Type', alignment: 'center' },
+			// Expense Voucher has no Qty column - only the Amount is entered.
+			...(isExpenseVoucher ? [] : [{ name: 'Qty', alignment: 'center' }]),
 		];
 	} else if (type === 'Purchase Order') {
 		baseColumns = [
@@ -160,15 +171,16 @@ export const ProductTable = ({
 		type !== 'Adjustment Slip' &&
 		type !== 'Purchase Order'
 	) {
-		columns.push({
-			name: type === 'Purchase' ? 'Unit Cost' : 'Unit Price',
-			alignment: 'center',
-			width: type === 'Purchase' ? '200px' : undefined,
-		});
-
-		if (type !== 'Purchase') {
-			columns.push({ name: 'Amount', alignment: 'center' });
+		// Expense Voucher skips the Unit Cost/Unit Price column - the Amount
+		// is typed in directly instead of being computed from Qty x Cost.
+		if (!isExpenseVoucher) {
+			columns.push({
+				name: isPurchaseLikeTable ? 'Unit Cost' : 'Unit Price',
+				alignment: 'center',
+			});
 		}
+
+		columns.push({ name: 'Amount', alignment: 'center' });
 	}
 
 	if (type === 'Delivery Receipt' || type === 'Receiving Report') {
@@ -195,27 +207,6 @@ export const ProductTable = ({
 		setPreviousProductCount(products.length);
 	}, [products.length, type, previousProductCount]);
 
-	// Auto-focus and select the first Qty input when the Purchase cart opens
-	useEffect(() => {
-		if (
-			type === 'Purchase' &&
-			!hasAutoFocusedPurchaseQty.current &&
-			products.length > 0
-		) {
-			const firstKey = products[0]?.product?.key;
-			if (firstKey) {
-				setTimeout(() => {
-					const inputEl = qtyInputRefs.current[firstKey];
-					if (inputEl) {
-						inputEl.focus();
-						inputEl.select();
-						hasAutoFocusedPurchaseQty.current = true;
-					}
-				}, 100);
-			}
-		}
-	}, [type, products]);
-
 	// Cleanup refs when products are removed
 	useEffect(() => {
 		const currentKeys = products.map((p) => p.product?.key).filter(Boolean);
@@ -241,11 +232,6 @@ export const ProductTable = ({
 		});
 	}, [products, unitErrors]);
 
-	// Initialize toggleAction for newly-added products based on the initial
-	// quantity sign: negative quantity  = shortage  → start in "Decrease" mode.
-	//                positive quantity  = excess    → start in "Increase" mode.
-	// This runs before the dataSource effect so the icon/tooltip are correct
-	// on first render.
 	useEffect(() => {
 		if (type !== 'Adjustment Slip') return;
 		setToggleAction((prev) => {
@@ -253,10 +239,9 @@ export const ProductTable = ({
 			let changed = false;
 			products.forEach((p) => {
 				const k = p.product?.key;
-				// Use String(k) so `undefined` keys become "undefined" – consistent
-				// with how JS object indexing with `undefined` works.
+
 				if (!(k in prev)) {
-					next[k] = p.quantity < 0; // true = Decrease, false = Increase
+					next[k] = p.quantity < 0;
 					changed = true;
 				}
 			});
@@ -264,9 +249,9 @@ export const ProductTable = ({
 		});
 	}, [products, type]);
 
-	useEffect(() => {
+	const dataSource = useMemo(() => {
 		if (type === 'Adjustment Slip') {
-			const data = products.map((branchProduct, index) => {
+			return products.map((branchProduct, index) => {
 				const { product, quantity } = branchProduct;
 				const { barcode, name, key } = product;
 
@@ -467,12 +452,10 @@ export const ProductTable = ({
 					</div>,
 				];
 			});
-			setDataSource(data);
-			return;
 		}
 
 		if (type === 'Purchase Order') {
-			const poData = products.map((branchProduct, index) => {
+			return products.map((branchProduct, index) => {
 				const { product, quantity } = branchProduct;
 				const { barcode, textcode, name, key } = product;
 				const currentPoQty =
@@ -539,8 +522,6 @@ export const ProductTable = ({
 					</div>,
 				];
 			});
-			setDataSource(poData);
-			return;
 		}
 
 		const paginatedProducts = products.slice(
@@ -560,6 +541,46 @@ export const ProductTable = ({
 				is_multiple_instance,
 			} = product;
 
+			// Qty cell: read-only display for Purchase (entered up front in the
+			// Add Product modal instead), plain edit-button for the other cart
+			// types, and omitted entirely for Expense Voucher (which has no Qty
+			// column - see baseColumns above).
+			let qtyCells: React.ReactNode[];
+			if (isExpenseVoucher) {
+				qtyCells = [];
+			} else if (isPurchaseLikeTable) {
+				qtyCells = [
+					<Tooltip
+						key={`tooltip-qty-${key}`}
+						placement="top"
+						title={`Qty: ${formatQuantity({
+							unitOfMeasurement: product.unit_of_measurement,
+							quantity: Number(quantity ?? 0),
+						})}`}
+					>
+						<div style={{ textAlign: 'center' }}>
+							{formatQuantity({
+								unitOfMeasurement: product.unit_of_measurement,
+								quantity: Number(quantity ?? 0),
+							})}
+						</div>
+					</Tooltip>,
+				];
+			} else {
+				qtyCells = [
+					<Button
+						key={`btn-edit-quantity-${key}`}
+						type="text"
+						onClick={() => handleEdit(index)}
+					>
+						{formatQuantity({
+							unitOfMeasurement: product.unit_of_measurement,
+							quantity,
+						})}
+					</Button>,
+				];
+			}
+
 			const row = [
 				<Tooltip key={`tooltip-delete-${key}`} placement="top" title="Remove">
 					<Button
@@ -571,67 +592,39 @@ export const ProductTable = ({
 					/>
 				</Tooltip>,
 
-				<Tooltip
-					key={`tooltip-barcode-${key}`}
-					placement="top"
-					title={barcode || textcode}
-				>
-					{barcode || textcode}
-				</Tooltip>,
+				...(isPurchaseLikeTable
+					? []
+					: [
+							<Tooltip
+								key={`tooltip-barcode-${key}`}
+								placement="top"
+								title={barcode || textcode}
+							>
+								{barcode || textcode}
+							</Tooltip>,
+					  ]),
 
 				<Tooltip key={`tooltip-name-${key}`} placement="top" title={name}>
 					{name}
 				</Tooltip>,
 
-				type === 'Purchase' ? (
-					<InputNumber
-						key={`input-qty-${key}`}
-						ref={(el: HTMLInputElement) => {
-							if (el) {
-								qtyInputRefs.current[key] = el;
-							}
-						}}
-						bordered={false}
-						className="ProductTable_costInput"
-						controls={false}
-						min={0}
-						precision={product.unit_of_measurement === 'weighing' ? 3 : 0}
-						value={
-							localQtys[key] !== undefined
-								? localQtys[key]
-								: Number(quantity ?? 0)
-						}
-						onBlur={() => {
-							const qty =
-								localQtys[key] !== undefined
-									? localQtys[key]
-									: Number(quantity ?? 0);
-							editProduct({
-								key,
-								product: { ...branchProduct, quantity: qty },
-							});
-						}}
-						onChange={(value) => {
-							setLocalQtys((prev) => ({ ...prev, [key]: value ?? 0 }));
-						}}
-						onFocus={(e) => e.target.select()}
-						onMouseUp={(e) => {
-							e.preventDefault();
-							(e.target as HTMLInputElement).select();
-						}}
-					/>
-				) : (
-					<Button
-						key={`btn-edit-quantity-${key}`}
-						type="text"
-						onClick={() => handleEdit(index)}
-					>
-						{formatQuantity({
-							unitOfMeasurement: product.unit_of_measurement,
-							quantity,
-						})}
-					</Button>
-				),
+				...(isPurchaseLikeTable
+					? [
+							<Tooltip
+								key={`tooltip-vat-${key}`}
+								placement="top"
+								title={product.is_vat_exempted ? 'VAT Exempt' : 'Vatable'}
+							>
+								<div style={{ textAlign: 'center' }}>
+									{product.is_vat_exempted
+										? vatTypes.VAT_EMPTY
+										: vatTypes.VATABLE}
+								</div>
+							</Tooltip>,
+					  ]
+					: []),
+
+				...qtyCells,
 			];
 
 			if (type === 'Requisition Slip') {
@@ -752,11 +745,79 @@ export const ProductTable = ({
 					</Tooltip>,
 				);
 			} else if (type !== 'Receiving Report' && type !== 'Delivery Receipt') {
-				if (type === 'Purchase') {
+				if (isExpenseVoucher) {
+					// No Qty/Unit Cost here - the Amount is typed in directly.
+					const currentAmount =
+						localAmounts[key] !== undefined
+							? localAmounts[key]
+							: branchProduct.amount ?? 0;
+
+					row.push(
+						<InputNumber
+							key={`input-amount-${key}`}
+							bordered={false}
+							className="ProductTable_costInput"
+							controls={false}
+							formatter={(value, info) =>
+								info?.userTyping || value === undefined || value === null
+									? `₱${value}`
+									: `₱${Number(value).toFixed(2)}`
+							}
+							min={0}
+							parser={(value) => Number((value || '').replace(/₱/g, '')) as any}
+							precision={2}
+							value={currentAmount}
+							onBlur={() => {
+								const amt =
+									localAmounts[key] !== undefined ? localAmounts[key] : 0;
+								editProduct({
+									key,
+									product: {
+										...branchProduct,
+										amount: amt,
+									},
+								});
+							}}
+							onChange={(value) => {
+								setLocalAmounts((prev) => ({
+									...prev,
+									[key]: value ?? 0,
+								}));
+							}}
+							onFocus={(e) => e.target.select()}
+							onKeyDown={(e) => {
+								const allowed = [
+									'Backspace',
+									'Delete',
+									'Tab',
+									'ArrowLeft',
+									'ArrowRight',
+									'Home',
+									'End',
+								];
+								if (!allowed.includes(e.key) && !/^[0-9.]$/.test(e.key)) {
+									e.preventDefault();
+								}
+							}}
+							onMouseUp={(e) => {
+								e.preventDefault();
+								(e.target as HTMLInputElement).select();
+							}}
+						/>,
+					);
+				} else if (isPurchaseLikeTable) {
+					// Qty is locked (set up front in the Add Product modal), but Unit
+					// Cost and Amount both stay editable for corrections - editing
+					// either one recomputes cost_per_piece (the source of truth sent
+					// to the backend) against the locked Qty.
+					const qty = Number(quantity ?? 0);
+					const storedCost = Number(branchProduct.cost_per_piece ?? 0);
 					const currentCost =
-						localCosts[key] !== undefined
-							? localCosts[key]
-							: branchProduct.cost_per_piece ?? 0;
+						localCosts[key] !== undefined ? localCosts[key] : storedCost;
+					const currentAmount =
+						localAmounts[key] !== undefined
+							? localAmounts[key]
+							: qty * storedCost;
 
 					row.push(
 						<InputNumber
@@ -775,20 +836,84 @@ export const ProductTable = ({
 							value={currentCost}
 							onBlur={() => {
 								const cost =
-									localCosts[key] !== undefined ? localCosts[key] : 0;
+									localCosts[key] !== undefined ? localCosts[key] : storedCost;
 								editProduct({
 									key,
-									product: {
-										...branchProduct,
-										cost_per_piece: cost,
-									},
+									product: { ...branchProduct, cost_per_piece: cost },
+								});
+								setLocalCosts((prev) => {
+									const next = { ...prev };
+									delete next[key];
+									return next;
+								});
+								// Amount is derived from Qty x Unit Cost - drop any local
+								// Amount override so it recomputes from the new cost.
+								setLocalAmounts((prev) => {
+									const next = { ...prev };
+									delete next[key];
+									return next;
 								});
 							}}
 							onChange={(value) => {
-								setLocalCosts((prev) => ({
-									...prev,
-									[key]: value ?? 0,
-								}));
+								setLocalCosts((prev) => ({ ...prev, [key]: value ?? 0 }));
+							}}
+							onFocus={(e) => e.target.select()}
+							onKeyDown={(e) => {
+								const allowed = [
+									'Backspace',
+									'Delete',
+									'Tab',
+									'ArrowLeft',
+									'ArrowRight',
+									'Home',
+									'End',
+								];
+								if (!allowed.includes(e.key) && !/^[0-9.]$/.test(e.key)) {
+									e.preventDefault();
+								}
+							}}
+							onMouseUp={(e) => {
+								e.preventDefault();
+								(e.target as HTMLInputElement).select();
+							}}
+						/>,
+						<InputNumber
+							key={`input-amount-${key}`}
+							bordered={false}
+							className="ProductTable_costInput"
+							controls={false}
+							formatter={(value, info) =>
+								info?.userTyping || value === undefined || value === null
+									? `₱${value}`
+									: `₱${Number(value).toFixed(2)}`
+							}
+							min={0}
+							parser={(value) => Number((value || '').replace(/₱/g, '')) as any}
+							precision={2}
+							value={currentAmount}
+							onBlur={() => {
+								const amt =
+									localAmounts[key] !== undefined
+										? localAmounts[key]
+										: currentAmount;
+								const newCost = qty > 0 ? amt / qty : 0;
+								editProduct({
+									key,
+									product: { ...branchProduct, cost_per_piece: newCost },
+								});
+								setLocalAmounts((prev) => {
+									const next = { ...prev };
+									delete next[key];
+									return next;
+								});
+								setLocalCosts((prev) => {
+									const next = { ...prev };
+									delete next[key];
+									return next;
+								});
+							}}
+							onChange={(value) => {
+								setLocalAmounts((prev) => ({ ...prev, [key]: value ?? 0 }));
 							}}
 							onFocus={(e) => e.target.select()}
 							onKeyDown={(e) => {
@@ -858,7 +983,7 @@ export const ProductTable = ({
 			return row;
 		});
 
-		setDataSource(data);
+		return data;
 	}, [
 		pageNumber,
 		products,
@@ -869,7 +994,7 @@ export const ProductTable = ({
 		unitErrors,
 		localCosts,
 		localPoQtys,
-		localQtys,
+		localAmounts,
 	]);
 
 	useEffect(() => {
@@ -942,6 +1067,7 @@ export const ProductTable = ({
 				activeRow={activeIndex}
 				columns={columns}
 				data={dataSource}
+				fixedLayout={isPurchaseLikeTable}
 				loading={isLoading}
 			/>
 
@@ -957,6 +1083,7 @@ export const ProductTable = ({
 			{addProductModalVisible && selectedProduct && (
 				<AddProductModal
 					product={selectedProduct}
+					type={type}
 					onClose={() => {
 						setAddProductModalVisible(false);
 						setSelectedProduct(null);

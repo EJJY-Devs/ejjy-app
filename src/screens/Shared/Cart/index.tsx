@@ -4,26 +4,37 @@ import {
 	AuthorizationModal,
 	Props as AuthorizationModalProps,
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useBoundStore } from 'screens/Shared/Cart/stores/useBoundStore';
-import { convertIntoArray, getLocalApiUrl, getLocalBranchId } from 'utils';
+import {
+	computeVatBreakdown,
+	convertIntoArray,
+	getLocalApiUrl,
+	getLocalBranchId,
+	isPurchaseVatApplicable,
+} from 'utils';
 import shallow from 'zustand/shallow';
 import { backOrderTypes, MAX_PAGE_SIZE } from 'ejjy-global';
 import {
+	useAccountRetrieve,
 	useReceivingVoucherCreate,
 	useBackOrderCreate,
 	useRequisitionSlipCreate,
 	useBranches,
 	useAdjustmentSlipCreate,
+	useCashDisbursementDetailUpsert,
+	useExpenseVoucherCreate,
 	usePurchaseCreate,
 	usePurchaseOrderCreate,
 	usePurchaseOrders,
 	usePurchaseOrderById,
+	useSiteSettings,
 } from 'hooks';
 import { Label } from 'components/elements';
 import { CreateRequisitionSlipModal } from 'components/modals/CreateRequisitionSlipModal';
 import { CreatePurchaseVoucherModal } from 'components/modals/CreatePurchaseVoucherModal';
 import { BarcodeScanner } from './components/BarcodeScanner';
+import { EwtCalculatorModal } from './components/EwtCalculatorModal';
 import { FooterButtons } from './components/FooterButtons';
 import { ProductSearch } from './components/ProductSearch';
 import { ProductTable } from './components/ProductTable';
@@ -43,6 +54,17 @@ interface ModalProps {
 	branchId?: string | null;
 	rsProducts?: any[];
 	onPurchaseCreated?: (purchase: any) => void;
+	// For type='Expense Voucher': the voucher's own Payee/Type/Invoice #/
+	// Remarks, collected by the caller BEFORE the Cart is shown (mirrors how
+	// Purchase collects those in its own CreatePurchaseVoucherModal step).
+	expenseVoucherDetails?: {
+		payee: string;
+		invoiceNumber: string;
+		paymentType: 'pay' | 'on_account';
+		remarks: string;
+		supplierAccountId?: number | null;
+	};
+	onExpenseVoucherCreated?: (expenseVoucher: any) => void;
 }
 
 export const Cart = ({
@@ -58,6 +80,8 @@ export const Cart = ({
 	branchId: branchIdProp,
 	rsProducts,
 	onPurchaseCreated,
+	expenseVoucherDetails,
+	onExpenseVoucherCreated,
 }: ModalProps) => {
 	// STATES
 	const [barcodeScanLoading, setBarcodeScanLoading] = useState(false);
@@ -77,20 +101,38 @@ export const Cart = ({
 		setAuthorizeConfig,
 	] = useState<AuthorizationModalProps | null>(null);
 
-	// Purchase Order selection state
+	const [purchaseVoucherFormData, setPurchaseVoucherFormData] = useState<any>(
+		null,
+	);
+	const [
+		isPurchaseVoucherFormVisible,
+		setIsPurchaseVoucherFormVisible,
+	] = useState(false);
+
+	// EWT Calculator - optional, opened via the icon next to Submit in
+	// FooterButtons (Purchase/Expense Voucher only). 0 means the user never
+	// calculated it, and no CashDisbursementDetail gets written.
+	const [isEwtCalculatorVisible, setIsEwtCalculatorVisible] = useState(false);
+	// A ref (not state) on purpose: it's set and then read from inside the
+	// Authorization modal's onSuccess callback, which is only invoked much
+	// later (after the user picks an authorizer) by a closure captured at
+	// the moment handlePurchaseFormSubmit/handleExpenseVoucherFormSubmit ran
+	// - state set in the same tick wouldn't be visible to that closure yet,
+	// but a ref always reads the latest value regardless of closure timing.
+	const pendingEwtPercentageRef = useRef(0);
+
+	// Purchase Order selection state - shown FIRST for type='Purchase'.
 	const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState<
 		number | null
 	>(null);
 	const [isPOSelectVisible, setIsPOSelectVisible] = useState(
 		type === 'Purchase',
 	);
-	const poProductsPopulated = useRef(false);
 
 	const hasPrePopulated =
 		!!prePopulatedProduct ||
 		(prePopulatedProducts && prePopulatedProducts.length > 0) ||
-		(type === 'Purchase Order' && !!rsProducts?.length) ||
-		(type === 'Purchase' && selectedPurchaseOrderId !== null);
+		(type === 'Purchase Order' && !!rsProducts?.length);
 
 	const [isBranchSelectVisible, setIsBranchSelectVisible] = useState(
 		type === 'Adjustment Slip' && !hasPrePopulated && !preSelectedBranchId,
@@ -122,15 +164,20 @@ export const Cart = ({
 		params: { pageSize: MAX_PAGE_SIZE },
 	});
 
-	// Load purchase orders for PO selector (only when type is Purchase)
+	// Load purchase orders for PO selector (only when type is Purchase).
+	// The PO is picked before the supplier is known, so this is unfiltered.
 	const {
 		data: { purchaseOrders = [] } = {},
 		isFetching: isFetchingPurchaseOrders,
 	} = usePurchaseOrders({
-		params: { pageSize: MAX_PAGE_SIZE },
+		params: {
+			pageSize: MAX_PAGE_SIZE,
+		},
 	});
 
-	// Load selected PO details to pre-populate cart
+	// Load selected PO details (used to pre-fill the Supplier field on the
+	// voucher details step - products are NOT auto-added to the cart; the
+	// user searches for and adds the products they actually received).
 	const { data: purchaseOrderData } = usePurchaseOrderById(
 		selectedPurchaseOrderId || 0,
 	);
@@ -163,39 +210,44 @@ export const Cart = ({
 	const { mutateAsync: createAdjustmentSlip } = useAdjustmentSlipCreate();
 	const { mutateAsync: createPurchase } = usePurchaseCreate();
 	const { mutateAsync: createPurchaseOrder } = usePurchaseOrderCreate();
+	const { mutateAsync: createExpenseVoucher } = useExpenseVoucherCreate();
+	const {
+		mutateAsync: upsertCashDisbursementDetail,
+	} = useCashDisbursementDetailUpsert();
 
-	// Pre-populate cart from selected PO (once, when PO data arrives)
-	useEffect(() => {
-		if (
-			!purchaseOrderData ||
-			type !== 'Purchase' ||
-			poProductsPopulated.current
-		) {
-			return;
-		}
+	const ewtSupplierAccountId =
+		type === 'Purchase'
+			? purchaseVoucherFormData?.supplierAccountId
+			: expenseVoucherDetails?.supplierAccountId;
+	const { data: siteSettings } = useSiteSettings();
+	const { data: ewtSupplierAccount } = useAccountRetrieve({
+		id: ewtSupplierAccountId,
+		options: { enabled: !!ewtSupplierAccountId && isEwtCalculatorVisible },
+	});
+	const cartProducts = useBoundStore((state: any) => state.products);
+	const ewtVatExclusiveBase = useMemo(() => {
+		if (type !== 'Purchase' && type !== 'Expense Voucher') return 0;
 
-		const products = purchaseOrderData.purchase_order_products || [];
-		if (products.length === 0) return;
+		const vatApplicable = isPurchaseVatApplicable(
+			siteSettings,
+			ewtSupplierAccount,
+		);
+		const lines = cartProducts.map((branchProduct: any) => {
+			const product = branchProduct.product || {};
+			const amount =
+				type === 'Purchase'
+					? Number(branchProduct.quantity || 0) *
+					  Number(branchProduct.cost_per_piece || 0)
+					: Number(branchProduct.amount) || 0;
 
-		resetProducts();
-		const { addProduct } = useBoundStore.getState();
-
-		products.forEach((pop: any) => {
-			addProduct({
-				id: pop.product?.id,
-				product: {
-					...pop.product,
-					key: pop.product?.id,
-					current_balance: 0,
-				},
-				quantity: 0,
-				cost_per_piece: Number(pop.cost_per_piece) || 0,
-				current_balance: 0,
-			});
+			return {
+				amount,
+				isVatExempt: !vatApplicable || !!product.is_vat_exempted,
+			};
 		});
-
-		poProductsPopulated.current = true;
-	}, [purchaseOrderData, type, resetProducts]);
+		const { vatExempt, vatableSales } = computeVatBreakdown(lines);
+		return vatExempt + vatableSales;
+	}, [type, cartProducts, siteSettings, ewtSupplierAccount]);
 
 	// Pre-populate cart from RS products for Purchase Order creation
 	useEffect(() => {
@@ -417,7 +469,7 @@ export const Cart = ({
 		});
 	};
 
-	const handleInventoryTransferFormSubmit = (formData: any) => {
+	const handleInventoryTransferFormSubmit = async (formData: any) => {
 		setAuthorizeConfig({
 			baseURL: getLocalApiUrl(),
 			title: `Authorize ${type}`,
@@ -469,6 +521,28 @@ export const Cart = ({
 		}
 	};
 
+	const persistPendingEwt = async (
+		sourceType: 'purchase' | 'expense',
+		sourceId: number,
+	) => {
+		const ewtPercentage = pendingEwtPercentageRef.current;
+		if (ewtPercentage <= 0) return;
+
+		try {
+			await upsertCashDisbursementDetail({
+				sourceType,
+				sourceId,
+				ewtPercentage,
+				otherDeductionsAmount: 0,
+				otherDeductionsRemarks: '',
+			});
+		} catch (error) {
+			message.warning(
+				'Voucher was created, but the EWT amount could not be saved.',
+			);
+		}
+	};
+
 	const handleCreatePurchase = async (formData) => {
 		const currentProducts = useBoundStore.getState().products;
 		if (currentProducts.length > 0) {
@@ -491,8 +565,47 @@ export const Cart = ({
 				throw Error;
 			}
 
+			await persistPendingEwt('purchase', response.data.id);
 			onPurchaseCreated?.(response.data);
 			message.success('Purchase was created successfully');
+		}
+	};
+
+	const handleCreateExpenseVoucher = async (formData) => {
+		const currentProducts = useBoundStore.getState().products;
+		if (currentProducts.length > 0) {
+			const particulars = currentProducts.map((branchProduct: any) => {
+				const product = branchProduct.product || {};
+				const amount = Number(branchProduct.amount) || 0;
+
+				return {
+					description: product.name || '',
+					type: product.is_vat_exempted ? 'VE' : 'V',
+					amount,
+					product_id: product.id ?? null,
+				};
+			});
+			const amount = particulars.reduce((sum, item) => sum + item.amount, 0);
+
+			const response = await createExpenseVoucher({
+				payee: formData.payee,
+				invoiceNumber: formData.invoiceNumber,
+				paymentType: formData.paymentType,
+				particulars,
+				amount,
+				remarks: formData.remarks,
+				authorizerId: formData.authorizerId,
+				supplierAccountId: formData.supplierAccountId,
+				branchId,
+			});
+
+			if (!response) {
+				throw Error;
+			}
+
+			await persistPendingEwt('expense', response.data.id);
+			onExpenseVoucherCreated?.(response.data);
+			message.success('Expense Voucher was created successfully');
 		}
 	};
 
@@ -512,6 +625,8 @@ export const Cart = ({
 				await handleCreatePurchase(formData);
 			} else if (type === 'Purchase Order') {
 				await handleCreatePurchaseOrder(formData);
+			} else if (type === 'Expense Voucher') {
+				await handleCreateExpenseVoucher(formData);
 			}
 		} catch (error) {
 			message.error({ key: 'cart-error', content: `Failed to create ${type}` });
@@ -521,6 +636,7 @@ export const Cart = ({
 		}
 
 		resetProducts();
+		pendingEwtPercentageRef.current = 0;
 		onClose();
 
 		const { setRefetchData } = useBoundStore.getState();
@@ -592,6 +708,20 @@ export const Cart = ({
 		});
 	};
 
+	const handleExpenseVoucherFormSubmit = (formData: any) => {
+		setAuthorizeConfig({
+			baseURL: getLocalApiUrl(),
+			title: 'Authorize Expense Voucher',
+			onSuccess: async (authorizer: any) => {
+				setAuthorizeConfig(null);
+				await handleModalSubmit({ ...formData, authorizerId: authorizer?.id });
+			},
+			onCancel: () => {
+				setAuthorizeConfig(null);
+			},
+		});
+	};
+
 	const handleSubmit = () => {
 		if (type === 'Requisition Slip') {
 			setIsCreateRequisitionSlipVisible(true);
@@ -628,7 +758,14 @@ export const Cart = ({
 
 			handleAdjustmentSlipAuthorize();
 		} else if (type === 'Purchase') {
-			setIsCreatePurchaseVisible(true);
+			const currentProducts = useBoundStore.getState().products;
+
+			if (!currentProducts || currentProducts.length === 0) {
+				message.error('Please add products to the cart before submission.');
+				return;
+			}
+
+			handlePurchaseFormSubmit(purchaseVoucherFormData);
 		} else if (type === 'Purchase Order') {
 			const currentProducts = useBoundStore.getState().products;
 			const incomplete = currentProducts.filter(
@@ -641,9 +778,30 @@ export const Cart = ({
 				return;
 			}
 			setIsCreatePurchaseVisible(true);
+		} else if (type === 'Expense Voucher') {
+			const currentProducts = useBoundStore.getState().products;
+
+			if (!currentProducts || currentProducts.length === 0) {
+				message.error('Please add products to the cart before submission.');
+				return;
+			}
+
+			handleExpenseVoucherFormSubmit(expenseVoucherDetails);
 		} else {
 			setIsCreateInventoryTransferModalVisible(true);
 		}
+	};
+
+	// EWT Calculator - opened via the icon next to Submit (Purchase/Expense
+	// Voucher only). Saving the % records it for persisting after the
+	// voucher is created (see persistPendingEwt) and immediately continues
+	// the same submission handleSubmit would have, straight to
+	// Authorization - calculating EWT first is just an alternate entry point
+	// into the same flow, not an extra step on top of it.
+	const handleEwtCalculatorSave = (ewtPercentage: number) => {
+		pendingEwtPercentageRef.current = ewtPercentage;
+		setIsEwtCalculatorVisible(false);
+		handleSubmit();
 	};
 
 	const handleBranchSelect = (branch: string) => {
@@ -651,7 +809,7 @@ export const Cart = ({
 		setIsBranchSelectVisible(false);
 	};
 
-	// PO selector step (shown before the cart for Purchase type)
+	// PO selector step - shown FIRST for Purchase, before the voucher details.
 	if (type === 'Purchase' && isPOSelectVisible) {
 		return (
 			<Modal
@@ -681,9 +839,9 @@ export const Cart = ({
 							placeholder="Select a purchase order"
 							showSearch
 							onChange={(value: number) => {
-								poProductsPopulated.current = false;
 								setSelectedPurchaseOrderId(value);
 								setIsPOSelectVisible(false);
+								setIsPurchaseVoucherFormVisible(true);
 							}}
 						>
 							{purchaseOrders.map((po: any) => (
@@ -698,7 +856,20 @@ export const Cart = ({
 		);
 	}
 
-	// Branch selector step for Adjustment Slip
+	if (type === 'Purchase' && isPurchaseVoucherFormVisible) {
+		return (
+			<CreatePurchaseVoucherModal
+				initialSupplierName={purchaseOrderData?.supplier_name}
+				isLoading={false}
+				onClose={onClose}
+				onSubmit={(formData) => {
+					setPurchaseVoucherFormData(formData);
+					setIsPurchaseVoucherFormVisible(false);
+				}}
+			/>
+		);
+	}
+
 	if (type === 'Adjustment Slip' && isBranchSelectVisible) {
 		return (
 			<Modal
@@ -742,6 +913,7 @@ export const Cart = ({
 		<Modal
 			className="CartModal"
 			footer={null}
+			maskClosable={false}
 			title={type === 'Purchase' ? 'Create Purchase Voucher' : `Create ${type}`}
 			width={1400}
 			centered
@@ -753,6 +925,7 @@ export const Cart = ({
 				<BarcodeScanner
 					ref={barcodeScannerRef}
 					setLoading={setBarcodeScanLoading}
+					type={type}
 				/>
 			)}
 
@@ -785,6 +958,8 @@ export const Cart = ({
 					isDisabled={
 						isLoading || (type === 'Requisition Slip' && hasEmptyUnits)
 					}
+					showEwtCalculator={type === 'Purchase' || type === 'Expense Voucher'}
+					onEwtCalculatorClick={() => setIsEwtCalculatorVisible(true)}
 					onSubmit={handleSubmit}
 				/>
 
@@ -832,6 +1007,16 @@ export const Cart = ({
 							}, 100);
 						}}
 						onSubmit={handlePurchaseFormSubmit}
+					/>
+				)}
+
+				{isEwtCalculatorVisible && (
+					<EwtCalculatorModal
+						initialEwtPercentage={pendingEwtPercentageRef.current}
+						vatExclusiveBase={ewtVatExclusiveBase}
+						open
+						onClose={() => setIsEwtCalculatorVisible(false)}
+						onSave={handleEwtCalculatorSave}
 					/>
 				)}
 

@@ -117,10 +117,16 @@ export const useInitializeData = ({ params, options }: Query) => {
 					params?.branchProductBalanceUpdateLogsIds,
 				);
 
-				queryClient.invalidateQueries('useProducts');
-				queryClient.invalidateQueries('useBranchProducts');
-				queryClient.invalidateQueries('useLatestProductDatetime');
-				queryClient.invalidateQueries('useLatestBranchProductDatetime');
+				queryClient.invalidateQueries('useProducts', { refetchActive: false });
+				queryClient.invalidateQueries('useBranchProducts', {
+					refetchActive: false,
+				});
+				queryClient.invalidateQueries('useLatestProductDatetime', {
+					refetchActive: false,
+				});
+				queryClient.invalidateQueries('useLatestBranchProductDatetime', {
+					refetchActive: false,
+				});
 			},
 			...options,
 		},

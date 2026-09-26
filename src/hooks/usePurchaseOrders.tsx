@@ -26,6 +26,7 @@ const usePurchaseOrders = ({ params }: Query) =>
 			params?.timeRange,
 			params?.branchId,
 			params?.requisitionSlipId,
+			params?.supplierName,
 		],
 		() =>
 			wrapServiceWithCatch(
@@ -36,6 +37,7 @@ const usePurchaseOrders = ({ params }: Query) =>
 						time_range: params?.timeRange,
 						branch_id: params?.branchId,
 						requisition_slip_id: params?.requisitionSlipId,
+						supplier_name: params?.supplierName,
 					},
 					getLocalApiUrl(),
 				),

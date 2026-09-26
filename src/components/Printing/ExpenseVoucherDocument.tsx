@@ -1,11 +1,17 @@
 import { EMPTY_CELL, getFullName } from 'ejjy-global';
 import React from 'react';
-import { formatDate, formatDateTime, formatInPeso } from 'utils';
+import {
+	computeVatBreakdown,
+	formatDateTime,
+	formatInPeso,
+	isPurchaseVatApplicable,
+} from 'utils';
 import { ReceiptHeaderV2 } from './ReceiptHeaderV2';
 
 interface Props {
 	expenseVoucher: any;
 	branch?: any;
+	siteSettings?: any;
 }
 
 const rowStyle: React.CSSProperties = {
@@ -23,18 +29,23 @@ const headerCellStyle: React.CSSProperties = {
 	fontWeight: 'bold',
 };
 
-const sectionTitleStyle: React.CSSProperties = {
-	fontWeight: 'bold',
-	textTransform: 'uppercase',
-	marginTop: '12px',
-};
-
-export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
+export const ExpenseVoucherDocument = ({
+	expenseVoucher,
+	branch,
+	siteSettings,
+}: Props) => {
 	const particulars = expenseVoucher?.particulars || [];
-	const notes = (expenseVoucher?.remarks || '')
-		.split('\n')
-		.map((line: string) => line.trim())
-		.filter(Boolean);
+
+	const vatApplicable = isPurchaseVatApplicable(
+		siteSettings,
+		expenseVoucher?.supplier_account,
+	);
+	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
+		particulars.map((item: any) => ({
+			amount: Number(item.amount),
+			isVatExempt: !vatApplicable || item.type === 'VE',
+		})),
+	);
 
 	return (
 		<div style={{ fontSize: '12px', lineHeight: '1.2' }}>
@@ -62,6 +73,12 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 						<td style={rowStyle}>Payee:</td>
 						<td style={{ ...rowStyle, textAlign: 'right' }}>
 							{expenseVoucher?.payee || EMPTY_CELL}
+						</td>
+					</tr>
+					<tr>
+						<td style={rowStyle}>Invoice #:</td>
+						<td style={{ ...rowStyle, textAlign: 'right' }}>
+							{expenseVoucher?.invoice_number || EMPTY_CELL}
 						</td>
 					</tr>
 					<tr>
@@ -96,7 +113,12 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 							Item #
 						</th>
 						<th style={{ ...headerCellStyle, textAlign: 'left' }}>
-							Description
+							Particulars
+						</th>
+						<th
+							style={{ ...headerCellStyle, textAlign: 'center', width: '80px' }}
+						>
+							Type
 						</th>
 						<th style={{ ...headerCellStyle, textAlign: 'right' }}>Amount</th>
 					</tr>
@@ -107,6 +129,9 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 						<tr key={index}>
 							<td style={{ ...cellStyle, textAlign: 'center' }}>{index + 1}</td>
 							<td style={cellStyle}>{item.description}</td>
+							<td style={{ ...cellStyle, textAlign: 'center' }}>
+								{!vatApplicable || item.type === 'VE' ? 'VE' : 'V'}
+							</td>
 							<td style={{ ...cellStyle, textAlign: 'right' }}>
 								{formatInPeso(item.amount, 'P')}
 							</td>
@@ -114,7 +139,7 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 					))}
 					<tr>
 						<td
-							colSpan={2}
+							colSpan={3}
 							style={{ ...cellStyle, textAlign: 'right', fontWeight: 'bold' }}
 						>
 							Total
@@ -134,61 +159,17 @@ export const ExpenseVoucherDocument = ({ expenseVoucher, branch }: Props) => {
 				Total Amount: {formatInPeso(expenseVoucher?.amount, 'P')}
 			</div>
 
-			<div style={sectionTitleStyle}>Notes</div>
-			<ul style={{ marginTop: '4px', paddingLeft: '18px' }}>
-				{notes.length > 0 ? (
-					notes.map((line: string, index: number) => (
-						// eslint-disable-next-line react/no-array-index-key
-						<li key={index}>{line}</li>
-					))
-				) : (
-					<li>{EMPTY_CELL}</li>
+			<div style={{ textAlign: 'center', marginTop: '4px' }}>
+				<div>VAT Exempt: {formatInPeso(vatExempt, 'P')}</div>
+				<div>VATable Sales: {formatInPeso(vatableSales, 'P')}</div>
+				<div>VAT Amount: {formatInPeso(vatAmount, 'P')}</div>
+				{Number(expenseVoucher?.ewt_percentage) > 0 && (
+					<div>
+						EWT: {formatInPeso(expenseVoucher?.ewt_amount, 'P')} (
+						{expenseVoucher?.ewt_percentage}%)
+					</div>
 				)}
-			</ul>
-
-			<div style={sectionTitleStyle}>Signatures</div>
-			<table
-				style={{ width: '100%', borderCollapse: 'collapse', marginTop: '16px' }}
-			>
-				<tbody>
-					<tr>
-						<td
-							style={{
-								width: '50%',
-								verticalAlign: 'top',
-								paddingRight: '12px',
-							}}
-						>
-							<div style={{ borderBottom: '1px solid #000', height: '28px' }} />
-							<div>{expenseVoucher?.payee || EMPTY_CELL}, Employee</div>
-							<div>
-								Date Signed: {formatDate(expenseVoucher?.datetime_created)}
-							</div>
-						</td>
-						<td
-							style={{
-								width: '50%',
-								verticalAlign: 'top',
-								paddingLeft: '12px',
-							}}
-						>
-							<div style={{ borderBottom: '1px solid #000', height: '28px' }} />
-							<div>
-								{expenseVoucher?.authorizer
-									? getFullName(expenseVoucher.authorizer)
-									: EMPTY_CELL}
-								, Authorizer
-							</div>
-							<div>
-								Date Signed:{' '}
-								{expenseVoucher?.authorizer
-									? formatDate(expenseVoucher?.datetime_created)
-									: EMPTY_CELL}
-							</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			</div>
 		</div>
 	);
 };

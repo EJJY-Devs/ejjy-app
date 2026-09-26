@@ -1,11 +1,13 @@
 /* eslint-disable react/no-this-in-sfc */
 import {
 	Button,
+	Checkbox,
 	Col,
 	Divider,
 	Input,
 	Row,
 	Select,
+	Space,
 	Typography,
 	Tooltip,
 } from 'antd';
@@ -138,6 +140,8 @@ export const ModifyProductForm = ({
 				description: product?.description || '',
 				hasQuantityAllowance: product?.has_quantity_allowance || false,
 				isShownInScaleList: String(product?.is_shown_in_scale_list ?? false),
+				isShownInPurchases: String(product?.is_shown_in_purchases ?? true),
+				isShownInExpenses: String(product?.is_shown_in_expenses ?? false),
 				isMultipleInstance: String(product?.is_multiple_instance ?? false),
 				checking: isDailyChecked
 					? productCheckingTypes.DAILY
@@ -357,8 +361,27 @@ export const ModifyProductForm = ({
 					patronageSystemTagId: Yup.string()
 						.nullable()
 						.label('Patronage System Tag'),
+					isShownInPurchases: Yup.string().test(
+						'at-least-one-checked',
+						'Product must be shown in at least one of Purchases or Expenses.',
+						function test(value) {
+							const { isShownInExpenses } = this.parent;
+							return value === 'true' || isShownInExpenses === 'true';
+						},
+					),
+					isShownInExpenses: Yup.string().test(
+						'at-least-one-checked',
+						'Product must be shown in at least one of Purchases or Expenses.',
+						function test(value) {
+							const { isShownInPurchases } = this.parent;
+							return value === 'true' || isShownInPurchases === 'true';
+						},
+					),
 				},
-				[['barcode', 'textcode']],
+				[
+					['barcode', 'textcode'],
+					['isShownInPurchases', 'isShownInExpenses'],
+				],
 			),
 		}),
 		[product, isDailyChecked],
@@ -431,6 +454,46 @@ export const ModifyProductForm = ({
 					<ScrollToFieldError />
 
 					<Row gutter={[16, 16]}>
+						<Col span={24}>
+							<Label label="Product/Service Search" spacing />
+							<Space size="middle">
+								<Checkbox
+									checked={values.isShownInPurchases === 'true'}
+									disabled={
+										values.isShownInPurchases === 'true' &&
+										values.isShownInExpenses !== 'true'
+									}
+									onChange={(event) => {
+										setFieldValue(
+											'isShownInPurchases',
+											String(event.target.checked),
+										);
+									}}
+								>
+									Purchases
+								</Checkbox>
+								<Checkbox
+									checked={values.isShownInExpenses === 'true'}
+									disabled={
+										values.isShownInExpenses === 'true' &&
+										values.isShownInPurchases !== 'true'
+									}
+									onChange={(event) => {
+										setFieldValue(
+											'isShownInExpenses',
+											String(event.target.checked),
+										);
+									}}
+								>
+									Expenses
+								</Checkbox>
+							</Space>
+							<ErrorMessage
+								name="isShownInPurchases"
+								render={(error) => <FieldError error={error} />}
+							/>
+						</Col>
+
 						<Col sm={12} span={24}>
 							{renderInputField({
 								name: 'barcode',

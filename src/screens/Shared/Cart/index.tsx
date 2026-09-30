@@ -33,6 +33,7 @@ import {
 import { Label } from 'components/elements';
 import { CreateRequisitionSlipModal } from 'components/modals/CreateRequisitionSlipModal';
 import { CreatePurchaseVoucherModal } from 'components/modals/CreatePurchaseVoucherModal';
+import { WEIGHING_DECIMAL_DIGITS } from './data/constants';
 import { BarcodeScanner } from './components/BarcodeScanner';
 import { EwtCalculatorModal } from './components/EwtCalculatorModal';
 import { FooterButtons } from './components/FooterButtons';
@@ -386,7 +387,9 @@ export const Cart = ({
 				({ id, product, quantity, remarks, errorRemarks }) => ({
 					product_id: id,
 					branch_product_id: product.id,
-					adjusted_value: quantity,
+					adjusted_value: Number(
+						Number(quantity).toFixed(WEIGHING_DECIMAL_DIGITS),
+					),
 					remarks,
 					error_remarks: errorRemarks,
 				}),

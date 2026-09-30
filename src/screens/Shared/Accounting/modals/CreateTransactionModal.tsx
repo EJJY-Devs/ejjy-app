@@ -3,7 +3,7 @@ import { Button, Input, Modal, Select, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { MAX_PAGE_SIZE } from 'global';
 import useChartOfAccounts from 'hooks/useChartOfAccounts';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import './CreateTransactionModal.scss';
 
 interface JournalEntryRow {
@@ -82,16 +82,22 @@ export const CreateTransactionModal = ({
 		if (!name.trim() || !information.trim() || validEntries.length === 0) {
 			return;
 		}
+
 		await onCreate({
 			name: name.trim(),
 			information: information.trim(),
 			type,
 			entries: validEntries,
 		});
-		setName('');
-		setInformation('');
-		setEntries([{ ...EMPTY_ENTRY }]);
-	}, [name, information, entries, onCreate]);
+	}, [name, information, entries, type, onCreate]);
+
+	useEffect(() => {
+		if (!open) {
+			setName('');
+			setInformation('');
+			setEntries([{ ...EMPTY_ENTRY }]);
+		}
+	}, [open]);
 
 	const isSubmitDisabled = useMemo(() => {
 		const hasName = name.trim().length > 0;

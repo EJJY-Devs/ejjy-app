@@ -364,6 +364,7 @@ export const Purchases = () => {
 							/>
 						)
 					}
+					allowTransactionTemplate
 					onClose={() => setPurchaseForJE(null)}
 					onSubmit={async (values) => {
 						setAuthorizeConfig({

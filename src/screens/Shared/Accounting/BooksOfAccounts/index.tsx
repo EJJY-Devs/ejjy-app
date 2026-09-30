@@ -7,7 +7,9 @@ import {
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { appTypes, MAX_PAGE_SIZE } from 'global';
 import { useJournalEntryCreate, useSiteSettingsNew } from 'hooks';
-import useAccountingTransactions from 'hooks/useAccountingTransactions';
+import useAccountingTransactions, {
+	getAccountingTransactionId,
+} from 'hooks/useAccountingTransactions';
 import React, { useCallback, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { getLocalApiUrl, getLocalBranchId, getReportsApiUrl } from 'utils';
@@ -217,7 +219,7 @@ export const BooksOfAccounts = () => {
 	const handleViewTransaction = useCallback(
 		async (transactionId: number, description: string) => {
 			const txn = (transactionsData?.accountingTransactions || []).find(
-				(t: any) => t.id === transactionId,
+				(t: any) => getAccountingTransactionId(t) === transactionId,
 			);
 
 			let entriesWithAmounts: {
@@ -275,7 +277,7 @@ export const BooksOfAccounts = () => {
 			}
 
 			setViewTransaction({
-				id: txn?.id ?? transactionId,
+				id: txn ? getAccountingTransactionId(txn) : transactionId,
 				name: txn?.name ?? '',
 				information: txn?.information ?? '',
 				entries: entriesWithAmounts,

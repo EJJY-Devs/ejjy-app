@@ -16,7 +16,7 @@ type Props = {
 
 export const getSupplierLabel = (account: any) => {
 	const name = getFullName(account);
-	return account?.business_name ? `${name} (${account.business_name})` : name;
+	return account?.business_name ? `${account.business_name} (${name})` : name;
 };
 
 const getBusinessNameLabel = (account: any) =>

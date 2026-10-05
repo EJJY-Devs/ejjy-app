@@ -1,6 +1,6 @@
 {
 	"name": "ejjy-inventory-app",
-	"version": "0.1.1154",
+	"version": "0.1.1157",
 	"private": true,
 	"homepage": "./",
 	"scripts": {
@@ -21,6 +21,11 @@
 		"server:om:branch": "concurrently \"npm run server:om\"",
 		"start:om": "concurrently \"npm run server:om:branch\" \"npm run start:local\"",
 		"server:all": "concurrently \"npm run server:bm:branch\" \"npm run server:om\"",
+		"server:bm:test": "set ENV=dev&& npm run server:bm",
+		"server:om:test": "set ENV=dev&& npm run server:om",
+		"start:bm:test": "concurrently \"npm run server:bm:test\" \"npm run start:local\"",
+		"start:om:test": "concurrently \"npm run server:om:test\" \"npm run start:local\"",
+		"server:all:test": "concurrently \"npm run server:bm:test\" \"npm run server:om:test\"",
 		"electron": "wait-on http://localhost:3010 && electron .",
 		"postinstall": "electron-builder install-app-deps",
 		"build:online": "env-cmd -f .env.online react-scripts build",

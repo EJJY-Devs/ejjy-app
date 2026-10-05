@@ -1017,7 +1017,7 @@ export const FinancialStatements = () => {
 						<Row className="FinancialStatements_filters" gutter={[16, 16]}>
 							<Col className="FinancialStatements_timeRange">
 								<TimeRangeFilter
-									dateRangeLabel="Select Date"
+									dateRangeLabel="Select Date Range"
 									fields={[
 										timeRangeTypes.DAILY,
 										timeRangeTypes.MONTHLY,

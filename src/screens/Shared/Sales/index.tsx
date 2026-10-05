@@ -1,33 +1,37 @@
-import { Button, message, Spin, Tabs } from 'antd';
-import { LockFilled } from '@ant-design/icons';
+import { /* Button, message, */ Spin, Tabs } from 'antd';
+// import { LockFilled } from '@ant-design/icons';
 import { Content, RequestErrors } from 'components';
 import { Box } from 'components/elements';
-import { appTypes, DEFAULT_PAGE, DEFAULT_PAGE_SIZE, userTypes } from 'global';
+import {
+	appTypes,
+	DEFAULT_PAGE,
+	DEFAULT_PAGE_SIZE /* , userTypes */,
+} from 'global';
 import { useBranches, useQueryParams } from 'hooks';
 import _ from 'lodash';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect /* , useState */ } from 'react';
 import {
 	convertIntoArray,
 	getAppType,
-	getLocalApiUrl,
+	// getLocalApiUrl,
 	getLocalBranchId,
 	isUserFromOffice,
 } from 'utils';
-import {
-	AuthorizationModal,
-	Props as AuthorizationModalProps,
-} from 'ejjy-global/dist/components/modals/AuthorizationModal';
+// import {
+// 	AuthorizationModal,
+// 	Props as AuthorizationModalProps,
+// } from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { CumulativeSales } from './components/CumulativeSales';
 import { BranchSales } from './components/BranchSales';
 import './style.scss';
 
 export const Sales = () => {
 	// STATES
-	const [isAuthorized, setIsAuthorized] = useState(false);
-	const [
-		authorizeConfig,
-		setAuthorizeConfig,
-	] = useState<AuthorizationModalProps | null>(null);
+	// const [isAuthorized, setIsAuthorized] = useState(false);
+	// const [
+	// 	authorizeConfig,
+	// 	setAuthorizeConfig,
+	// ] = useState<AuthorizationModalProps | null>(null);
 
 	// CUSTOM HOOKS
 	const {
@@ -47,20 +51,20 @@ export const Sales = () => {
 	} = useQueryParams();
 
 	// METHODS
-	useEffect(() => {
-		return () => {
-			setIsAuthorized(false);
-		};
-	}, []);
+	// useEffect(() => {
+	// 	return () => {
+	// 		setIsAuthorized(false);
+	// 	};
+	// }, []);
 
-	const handleShowData = () => {
-		setAuthorizeConfig({
-			baseURL: getLocalApiUrl(),
-			userTypes: [userTypes.ADMIN],
-			onSuccess: handleAuthorizedSuccess,
-			onCancel: () => setAuthorizeConfig(null),
-		});
-	};
+	// const handleShowData = () => {
+	// 	setAuthorizeConfig({
+	// 		baseURL: getLocalApiUrl(),
+	// 		userTypes: [userTypes.ADMIN],
+	// 		onSuccess: handleAuthorizedSuccess,
+	// 		onCancel: () => setAuthorizeConfig(null),
+	// 	});
+	// };
 
 	useEffect(() => {
 		if (branches && !currentBranchId) {
@@ -68,12 +72,12 @@ export const Sales = () => {
 		}
 	}, [branches, currentBranchId]);
 
-	const handleAuthorizedSuccess = () => {
-		setIsAuthorized(true);
-		setAuthorizeConfig(null);
+	// const handleAuthorizedSuccess = () => {
+	// 	setIsAuthorized(true);
+	// 	setAuthorizeConfig(null);
 
-		message.success('Authorization successful!');
-	};
+	// 	message.success('Authorization successful!');
+	// };
 
 	const handleTabClick = (branchId) => {
 		setQueryParams({
@@ -86,7 +90,7 @@ export const Sales = () => {
 	return (
 		<>
 			<Content title="Sales">
-				{getAppType() === appTypes.BACK_OFFICE && !isAuthorized && (
+				{/* {getAppType() === appTypes.BACK_OFFICE && !isAuthorized && (
 					<div className="ShowDataButtonContainer">
 						<div className="ShowDataBox">
 							<LockFilled className="LockIcon" />
@@ -95,15 +99,16 @@ export const Sales = () => {
 							</Button>
 						</div>
 					</div>
-				)}
+				)} */}
 
-				<div
+				{/* <div
 					className={`SalesContent ${
 						getAppType() === appTypes.HEAD_OFFICE || isAuthorized
 							? 'authorized'
 							: 'blurred'
 					}`}
-				>
+				> */}
+				<>
 					<Box padding>
 						<CumulativeSales />
 					</Box>
@@ -136,10 +141,11 @@ export const Sales = () => {
 							<BranchSales branchId={getLocalBranchId()} />
 						)}
 					</Box>
-				</div>
+				</>
+				{/* </div> */}
 			</Content>
 
-			{authorizeConfig && <AuthorizationModal {...authorizeConfig} />}
+			{/* {authorizeConfig && <AuthorizationModal {...authorizeConfig} />} */}
 		</>
 	);
 };

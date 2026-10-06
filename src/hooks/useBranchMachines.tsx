@@ -3,7 +3,7 @@ import { wrapServiceWithCatch } from 'hooks/helper';
 import { Query } from 'hooks/inteface';
 import { useQuery } from 'react-query';
 import { BranchMachinesService } from 'services';
-import { getReportsApiUrl } from 'utils';
+import { getLocalApiUrl, getReportsApiUrl, isStandAlone } from 'utils';
 
 const useBranchMachines = ({ params, options }: Query = {}) =>
 	useQuery<any>(
@@ -40,10 +40,26 @@ const useBranchMachines = ({ params, options }: Query = {}) =>
 export const useBranchMachineRetrieve = ({ id, options }: Query) =>
 	useQuery<any>(
 		['useBranchMachineRetrieve', id],
-		() =>
-			wrapServiceWithCatch(
-				BranchMachinesService.retrieve(id, getReportsApiUrl()),
-			),
+		async () => {
+			try {
+				return await wrapServiceWithCatch(
+					BranchMachinesService.retrieve(id, getReportsApiUrl()),
+				);
+			} catch (error) {
+				// The Branch Machines tab lists machines from the local API, so the
+				// machine may not exist in the reports (Google) API. Fall back to local.
+				const localApiUrl = getLocalApiUrl();
+				if (!localApiUrl || localApiUrl === getReportsApiUrl()) {
+					throw error;
+				}
+
+				return wrapServiceWithCatch(
+					isStandAlone()
+						? BranchMachinesService.retrieve(id, localApiUrl)
+						: BranchMachinesService.retrieveOffline(id, localApiUrl),
+				);
+			}
+		},
 		{
 			select: (query) => query.data,
 			...options,

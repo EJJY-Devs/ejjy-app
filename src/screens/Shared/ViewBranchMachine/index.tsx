@@ -9,12 +9,7 @@ import { useHistory } from 'react-router';
 import { TabDiscountedTransactions } from 'screens/Shared/Branches/components/TabDiscountedTransactions';
 import { viewBranchTabs } from 'screens/Shared/Branches/data';
 import { useUserStore } from 'stores';
-import {
-	convertIntoArray,
-	getAppType,
-	getUrlPrefix,
-	isUserFromOffice,
-} from 'utils';
+import { convertIntoArray, getAppType, getUrlPrefix } from 'utils';
 import { TabBirReport } from './components/TabBirReport';
 import { TabDailyInvoiceReport } from './components/TabDailyInvoiceReport';
 import { TabDeliveryInvoice } from './components/TabDeliveryInvoice';
@@ -66,7 +61,11 @@ export const ViewBranchMachine = ({ match }: Props) => {
 	// METHODS
 	useEffect(() => {
 		if (isBranchMachineFetched && !branchMachine) {
-			history.replace(`/${getUrlPrefix(user.user_type)}/branch-machines`);
+			history.replace(
+				getAppType() === appTypes.HEAD_OFFICE
+					? `${getUrlPrefix(user.user_type)}/branches`
+					: `${getUrlPrefix(user.user_type)}/branch-machines`,
+			);
 			message.error(GENERIC_ERROR_MESSAGE);
 		}
 	}, [branchMachine, isBranchMachineFetched]);
@@ -80,7 +79,7 @@ export const ViewBranchMachine = ({ match }: Props) => {
 			{ name: branchMachine?.name },
 		];
 
-		if (isUserFromOffice()) {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
 			breadcrumbItems.unshift({
 				name: 'Branches',
 				link: `${getUrlPrefix(user.user_type)}/branches`,

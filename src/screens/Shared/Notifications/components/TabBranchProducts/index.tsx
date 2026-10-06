@@ -14,11 +14,12 @@ import {
 	MAX_PAGE_SIZE,
 	SEARCH_DEBOUNCE_TIME,
 	pageSizeOptions,
+	appTypes,
 } from 'global';
 import { useBranchProducts, useBranches, useQueryParams } from 'hooks';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
-import { convertIntoArray, formatQuantity, isUserFromOffice } from 'utils';
+import { convertIntoArray, formatQuantity, getAppType } from 'utils';
 
 const columns: ColumnsType = [
 	{ title: 'Code', dataIndex: 'code' },
@@ -126,7 +127,7 @@ const Filter = () => {
 		error: branchErrors,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: isUserFromOffice() },
+		options: { enabled: getAppType() === appTypes.HEAD_OFFICE },
 	});
 
 	// METHODS
@@ -157,7 +158,7 @@ const Filter = () => {
 					/>
 				</Col>
 
-				{isUserFromOffice() && (
+				{getAppType() === appTypes.HEAD_OFFICE && (
 					<Col lg={12} span={24}>
 						<Label label="Branch" spacing />
 						<Select

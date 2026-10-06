@@ -38,7 +38,6 @@ import {
 	formatDateTime,
 	getAppType,
 	getLocalBranchId,
-	isUserFromOffice,
 } from 'utils';
 
 export const TabDTR = () => {
@@ -105,7 +104,7 @@ export const TabDTR = () => {
 			{ title: 'Description', dataIndex: 'description' },
 		];
 
-		if (isUserFromOffice()) {
+		if (getAppType() === appTypes.HEAD_OFFICE) {
 			columns.push({ title: 'Actions', dataIndex: 'actions' });
 		}
 

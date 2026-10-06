@@ -24,6 +24,7 @@ import {
 	DEFAULT_PAGE_SIZE,
 	MAX_PAGE_SIZE,
 	pageSizeOptions,
+	appTypes,
 } from 'global';
 import {
 	useBranches,
@@ -33,7 +34,7 @@ import {
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { Cart } from 'screens/Shared/Cart';
-import { convertIntoArray, getLocalApiUrl, isUserFromOffice } from 'utils';
+import { convertIntoArray, getLocalApiUrl, getAppType } from 'utils';
 
 interface Props {
 	branchId?: number;
@@ -53,8 +54,8 @@ export const TabPurchaseOrderQtyNotifications = ({ branchId }: Props) => {
 	] = useState<AuthorizationModalProps | null>(null);
 
 	const { params, setQueryParams } = useQueryParams();
-	const showBranchColumn = isUserFromOffice() && !branchId;
-	const showActionsColumn = isUserFromOffice();
+	const showBranchColumn = getAppType() === appTypes.HEAD_OFFICE && !branchId;
+	const showActionsColumn = getAppType() === appTypes.HEAD_OFFICE;
 
 	const {
 		mutateAsync: resolveNotification,

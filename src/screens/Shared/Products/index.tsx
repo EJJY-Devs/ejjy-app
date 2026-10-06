@@ -73,7 +73,6 @@ import {
 	getAppType,
 	getId,
 	getLocalBranchId,
-	isUserFromOffice,
 	isStandAlone,
 	getAppReceiptPrinterFontFamily,
 } from 'utils';
@@ -376,7 +375,7 @@ export const Products = () => {
 					<TableHeader
 						buttonName="Create Product"
 						buttons={
-							isUserFromOffice() && (
+							getAppType() === appTypes.HEAD_OFFICE && (
 								<Upload
 									accept=".csv"
 									beforeUpload={handleReinitialize}

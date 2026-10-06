@@ -49,6 +49,7 @@ import {
 	SEARCH_DEBOUNCE_TIME,
 	pageSizeOptions,
 	userTypes,
+	appTypes,
 } from 'global';
 import {
 	usePingOnlineServer,
@@ -66,7 +67,7 @@ import {
 	getLocalApiUrl,
 	getUserTypeName,
 	isStandAlone,
-	isUserFromOffice,
+	getAppType,
 } from 'utils';
 
 const columns: ColumnsType = [
@@ -387,7 +388,7 @@ const Filter = () => {
 		error: branchErrors,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: isUserFromOffice() },
+		options: { enabled: getAppType() === appTypes.HEAD_OFFICE },
 		serviceOptions: {
 			baseURL: getLocalApiUrl(),
 			type: isStandAlone() ? ServiceType.ONLINE : ServiceType.OFFLINE,
@@ -420,7 +421,7 @@ const Filter = () => {
 					/>
 				</Col>
 
-				{isUserFromOffice() && (
+				{getAppType() === appTypes.HEAD_OFFICE && (
 					<Col lg={12} span={24}>
 						<Label label="Branch" spacing />
 						<Select

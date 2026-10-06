@@ -15,7 +15,6 @@ import {
 	getAppType,
 	// getLocalApiUrl,
 	getLocalBranchId,
-	isUserFromOffice,
 } from 'utils';
 // import {
 // 	AuthorizationModal,
@@ -40,7 +39,7 @@ export const Sales = () => {
 		error: branchesErrors,
 	} = useBranches({
 		options: {
-			enabled: isUserFromOffice(),
+			enabled: getAppType() === appTypes.HEAD_OFFICE,
 		},
 	});
 

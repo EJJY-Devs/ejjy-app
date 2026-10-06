@@ -590,8 +590,6 @@ export const isUserFromBranch = _.memoize((userType) =>
 	[userTypes.BRANCH_MANAGER, userTypes.BRANCH_PERSONNEL].includes(userType),
 );
 
-export const isUserFromOffice = () => getAppType() === appTypes.HEAD_OFFICE;
-
 export const isStandAlone = () => getLocalApiUrl() === getOnlineApiUrl();
 
 export const isCUDShown = (userType) =>

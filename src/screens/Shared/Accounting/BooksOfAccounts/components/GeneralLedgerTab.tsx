@@ -552,7 +552,7 @@ export const GeneralLedgerTab = ({
 				entry={selectedLedgerEntry}
 				filter={
 					<TimeRangeFilter
-						dateRangeLabel="Select Date"
+						dateRangeLabel="Select Date Range"
 						fields={[timeRangeTypes.MONTHLY, timeRangeTypes.DATE_RANGE]}
 						queryName="generalLedgerDetailTimeRange"
 						useSingleDateForDateRange

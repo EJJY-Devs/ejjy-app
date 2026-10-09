@@ -465,7 +465,7 @@ export const TrialBalanceTab = ({ isHeadOffice, localBranchId }: Props) => {
 				<div className="BooksOfAccounts_ledgerControls">
 					<div className="BooksOfAccounts_ledgerTimeRange">
 						<TimeRangeFilter
-							dateRangeLabel="Select Date"
+							dateRangeLabel="Select Date Range"
 							queryName="trialBalanceTimeRange"
 							useSingleDateForDateRange
 						/>

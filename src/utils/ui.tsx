@@ -38,6 +38,7 @@ import {
 	userTypes,
 } from 'global';
 import _ from 'lodash';
+import history from 'utils/history';
 import React from 'react';
 import {
 	getAppType,
@@ -400,28 +401,20 @@ export const getBackOrderStatus = _.memoize((status) => {
 	}
 });
 
-export const getUrlPrefix = _.memoize((userType) => {
-	let prefix = '';
-
-	switch (userType) {
-		case userTypes.ADMIN:
-			prefix = '/admin';
-			break;
-		case userTypes.OFFICE_MANAGER:
-			prefix = '/office-manager';
-			break;
-		case userTypes.BRANCH_MANAGER:
-			prefix = '/branch-manager';
-			break;
-		case userTypes.BRANCH_PERSONNEL:
-			prefix = '/branch-personel';
-			break;
-		default:
-			break;
+// Head Office has no login, so the prefix is based on the app type rather than
+// the logged-in user's type.
+export const getUrlPrefix = (userType?) => {
+	if (getAppType() === appTypes.HEAD_OFFICE) {
+		// Head Office can switch between Admin and Office Manager modes
+		return history.location.pathname.startsWith('/admin')
+			? '/admin'
+			: '/office-manager';
 	}
 
-	return prefix;
-});
+	return userType === userTypes.BRANCH_PERSONNEL
+		? '/branch-personnel'
+		: '/branch-manager';
+};
 
 export const getCashBreakdownTypeDescription = (category, type) => {
 	let description = '';

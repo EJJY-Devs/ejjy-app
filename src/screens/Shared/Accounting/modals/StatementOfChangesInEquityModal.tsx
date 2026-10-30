@@ -33,6 +33,7 @@ interface ChangesInEquityRow {
 
 interface ChangesInEquityEntry {
 	snapshotDate: string;
+	periodStartDate?: string;
 	storeName: string;
 	storeAddress: string;
 	branchName: string;
@@ -106,7 +107,11 @@ const printStatementOfChangesInEquity = ({
 			</div>
 			<div class="title">
 				<h1>STATEMENT OF CHANGES IN EQUITY</h1>
-				<h2>AS OF ${escapeHtml(entry.snapshotDate || '-')}</h2>
+				<h2>${
+					entry.periodStartDate
+						? `FROM ${escapeHtml(entry.periodStartDate)} TO`
+						: 'AS OF'
+				} ${escapeHtml(entry.snapshotDate || '-')}</h2>
 			</div>
 			<div class="table-wrap">
 				<table>
@@ -222,6 +227,7 @@ export const StatementOfChangesInEquityModal = ({
 	const printableEntry = useMemo(
 		() => ({
 			snapshotDate: entry?.snapshotDate || '',
+			periodStartDate: entry?.periodStartDate,
 			storeName: entry?.storeName || '',
 			storeAddress: entry?.storeAddress || '',
 			branchName: entry?.branchName || '',
@@ -324,7 +330,10 @@ export const StatementOfChangesInEquityModal = ({
 						STATEMENT OF CHANGES IN EQUITY
 					</div>
 					<div className="TrialBalanceModal_asOf">
-						AS OF {entry?.snapshotDate || '-'}
+						{entry?.periodStartDate
+							? `FROM ${entry.periodStartDate} TO`
+							: 'AS OF'}{' '}
+						{entry?.snapshotDate || '-'}
 					</div>
 				</div>
 				<div style={{ marginTop: 12 }}>

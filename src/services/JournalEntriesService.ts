@@ -7,6 +7,7 @@ interface List extends IListRequest {
 	branch_machine_id?: number;
 	time_range?: string;
 	entry_type?: string;
+	exclude_entry_type?: string;
 	expense_id?: number;
 	purchase_id?: number;
 }

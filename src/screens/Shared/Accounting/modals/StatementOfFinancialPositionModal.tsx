@@ -33,6 +33,7 @@ interface FinancialPositionRow {
 
 interface FinancialPositionEntry {
 	snapshotDate: string;
+	periodStartDate?: string;
 	storeName: string;
 	storeAddress: string;
 	branchName: string;
@@ -118,7 +119,11 @@ const printStatementOfFinancialPosition = ({
 			</div>
 			<div class="title">
 				<h1>STATEMENT OF FINANCIAL POSITION</h1>
-				<h2>AS OF ${escapeHtml(entry.snapshotDate || '-')}</h2>
+				<h2>${
+					entry.periodStartDate
+						? `FROM ${escapeHtml(entry.periodStartDate)} TO`
+						: 'AS OF'
+				} ${escapeHtml(entry.snapshotDate || '-')}</h2>
 			</div>
 			<div class="sides">
 				<div class="side">
@@ -237,6 +242,7 @@ export const StatementOfFinancialPositionModal = ({
 	const printableEntry = useMemo(
 		() => ({
 			snapshotDate: entry?.snapshotDate || '',
+			periodStartDate: entry?.periodStartDate,
 			storeName: entry?.storeName || '',
 			storeAddress: entry?.storeAddress || '',
 			branchName: entry?.branchName || '',
@@ -350,7 +356,10 @@ export const StatementOfFinancialPositionModal = ({
 						STATEMENT OF FINANCIAL POSITION
 					</div>
 					<div className="TrialBalanceModal_asOf">
-						AS OF {entry?.snapshotDate || '-'}
+						{entry?.periodStartDate
+							? `FROM ${entry.periodStartDate} TO`
+							: 'AS OF'}{' '}
+						{entry?.snapshotDate || '-'}
 					</div>
 				</div>
 				<div style={{ marginTop: 12 }}>

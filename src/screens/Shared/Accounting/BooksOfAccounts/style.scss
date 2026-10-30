@@ -28,6 +28,14 @@
 	}
 }
 
+.BooksOfAccounts_sectionTitle.ant-typography {
+	margin-bottom: 12px;
+}
+
+.BooksOfAccounts_table + .BooksOfAccounts_sectionTitle.ant-typography {
+	margin-top: 32px;
+}
+
 .CreateJournalEntryModal {
 	.ant-modal-content {
 		border-radius: 20px;

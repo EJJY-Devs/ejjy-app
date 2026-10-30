@@ -5,7 +5,7 @@ import { DATE_FORMAT, timeRangeTypes } from 'global';
 import { useQueryParams } from 'hooks';
 import _ from 'lodash';
 import moment from 'moment';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Label } from '../elements';
 
 interface Props {
@@ -35,6 +35,7 @@ export const TimeRangeFilter = ({
 }: Props) => {
 	// STATES
 	const [timeRangeType, setTimeRangeType] = useState(timeRangeTypes.DAILY);
+	const pendingDateRangeRef = useRef<string | null>(null);
 
 	// CUSTOM HOOKS
 	const { params, setQueryParams } = useQueryParams({
@@ -85,6 +86,8 @@ export const TimeRangeFilter = ({
 						startDate.year() === endDate.year()
 					) {
 						setTimeRangeType(timeRangeTypes.ANNUAL);
+					} else if (areValid && fields?.includes(timeRangeTypes.DATE_RANGE)) {
+						setTimeRangeType(timeRangeTypes.DATE_RANGE);
 					}
 				}
 			}
@@ -197,9 +200,18 @@ export const TimeRangeFilter = ({
 				defaultValue={defaultValue}
 				disabled={disabled}
 				format={DATE_FORMAT}
+				// Commit only once the calendar closes. With a range already set,
+				// the first click fires with [newStart, oldEnd]; committing that
+				// right away re-fetches (often disabling this filter), which closes
+				// the calendar before the end date can be picked.
 				onCalendarChange={(dates, dateStrings) => {
-					if (dates?.[0] && dates?.[1]) {
-						handleChange(dateStrings.join(','));
+					pendingDateRangeRef.current =
+						dates?.[0] && dates?.[1] ? dateStrings.join(',') : null;
+				}}
+				onOpenChange={(open) => {
+					if (!open && pendingDateRangeRef.current) {
+						handleChange(pendingDateRangeRef.current);
+						pendingDateRangeRef.current = null;
 					}
 				}}
 			/>

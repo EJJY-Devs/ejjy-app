@@ -35,6 +35,7 @@ interface NotesRow {
 
 interface NotesToFinancialStatementsEntry {
 	snapshotDate: string;
+	periodStartDate?: string;
 	storeName: string;
 	storeAddress: string;
 	branchName: string;
@@ -129,7 +130,11 @@ const printNotesToFinancialStatements = ({
 			</div>
 			<div class="title">
 				<h1>NOTES TO FINANCIAL STATEMENTS</h1>
-				<h2>FOR THE YEAR ENDED ${escapeHtml(entry.snapshotDate || '-')}</h2>
+				<h2>${
+					entry.periodStartDate
+						? `FROM ${escapeHtml(entry.periodStartDate)} TO`
+						: 'FOR THE YEAR ENDED'
+				} ${escapeHtml(entry.snapshotDate || '-')}</h2>
 			</div>
 			<div class="table-wrap">
 				<table>
@@ -260,6 +265,7 @@ export const NotesToFinancialStatementsModal = ({
 	const printableEntry = useMemo(
 		() => ({
 			snapshotDate: entry?.snapshotDate || '',
+			periodStartDate: entry?.periodStartDate,
 			storeName: entry?.storeName || '',
 			storeAddress: entry?.storeAddress || '',
 			branchName: entry?.branchName || '',
@@ -364,7 +370,10 @@ export const NotesToFinancialStatementsModal = ({
 						NOTES TO FINANCIAL STATEMENTS
 					</div>
 					<div className="TrialBalanceModal_asOf">
-						FOR THE YEAR ENDED {entry?.snapshotDate || '-'}
+						{entry?.periodStartDate
+							? `FROM ${entry.periodStartDate} TO`
+							: 'FOR THE YEAR ENDED'}{' '}
+						{entry?.snapshotDate || '-'}
 					</div>
 				</div>
 				<div style={{ marginTop: 12 }}>

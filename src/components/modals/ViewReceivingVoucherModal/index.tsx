@@ -47,6 +47,7 @@ export const ViewReceivingVoucherModal = ({
 		title: `ReceivingVoucher_${receivingVoucher.id}.pdf`,
 		paper: 'a4HalfLengthwise',
 		previewInModal: true,
+		continuousPage: true,
 		print: generateHtmlContent,
 	});
 

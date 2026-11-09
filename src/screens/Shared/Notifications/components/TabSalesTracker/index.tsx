@@ -2,7 +2,7 @@ import { Alert, Col, Empty, Row, Select, Spin } from 'antd';
 import { RequestErrors, TableHeader } from 'components';
 import { Label } from 'components/elements';
 import { filterOption } from 'ejjy-global';
-import { MAX_PAGE_SIZE } from 'global';
+import { MAX_PAGE_SIZE, appTypes } from 'global';
 import {
 	useBranches,
 	useQueryParams,
@@ -10,7 +10,7 @@ import {
 	useSiteSettings,
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { convertIntoArray, formatInPeso, isUserFromOffice } from 'utils';
+import { convertIntoArray, formatInPeso, getAppType } from 'utils';
 
 export const TabSalesTracker = () => {
 	// STATES
@@ -142,7 +142,7 @@ const Filter = () => {
 		error: branchErrors,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: isUserFromOffice() },
+		options: { enabled: getAppType() === appTypes.HEAD_OFFICE },
 	});
 
 	return (
@@ -153,7 +153,7 @@ const Filter = () => {
 			/>
 
 			<Row gutter={[16, 16]}>
-				{isUserFromOffice() && (
+				{getAppType() === appTypes.HEAD_OFFICE && (
 					<Col lg={12} span={24}>
 						<Label label="Branch" spacing />
 						<Select

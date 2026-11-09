@@ -7,7 +7,9 @@ import {
 } from 'ejjy-global/dist/components/modals/AuthorizationModal';
 import { appTypes, MAX_PAGE_SIZE } from 'global';
 import { useJournalEntryCreate, useSiteSettingsNew } from 'hooks';
-import useAccountingTransactions from 'hooks/useAccountingTransactions';
+import useAccountingTransactions, {
+	getAccountingTransactionId,
+} from 'hooks/useAccountingTransactions';
 import React, { useCallback, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { getLocalApiUrl, getLocalBranchId, getReportsApiUrl } from 'utils';
@@ -171,6 +173,7 @@ export const BooksOfAccounts = () => {
 
 	const fetchAndViewInvoice = useCallback(
 		async (orNumber: string, branchMachineId?: number | null) => {
+			let transaction = null;
 			try {
 				const response = await TransactionsService.list(
 					{
@@ -183,15 +186,21 @@ export const BooksOfAccounts = () => {
 					},
 					getReportsApiUrl(),
 				);
-				const transaction = response.data?.results?.[0];
-				if (transaction) {
-					setViewInvoiceTransaction(transaction);
-				} else {
-					message.error('Failed to load invoice');
-				}
+				transaction = response.data?.results?.[0];
 			} catch {
-				message.error('Failed to load invoice');
+				// Handled below
 			}
+
+			if (
+				!transaction?.id ||
+				!transaction.payment ||
+				transaction.invoice?.or_number !== orNumber
+			) {
+				message.error('Failed to load invoice');
+				return;
+			}
+
+			setViewInvoiceTransaction(transaction);
 		},
 		[],
 	);
@@ -210,7 +219,7 @@ export const BooksOfAccounts = () => {
 	const handleViewTransaction = useCallback(
 		async (transactionId: number, description: string) => {
 			const txn = (transactionsData?.accountingTransactions || []).find(
-				(t: any) => t.id === transactionId,
+				(t: any) => getAccountingTransactionId(t) === transactionId,
 			);
 
 			let entriesWithAmounts: {
@@ -268,7 +277,7 @@ export const BooksOfAccounts = () => {
 			}
 
 			setViewTransaction({
-				id: txn?.id ?? transactionId,
+				id: txn ? getAccountingTransactionId(txn) : transactionId,
 				name: txn?.name ?? '',
 				information: txn?.information ?? '',
 				entries: entriesWithAmounts,

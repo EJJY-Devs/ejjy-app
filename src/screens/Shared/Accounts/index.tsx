@@ -7,7 +7,7 @@ import React from 'react';
 import { TabAccounts } from './components/TabAccounts';
 import { TabCreditRegistrations } from './components/TabCreditRegistration';
 import { TabEmployees } from './components/TabEmployees';
-import { TabUsers } from './components/TabUsers';
+// import { TabUsers } from './components/TabUsers';
 import { TabSupplierRegistrations } from './components/TabSupplierRegistration';
 import { accountTabs } from './data';
 
@@ -46,9 +46,10 @@ export const Accounts = () => {
 					<Tabs.TabPane key={accountTabs.EMPLOYEES} tab={accountTabs.EMPLOYEES}>
 						<TabEmployees disabled={isConnected === false} />
 					</Tabs.TabPane>
-					<Tabs.TabPane key={accountTabs.USERS} tab={accountTabs.USERS}>
+					{/* Users tab hidden for now - may be used in the future */}
+					{/* <Tabs.TabPane key={accountTabs.USERS} tab={accountTabs.USERS}>
 						<TabUsers disabled={isConnected === false} />
-					</Tabs.TabPane>
+					</Tabs.TabPane> */}
 					<Tabs.TabPane
 						key={accountTabs.CREDIT_ACCOUNTS}
 						tab={accountTabs.CREDIT_ACCOUNTS}

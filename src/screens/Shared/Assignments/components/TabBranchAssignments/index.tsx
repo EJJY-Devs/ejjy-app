@@ -20,7 +20,6 @@ import {
 	getLocalApiUrl,
 	getLocalBranchId,
 	isStandAlone,
-	isUserFromOffice,
 } from 'utils';
 
 const columns: ColumnsType = [
@@ -110,7 +109,7 @@ const Filter = () => {
 		error: branchesError,
 	} = useBranches({
 		params: { pageSize: MAX_PAGE_SIZE },
-		options: { enabled: isUserFromOffice() },
+		options: { enabled: getAppType() === appTypes.HEAD_OFFICE },
 	});
 	const {
 		data: usersData,
@@ -141,7 +140,7 @@ const Filter = () => {
 			/>
 
 			<Row className="mb-4" gutter={[16, 16]}>
-				{isUserFromOffice() && (
+				{getAppType() === appTypes.HEAD_OFFICE && (
 					<Col lg={12} span={24}>
 						<Label label="Branch" spacing />
 						<Select

@@ -37,6 +37,13 @@ const STATEMENT_ITEMS = [
 	'Notes to Financial Statements',
 ];
 
+const formatLongDate = (dateValue: moment.Moment) => {
+	const formatted = dateValue.format('MMMM D, YYYY');
+	const [month, ...rest] = formatted.split(' ');
+
+	return [month?.toUpperCase() || '', ...rest].join(' ');
+};
+
 export const FinancialStatements = () => {
 	const isHeadOffice = getAppType() === appTypes.HEAD_OFFICE;
 	const localBranchId = Number(getLocalBranchId());
@@ -135,13 +142,6 @@ export const FinancialStatements = () => {
 	}, [params.financialStatementsTimeRange]);
 
 	const financialStatementAsOfLabel = useMemo(() => {
-		const formatLongDate = (dateValue: moment.Moment) => {
-			const formatted = dateValue.format('MMMM D, YYYY');
-			const [month, ...rest] = formatted.split(' ');
-
-			return [month?.toUpperCase() || '', ...rest].join(' ');
-		};
-
 		const value = String(
 			params.financialStatementsTimeRange || timeRangeTypes.DAILY,
 		);
@@ -163,6 +163,55 @@ export const FinancialStatements = () => {
 			? formatLongDate(singleDate)
 			: selectedTimeRangeLabel;
 	}, [params.financialStatementsTimeRange, selectedTimeRangeLabel]);
+
+	const periodType = useMemo(() => {
+		const value = String(
+			params.financialStatementsTimeRange || timeRangeTypes.DAILY,
+		);
+
+		if (value === timeRangeTypes.DAILY) return 'daily' as const;
+
+		const parts = value.split(',');
+		if (parts.length === 2) {
+			const start = moment(parts[0].trim(), DATE_FORMAT, true);
+			const end = moment(parts[1].trim(), DATE_FORMAT, true);
+			if (start.isValid() && end.isValid()) {
+				const isFullYear =
+					start.date() === 1 &&
+					start.month() === 0 &&
+					end.date() === 31 &&
+					end.month() === 11 &&
+					start.year() === end.year();
+				if (isFullYear) return 'annual' as const;
+
+				const isFullMonth =
+					start.isSame(start.clone().startOf('month'), 'day') &&
+					end.isSame(end.clone().endOf('month'), 'day') &&
+					start.isSame(end, 'month') &&
+					start.isSame(end, 'year');
+				if (isFullMonth) return 'monthly' as const;
+
+				return 'range' as const;
+			}
+		}
+
+		return 'daily' as const;
+	}, [params.financialStatementsTimeRange]);
+
+	// "Select Date Range" covers the period from its start date to its end date
+	// instead of "as of" the end date. Full months and years stay Monthly/Annual.
+	const dateRange = useMemo(() => {
+		if (periodType !== 'range') return null;
+
+		const [start, end] = String(params.financialStatementsTimeRange)
+			.split(',')
+			.map((value) => moment(value.trim(), DATE_FORMAT, true));
+
+		return { start, end };
+	}, [params.financialStatementsTimeRange, periodType]);
+	const periodStartDate = dateRange
+		? formatLongDate(dateRange.start)
+		: undefined;
 
 	const mainBranch = useMemo(
 		() => branches.find((branch: any) => branch.is_main),
@@ -378,6 +427,7 @@ export const FinancialStatements = () => {
 
 		return {
 			snapshotDate: financialStatementAsOfLabel,
+			periodStartDate,
 			storeName:
 				financialPerformanceData?.store_name ||
 				mainBranch?.store_name ||
@@ -403,6 +453,7 @@ export const FinancialStatements = () => {
 		};
 	}, [
 		financialStatementAsOfLabel,
+		periodStartDate,
 		financialPerformanceData,
 		headerBranch,
 		mainBranch,
@@ -566,6 +617,7 @@ export const FinancialStatements = () => {
 
 		return {
 			snapshotDate: financialStatementAsOfLabel,
+			periodStartDate,
 			storeName:
 				financialPositionData?.store_name ||
 				mainBranch?.store_name ||
@@ -592,6 +644,7 @@ export const FinancialStatements = () => {
 		};
 	}, [
 		financialStatementAsOfLabel,
+		periodStartDate,
 		financialPositionData,
 		headerBranch,
 		mainBranch,
@@ -702,6 +755,7 @@ export const FinancialStatements = () => {
 
 		return {
 			snapshotDate: financialStatementAsOfLabel,
+			periodStartDate,
 			storeName:
 				notesData?.store_name ||
 				mainBranch?.store_name ||
@@ -724,6 +778,7 @@ export const FinancialStatements = () => {
 		};
 	}, [
 		financialStatementAsOfLabel,
+		periodStartDate,
 		notesData,
 		headerBranch,
 		mainBranch,
@@ -794,6 +849,7 @@ export const FinancialStatements = () => {
 
 		return {
 			snapshotDate: financialStatementAsOfLabel,
+			periodStartDate,
 			storeName:
 				changesInEquityData?.store_name ||
 				mainBranch?.store_name ||
@@ -819,45 +875,12 @@ export const FinancialStatements = () => {
 		};
 	}, [
 		financialStatementAsOfLabel,
+		periodStartDate,
 		changesInEquityData,
 		headerBranch,
 		mainBranch,
 		selectedBranchLabel,
 	]);
-
-	const cashFlowPeriodType = useMemo(() => {
-		const value = String(
-			params.financialStatementsTimeRange || timeRangeTypes.DAILY,
-		);
-
-		if (value === timeRangeTypes.DAILY) return 'daily' as const;
-
-		const parts = value.split(',');
-		if (parts.length === 2) {
-			const start = moment(parts[0].trim(), DATE_FORMAT, true);
-			const end = moment(parts[1].trim(), DATE_FORMAT, true);
-			if (start.isValid() && end.isValid()) {
-				const isFullYear =
-					start.date() === 1 &&
-					start.month() === 0 &&
-					end.date() === 31 &&
-					end.month() === 11 &&
-					start.year() === end.year();
-				if (isFullYear) return 'annual' as const;
-
-				const isFullMonth =
-					start.isSame(start.clone().startOf('month'), 'day') &&
-					end.isSame(end.clone().endOf('month'), 'day') &&
-					start.isSame(end, 'month') &&
-					start.isSame(end, 'year');
-				if (isFullMonth) return 'monthly' as const;
-
-				return 'range' as const;
-			}
-		}
-
-		return 'daily' as const;
-	}, [params.financialStatementsTimeRange]);
 
 	const cashFlowsModalEntry = useMemo(() => {
 		const formatAmount = (value: number | string) => formatInPeso(value, '₱ ');
@@ -979,6 +1002,7 @@ export const FinancialStatements = () => {
 
 		return {
 			snapshotDate: financialStatementAsOfLabel,
+			periodStartDate,
 			storeName:
 				cashFlowsData?.store_name ||
 				mainBranch?.store_name ||
@@ -997,13 +1021,14 @@ export const FinancialStatements = () => {
 				'',
 			storeTin:
 				cashFlowsData?.store_tin || mainBranch?.tin || headerBranch?.tin || '',
-			periodType: cashFlowPeriodType,
+			periodType,
 			rows,
 		};
 	}, [
-		cashFlowPeriodType,
+		periodType,
 		cashFlowsData,
 		financialStatementAsOfLabel,
+		periodStartDate,
 		headerBranch,
 		mainBranch,
 		selectedBranchLabel,
@@ -1017,7 +1042,7 @@ export const FinancialStatements = () => {
 						<Row className="FinancialStatements_filters" gutter={[16, 16]}>
 							<Col className="FinancialStatements_timeRange">
 								<TimeRangeFilter
-									dateRangeLabel="Select Date"
+									dateRangeLabel="Select Date Range"
 									fields={[
 										timeRangeTypes.DAILY,
 										timeRangeTypes.MONTHLY,
@@ -1025,7 +1050,6 @@ export const FinancialStatements = () => {
 										timeRangeTypes.ANNUAL,
 									]}
 									queryName="financialStatementsTimeRange"
-									useSingleDateForDateRange
 								/>
 							</Col>
 							{isHeadOffice && (
@@ -1079,7 +1103,11 @@ export const FinancialStatements = () => {
 											{statementTitle}
 										</div>
 										<div className="FinancialStatements_subtitle">
-											As of {selectedTimeRangeLabel}
+											{dateRange
+												? `From ${dateRange.start.format(
+														DATE_FORMAT,
+												  )} to ${dateRange.end.format(DATE_FORMAT)}`
+												: `As of ${selectedTimeRangeLabel}`}
 										</div>
 										<div className="FinancialStatements_subtitle">
 											{selectedBranchLabel}

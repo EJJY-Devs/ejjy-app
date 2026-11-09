@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import {
 	EMPTY_CELL,
+	escPosToHtml,
 	getAppReceiptPrintingType,
 	getFullName,
 	printingTypes,
@@ -24,12 +25,10 @@ import {
 	computeVatBreakdown,
 	formatDateTime,
 	formatInPeso,
+	isNvatEntity,
 	isPurchaseVatApplicable,
 } from 'utils';
-import {
-	DASHED_DIVIDER,
-	generateFourColumnLine,
-} from 'utils/printEscPosHelpers';
+import { DASHED_DIVIDER } from 'utils/printEscPosHelpers';
 
 interface PrintPurchaseProps {
 	purchase: any;
@@ -102,28 +101,35 @@ const renderNative = ({
 
 	commands.push(EscPosCommands.LINE_BREAK);
 	commands.push(
-		generateFourColumnLine('Qty', 'Particulars', 'Unit Cost', 'Amount'),
+		...generateItemBlockCommands([{ label: 'Particulars', value: 'Amount' }]),
 	);
-	commands.push(EscPosCommands.LINE_BREAK);
 	commands.push(printCenter(DASHED_DIVIDER));
 	commands.push(EscPosCommands.LINE_BREAK);
 
-	// Receipt paper is too narrow for a true 5th "Type" column, so it's
-	// tucked into the particulars text instead (e.g. "Item Name (VE)");
-	// the PDF/HTML render (PurchaseVoucherDocument) has room for a real
-	// column since it can expand.
+	// Same layout as the sales invoice: the particulars get a full line of
+	// their own, with the type tucked in (e.g. "Item Name (VE)") since the
+	// paper is too narrow for a column, and the quantity, unit cost and
+	// amount go on an indented line below.
 	products.forEach((item: any) => {
 		const typeLabel =
 			!vatApplicable || item.product?.is_vat_exempted ? 'VE' : 'V';
-		commands.push(
-			generateFourColumnLine(
-				String(item.quantity),
-				`${item.product?.name || ''} (${typeLabel})`,
-				formatInPeso(item.cost_per_piece, 'P'),
-				formatInPeso(Number(item.quantity) * Number(item.cost_per_piece), 'P'),
-			),
+		const unitCost = formatInPeso(item.cost_per_piece, 'P');
+		const amount = formatInPeso(
+			Number(item.quantity) * Number(item.cost_per_piece),
+			'P',
 		);
+
+		commands.push(`${item.product?.name || ''} (${typeLabel})`);
 		commands.push(EscPosCommands.LINE_BREAK);
+		commands.push(
+			...generateItemBlockCommands([
+				{
+					label: `   ${item.quantity} @ ${unitCost}`,
+					value: amount,
+					isIndented: true,
+				},
+			]),
+		);
 	});
 
 	const { vatExempt, vatableSales, vatAmount } = computeVatBreakdown(
@@ -138,14 +144,16 @@ const renderNative = ({
 		printCenter(`Total Amount: ${formatInPeso(purchase?.total_amount, 'P')}`),
 	);
 	commands.push(EscPosCommands.LINE_BREAK);
-	commands.push(printCenter(`VAT Exempt: ${formatInPeso(vatExempt, 'P')}`));
-	commands.push(EscPosCommands.LINE_BREAK);
-	commands.push(
-		printCenter(`VATable Sales: ${formatInPeso(vatableSales, 'P')}`),
-	);
-	commands.push(EscPosCommands.LINE_BREAK);
-	commands.push(printCenter(`VAT Amount: ${formatInPeso(vatAmount, 'P')}`));
-	commands.push(EscPosCommands.LINE_BREAK);
+	if (!isNvatEntity(siteSettings)) {
+		commands.push(printCenter(`VAT Exempt: ${formatInPeso(vatExempt, 'P')}`));
+		commands.push(EscPosCommands.LINE_BREAK);
+		commands.push(
+			printCenter(`VATable Sales: ${formatInPeso(vatableSales, 'P')}`),
+		);
+		commands.push(EscPosCommands.LINE_BREAK);
+		commands.push(printCenter(`VAT Amount: ${formatInPeso(vatAmount, 'P')}`));
+		commands.push(EscPosCommands.LINE_BREAK);
+	}
 	commands.push(
 		printCenter(`Print Details: ${dayjs().format('MM/DD/YYYY h:mmA')}`),
 	);
@@ -160,8 +168,9 @@ export const printPurchase = ({
 	siteSettings,
 	isPdf = false,
 }: PrintPurchaseProps): string | undefined => {
+	// The PDF is rendered from the native commands so it matches the printout.
 	if (isPdf) {
-		return appendHtmlElement(renderHtml({ purchase, siteSettings }));
+		return escPosToHtml(renderNative({ purchase, siteSettings }));
 	}
 
 	const printingType = getAppReceiptPrintingType();

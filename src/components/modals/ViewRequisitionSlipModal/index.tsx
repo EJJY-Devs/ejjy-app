@@ -38,6 +38,7 @@ export const ViewRequisitionSlipModal = ({
 		title: `RequisitionSlip_${requisitionSlip.id}.pdf`,
 		paper: 'a4HalfLengthwise',
 		previewInModal: true,
+		continuousPage: true,
 		print: generateHtmlContent,
 	});
 

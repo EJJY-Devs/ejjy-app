@@ -35,6 +35,7 @@ export type CashFlowPeriodType = 'daily' | 'monthly' | 'annual' | 'range';
 
 export interface CashFlowEntry {
 	snapshotDate: string;
+	periodStartDate?: string;
 	periodType?: CashFlowPeriodType;
 	storeName: string;
 	storeAddress: string;
@@ -43,10 +44,11 @@ export interface CashFlowEntry {
 	rows: CashFlowRow[];
 }
 
-const getPeriodPrefix = (periodType?: CashFlowPeriodType) => {
-	if (periodType === 'monthly') return 'FOR THE MONTH ENDED';
-	if (periodType === 'annual') return 'FOR THE YEAR ENDED';
-	if (periodType === 'range') return 'FOR THE PERIOD ENDED';
+const getPeriodPrefix = (entry: CashFlowEntry | null) => {
+	if (entry?.periodStartDate) return `FROM ${entry.periodStartDate} TO`;
+	if (entry?.periodType === 'monthly') return 'FOR THE MONTH ENDED';
+	if (entry?.periodType === 'annual') return 'FOR THE YEAR ENDED';
+	if (entry?.periodType === 'range') return 'FOR THE PERIOD ENDED';
 	return 'AS OF';
 };
 
@@ -86,7 +88,7 @@ const printStatementOfCashFlows = ({
 	if (!entry) return '';
 
 	const rowsHtml = buildRowsHtml(entry.rows || []);
-	const periodPrefix = getPeriodPrefix(entry.periodType);
+	const periodPrefix = getPeriodPrefix(entry);
 
 	return `
 		<!DOCTYPE html>
@@ -306,7 +308,7 @@ export const StatementOfCashFlowsModal = ({
 				<div className="TrialBalanceModal_titleBlock">
 					<div className="TrialBalanceModal_title">STATEMENT OF CASH FLOWS</div>
 					<div className="TrialBalanceModal_asOf">
-						{getPeriodPrefix(entry?.periodType)} {entry?.snapshotDate || '-'}
+						{getPeriodPrefix(entry)} {entry?.snapshotDate || '-'}
 					</div>
 				</div>
 				<div style={{ marginTop: 12 }}>

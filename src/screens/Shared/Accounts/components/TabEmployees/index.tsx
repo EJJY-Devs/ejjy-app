@@ -1,6 +1,5 @@
 import {
 	ClockCircleFilled,
-	EditFilled,
 	EyeOutlined,
 	EyeInvisibleOutlined,
 	SearchOutlined,
@@ -20,7 +19,6 @@ import {
 } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import {
-	ModifyAccountModal,
 	ModifyAttendanceScheduleModal,
 	ModifyUserModal,
 	RequestErrors,
@@ -54,8 +52,6 @@ interface Props {
 }
 
 const modals = {
-	CREATE: 1,
-	EDIT: 2,
 	ATTENDANCE: 3,
 	CREATE_USER: 4,
 	EDIT_USER: 5,
@@ -103,18 +99,6 @@ export const TabEmployees = ({ disabled }: Props) => {
 			),
 			actions: (
 				<Space>
-					<Tooltip title="Edit">
-						<Button
-							disabled={disabled}
-							icon={<EditFilled />}
-							type="primary"
-							ghost
-							onClick={() => {
-								setModalVisible(modals.EDIT);
-								setSelectedAccount(account);
-							}}
-						/>
-					</Tooltip>
 					{account.type === accountTypes.EMPLOYEE && (
 						<>
 							<Tooltip title="Set Attendance">
@@ -288,18 +272,6 @@ export const TabEmployees = ({ disabled }: Props) => {
 				scroll={{ x: 1000 }}
 				bordered
 			/>
-
-			{(modalVisible === modals.CREATE ||
-				(modalVisible === modals.EDIT && selectedAccount)) && (
-				<ModifyAccountModal
-					account={selectedAccount}
-					onClose={() => {
-						setModalVisible(null);
-						setSelectedAccount(null);
-					}}
-					onSuccess={refetchAccounts}
-				/>
-			)}
 
 			{modalVisible === modals.ATTENDANCE && selectedAccount && (
 				<ModifyAttendanceScheduleModal

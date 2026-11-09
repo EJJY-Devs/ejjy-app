@@ -217,7 +217,7 @@ export const SubsidiaryPurchasesTab = ({
 				<Row className="BooksOfAccounts_filters" gutter={[16, 16]}>
 					<Col className="BooksOfAccounts_timeRangeFilter">
 						<TimeRangeFilter
-							dateRangeLabel="Select Date"
+							dateRangeLabel="Select Date Range"
 							queryName="subsidiaryPurchasesTimeRange"
 							useSingleDateForDateRange
 						/>

@@ -28,6 +28,9 @@ export const isPurchaseVatApplicable = (
 	siteSettings?.tax_type === taxTypes.VAT &&
 	supplierAccount?.tax_type === taxTypes.VAT;
 
+export const isNvatEntity = (siteSettings: any): boolean =>
+	siteSettings?.tax_type === taxTypes.NVAT;
+
 export const computeVatBreakdown = (
 	lines: VatBreakdownLine[],
 ): VatBreakdown => {

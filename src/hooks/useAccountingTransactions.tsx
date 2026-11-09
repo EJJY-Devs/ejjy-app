@@ -5,6 +5,9 @@ import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { AccountingTransactionsService } from 'services';
 import { getLocalApiUrl } from 'utils';
 
+export const getAccountingTransactionId = (transaction: any): number =>
+	transaction?.online_id ?? transaction?.id;
+
 const useAccountingTransactions = ({ params }: Query) =>
 	useQuery<any>(
 		[

@@ -73,6 +73,50 @@ type UsePdfArgs = {
 	// When true, `previewPdf` shows the PDF in an in-app dialog (returned as
 	// `pdfPreviewModal`) instead of opening a new browser tab / Electron window.
 	previewInModal?: boolean;
+	// Grow the page to fit the content instead of splitting it into pages,
+	// so a long document comes out as one continuous page (like the printed
+	// roll) that ends right after its last line. Shorter content keeps the
+	// paper's normal size.
+	continuousPage?: boolean;
+};
+
+const PDF_MARGIN_PX = 5;
+
+// Height the HTML lays out at. jsPDF sanitizes away <head> (and its styles)
+// before rendering, so only the body is measured, the same way.
+const measureHtmlHeight = (html: string) => {
+	const element = document.createElement('div');
+	element.style.cssText =
+		'position: absolute; top: 0; left: -10000px; visibility: hidden;';
+	element.innerHTML = new DOMParser().parseFromString(
+		html,
+		'text/html',
+	).body.innerHTML;
+
+	document.body.appendChild(element);
+	const height = Math.ceil(element.getBoundingClientRect().height);
+	document.body.removeChild(element);
+
+	return height;
+};
+
+// html2canvas finds each font's baseline with a hidden 1x1 GIF <img> on the
+// live page. Tailwind's preflight (`img { display: block }`, from
+// ejjy-global's styles.css) pushes that probe onto its own line, so all text
+// was drawn ~10px below where it is laid out — enough to push the last line
+// of a continuous page onto a new page. This keeps only that probe inline.
+const HTML2CANVAS_PROBE_FIX_ID = 'html2canvas-probe-fix';
+
+const fixHtml2CanvasFontMetrics = () => {
+	if (document.getElementById(HTML2CANVAS_PROBE_FIX_ID)) {
+		return;
+	}
+
+	const style = document.createElement('style');
+	style.id = HTML2CANVAS_PROBE_FIX_ID;
+	style.textContent =
+		'img[src^="data:image/gif;base64,R0lGODlhAQABA"] { display: inline !important; }';
+	document.head.appendChild(style);
 };
 
 const usePdf = ({
@@ -82,6 +126,7 @@ const usePdf = ({
 	image = null,
 	paper = 'receipt',
 	previewInModal = false,
+	continuousPage = false,
 }: UsePdfArgs) => {
 	const [htmlPdf, setHtmlPdf] = useState('');
 	const [isLoadingPdf, setLoadingPdf] = useState(false);
@@ -109,12 +154,35 @@ const usePdf = ({
 	const wrapHtml = (dataHtml: string | undefined) =>
 		`<div style="width: ${preset.wrapperWidth}px; padding: ${preset.wrapperPadding}px; box-sizing: border-box;">${dataHtml}</div>`;
 
+	const createPdf = (wrappedHtml: string) => {
+		const settings: jsPDFOptions = { ...baseSettings, ...jsPdfSettings };
+		if (continuousPage) {
+			const [width, height] = settings.format as number[];
+			// +1: jsPDF starts a new (empty) page for content that ends exactly
+			// at the bottom margin.
+			const pageHeight = Math.max(
+				height,
+				measureHtmlHeight(wrappedHtml) + PDF_MARGIN_PX * 2 + 1,
+			);
+			settings.format = [width, pageHeight];
+			settings.orientation = width > pageHeight ? 'l' : 'p';
+		}
+
+		// eslint-disable-next-line new-cap
+		return new jsPDF(settings);
+	};
+
 	const addImage = (pdf: jsPDF) => {
 		if (image) {
 			const img = new Image();
 			img.src = image.src;
 			pdf.addImage(img, 'png', image.x, image.y, image.w, image.h);
 		}
+	};
+
+	const renderHtml = (pdf: jsPDF, wrappedHtml: string) => {
+		fixHtml2CanvasFontMetrics();
+		return pdf.html(wrappedHtml, { margin: PDF_MARGIN_PX });
 	};
 
 	const previewPdf = async (data = null) => {
@@ -129,12 +197,11 @@ const usePdf = ({
 
 		try {
 			const pdfTitle = data?.title || title;
-			// eslint-disable-next-line new-cap
-			const pdf = new jsPDF({ ...baseSettings, ...jsPdfSettings });
-			pdf.setProperties({ title: pdfTitle });
-
 			const dataHtml = await print?.();
 			const wrappedHtml = wrapHtml(dataHtml);
+
+			const pdf = createPdf(wrappedHtml);
+			pdf.setProperties({ title: pdfTitle });
 
 			addImage(pdf);
 
@@ -142,7 +209,7 @@ const usePdf = ({
 				await document.fonts.ready;
 			}
 
-			await pdf.html(wrappedHtml, { margin: 5 });
+			await renderHtml(pdf, wrappedHtml);
 
 			const blobUrl = pdf.output('bloburl').toString();
 			if (previewInModal) {
@@ -169,12 +236,11 @@ const usePdf = ({
 
 		try {
 			const pdfTitle = data?.title || title;
-			// eslint-disable-next-line new-cap
-			const pdf = new jsPDF({ ...baseSettings, ...jsPdfSettings });
-			pdf.setProperties({ title: pdfTitle });
-
 			const dataHtml = await print?.(data?.printData);
 			const wrappedHtml = wrapHtml(dataHtml);
+
+			const pdf = createPdf(wrappedHtml);
+			pdf.setProperties({ title: pdfTitle });
 
 			addImage(pdf);
 
@@ -182,7 +248,7 @@ const usePdf = ({
 				await document.fonts.ready;
 			}
 
-			await pdf.html(wrappedHtml, { margin: 5 });
+			await renderHtml(pdf, wrappedHtml);
 			await savePdf(pdf, pdfTitle);
 		} catch (error) {
 			console.error('Failed to generate PDF download', error);

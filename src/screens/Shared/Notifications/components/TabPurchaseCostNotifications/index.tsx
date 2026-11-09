@@ -20,6 +20,7 @@ import {
 	DEFAULT_PAGE_SIZE,
 	MAX_PAGE_SIZE,
 	pageSizeOptions,
+	appTypes,
 } from 'global';
 import {
 	useBranches,
@@ -29,7 +30,7 @@ import {
 } from 'hooks';
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
-import { convertIntoArray, formatInPeso, isUserFromOffice } from 'utils';
+import { convertIntoArray, formatInPeso, getAppType } from 'utils';
 
 interface Props {
 	branchId?: number;
@@ -41,8 +42,8 @@ export const TabPurchaseCostNotifications = ({ branchId }: Props) => {
 	const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
 	const queryClient = useQueryClient();
 	const { params, setQueryParams } = useQueryParams();
-	const showBranchColumn = isUserFromOffice() && !branchId;
-	const showActionsColumn = isUserFromOffice();
+	const showBranchColumn = getAppType() === appTypes.HEAD_OFFICE && !branchId;
+	const showActionsColumn = getAppType() === appTypes.HEAD_OFFICE;
 
 	const {
 		mutateAsync: resolveNotification,

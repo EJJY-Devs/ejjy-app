@@ -14,6 +14,7 @@ import {
 	computeVatBreakdown,
 	formatDateTime,
 	formatInPeso,
+	isNvatEntity,
 	isPurchaseVatApplicable,
 } from 'utils';
 import { printPurchase } from 'utils/printPurchase';
@@ -50,6 +51,7 @@ export const ViewPurchaseModal = ({
 		title: `Purchase_${data.reference_number}.pdf`,
 		paper: 'a4HalfLengthwise',
 		previewInModal: true,
+		continuousPage: true,
 		print: () => printPurchase({ purchase: data, siteSettings, isPdf: true }),
 	});
 
@@ -201,15 +203,19 @@ export const ViewPurchaseModal = ({
 				<Text style={{ whiteSpace: 'pre-line' }} strong>
 					Total Amount: {formatInPeso(data?.total_amount)}
 				</Text>
-				<Text style={{ whiteSpace: 'pre-line' }}>
-					VAT Exempt: {formatInPeso(vatExempt)}
-				</Text>
-				<Text style={{ whiteSpace: 'pre-line' }}>
-					VATable Sales: {formatInPeso(vatableSales)}
-				</Text>
-				<Text style={{ whiteSpace: 'pre-line' }}>
-					VAT Amount: {formatInPeso(vatAmount)}
-				</Text>
+				{!isNvatEntity(siteSettings) && (
+					<>
+						<Text style={{ whiteSpace: 'pre-line' }}>
+							VAT Exempt: {formatInPeso(vatExempt)}
+						</Text>
+						<Text style={{ whiteSpace: 'pre-line' }}>
+							VATable Sales: {formatInPeso(vatableSales)}
+						</Text>
+						<Text style={{ whiteSpace: 'pre-line' }}>
+							VAT Amount: {formatInPeso(vatAmount)}
+						</Text>
+					</>
+				)}
 				{Number(data?.ewt_percentage) > 0 && (
 					<Text style={{ whiteSpace: 'pre-line' }}>
 						EWT: {formatInPeso(data?.ewt_amount)} ({data?.ewt_percentage}%)

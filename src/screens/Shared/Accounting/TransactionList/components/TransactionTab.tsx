@@ -12,6 +12,7 @@ import {
 	userTypes,
 } from 'global';
 import useAccountingTransactions, {
+	getAccountingTransactionId,
 	useAccountingTransactionCreate,
 	useAccountingTransactionDelete,
 } from 'hooks/useAccountingTransactions';
@@ -63,7 +64,7 @@ export const TransactionTab = ({ isHeadOffice, type }: Props) => {
 
 	const transactions = useMemo(() => {
 		return (data?.accountingTransactions || []).map((t: any) => ({
-			id: t.id,
+			id: getAccountingTransactionId(t),
 			name: t.name,
 			information: t.information,
 			entries: (t.entries || []).map((e: any) => ({

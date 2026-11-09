@@ -6,12 +6,15 @@ import {
 	AuthorizationModal,
 	BirReportsService,
 	BranchMachine,
+	ExcelButton,
 	MAX_PAGE_SIZE,
 	NO_TRANSACTION_REMARK,
 	User,
+	exportBirReportXlsx,
 	printBirReport,
 	renderA4SinglePagePdf,
 	useBirReports,
+	saveXlsx,
 	userTypes,
 } from 'ejjy-global';
 import { Props as AuthorizationModalProps } from 'ejjy-global/dist/components/modals/AuthorizationModal';
@@ -110,6 +113,7 @@ export const AnnexBirSalesSummaryTab = ({ branchMachine }: Props) => {
 	// STATES
 	const [dataSource, setDataSource] = useState([]);
 	const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+	const [isLoadingExcel, setIsLoadingExcel] = useState(false);
 	const [
 		authorizeConfig,
 		setAuthorizeConfig,
@@ -219,7 +223,37 @@ export const AnnexBirSalesSummaryTab = ({ branchMachine }: Props) => {
 		showPreview(pdf.output('bloburl').toString());
 	};
 
+	// Same authorization gate as the PDF: the sheet's header carries the
+	// authorizer's UserID.
+	const downloadExcelAsUser = async (authorizedUser: User) => {
+		setIsLoadingExcel(true);
+		try {
+			const response = await BirReportsService.list(
+				{
+					branch_machine_id: branchMachine.id,
+					page_size: MAX_PAGE_SIZE,
+					page: DEFAULT_PAGE,
+					time_range: params?.timeRange as string,
+				},
+				getLocalApiUrl(),
+			);
+
+			const blob = await exportBirReportXlsx(
+				response.results,
+				siteSettings,
+				authorizedUser,
+				branchMachine,
+			);
+			saveXlsx(blob, 'AnnexE1.xlsx');
+		} catch (error) {
+			console.error('Failed to generate Excel', error);
+		} finally {
+			setIsLoadingExcel(false);
+		}
+	};
+
 	const downloadPdf = () => authorize(downloadPdfAsUser);
+	const downloadExcel = () => authorize(downloadExcelAsUser);
 	const previewPdf = () => authorize(previewPdfAsUser);
 
 	// METHODS
@@ -331,13 +365,21 @@ export const AnnexBirSalesSummaryTab = ({ branchMachine }: Props) => {
 			{pdfPreviewModal}
 			<TableHeader
 				buttons={
-					<PdfButtons
-						key="pdf"
-						downloadPdf={downloadPdf}
-						isDisabled={isLoadingPdf}
-						isLoading={isLoadingPdf}
-						previewPdf={previewPdf}
-					/>
+					<>
+						<PdfButtons
+							key="pdf"
+							downloadPdf={downloadPdf}
+							isDisabled={isLoadingPdf || isLoadingExcel}
+							isLoading={isLoadingPdf}
+							previewPdf={previewPdf}
+						/>
+						<ExcelButton
+							key="excel"
+							downloadExcel={downloadExcel}
+							isDisabled={isLoadingPdf || isLoadingExcel}
+							isLoading={isLoadingExcel}
+						/>
+					</>
 				}
 				title={tabs.BIR_SALES_SUMMARY_REPORT}
 				wrapperClassName="pt-2 px-0"
@@ -347,7 +389,8 @@ export const AnnexBirSalesSummaryTab = ({ branchMachine }: Props) => {
 				isLoading={
 					(isFetchingBirReports && !isBirReportsFetched) ||
 					isFetchingSiteSettings ||
-					isLoadingPdf
+					isLoadingPdf ||
+					isLoadingExcel
 				}
 			/>
 

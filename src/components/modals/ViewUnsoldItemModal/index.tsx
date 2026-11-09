@@ -117,6 +117,7 @@ export const ViewUnsoldItemModal = ({
 		title: `UnsoldItemSummary_${new Date().toISOString().split('T')[0]}`,
 		paper: 'a4HalfLengthwise',
 		previewInModal: true,
+		continuousPage: true,
 		print: () =>
 			printUnsoldItem({
 				unsoldItemSummary: filteredUnsoldItems,

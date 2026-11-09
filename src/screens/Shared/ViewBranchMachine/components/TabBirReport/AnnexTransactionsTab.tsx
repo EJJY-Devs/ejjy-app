@@ -5,17 +5,23 @@ import {
 	BirAnnexTransactions,
 	BranchMachine,
 	DEFAULT_PAGE,
+	ExcelButton,
 	MAX_PAGE_SIZE,
 	PdfButtons,
 	SpecialDiscountCode,
 	TransactionsService,
 	User,
 	convertIntoArray,
+	exportBirReportNAACXlsx,
+	exportBirReportPWDXlsx,
+	exportBirReportSCXlsx,
+	exportBirReportSPXlsx,
 	printBirReportNAAC,
 	printBirReportPWD,
 	printBirReportSC,
 	printBirReportSP,
 	renderA4SinglePagePdf,
+	saveXlsx,
 	timeRangeTypes,
 	useQueryParams,
 	useTransactions,
@@ -65,6 +71,7 @@ export const AnnexTransactionsTab = ({
 	});
 
 	const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+	const [isLoadingExcel, setIsLoadingExcel] = useState(false);
 	const [
 		authorizeConfig,
 		setAuthorizeConfig,
@@ -78,7 +85,7 @@ export const AnnexTransactionsTab = ({
 		return '';
 	})();
 
-	const buildPdfHtml = async (authorizedUser: User) => {
+	const fetchAllTransactions = async () => {
 		const response = await TransactionsService.list(
 			{
 				branch_machine_id: branchMachine.id,
@@ -90,7 +97,11 @@ export const AnnexTransactionsTab = ({
 			getLocalApiUrl(),
 		);
 
-		const transactions = response.results;
+		return response.results;
+	};
+
+	const buildPdfHtml = async (authorizedUser: User) => {
+		const transactions = await fetchAllTransactions();
 
 		if (category === tabs.NATIONAL_ATHLETES_AND_COACHES_SALES_REPORT) {
 			return printBirReportNAAC(
@@ -192,7 +203,47 @@ export const AnnexTransactionsTab = ({
 		showPreview(pdf.output('bloburl').toString());
 	};
 
+	const exportXlsx = (transactions, authorizedUser: User) => {
+		const args = [
+			transactions,
+			siteSettings,
+			authorizedUser,
+			branchMachine,
+		] as const;
+
+		if (category === tabs.NATIONAL_ATHLETES_AND_COACHES_SALES_REPORT) {
+			return exportBirReportNAACXlsx(...args);
+		}
+		if (category === tabs.SOLO_PARENTS_SALES_REPORT) {
+			return exportBirReportSPXlsx(...args);
+		}
+		if (category === tabs.SENIOR_CITIZEN_SALES_REPORT) {
+			return exportBirReportSCXlsx(...args);
+		}
+		if (category === tabs.PERSONS_WITH_DISABILITY_SALES_REPORT) {
+			return exportBirReportPWDXlsx(...args);
+		}
+
+		return null;
+	};
+
+	const downloadExcelAsUser = async (authorizedUser: User) => {
+		setIsLoadingExcel(true);
+		try {
+			const transactions = await fetchAllTransactions();
+			const blob = await exportXlsx(transactions, authorizedUser);
+			if (blob) {
+				saveXlsx(blob, pdfTitle);
+			}
+		} catch (error) {
+			console.error('Failed to generate Excel', error);
+		} finally {
+			setIsLoadingExcel(false);
+		}
+	};
+
 	const downloadPdf = () => authorize(downloadPdfAsUser);
+	const downloadExcel = () => authorize(downloadExcelAsUser);
 	const previewPdf = () => authorize(previewPdfAsUser);
 
 	// METHODS
@@ -202,13 +253,25 @@ export const AnnexTransactionsTab = ({
 			{pdfPreviewModal}
 			<TableHeader
 				buttons={
-					<PdfButtons
-						key="pdf"
-						downloadPdf={downloadPdf}
-						isDisabled={isLoadingPdf || !transactionsData?.list}
-						isLoading={isLoadingPdf || isFetchingTransactions}
-						previewPdf={previewPdf}
-					/>
+					<>
+						<PdfButtons
+							key="pdf"
+							downloadPdf={downloadPdf}
+							isDisabled={
+								isLoadingPdf || isLoadingExcel || !transactionsData?.list
+							}
+							isLoading={isLoadingPdf || isFetchingTransactions}
+							previewPdf={previewPdf}
+						/>
+						<ExcelButton
+							key="excel"
+							downloadExcel={downloadExcel}
+							isDisabled={
+								isLoadingPdf || isLoadingExcel || !transactionsData?.list
+							}
+							isLoading={isLoadingExcel}
+						/>
+					</>
 				}
 				title={category}
 				wrapperClassName="pt-2 px-0"
@@ -227,7 +290,10 @@ export const AnnexTransactionsTab = ({
 				category={category}
 				discountCode={discountCode}
 				isLoading={
-					isFetchingSiteSettings || isFetchingTransactions || isLoadingPdf
+					isFetchingSiteSettings ||
+					isFetchingTransactions ||
+					isLoadingPdf ||
+					isLoadingExcel
 				}
 				siteSettings={siteSettings}
 				transactions={transactionsData?.list}

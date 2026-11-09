@@ -1,5 +1,5 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Col, Row, Select, Table } from 'antd';
+import { Button, Col, Row, Select, Table, Typography } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import { TimeRangeFilter } from 'components';
 import { Label } from 'components/elements';
@@ -16,8 +16,10 @@ import {
 	useJournalEntries,
 	useQueryParams,
 } from 'hooks';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { formatDateTime, formatInPeso } from 'utils';
+
+const AUTOMATED_ENTRY_TYPE = 'automated';
 
 export interface GeneralJournalEntry {
 	id: number;
@@ -51,6 +53,25 @@ interface Props {
 	onViewPurchase?: (purchaseId: number) => void;
 	onViewTransaction?: (transactionId: number, description: string) => void;
 }
+
+const toGeneralJournalEntry = (entry: any): GeneralJournalEntry => ({
+	id: entry.id,
+	entryType: entry.entry_type || '',
+	datetime: formatDateTime(entry.datetime_created, true),
+	branch: entry.branch_name,
+	branchMachine: entry.branch_machine_name,
+	referenceNumber: entry.reference_number,
+	debitAccount: entry.debit_account,
+	creditAccount: entry.credit_account,
+	amount: formatInPeso(entry.amount, '₱ '),
+	remarks: entry.remarks || EMPTY_CELL,
+	description: entry.description || '',
+	expenseId: entry.expense ?? null,
+	expenseReferenceNumber: entry.expense_reference_number ?? null,
+	purchaseId: entry.purchase ?? null,
+	purchaseReferenceNumber: entry.purchase_reference_number ?? null,
+	branchMachineId: entry.branch_machine ?? null,
+});
 
 export const GeneralJournalTab = ({
 	isHeadOffice,
@@ -100,42 +121,56 @@ export const GeneralJournalTab = ({
 		},
 	});
 
+	const filterParams = {
+		timeRange: params.timeRange,
+		...(selectedBranchId && { branchId: selectedBranchId }),
+		...(selectedBranchMachineId && {
+			branchMachineId: selectedBranchMachineId,
+		}),
+	};
+
 	const {
 		data: { journalEntries, total },
 		isFetching,
 	} = useJournalEntries({
 		params: {
+			...filterParams,
 			page: params.page,
 			pageSize: params.pageSize,
-			timeRange: params.timeRange,
-			...(selectedBranchId && { branchId: selectedBranchId }),
-			...(selectedBranchMachineId && {
-				branchMachineId: selectedBranchMachineId,
-			}),
+			excludeEntryType: AUTOMATED_ENTRY_TYPE,
 			...(params.entryType && { entryType: params.entryType }),
 		},
 	});
 
+	// The automated table keeps its own pagination so paging through one
+	// table doesn't move the other.
+	const [automatedPagination, setAutomatedPagination] = useState({
+		page: DEFAULT_PAGE,
+		pageSize: DEFAULT_PAGE_SIZE,
+	});
+
+	useEffect(() => {
+		setAutomatedPagination((prev) => ({ ...prev, page: DEFAULT_PAGE }));
+	}, [params.timeRange, selectedBranchId, selectedBranchMachineId]);
+
+	const {
+		data: { journalEntries: automatedJournalEntries, total: automatedTotal },
+		isFetching: isFetchingAutomated,
+	} = useJournalEntries({
+		params: {
+			...filterParams,
+			page: automatedPagination.page,
+			pageSize: automatedPagination.pageSize,
+			entryType: AUTOMATED_ENTRY_TYPE,
+		},
+	});
+
 	const entries: GeneralJournalEntry[] = (journalEntries || []).map(
-		(entry: any) => ({
-			id: entry.id,
-			entryType: entry.entry_type || '',
-			datetime: formatDateTime(entry.datetime_created, true),
-			branch: entry.branch_name,
-			branchMachine: entry.branch_machine_name,
-			referenceNumber: entry.reference_number,
-			debitAccount: entry.debit_account,
-			creditAccount: entry.credit_account,
-			amount: formatInPeso(entry.amount, '₱ '),
-			remarks: entry.remarks || EMPTY_CELL,
-			description: entry.description || '',
-			expenseId: entry.expense ?? null,
-			expenseReferenceNumber: entry.expense_reference_number ?? null,
-			purchaseId: entry.purchase ?? null,
-			purchaseReferenceNumber: entry.purchase_reference_number ?? null,
-			branchMachineId: entry.branch_machine ?? null,
-		}),
+		toGeneralJournalEntry,
 	);
+	const automatedEntries: GeneralJournalEntry[] = (
+		automatedJournalEntries || []
+	).map(toGeneralJournalEntry);
 
 	const columns = useMemo(() => {
 		const baseColumns: ColumnsType<GeneralJournalEntry> = [
@@ -262,7 +297,7 @@ export const GeneralJournalTab = ({
 						);
 					}
 					if (
-						record.entryType === 'automated' &&
+						record.entryType === AUTOMATED_ENTRY_TYPE &&
 						record.remarks &&
 						record.remarks !== EMPTY_CELL
 					) {
@@ -314,7 +349,7 @@ export const GeneralJournalTab = ({
 				<Row className="BooksOfAccounts_filters" gutter={[16, 16]}>
 					<Col className="BooksOfAccounts_timeRangeFilter">
 						<TimeRangeFilter
-							dateRangeLabel="Select Date"
+							dateRangeLabel="Select Date Range"
 							useSingleDateForDateRange
 						/>
 					</Col>
@@ -331,7 +366,6 @@ export const GeneralJournalTab = ({
 						>
 							<Select.Option value="manual">Manual</Select.Option>
 							<Select.Option value="transaction">Transaction</Select.Option>
-							<Select.Option value="automated">Automated</Select.Option>
 						</Select>
 					</Col>
 					{isHeadOffice && (
@@ -429,6 +463,29 @@ export const GeneralJournalTab = ({
 						});
 					},
 					disabled: !entries?.length,
+					position: ['bottomCenter'],
+					pageSizeOptions,
+				}}
+				rowKey="id"
+				scroll={{ x: 900 }}
+				bordered
+			/>
+			<Typography.Title className="BooksOfAccounts_sectionTitle" level={5}>
+				Automated Journal Entries
+			</Typography.Title>
+			<Table
+				className="BooksOfAccounts_table"
+				columns={columns}
+				dataSource={automatedEntries}
+				loading={isFetchingAutomated}
+				pagination={{
+					current: automatedPagination.page,
+					total: automatedTotal,
+					pageSize: automatedPagination.pageSize,
+					onChange: (page, pageSize) => {
+						setAutomatedPagination({ page, pageSize });
+					},
+					disabled: !automatedEntries?.length,
 					position: ['bottomCenter'],
 					pageSizeOptions,
 				}}

@@ -367,6 +367,7 @@ export const ExpenseVouchers = () => {
 						/>
 					)
 				}
+				allowTransactionTemplate
 				onClose={() => setJeExpenseVoucher(null)}
 				onSubmit={async (values) => {
 					setAuthorizeConfig({

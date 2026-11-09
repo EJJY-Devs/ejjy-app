@@ -2,6 +2,7 @@ import {
 	DeleteOutlined,
 	FileSearchOutlined,
 	PlusOutlined,
+	ProfileOutlined,
 } from '@ant-design/icons';
 import {
 	Button,
@@ -10,9 +11,13 @@ import {
 	InputNumber,
 	Modal,
 	Select,
+	Space,
 	Tooltip,
 } from 'antd';
-import { DEFAULT_PAGE } from 'global';
+import { DEFAULT_PAGE, MAX_PAGE_SIZE } from 'global';
+import useAccountingTransactions, {
+	getAccountingTransactionId,
+} from 'hooks/useAccountingTransactions';
 import useChartOfAccounts from 'hooks/useChartOfAccounts';
 import moment, { Moment } from 'moment';
 import { formatNumberWithCommas } from 'utils';
@@ -45,6 +50,7 @@ interface Props {
 	isSubmitting?: boolean;
 	open: boolean;
 	hasVoucher?: boolean;
+	allowTransactionTemplate?: boolean;
 	renderVoucher?: (onClose: () => void) => React.ReactNode;
 	onClose: () => void;
 	onSubmit: (values: {
@@ -58,6 +64,7 @@ export const CreateJournalEntryModal = ({
 	isSubmitting,
 	open,
 	hasVoucher,
+	allowTransactionTemplate,
 	renderVoucher,
 	onClose,
 	onSubmit,
@@ -78,6 +85,10 @@ export const CreateJournalEntryModal = ({
 		null,
 	);
 	const [isVoucherOpen, setIsVoucherOpen] = useState(!!hasVoucher);
+	const [isTemplateMode, setIsTemplateMode] = useState(false);
+	const [selectedTransactionId, setSelectedTransactionId] = useState<
+		number | null
+	>(null);
 
 	const { data, isFetching } = useChartOfAccounts({
 		params: {
@@ -86,6 +97,34 @@ export const CreateJournalEntryModal = ({
 		},
 	});
 	const { chartOfAccounts } = data || { chartOfAccounts: [] };
+
+	const {
+		data: transactionsData,
+		isFetching: isFetchingTransactions,
+	} = useAccountingTransactions({
+		params: {
+			page: DEFAULT_PAGE,
+			pageSize: MAX_PAGE_SIZE,
+		},
+	});
+
+	const transactions = useMemo(
+		() =>
+			(transactionsData?.accountingTransactions || []).map((t: any) => ({
+				id: getAccountingTransactionId(t),
+				name: t.name,
+				entries: (t.entries || []).map((e: any) => ({
+					debitAccount: e.debit_account,
+					creditAccount: e.credit_account,
+				})),
+			})),
+		[transactionsData],
+	);
+
+	const transactionOptions = useMemo(
+		() => transactions.map((t: any) => ({ label: t.name, value: t.id })),
+		[transactions],
+	);
 
 	const getAccountFontSize = useCallback((text: string | undefined) => {
 		if (!text) return 18;
@@ -96,17 +135,55 @@ export const CreateJournalEntryModal = ({
 		return 11;
 	}, []);
 
-	const resetModalState = useCallback(() => {
-		setEntries([createEmptyRow()]);
-		setActiveCell({ rowIndex: 0, field: 'debitAccount' });
+	const resetEntries = useCallback((templateMode: boolean) => {
+		setEntries(templateMode ? [] : [createEmptyRow()]);
+		setActiveCell(templateMode ? null : { rowIndex: 0, field: 'debitAccount' });
 		setLockedAmounts(new Set());
-		setRemarks('');
-		setEntryDate(moment());
 		setSearchText('');
 		setSelectedSearchValue(null);
-		setIsVoucherOpen(!!hasVoucher);
+		setSelectedTransactionId(null);
 		amountRefs.current = [];
-	}, [hasVoucher]);
+	}, []);
+
+	const resetModalState = useCallback(
+		(templateMode = false) => {
+			resetEntries(templateMode);
+			setIsTemplateMode(templateMode);
+			setRemarks('');
+			setEntryDate(moment());
+			setIsVoucherOpen(!!hasVoucher);
+		},
+		[hasVoucher, resetEntries],
+	);
+
+	const handleTemplateModeToggle = () => {
+		const next = !isTemplateMode;
+		setIsTemplateMode(next);
+		resetEntries(next);
+		setTimeout(() => {
+			searchSelectRef.current?.focus?.();
+		}, 0);
+	};
+
+	const handleTransactionSelect = (transactionId: number | undefined) => {
+		const txn = transactionId
+			? transactions.find((t: any) => t.id === transactionId)
+			: null;
+		resetEntries(true);
+		if (!txn) return;
+
+		setSelectedTransactionId(transactionId as number);
+		setEntries(
+			txn.entries.map((e: any) => ({
+				debitAccount: e.debitAccount,
+				creditAccount: e.creditAccount,
+				amount: null,
+			})),
+		);
+		setTimeout(() => {
+			amountRefs.current[0]?.focus?.();
+		}, 0);
+	};
 
 	const handleClose = () => {
 		resetModalState();
@@ -237,6 +314,7 @@ export const CreateJournalEntryModal = ({
 		rowIndex: number,
 		field: 'debitAccount' | 'creditAccount',
 	) => {
+		if (isTemplateMode) return;
 		setActiveCell({ rowIndex, field });
 		setSearchText('');
 		setSelectedSearchValue(null);
@@ -245,24 +323,30 @@ export const CreateJournalEntryModal = ({
 		}, 0);
 	};
 
-	const isValid = entries.every(
-		(e) => e.debitAccount && e.creditAccount && e.amount && e.amount > 0,
-	);
+	const isValid = isTemplateMode
+		? selectedTransactionId !== null &&
+		  entries.some((e) => e.amount && e.amount > 0)
+		: entries.every(
+				(e) => e.debitAccount && e.creditAccount && e.amount && e.amount > 0,
+		  );
 
 	const handleSubmit = async () => {
 		if (!isValid) return;
 		await onSubmit({
-			entries: entries.map((e) => ({
-				debitAccount: e.debitAccount,
-				creditAccount: e.creditAccount,
-				amount: e.amount as number,
-			})),
+			entries: entries
+				.filter((e) => e.amount && e.amount > 0)
+				.map((e) => ({
+					debitAccount: e.debitAccount,
+					creditAccount: e.creditAccount,
+					amount: e.amount as number,
+				})),
 			remarks: remarks || undefined,
 			datetimeCreated: entryDate.format('YYYY-MM-DD'),
 		});
 	};
 
-	const hasMultipleRows = entries.length > 1;
+	// Template rows come from the transaction as-is, so they can't be removed.
+	const hasMultipleRows = !isTemplateMode && entries.length > 1;
 	const gridClass = `CreateJournalEntryModal_gridInputs${
 		hasMultipleRows ? ' has-delete' : ''
 	}`;
@@ -282,18 +366,38 @@ export const CreateJournalEntryModal = ({
 			title={
 				<div className="CreateJournalEntryModal_titleRow">
 					<span>Create Journal Entry</span>
-					{hasVoucher && (
-						<Tooltip title={isVoucherOpen ? 'Hide voucher' : 'Show voucher'}>
-							<Button
-								icon={<FileSearchOutlined />}
-								size="small"
-								type={isVoucherOpen ? 'primary' : 'default'}
-								onClick={() => setIsVoucherOpen((prev) => !prev)}
+					<Space size={8}>
+						{allowTransactionTemplate && (
+							<Tooltip
+								title={
+									isTemplateMode
+										? 'Pick accounts manually'
+										: 'Use a transaction as the JE template'
+								}
 							>
-								Voucher
-							</Button>
-						</Tooltip>
-					)}
+								<Button
+									icon={<ProfileOutlined />}
+									size="small"
+									type={isTemplateMode ? 'primary' : 'default'}
+									onClick={handleTemplateModeToggle}
+								>
+									JE Template
+								</Button>
+							</Tooltip>
+						)}
+						{hasVoucher && (
+							<Tooltip title={isVoucherOpen ? 'Hide voucher' : 'Show voucher'}>
+								<Button
+									icon={<FileSearchOutlined />}
+									size="small"
+									type={isVoucherOpen ? 'primary' : 'default'}
+									onClick={() => setIsVoucherOpen((prev) => !prev)}
+								>
+									Voucher
+								</Button>
+							</Tooltip>
+						)}
+					</Space>
 				</div>
 			}
 			width={760}
@@ -323,46 +427,70 @@ export const CreateJournalEntryModal = ({
 					</div>
 
 					<div className="CreateJournalEntryModal_searchItem">
-						<Select
-							ref={searchSelectRef}
-							className="w-100"
-							disabled={!activeCell}
-							filterOption={false}
-							loading={isFetching}
-							notFoundContent={isFetching ? 'Loading...' : 'No accounts found'}
-							options={accountOptions}
-							placeholder={
-								activeCell?.field === 'debitAccount'
-									? 'Search account for debit'
-									: 'Search account for credit'
-							}
-							searchValue={searchText}
-							value={selectedSearchValue}
-							allowClear
-							autoFocus
-							showSearch
-							onChange={() => setSelectedSearchValue(null)}
-							onClear={() => {
-								setSelectedSearchValue(null);
-								setSearchText('');
-							}}
-							onSearch={(value) => setSearchText(value)}
-							onSelect={(value) => handleAccountSelect(value)}
-						/>
+						{isTemplateMode ? (
+							<Select
+								ref={searchSelectRef}
+								className="w-100"
+								loading={isFetchingTransactions}
+								notFoundContent={
+									isFetchingTransactions
+										? 'Loading...'
+										: 'No transactions found'
+								}
+								optionFilterProp="label"
+								options={transactionOptions}
+								placeholder="Select a transaction"
+								value={selectedTransactionId}
+								allowClear
+								showSearch
+								onChange={handleTransactionSelect}
+							/>
+						) : (
+							<Select
+								ref={searchSelectRef}
+								className="w-100"
+								disabled={!activeCell}
+								filterOption={false}
+								loading={isFetching}
+								notFoundContent={
+									isFetching ? 'Loading...' : 'No accounts found'
+								}
+								options={accountOptions}
+								placeholder={
+									activeCell?.field === 'debitAccount'
+										? 'Search account for debit'
+										: 'Search account for credit'
+								}
+								searchValue={searchText}
+								value={selectedSearchValue}
+								allowClear
+								autoFocus
+								showSearch
+								onChange={() => setSelectedSearchValue(null)}
+								onClear={() => {
+									setSelectedSearchValue(null);
+									setSearchText('');
+								}}
+								onSearch={(value) => setSearchText(value)}
+								onSelect={(value) => handleAccountSelect(value)}
+							/>
+						)}
 					</div>
 
-					<div className={labelsClass}>
-						<span>DEBIT</span>
-						<span>CREDIT</span>
-						<span>AMOUNT</span>
-						{hasMultipleRows && <span />}
-					</div>
+					{entries.length > 0 && (
+						<div className={labelsClass}>
+							<span>DEBIT</span>
+							<span>CREDIT</span>
+							<span>AMOUNT</span>
+							{hasMultipleRows && <span />}
+						</div>
+					)}
 
 					{entries.map((entry, index) => (
 						<div key={index} className={gridClass}>
 							<div
 								role="button"
-								style={{ cursor: 'pointer' }}
+								style={{ cursor: isTemplateMode ? 'default' : 'pointer' }}
 								tabIndex={0}
 								onClick={() => handleCellClick(index, 'debitAccount')}
 								onKeyDown={(e) => {
@@ -390,7 +518,7 @@ export const CreateJournalEntryModal = ({
 							</div>
 							<div
 								role="button"
-								style={{ cursor: 'pointer' }}
+								style={{ cursor: isTemplateMode ? 'default' : 'pointer' }}
 								tabIndex={0}
 								onClick={() => handleCellClick(index, 'creditAccount')}
 								onKeyDown={(e) => {
@@ -477,16 +605,18 @@ export const CreateJournalEntryModal = ({
 						</div>
 					))}
 
-					<Button
-						className="CreateJournalEntryModal_addEntryBtn"
-						icon={<PlusOutlined />}
-						style={{ marginBottom: 16, marginTop: 4 }}
-						type="primary"
-						ghost
-						onClick={addEntry}
-					>
-						Add Entry
-					</Button>
+					{!isTemplateMode && (
+						<Button
+							className="CreateJournalEntryModal_addEntryBtn"
+							icon={<PlusOutlined />}
+							style={{ marginBottom: 16, marginTop: 4 }}
+							type="primary"
+							ghost
+							onClick={addEntry}
+						>
+							Add Entry
+						</Button>
+					)}
 
 					<div className="CreateJournalEntryModal_remarksLabel">Remarks</div>
 					<Input
@@ -499,7 +629,7 @@ export const CreateJournalEntryModal = ({
 						<Button
 							htmlType="button"
 							onClick={() => {
-								resetModalState();
+								resetModalState(isTemplateMode);
 								setTimeout(() => {
 									searchSelectRef.current?.focus?.();
 								}, 0);

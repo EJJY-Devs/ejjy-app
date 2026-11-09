@@ -13,9 +13,17 @@ interface GeneralLedgerEntryForPrint {
 	entries: GeneralLedgerDetailForPrint[];
 }
 
-interface SummaryForPrint {
+interface BalanceForPrint {
 	label: string;
 	value: string;
+	asOf: string;
+}
+
+interface BalancesForPrint {
+	beginning: BalanceForPrint;
+	ending: BalanceForPrint;
+	totalDebit: string;
+	totalCredit: string;
 }
 
 const escapeHtml = (value: string) =>
@@ -28,12 +36,12 @@ const escapeHtml = (value: string) =>
 
 export const printGeneralLedgerTAccounts = ({
 	entry,
-	summary,
+	balances,
 }: {
 	entry: GeneralLedgerEntryForPrint | null;
-	summary: SummaryForPrint;
+	balances: BalancesForPrint | null;
 }) => {
-	if (!entry) {
+	if (!entry || !balances) {
 		return '';
 	}
 
@@ -56,7 +64,9 @@ export const printGeneralLedgerTAccounts = ({
 	const accountTitle = `${
 		entry.accountCode
 	} - ${entry.accountName.toUpperCase()}`;
-	const summaryText = `${summary.label} - ${summary.value}`;
+	const beginningText = `Beginning Balance (as of ${balances.beginning.asOf}): ${balances.beginning.label} - ${balances.beginning.value}`;
+	const endingLabelText = `Ending Balance (as of ${balances.ending.asOf})`;
+	const endingText = `${balances.ending.label} - ${balances.ending.value}`;
 
 	return `
 		<!DOCTYPE html>
@@ -70,12 +80,16 @@ export const printGeneralLedgerTAccounts = ({
 				table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
 				th, td { border: 1px solid #d9d9d9; padding: 5px 6px; text-align: left; font-size: 10px; }
 				th { background: #fafafa; font-weight: 700; }
-				.summary { text-align: center; font-size: 15px; font-weight: 700; margin-top: 12px; }
+				tfoot td { font-weight: 700; background: #fafafa; }
+				.beginning { font-size: 11px; font-weight: 700; margin-bottom: 8px; }
+				.summary-label { text-align: center; font-size: 11px; margin-top: 12px; }
+				.summary { text-align: center; font-size: 15px; font-weight: 700; margin-top: 4px; }
 			</style>
 		</head>
 		<body>
 			<h1>View - T Accounts</h1>
 			<h2>${escapeHtml(accountTitle)}</h2>
+			<div class="beginning">${escapeHtml(beginningText)}</div>
 			<table>
 				<thead>
 					<tr>
@@ -91,8 +105,20 @@ export const printGeneralLedgerTAccounts = ({
 				<tbody>
 					${rowsHtml}
 				</tbody>
+				<tfoot>
+					<tr>
+						<td>Total</td>
+						<td>${escapeHtml(balances.totalDebit)}</td>
+						<td></td>
+						<td></td>
+						<td>Total</td>
+						<td>${escapeHtml(balances.totalCredit)}</td>
+						<td></td>
+					</tr>
+				</tfoot>
 			</table>
-			<div class="summary">${escapeHtml(summaryText)}</div>
+			<div class="summary-label">${escapeHtml(endingLabelText)}</div>
+			<div class="summary">${escapeHtml(endingText)}</div>
 		</body>
 		</html>
 	`;

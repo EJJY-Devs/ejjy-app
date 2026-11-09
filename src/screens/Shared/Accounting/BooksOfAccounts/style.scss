@@ -28,6 +28,14 @@
 	}
 }
 
+.BooksOfAccounts_sectionTitle.ant-typography {
+	margin-bottom: 12px;
+}
+
+.BooksOfAccounts_table + .BooksOfAccounts_sectionTitle.ant-typography {
+	margin-top: 32px;
+}
+
 .CreateJournalEntryModal {
 	.ant-modal-content {
 		border-radius: 20px;
@@ -235,11 +243,28 @@
 	text-transform: uppercase;
 }
 
+.BooksOfAccounts_tAccountSummaryLabel {
+	text-align: center;
+	font-size: 16px;
+	margin-top: 24px;
+}
+
 .BooksOfAccounts_tAccountSummary {
 	text-align: center;
 	font-size: 36px;
 	font-weight: 700;
-	margin-top: 24px;
+	margin-top: 4px;
+}
+
+.BooksOfAccounts_tAccountBeginning {
+	font-size: 16px;
+	font-weight: 700;
+	margin-bottom: 12px;
+}
+
+.BooksOfAccounts_tAccountTotals .ant-table-cell {
+	font-weight: 700;
+	background: #fafafa;
 }
 
 .BooksOfAccounts_tAccountFilter {

@@ -118,14 +118,27 @@ export const PricesModal = ({
 				actingUserId: getId(user),
 			});
 		} else if (branchProductFormData.length > 0) {
+			// Saved on the local server (which the branches sync from), so every
+			// id sent must be a local id. PricesForm builds branchIds with getId(),
+			// which resolves to online ids, so map them back to local ids.
+			const getLocalBranchIds = (branchIds: string) =>
+				branchIds
+					.split(',')
+					.map(
+						(branchId) =>
+							branches.find((branch) => String(getId(branch)) === branchId)
+								?.id ?? branchId,
+					)
+					.join(',');
+
 			await editBranchProductPriceCost({
-				actingUserId: appType === appTypes.BACK_OFFICE ? user.id : getId(user),
-				productId: product?.product?.id || getId(product),
-				data: branchProductFormData,
-				serverUrl:
-					appType === appTypes.BACK_OFFICE
-						? getLocalApiUrl()
-						: getGoogleApiUrl(),
+				actingUserId: user.id,
+				productId: product?.product?.id || product?.id,
+				data: branchProductFormData.map((data) => ({
+					...data,
+					branchIds: getLocalBranchIds(data.branchIds),
+				})),
+				serverUrl: getLocalApiUrl(),
 			});
 		}
 

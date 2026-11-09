@@ -1,8 +1,16 @@
 import { Button, DatePicker, Input, InputNumber, Modal, Select } from 'antd';
 import { DEFAULT_PAGE, MAX_PAGE_SIZE } from 'global';
-import useAccountingTransactions from 'hooks/useAccountingTransactions';
+import useAccountingTransactions, {
+	getAccountingTransactionId,
+} from 'hooks/useAccountingTransactions';
 import moment, { Moment } from 'moment';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import { formatNumberWithCommas } from 'utils';
 import './AddTransactionEntryModal.scss';
 
@@ -49,7 +57,7 @@ export const AddTransactionEntryModal = ({
 	const transactions = useMemo(
 		() =>
 			(data?.accountingTransactions || []).map((t: any) => ({
-				id: t.id,
+				id: getAccountingTransactionId(t),
 				name: t.name,
 				entries: (t.entries || []).map((e: any) => ({
 					debitAccount: e.debit_account,
@@ -133,6 +141,7 @@ export const AddTransactionEntryModal = ({
 	const handleSubmit = useCallback(async () => {
 		if (!selectedTransactionId) return;
 		const txn = transactions.find((t: any) => t.id === selectedTransactionId);
+
 		await onSubmit({
 			transactionId: selectedTransactionId,
 			transactionName: txn?.name || '',
@@ -140,7 +149,6 @@ export const AddTransactionEntryModal = ({
 			remarks,
 			datetimeCreated: entryDate.format('YYYY-MM-DD'),
 		});
-		resetModalState();
 	}, [
 		selectedTransactionId,
 		transactions,
@@ -148,8 +156,11 @@ export const AddTransactionEntryModal = ({
 		remarks,
 		entryDate,
 		onSubmit,
-		resetModalState,
 	]);
+
+	useEffect(() => {
+		if (!open) resetModalState();
+	}, [open, resetModalState]);
 
 	return (
 		<Modal

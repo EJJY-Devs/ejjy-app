@@ -51,6 +51,7 @@ export const ViewPurchaseModal = ({
 		title: `Purchase_${data.reference_number}.pdf`,
 		paper: 'a4HalfLengthwise',
 		previewInModal: true,
+		continuousPage: true,
 		print: () => printPurchase({ purchase: data, siteSettings, isPdf: true }),
 	});
 

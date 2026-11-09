@@ -52,6 +52,7 @@ export const ViewBackOrderModal = ({ backOrder, onClose }: Props) => {
 		title: `DeliveryReceipt_${backOrder?.id}.pdf`,
 		paper: 'a4HalfLengthwise',
 		previewInModal: true,
+		continuousPage: true,
 		print: generateHtmlContent,
 	});
 

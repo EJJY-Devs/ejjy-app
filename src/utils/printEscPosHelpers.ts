@@ -22,27 +22,3 @@ export const generateTwoColumnLine = (
 
 	return `${truncatedLeft.padEnd(leftWidth)} ${rightText.padStart(rightWidth)}`;
 };
-
-export const generateFourColumnLine = (
-	col1Text: string,
-	col2Text: string,
-	col3Text: string,
-	col4Text: string,
-): string => {
-	const col1Width = 8;
-	const col3Width = 10;
-	const col4Width = 10;
-	const col2Width = PAPER_CHARACTER_WIDTH - col1Width - col3Width - col4Width;
-
-	const truncatedCol2 =
-		col2Text.length > col2Width
-			? col2Text.substring(0, col2Width - 1)
-			: col2Text;
-
-	return (
-		col1Text.padEnd(col1Width) +
-		truncatedCol2.padEnd(col2Width) +
-		col3Text.padStart(col3Width) +
-		col4Text.padStart(col4Width)
-	);
-};
